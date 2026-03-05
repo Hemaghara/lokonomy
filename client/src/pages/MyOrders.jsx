@@ -130,15 +130,6 @@ const MyOrders = () => {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={fetchOrders}
-              className="p-3 bg-[#111827] border border-[#1f2a3d] text-slate-400 hover:text-white rounded-xl transition-all"
-              title="Refresh Orders"
-            >
-              <HiOutlineArrowPath
-                className={`text-lg ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-            <button
               onClick={() => navigate("/market")}
               className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30"
             >
