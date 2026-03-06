@@ -12,15 +12,6 @@ exports.createOrder = async (req, res) => {
       transactionId,
     } = req.body;
 
-    console.log("=== Order Creation Debug ===");
-    console.log("Payload:", {
-      productId,
-      paymentMethod,
-      shippingAddress,
-      contactNumber,
-    });
-    console.log("User:", req.user);
-
     if (!productId || !paymentMethod || !shippingAddress || !contactNumber) {
       return res.status(400).json({
         success: false,
@@ -36,6 +27,15 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     }
 
+    // Guard 1: Already sold out (check actual boolean OR undefined = not sold)
+    if (product.isSold === true) {
+      return res.status(400).json({
+        success: false,
+        message: "This product has already been sold to another buyer.",
+      });
+    }
+
+    // Guard 2: Seller cannot buy own product
     if (!product.sellerId) {
       return res.status(400).json({
         success: false,
@@ -50,6 +50,19 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    // Guard 3: Buyer already ordered this product
+    const existingOrder = await Order.findOne({
+      product: productId,
+      buyer: req.user.id,
+    });
+    if (existingOrder) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already placed an order for this product.",
+      });
+    }
+
+    // Create order
     const newOrder = new Order({
       product: productId,
       buyer: req.user.id,
@@ -63,7 +76,15 @@ exports.createOrder = async (req, res) => {
     });
 
     const savedOrder = await newOrder.save();
-    console.log("Order saved successfully:", savedOrder._id);
+
+    // Mark product as sold using explicit $set (works on all Mongoose versions
+    // and handles documents that existed before isSold field was added)
+    await Product.findByIdAndUpdate(
+      productId,
+      { $set: { isSold: true } },
+      { strict: false },
+    );
+
     res.status(201).json({ success: true, order: savedOrder });
   } catch (err) {
     console.error("Order Creation Error:", err);
@@ -85,8 +106,6 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server Error: " + err.message,
-      error: err,
-      stack: err.stack,
     });
   }
 };

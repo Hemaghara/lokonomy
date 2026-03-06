@@ -54,7 +54,13 @@ exports.getAllProducts = async (req, res) => {
     } else {
       products = await Product.find(query).sort({ createdAt: -1 });
     }
-    res.json(products);
+    // Coerce isSold to boolean for old docs without the field
+    const result = products.map((p) => {
+      const obj = p.toObject();
+      obj.isSold = obj.isSold === true;
+      return obj;
+    });
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -110,7 +116,11 @@ exports.getProductById = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.json(product);
+    // Convert to plain object and coerce isSold to boolean
+    // (handles old docs that were created before the isSold field was added)
+    const productObj = product.toObject();
+    productObj.isSold = productObj.isSold === true;
+    res.json(productObj);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

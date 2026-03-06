@@ -13,6 +13,7 @@ import Market from "./pages/Market";
 import SellProduct from "./pages/SellProduct";
 import BusinessDetails from "./pages/BusinessDetails";
 import ProductDetails from "./pages/ProductDetails";
+import Checkout from "./pages/Checkout";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
 import ApplyJob from "./pages/ApplyJob";
@@ -88,6 +89,10 @@ function App() {
                 <Route path="/add-business" element={<AddBusiness />} />
                 <Route path="/edit-business/:id" element={<EditBusiness />} />
                 <Route path="/market/sell" element={<SellProduct />} />
+                <Route
+                  path="/market/product/:id/checkout"
+                  element={<Checkout />}
+                />
                 <Route path="/jobs/post" element={<PostJob />} />
                 <Route path="/jobs/:id/apply" element={<ApplyJob />} />
                 <Route path="/stories/post" element={<PostStory />} />
