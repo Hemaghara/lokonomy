@@ -473,7 +473,6 @@ const ProductDetails = () => {
                     </div>
                   </div>
 
-                  {/* Seller Payment Info */}
                   {orderForm.paymentMethod === "upi" && (
                     <div className="p-4 bg-violet-500/5 border border-violet-500/10 rounded-2xl space-y-3">
                       <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest text-center">

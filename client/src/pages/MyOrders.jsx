@@ -105,7 +105,7 @@ const MyOrders = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
+        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -176,7 +176,6 @@ const MyOrders = () => {
                   >
                     <div className="p-6 sm:p-8">
                       <div className="flex flex-col md:flex-row gap-8">
-                        {/* Image & Main Info */}
                         <div className="flex-1 flex gap-6">
                           <div className="w-24 h-24 sm:w-32 sm:h-32 bg-[#080e1a] rounded-2xl overflow-hidden border border-[#1f2a3d] shrink-0 relative">
                             <img
@@ -235,7 +234,6 @@ const MyOrders = () => {
                           </div>
                         </div>
 
-                        {/* Order Meta */}
                         <div className="md:w-56 flex flex-col justify-center border-t md:border-t-0 md:border-l border-[#1f2a3d] pt-6 md:pt-0 md:pl-8 space-y-4">
                           <div className="space-y-1">
                             <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">

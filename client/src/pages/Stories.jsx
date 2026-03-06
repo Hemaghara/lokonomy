@@ -153,9 +153,7 @@ const Stories = () => {
           </button>
         </motion.div>
 
-        {/* ── Search + Filter Bar ── */}
         <div className={`${card} p-4 mb-6 flex flex-col gap-4`}>
-          {/* Search */}
           <div className="relative">
             <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-base pointer-events-none" />
             <input
@@ -189,7 +187,6 @@ const Stories = () => {
             )}
           </div>
 
-          {/* Category pills */}
           <div className="no-sb flex items-center gap-2 overflow-x-auto">
             {storyCategories.map((cat) => (
               <button
@@ -213,7 +210,6 @@ const Stories = () => {
           </div>
         </div>
 
-        {/* ── Story Grid ── */}
         <div className="min-h-64">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -238,7 +234,6 @@ const Stories = () => {
                     onClick={() => navigate(`/stories/${story._id}`)}
                     className={`${card} flex flex-col overflow-hidden hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 cursor-pointer group`}
                   >
-                    {/* Story Image */}
                     <div className="relative aspect-video overflow-hidden bg-[#0d1424]">
                       {story.image ? (
                         <img
@@ -254,7 +249,6 @@ const Stories = () => {
                         </div>
                       )}
 
-                      {/* Type badge overlay */}
                       <div className="absolute top-3 left-3">
                         <span
                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm ${getTypeColor(story.type)}`}
@@ -267,9 +261,7 @@ const Stories = () => {
                       </div>
                     </div>
 
-                    {/* Card Body */}
                     <div className="p-4 flex-1 flex flex-col">
-                      {/* Meta row */}
                       <div className="flex items-center gap-2 mb-3">
                         <span className="flex items-center gap-1 text-[11px] text-violet-400 font-medium line-clamp-1">
                           <HiOutlineMapPin className="text-xs shrink-0" />
@@ -284,17 +276,14 @@ const Stories = () => {
                         </span>
                       </div>
 
-                      {/* Title */}
                       <h3 className="text-slate-100 font-semibold text-base leading-snug mb-2 group-hover:text-violet-400 transition-colors line-clamp-2 flex-1">
                         {story.title}
                       </h3>
 
-                      {/* Excerpt */}
                       <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 mb-4">
                         {story.content}
                       </p>
 
-                      {/* Footer */}
                       <div className="flex items-center justify-between pt-3 border-t border-[#1f2a3d]">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold">
@@ -318,7 +307,6 @@ const Stories = () => {
                 ))}
               </AnimatePresence>
 
-              {/* Empty state */}
               {stories.length === 0 && !loading && (
                 <motion.div
                   initial={{ opacity: 0 }}
