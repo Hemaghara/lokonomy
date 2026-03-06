@@ -22,6 +22,9 @@ import {
   HiOutlineCreditCard,
   HiOutlineQrCode,
   HiOutlineArrowUpTray,
+  HiOutlineUserGroup,
+  HiOutlineChevronDown,
+  HiOutlineCalendarDays,
 } from "react-icons/hi2";
 import { FiUser, FiMapPin, FiBriefcase, FiPlus } from "react-icons/fi";
 
