@@ -54,7 +54,6 @@ exports.getAllProducts = async (req, res) => {
     } else {
       products = await Product.find(query).sort({ createdAt: -1 });
     }
-    // Coerce isSold to boolean for old docs without the field
     const result = products.map((p) => {
       const obj = p.toObject();
       obj.isSold = obj.isSold === true;
@@ -116,8 +115,7 @@ exports.getProductById = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    // Convert to plain object and coerce isSold to boolean
-    // (handles old docs that were created before the isSold field was added)
+
     const productObj = product.toObject();
     productObj.isSold = productObj.isSold === true;
     res.json(productObj);

@@ -1,7 +1,6 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 
-// Create new order
 exports.createOrder = async (req, res) => {
   try {
     const {
@@ -27,7 +26,6 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     }
 
-    // Guard 1: Already sold out (check actual boolean OR undefined = not sold)
     if (product.isSold === true) {
       return res.status(400).json({
         success: false,
@@ -35,7 +33,6 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Guard 2: Seller cannot buy own product
     if (!product.sellerId) {
       return res.status(400).json({
         success: false,
@@ -50,7 +47,6 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Guard 3: Buyer already ordered this product
     const existingOrder = await Order.findOne({
       product: productId,
       buyer: req.user.id,
@@ -62,7 +58,6 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Create order
     const newOrder = new Order({
       product: productId,
       buyer: req.user.id,
@@ -77,8 +72,6 @@ exports.createOrder = async (req, res) => {
 
     const savedOrder = await newOrder.save();
 
-    // Mark product as sold using explicit $set (works on all Mongoose versions
-    // and handles documents that existed before isSold field was added)
     await Product.findByIdAndUpdate(
       productId,
       { $set: { isSold: true } },
@@ -110,7 +103,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// Get orders for buyer
 exports.getBuyerOrders = async (req, res) => {
   try {
     const orders = await Order.find({ buyer: req.user.id })
@@ -123,7 +115,6 @@ exports.getBuyerOrders = async (req, res) => {
   }
 };
 
-// Get orders for seller
 exports.getSellerOrders = async (req, res) => {
   try {
     const orders = await Order.find({ seller: req.user.id })
@@ -136,7 +127,6 @@ exports.getSellerOrders = async (req, res) => {
   }
 };
 
-// Update order status (by seller)
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus } = req.body;
@@ -148,7 +138,6 @@ exports.updateOrderStatus = async (req, res) => {
         .json({ success: false, message: "Order not found" });
     }
 
-    // Only seller can update status
     if (order.seller.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
@@ -162,7 +151,6 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// Get Dashboard Stats for Seller
 exports.getSellerDashboardStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
@@ -185,14 +173,12 @@ exports.getSellerDashboardStats = async (req, res) => {
       dailySales: [], // { date: '2024-01-01', amount: 500 }
     };
 
-    // Calculate status counts
     orders.forEach((o) => {
       if (stats.statusCounts[o.orderStatus] !== undefined) {
         stats.statusCounts[o.orderStatus]++;
       }
     });
 
-    // Calculate daily sales for the last 7 days
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();

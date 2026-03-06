@@ -292,7 +292,6 @@ exports.updateProfile = async (req, res) => {
     if (district !== undefined) user.district = district;
     if (taluka !== undefined) user.taluka = taluka;
 
-    // Explicitly update payment fields if present in request
     if (upiId !== undefined) user.upiId = upiId;
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
 
@@ -303,7 +302,7 @@ exports.updateProfile = async (req, res) => {
           "payments",
         );
       } else {
-        user.paymentQrCode = paymentQrCode; // keeps URL or null
+        user.paymentQrCode = paymentQrCode; 
       }
     }
 
