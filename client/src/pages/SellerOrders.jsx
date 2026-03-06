@@ -27,7 +27,7 @@ const SellerOrders = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard, orders, products
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
@@ -58,7 +58,6 @@ const SellerOrders = () => {
     try {
       await orderService.updateOrderStatus(orderId, newStatus);
       toast.success(`Order marked as ${newStatus}`);
-      // Refresh both orders and stats
       const [oRes, sRes] = await Promise.all([
         orderService.getSellerOrders(),
         orderService.getSellerStats(),
@@ -156,7 +155,6 @@ const SellerOrders = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -215,7 +213,6 @@ const SellerOrders = () => {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-8"
             >
-              {/* Stats Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-3xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -251,23 +248,8 @@ const SellerOrders = () => {
                   <h3 className="text-3xl font-black text-white mb-2">
                     {stats?.statusCounts.pending}
                   </h3>
-                  <div className="flex gap-1">
-                    {[1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className="h-1 flex-1 bg-amber-500/20 rounded-full overflow-hidden"
-                      >
-                        <motion.div
-                          animate={{ x: ["-100%", "100%"] }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: i * 0.2,
-                          }}
-                          className="w-1/2 h-full bg-amber-500"
-                        />
-                      </div>
-                    ))}
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
+                    <HiOutlineClock className="text-xs" /> Awaiting action
                   </div>
                 </div>
 
@@ -284,7 +266,6 @@ const SellerOrders = () => {
                 </div>
               </div>
 
-              {/* Chart Section */}
               <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-[#111827] border border-[#1f2a3d] p-8 rounded-[2.5rem] relative overflow-hidden">
                   <div className="flex items-center justify-between mb-8">
@@ -317,14 +298,12 @@ const SellerOrders = () => {
                           className="flex-1 flex flex-col items-center gap-3 group relative"
                         >
                           <div className="w-full flex justify-center items-end h-32 relative">
-                            {/* Bar */}
                             <motion.div
                               initial={{ height: 0 }}
                               animate={{ height: `${height}%` }}
                               transition={{ duration: 1, delay: i * 0.1 }}
                               className="w-full sm:w-8 bg-linear-to-t from-violet-600 via-indigo-500 to-indigo-400 rounded-lg sm:rounded-xl relative z-10 shadow-lg shadow-indigo-900/20 group-hover:from-violet-500 group-hover:to-indigo-300 transition-all duration-300"
                             />
-                            {/* Hover Tooltip */}
                             <div className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-white text-black px-2 py-1 rounded text-xs font-bold z-20 whitespace-nowrap">
                               ₹{day.amount}
                             </div>
@@ -340,7 +319,6 @@ const SellerOrders = () => {
                   </div>
                 </div>
 
-                {/* Status Breakthrough */}
                 <div className="bg-[#111827] border border-[#1f2a3d] p-8 rounded-[2.5rem]">
                   <h4 className="text-white font-bold text-lg mb-6">
                     Order Status
@@ -386,7 +364,6 @@ const SellerOrders = () => {
               exit={{ opacity: 0, x: 10 }}
               className="space-y-6"
             >
-              {/* Toolbar */}
               <div className="bg-[#111827] border border-[#1f2a3d] p-4 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-slate-400">
                   <HiOutlineFunnel className="text-lg" />
@@ -438,7 +415,6 @@ const SellerOrders = () => {
                     >
                       <div className="p-6 md:p-8">
                         <div className="flex flex-col lg:flex-row gap-8">
-                          {/* Product Details */}
                           <div className="flex-1 space-y-6">
                             <div className="flex items-start gap-5">
                               <div className="w-24 h-24 shrink-0 relative">
@@ -538,7 +514,6 @@ const SellerOrders = () => {
                             </div>
                           </div>
 
-                          {/* Action Sidebar */}
                           <div className="lg:w-64 flex flex-col gap-3">
                             <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">
                               Fulfillment Status
