@@ -32,6 +32,7 @@ app.use("/api/market", require("./routes/market"));
 app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/stories", require("./routes/stories"));
 app.use("/api/orders", require("./routes/orders"));
+app.use("/api/feeds", require("./routes/feeds"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });

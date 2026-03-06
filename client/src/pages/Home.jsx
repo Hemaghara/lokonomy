@@ -43,6 +43,12 @@ const Home = () => {
                 >
                   Marketplace
                 </Link>
+                <Link
+                  to="/feed"
+                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-6 py-2.5 rounded-lg font-semibold transition-all"
+                >
+                  Community Feed
+                </Link>
               </div>
             </div>
           </div>
