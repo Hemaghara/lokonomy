@@ -221,7 +221,7 @@ const PostStory = () => {
       };
       const response = await storyService.createStory(storyData);
       if (response.data.success) {
-        toast.success("Broadcasted successfully!");
+        toast.success(response.data.message || "Broadcasted successfully!");
         navigate("/stories");
       }
     } catch (error) {

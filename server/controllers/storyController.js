@@ -17,7 +17,7 @@ const buildLocationGeoJSON = (body) => {
 exports.getAllStories = async (req, res, next) => {
   try {
     const { lat, lng, radius = 5000, district, type, search } = req.query;
-    let query = {};
+    let query = { expiresAt: { $gt: new Date() } };
 
     if (lat && lng) {
       query.location = {
@@ -70,6 +70,15 @@ exports.getStoryById = async (req, res, next) => {
         .json({ success: false, message: "Story not found" });
     }
 
+    if (story.expiresAt && story.expiresAt < new Date()) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "This story has expired and is no longer available",
+        });
+    }
+
     res.status(200).json({
       success: true,
       data: story,
@@ -88,6 +97,9 @@ exports.createStory = async (req, res, next) => {
       imageUrl = await uploadToCloudinary(image, "stories");
     }
 
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); 
+
     const storyData = {
       title,
       content,
@@ -97,6 +109,8 @@ exports.createStory = async (req, res, next) => {
       taluka,
       author,
       authorId: req.user.id,
+      createdAt: now,
+      expiresAt,
     };
 
     const geoData = buildLocationGeoJSON(req.body);
@@ -110,6 +124,7 @@ exports.createStory = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: story,
+      message: "Story will be automatically removed after 24 hours",
     });
   } catch (error) {
     console.error("Error creating story:", error);

@@ -22,6 +22,50 @@ import {
   HiOutlineCheckCircle,
 } from "react-icons/hi2";
 
+const getTimeRemaining = (expiresAt) => {
+  const now = Date.now();
+  const exp = new Date(expiresAt).getTime();
+  const diff = exp - now;
+  if (diff <= 0)
+    return { expired: true, label: "Expired", pct: 0, urgent: true };
+  const totalMs = 24 * 60 * 60 * 1000;
+  const pct = Math.max(0, Math.min(100, (diff / totalMs) * 100));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const urgent = diff < 3 * 60 * 60 * 1000;
+  const label = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  return { expired: false, label, pct, urgent };
+};
+
+const StoryExpiryStatus = ({ expiresAt }) => {
+  const [info, setInfo] = useState(() => getTimeRemaining(expiresAt));
+  useEffect(() => {
+    const id = setInterval(() => setInfo(getTimeRemaining(expiresAt)), 60000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  const textColor = info.expired
+    ? "text-red-400"
+    : info.urgent
+      ? "text-orange-400"
+      : "text-violet-400";
+
+  const bgColor = info.expired
+    ? "bg-red-500/10 border-red-500/20"
+    : info.urgent
+      ? "bg-orange-500/10 border-orange-500/20"
+      : "bg-violet-500/10 border-violet-500/20";
+
+  return (
+    <div
+      className={`px-2 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-tight shrink-0 flex items-center gap-1 ${textColor} ${bgColor}`}
+    >
+      <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+      {info.expired ? "Expired" : `${info.label} Left`}
+    </div>
+  );
+};
+
 const StoryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -243,11 +287,22 @@ const StoryDetails = () => {
                 className={`${card} p-4 group hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
               >
                 <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
-                <div className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:bg-violet-500/20 transition-all duration-300">
-                  <HiOutlineCalendarDays className="text-violet-400 text-sm" />
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-violet-500/20 transition-all duration-300">
+                    <HiOutlineClock className="text-violet-400 text-sm" />
+                  </div>
+                  <StoryExpiryStatus
+                    expiresAt={
+                      story.expiresAt ||
+                      new Date(
+                        new Date(story.createdAt).getTime() +
+                          24 * 60 * 60 * 1000,
+                      )
+                    }
+                  />
                 </div>
                 <p className="text-[10px] text-slate-600 group-hover:text-violet-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
-                  Published
+                  Validity
                 </p>
                 <p className="text-slate-200 font-semibold text-xs leading-snug group-hover:text-white transition-colors duration-300">
                   {new Date(story.createdAt).toLocaleDateString("en-GB", {
@@ -257,7 +312,7 @@ const StoryDetails = () => {
                   })}
                 </p>
                 <p className="text-slate-600 text-[10px] mt-0.5 flex items-center gap-1">
-                  <HiOutlineClock className="text-xs" />
+                  Published:{" "}
                   {new Date(story.createdAt).toLocaleTimeString("en-GB", {
                     hour: "2-digit",
                     minute: "2-digit",

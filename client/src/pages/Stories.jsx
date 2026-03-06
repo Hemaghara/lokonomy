@@ -21,13 +21,65 @@ import {
   HiOutlineUser,
 } from "react-icons/hi2";
 
+const getTimeRemaining = (expiresAt) => {
+  const now = Date.now();
+  const exp = new Date(expiresAt).getTime();
+  const diff = exp - now;
+  if (diff <= 0)
+    return { expired: true, label: "Expired", pct: 0, urgent: true };
+  const totalMs = 24 * 60 * 60 * 1000;
+  const pct = Math.max(0, Math.min(100, (diff / totalMs) * 100));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const urgent = diff < 3 * 60 * 60 * 1000;
+  const label = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  return { expired: false, label, pct, urgent };
+};
+
+const ExpiryBadge = ({ expiresAt }) => {
+  const [info, setInfo] = useState(() => getTimeRemaining(expiresAt));
+  useEffect(() => {
+    const id = setInterval(() => setInfo(getTimeRemaining(expiresAt)), 60000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  const barColor = info.expired
+    ? "bg-red-500"
+    : info.urgent
+      ? "bg-orange-400"
+      : "bg-violet-500";
+
+  const textColor = info.expired
+    ? "text-red-400"
+    : info.urgent
+      ? "text-orange-400"
+      : "text-slate-500";
+
+  return (
+    <>
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/5 rounded-t-2xl overflow-hidden">
+        <div
+          className={`h-full ${barColor} transition-all duration-1000 ease-linear`}
+          style={{ width: `${info.pct}%` }}
+        />
+      </div>
+      <span
+        className={`flex items-center gap-1 text-[10px] font-semibold ${textColor}`}
+      >
+        <HiOutlineClock className="text-xs shrink-0" />
+        {info.expired ? "Expired" : `Expires in ${info.label}`}
+      </span>
+    </>
+  );
+};
+
 const Stories = () => {
   const navigate = useNavigate();
   const { district, taluka } = useLocation();
   const { user } = useUser();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [radius, setRadius] = useState(5000); 
+  const [radius, setRadius] = useState(5000);
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -232,7 +284,7 @@ const Stories = () => {
                     exit={{ opacity: 0, scale: 0.97 }}
                     transition={{ duration: 0.18 }}
                     onClick={() => navigate(`/stories/${story._id}`)}
-                    className={`${card} flex flex-col overflow-hidden hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 cursor-pointer group`}
+                    className={`${card} flex flex-col overflow-hidden hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 cursor-pointer group relative`}
                   >
                     <div className="relative aspect-video overflow-hidden bg-[#0d1424]">
                       {story.image ? (
@@ -270,10 +322,15 @@ const Stories = () => {
                             story.district}
                         </span>
                         <span className="w-1 h-1 bg-slate-700 rounded-full" />
-                        <span className="flex items-center gap-1 text-[11px] text-slate-600">
-                          <HiOutlineClock className="text-xs" />
-                          {new Date(story.createdAt).toLocaleDateString()}
-                        </span>
+                        <ExpiryBadge
+                          expiresAt={
+                            story.expiresAt ||
+                            new Date(
+                              new Date(story.createdAt).getTime() +
+                                24 * 60 * 60 * 1000,
+                            )
+                          }
+                        />
                       </div>
 
                       <h3 className="text-slate-100 font-semibold text-base leading-snug mb-2 group-hover:text-violet-400 transition-colors line-clamp-2 flex-1">
