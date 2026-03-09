@@ -170,7 +170,7 @@ exports.getSellerDashboardStats = async (req, res) => {
         delivered: 0,
         cancelled: 0,
       },
-      dailySales: [], // { date: '2024-01-01', amount: 500 }
+      dailySales: [], 
     };
 
     orders.forEach((o) => {

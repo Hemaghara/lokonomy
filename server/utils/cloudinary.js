@@ -21,7 +21,7 @@ const uploadToCloudinary = async (file, folder) => {
 
     const options = {
       folder: `lokonomy/${folder}`,
-      resource_type: "auto", // Automatically detect if it's an image or PDF
+      resource_type: "auto", 
     };
 
     const result = await cloudinary.uploader.upload(file, options);

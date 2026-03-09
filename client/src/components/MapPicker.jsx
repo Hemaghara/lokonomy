@@ -43,7 +43,6 @@ const reverseGeocode = async (lat, lng) => {
       const parts = data.display_name.split(",");
       const addr = data.address || {};
 
-      // Attempt to find district and taluka
       const district = addr.state_district || addr.county || addr.city || "";
       const taluka =
         addr.suburb || addr.town || addr.village || addr.city_district || "";

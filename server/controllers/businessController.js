@@ -171,7 +171,6 @@ exports.addReview = async (req, res) => {
       });
     }
 
-    // Safely compare ownerId
     if (business.ownerId && business.ownerId.toString() === userId.toString()) {
       return res.status(403).json({
         success: false,
@@ -179,7 +178,6 @@ exports.addReview = async (req, res) => {
       });
     }
 
-    // Check if user already reviewed
     const alreadyReviewed = business.reviews.find(
       (rev) => rev.userId && rev.userId.toString() === userId.toString(),
     );
@@ -199,7 +197,6 @@ exports.addReview = async (req, res) => {
 
     business.reviews.push(newReview);
 
-    // Recalculate average rating
     const totalRating = business.reviews.reduce(
       (acc, rev) => acc + (Number(rev.rating) || 0),
       0,
