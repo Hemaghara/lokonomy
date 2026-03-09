@@ -1,12 +1,17 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const http = require("http");
 require("dotenv").config();
 
 const globalErrorHandler = require("./middleware/globalErrorHandler");
+const initSocket = require("./socket");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+
+const io = initSocket(server);
 
 app.use(
   cors({
@@ -33,6 +38,7 @@ app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/stories", require("./routes/stories"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/feeds", require("./routes/feeds"));
+app.use("/api/chat", require("./routes/chat"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });
@@ -52,6 +58,6 @@ mongoose
     }
   });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

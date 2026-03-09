@@ -68,3 +68,11 @@ export const feedService = {
   createFeed: (feedData) => api.post("/feeds", feedData),
   deleteFeed: (id) => api.delete(`/feeds/${id}`),
 };
+
+export const chatService = {
+  getMessages: (productId, buyerId, sellerId) =>
+    api.get(`/chat/messages/${productId}/${buyerId}/${sellerId}`),
+  getConversations: () => api.get("/chat/conversations"),
+  getUnreadCount: () => api.get("/chat/unread"),
+  markAsRead: (chatRoom) => api.patch(`/chat/read/${chatRoom}`),
+};

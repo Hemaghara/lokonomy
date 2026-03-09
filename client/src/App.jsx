@@ -28,6 +28,7 @@ import PostFeed from "./pages/PostFeed";
 import FeedDetails from "./pages/FeedDetails";
 import JobDashboard from "./pages/JobDashboard";
 import EditJob from "./pages/EditJob";
+import MyChats from "./pages/MyChats";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import MainLayout from "./layouts/MainLayout";
@@ -108,6 +109,7 @@ function App() {
                 <Route path="/feed/post" element={<PostFeed />} />
                 <Route path="/my-orders" element={<MyOrders />} />
                 <Route path="/sales-management" element={<SellerOrders />} />
+                <Route path="/my-chats" element={<MyChats />} />
               </Route>
             </Route>
           </Routes>

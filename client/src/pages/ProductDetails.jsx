@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { marketService } from "../services";
+import { marketService, chatService } from "../services";
 import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
+import ChatBox from "../components/ChatBox";
 import {
   HiOutlineArrowLeft,
   HiOutlineShare,
@@ -22,11 +23,57 @@ import {
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useUser();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [sellerChats, setSellerChats] = useState([]); 
+  const [activeBuyerId, setActiveBuyerId] = useState(null); 
+  const [activeBuyerName, setActiveBuyerName] = useState("");
+
+  const isSeller =
+    user &&
+    product &&
+    user.id ===
+      (typeof product.sellerId === "object"
+        ? product.sellerId._id
+        : product.sellerId);
+  const actualSellerId = product
+    ? typeof product.sellerId === "object"
+      ? product.sellerId._id
+      : product.sellerId
+    : null;
+
+  useEffect(() => {
+    if (searchParams.get("openChat") === "true" && product && user) {
+      setShowChat(true);
+    }
+  }, [searchParams, product, user]);
+
+  useEffect(() => {
+    if (isSeller && product) {
+      fetchSellerChats();
+    }
+  }, [isSeller, product]);
+
+  const fetchSellerChats = async () => {
+    try {
+      const res = await chatService.getConversations();
+      if (res.data.success) {
+        const productChats = res.data.chats.filter(
+          (chat) =>
+            chat.product?._id?.toString() === id ||
+            chat.productId?.toString() === id,
+        );
+        setSellerChats(productChats);
+      }
+    } catch (err) {
+      console.error("Error fetching seller chats:", err);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -312,7 +359,7 @@ const ProductDetails = () => {
                 </div>
               )}
 
-              {user && user.id !== product.sellerId?._id && !product.isSold && (
+              {user && !isSeller && !product.isSold && (
                 <button
                   onClick={() =>
                     navigate(`/market/product/${product._id}/checkout`)
@@ -322,34 +369,135 @@ const ProductDetails = () => {
                   <HiOutlineShoppingBag className="text-lg" /> Buy Now
                 </button>
               )}
-              {user && user.id === product.sellerId?._id && (
-                <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl text-center">
-                  <p className="text-violet-400 text-xs font-semibold">
-                    You are viewing your own product listing.
-                  </p>
+
+              {isSeller && (
+                <div className="space-y-3">
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                    <p className="text-emerald-400 text-xs font-semibold text-center">
+                      You are the seller of this product
+                    </p>
+                  </div>
+
+                  {sellerChats.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <HiOutlineChatBubbleLeftRight className="text-violet-400" />
+                        Customer Messages ({sellerChats.length})
+                      </p>
+                      {sellerChats.map((chat) => (
+                        <button
+                          key={chat._id}
+                          onClick={() => {
+                            setActiveBuyerId(chat.buyerId);
+                            setActiveBuyerName(
+                              chat.otherUserName || "Customer",
+                            );
+                            setShowChat(true);
+                          }}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                            showChat && activeBuyerId === chat.buyerId
+                              ? "bg-violet-600/10 border-violet-500/30"
+                              : "bg-[#111827] hover:bg-[#131d2e] border-[#1f2a3d] hover:border-violet-500/20"
+                          }`}
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-linear-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            {(chat.otherUserName || "C")
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-white text-xs font-semibold truncate">
+                                {chat.otherUserName || "Customer"}
+                              </p>
+                              {chat.unreadCount > 0 && (
+                                <span className="w-4 h-4 bg-violet-600 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                                  {chat.unreadCount}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-500 text-[10px] truncate">
+                              {chat.lastMessage}
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg shrink-0">
+                            Reply
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {sellerChats.length === 0 && (
+                    <div className="p-4 bg-[#111827] border border-[#1f2a3d] rounded-xl text-center">
+                      <p className="text-slate-500 text-xs">
+                        No customer messages yet
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a
-                  href={`tel:${product.sellerProfile?.contactNumber || product.contactNumber}`}
-                  className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 active:scale-[.98] text-white text-sm font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-violet-900/30"
-                >
-                  <HiOutlinePhone className="text-base" /> Call Seller
-                </a>
-                <a
-                  href={`https://wa.me/${product.sellerProfile?.whatsappNumber || product.sellerProfile?.contactNumber || product.contactNumber}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#111827] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-300 text-sm font-semibold py-3.5 rounded-xl transition-all"
-                >
-                  <HiOutlineChatBubbleLeftRight className="text-base" />{" "}
-                  WhatsApp
-                </a>
-              </div>
+
+              {!isSeller && (
+                <>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a
+                      href={`tel:${product.sellerProfile?.contactNumber || product.contactNumber}`}
+                      className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 active:scale-[.98] text-white text-sm font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-violet-900/30"
+                    >
+                      <HiOutlinePhone className="text-base" /> Call Seller
+                    </a>
+                    <a
+                      href={`https://wa.me/${product.sellerProfile?.whatsappNumber || product.sellerProfile?.contactNumber || product.contactNumber}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 bg-[#111827] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-300 text-sm font-semibold py-3.5 rounded-xl transition-all"
+                    >
+                      <HiOutlineChatBubbleLeftRight className="text-base" />{" "}
+                      WhatsApp
+                    </a>
+                  </div>
+                  {user && (
+                    <button
+                      onClick={() => setShowChat(!showChat)}
+                      className={`w-full flex items-center justify-center gap-2 text-sm font-semibold py-3.5 rounded-xl transition-all ${
+                        showChat
+                          ? "bg-violet-600/20 text-violet-400 border border-violet-500/30"
+                          : "bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-900/30 active:scale-[.98]"
+                      }`}
+                    >
+                      <HiOutlineChatBubbleLeftRight className="text-base" />
+                      {showChat ? "Close Chat" : "Chat with Seller"}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </motion.div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showChat && product && user && (
+          <ChatBox
+            productId={product._id}
+            sellerId={actualSellerId}
+            buyerId={isSeller ? activeBuyerId : user.id}
+            otherUserName={
+              isSeller
+                ? activeBuyerName
+                : product.sellerProfile?.name || "Seller"
+            }
+            productName={product.productName}
+            onClose={() => {
+              setShowChat(false);
+              setActiveBuyerId(null);
+              setActiveBuyerName("");
+              if (isSeller) fetchSellerChats(); // refresh unread counts
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
