@@ -4,11 +4,13 @@ const jobController = require("../controllers/jobController");
 const auth = require("../middleware/authMiddleware");
 
 router.get("/", jobController.getAllJobs);
+router.get("/saved", auth, jobController.getSavedJobs);
 router.get("/applied", auth, jobController.getAppliedJobs);
 router.get("/my", auth, jobController.getMyJobs);
 router.post("/", auth, jobController.createJob);
 router.get("/:id", jobController.getJobById);
 router.post("/:id/apply", auth, jobController.applyForJob);
+router.post("/:id/save", auth, jobController.toggleSaveJob);
 router.put("/:id", auth, jobController.updateJob);
 router.patch("/:id/status", auth, jobController.toggleJobStatus);
 router.patch(

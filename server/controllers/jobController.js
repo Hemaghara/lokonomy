@@ -1,4 +1,5 @@
 const Job = require("../models/Job");
+const User = require("../models/User");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 
 exports.getAllJobs = async (req, res) => {
@@ -265,6 +266,43 @@ exports.getAppliedJobs = async (req, res) => {
       };
     });
     res.json(applications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.toggleSaveJob = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const jobId = req.params.id;
+
+    const index = user.savedJobs.indexOf(jobId);
+    if (index > -1) {
+      user.savedJobs.splice(index, 1);
+      await user.save();
+      return res.json({
+        success: true,
+        message: "Job removed from saved list",
+        isSaved: false,
+      });
+    } else {
+      user.savedJobs.push(jobId);
+      await user.save();
+      return res.json({
+        success: true,
+        message: "Job saved successfully",
+        isSaved: true,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getSavedJobs = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate("savedJobs");
+    res.json(user.savedJobs);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

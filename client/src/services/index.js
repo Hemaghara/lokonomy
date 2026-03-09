@@ -33,6 +33,8 @@ export const jobService = {
   getAppliedJobs: () => api.get("/jobs/applied"),
   updateApplicationStatus: (id, applicantId, status) =>
     api.patch(`/jobs/${id}/applications/${applicantId}/status`, { status }),
+  getSavedJobs: () => api.get("/jobs/saved"),
+  saveJob: (id) => api.post(`/jobs/${id}/save`),
   deleteJob: (id) => api.delete(`/jobs/${id}`),
 };
 

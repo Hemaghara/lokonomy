@@ -18,6 +18,7 @@ import {
   HiOutlineCreditCard,
   HiOutlineArrowUpTray,
   HiOutlineUserGroup,
+  HiOutlineBookmark,
 } from "react-icons/hi2";
 import { FiUser, FiMapPin, FiBriefcase } from "react-icons/fi";
 
@@ -29,6 +30,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [myBusinesses, setMyBusinesses] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
+  const [savedJobs, setSavedJobs] = useState([]);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -53,6 +55,7 @@ const Profile = () => {
   useEffect(() => {
     if (activeTab === "businesses" && user) fetchMyBusinesses();
     if (activeTab === "applications" && user) fetchAppliedJobs();
+    if (activeTab === "saved" && user) fetchSavedJobs();
   }, [activeTab, user]);
 
   const fetchMyBusinesses = async () => {
@@ -70,6 +73,15 @@ const Profile = () => {
       setAppliedJobs(response.data);
     } catch (err) {
       console.error("Error fetching applied jobs:", err);
+    }
+  };
+
+  const fetchSavedJobs = async () => {
+    try {
+      const response = await jobService.getSavedJobs();
+      setSavedJobs(response.data);
+    } catch (err) {
+      console.error("Error fetching saved jobs:", err);
     }
   };
 
@@ -184,6 +196,7 @@ const Profile = () => {
       label: "My Applications",
       icon: <HiOutlineUserGroup />,
     },
+    { id: "saved", label: "Saved Jobs", icon: <HiOutlineBookmark /> },
     { id: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
   ];
@@ -736,6 +749,88 @@ const Profile = () => {
               >
                 Go to Orders Panel <HiOutlineArrowUpRight />
               </button>
+            </motion.div>
+          )}
+
+          {activeTab === "saved" && (
+            <motion.div
+              key="saved"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
+              <div className={`${card} p-6`}>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl">
+                    🔖
+                  </div>
+                  <div>
+                    <h2 className="text-white font-bold text-lg">Saved Jobs</h2>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      Jobs you have saved to apply later
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {savedJobs.length > 0 ? (
+                    savedJobs.map((job) => (
+                      <div
+                        key={job._id}
+                        className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-violet-500/20 transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center text-amber-400">
+                            💼
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">
+                              {job.position}
+                            </h4>
+                            <p className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
+                              <FiMapPin className="text-xs" /> {job.location}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-slate-600 text-[10px] uppercase font-bold tracking-wider mb-1">
+                              Job Status
+                            </p>
+                            <span
+                              className={`text-[10px] font-semibold ${job.status === "Open" ? "text-emerald-500" : "text-slate-500"}`}
+                            >
+                              {job.status === "Open" ? "Active" : "Closed"}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => navigate(`/jobs/${job._id}`)}
+                            className="p-2 bg-[#1a2540] border border-[#1f2a3d] rounded-lg text-slate-400 hover:text-white transition-all ml-4"
+                          >
+                            <HiOutlineArrowUpRight />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center">
+                      <div className="text-4xl mb-4 opacity-10">🔖</div>
+                      <p className="text-slate-500 text-sm">
+                        No saved jobs yet
+                      </p>
+                      <button
+                        onClick={() => navigate("/jobs")}
+                        className="mt-4 text-violet-400 text-xs font-semibold hover:underline"
+                      >
+                        Browse available jobs
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           )}
 

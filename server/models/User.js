@@ -40,6 +40,12 @@ const userSchema = new mongoose.Schema({
   upiId: { type: String, default: null },
   paymentQrCode: { type: String, default: null },
   phoneNumber: { type: String, default: null },
+  savedJobs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Job",
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);
