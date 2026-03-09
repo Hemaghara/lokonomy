@@ -30,6 +30,9 @@ export const jobService = {
   toggleJobStatus: (id) => api.patch(`/jobs/${id}/status`),
   applyForJob: (id, applicationData) =>
     api.post(`/jobs/${id}/apply`, applicationData),
+  getAppliedJobs: () => api.get("/jobs/applied"),
+  updateApplicationStatus: (id, applicantId, status) =>
+    api.patch(`/jobs/${id}/applications/${applicantId}/status`, { status }),
   deleteJob: (id) => api.delete(`/jobs/${id}`),
 };
 

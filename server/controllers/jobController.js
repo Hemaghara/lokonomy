@@ -219,3 +219,53 @@ exports.toggleJobStatus = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+exports.updateApplicationStatus = async (req, res) => {
+  try {
+    const { id, applicantId } = req.params;
+    const { status } = req.body;
+
+    const job = await Job.findById(id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (job.posterId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const application = job.applications.id(applicantId);
+    if (!application)
+      return res.status(404).json({ message: "Application not found" });
+
+    application.applicationStatus = status;
+    await job.save();
+
+    res.json({
+      success: true,
+      message: "Application status updated successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getAppliedJobs = async (req, res) => {
+  try {
+    const jobs = await Job.find({ "applications.candidateId": req.user.id });
+    const applications = jobs.map((job) => {
+      const myApp = job.applications.find(
+        (app) => app.candidateId?.toString() === req.user.id,
+      );
+      return {
+        jobId: job._id,
+        position: job.position,
+        location: job.location,
+        status: myApp?.applicationStatus || "Applied",
+        appliedAt: myApp?.appliedAt,
+        jobStatus: job.status || "Open",
+      };
+    });
+    res.json(applications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

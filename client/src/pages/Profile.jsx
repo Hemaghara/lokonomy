@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useLocation } from "../context/LocationContext";
-import { authService, businessService } from "../services";
+import { authService, businessService, jobService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
@@ -17,6 +17,7 @@ import {
   HiOutlineCurrencyRupee,
   HiOutlineCreditCard,
   HiOutlineArrowUpTray,
+  HiOutlineUserGroup,
 } from "react-icons/hi2";
 import { FiUser, FiMapPin, FiBriefcase } from "react-icons/fi";
 
@@ -27,6 +28,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [myBusinesses, setMyBusinesses] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -44,11 +46,13 @@ const Profile = () => {
         paymentQrCode: user.paymentQrCode || null,
       });
       fetchMyBusinesses();
+      fetchAppliedJobs();
     }
   }, [user]);
 
   useEffect(() => {
     if (activeTab === "businesses" && user) fetchMyBusinesses();
+    if (activeTab === "applications" && user) fetchAppliedJobs();
   }, [activeTab, user]);
 
   const fetchMyBusinesses = async () => {
@@ -57,6 +61,15 @@ const Profile = () => {
       setMyBusinesses(response.data);
     } catch (err) {
       console.error("Error fetching businesses:", err);
+    }
+  };
+
+  const fetchAppliedJobs = async () => {
+    try {
+      const response = await jobService.getAppliedJobs();
+      setAppliedJobs(response.data);
+    } catch (err) {
+      console.error("Error fetching applied jobs:", err);
     }
   };
 
@@ -166,6 +179,11 @@ const Profile = () => {
       icon: <HiOutlineBuildingOffice2 />,
     },
     { id: "jobs", label: "Jobs", icon: <FiBriefcase /> },
+    {
+      id: "applications",
+      label: "My Applications",
+      icon: <HiOutlineUserGroup />,
+    },
     { id: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
   ];
@@ -581,6 +599,121 @@ const Profile = () => {
               >
                 Open Job Dashboard <HiOutlineArrowUpRight />
               </button>
+            </motion.div>
+          )}
+
+          {activeTab === "applications" && (
+            <motion.div
+              key="applications"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
+              <div className={`${card} p-6`}>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-2xl">
+                    📝
+                  </div>
+                  <div>
+                    <h2 className="text-white font-bold text-lg">
+                      My Applications
+                    </h2>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      Track the status of your current job applications
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {appliedJobs.length > 0 ? (
+                    appliedJobs.map((app) => (
+                      <div
+                        key={app.jobId}
+                        className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-violet-500/20 transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-violet-500/10 border border-violet-500/20 rounded-xl flex items-center justify-center text-violet-400">
+                            💼
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold text-sm">
+                              {app.position}
+                            </h4>
+                            <p className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
+                              <FiMapPin className="text-xs" /> {app.location}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-4">
+                          <div className="text-left sm:text-right">
+                            <p className="text-slate-600 text-[10px] uppercase font-bold tracking-wider mb-1">
+                              Status
+                            </p>
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold
+                              ${
+                                app.status === "Selected"
+                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                  : app.status === "Rejected"
+                                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                    : app.status === "Interview"
+                                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                      : "bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  app.status === "Selected"
+                                    ? "bg-emerald-400"
+                                    : app.status === "Rejected"
+                                      ? "bg-red-400"
+                                      : "bg-violet-400 animate-pulse"
+                                }`}
+                              />
+                              {app.status}
+                            </span>
+                          </div>
+
+                          <div className="text-left sm:text-right">
+                            <p className="text-slate-600 text-[10px] uppercase font-bold tracking-wider mb-1">
+                              Job Status
+                            </p>
+                            <span
+                              className={`text-[10px] font-semibold ${app.jobStatus === "Open" ? "text-emerald-500" : "text-slate-500"}`}
+                            >
+                              {app.jobStatus === "Open"
+                                ? "Active"
+                                : "Expired/Closed"}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => navigate(`/jobs/${app.jobId}`)}
+                            className="p-2 bg-[#1a2540] border border-[#1f2a3d] rounded-lg text-slate-400 hover:text-white transition-all ml-auto sm:ml-0"
+                          >
+                            <HiOutlineArrowUpRight />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center">
+                      <div className="text-4xl mb-4 opacity-10">📄</div>
+                      <p className="text-slate-500 text-sm">
+                        You haven't applied for any jobs yet
+                      </p>
+                      <button
+                        onClick={() => navigate("/jobs")}
+                        className="mt-4 text-violet-400 text-xs font-semibold hover:underline"
+                      >
+                        Browse available jobs
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           )}
 

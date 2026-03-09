@@ -76,6 +76,17 @@ const jobSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "User",
         },
+        applicationStatus: {
+          type: String,
+          enum: [
+            "Applied",
+            "Under Review",
+            "Interview",
+            "Selected",
+            "Rejected",
+          ],
+          default: "Applied",
+        },
         appliedAt: { type: Date, default: Date.now },
       },
     ],

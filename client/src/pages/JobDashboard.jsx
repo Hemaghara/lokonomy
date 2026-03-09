@@ -87,6 +87,36 @@ const JobDashboard = () => {
     }
   };
 
+  const handleUpdateAppStatus = async (jobId, applicantId, newStatus) => {
+    try {
+      const response = await jobService.updateApplicationStatus(
+        jobId,
+        applicantId,
+        newStatus,
+      );
+      if (response.data.success) {
+        toast.success("Applicant status updated");
+        setMyJobs((prev) =>
+          prev.map((job) => {
+            if (job._id === jobId) {
+              return {
+                ...job,
+                applications: job.applications.map((app) =>
+                  app._id === applicantId
+                    ? { ...app, applicationStatus: newStatus }
+                    : app,
+                ),
+              };
+            }
+            return job;
+          }),
+        );
+      }
+    } catch (err) {
+      toast.error("Failed to update applicant status");
+    }
+  };
+
   const totalApplicants = myJobs.reduce(
     (sum, j) => sum + (j.applications?.length || 0),
     0,
@@ -481,14 +511,53 @@ const JobDashboard = () => {
                                             <HiOutlineEnvelope className="text-[10px]" />{" "}
                                             {app.candidateEmail}
                                           </p>
-                                          {app.candidateExperience && (
-                                            <span className="text-slate-600 text-[10px] font-medium hidden sm:block">
-                                              • {app.candidateExperience}
-                                            </span>
-                                          )}
+                                          <span
+                                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded
+                                            ${
+                                              app.applicationStatus ===
+                                              "Selected"
+                                                ? "bg-emerald-500/10 text-emerald-500"
+                                                : app.applicationStatus ===
+                                                    "Rejected"
+                                                  ? "bg-red-500/10 text-red-500"
+                                                  : "bg-violet-500/10 text-violet-500"
+                                            }`}
+                                          >
+                                            {app.applicationStatus || "Applied"}
+                                          </span>
                                         </div>
                                       </div>
                                       <div className="flex items-center gap-2 shrink-0">
+                                        <select
+                                          value={
+                                            app.applicationStatus || "Applied"
+                                          }
+                                          onClick={(e) => e.stopPropagation()}
+                                          onChange={(e) =>
+                                            handleUpdateAppStatus(
+                                              job._id,
+                                              app._id,
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="bg-[#0d1424] border border-[#1f2a3d] text-[10px] text-slate-400 rounded-md px-2 py-1 outline-none focus:border-violet-500 transition-colors"
+                                        >
+                                          <option value="Applied">
+                                            Applied
+                                          </option>
+                                          <option value="Under Review">
+                                            Under Review
+                                          </option>
+                                          <option value="Interview">
+                                            Interview
+                                          </option>
+                                          <option value="Selected">
+                                            Selected
+                                          </option>
+                                          <option value="Rejected">
+                                            Rejected
+                                          </option>
+                                        </select>
                                         {app.appliedAt && (
                                           <span className="text-slate-600 text-[10px] font-medium hidden sm:flex items-center gap-1">
                                             <HiOutlineCalendarDays className="text-[10px]" />
