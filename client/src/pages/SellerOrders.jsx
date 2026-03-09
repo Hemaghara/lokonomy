@@ -255,7 +255,7 @@ const SellerOrders = () => {
 
                 <div className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-3xl">
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
-                    Active Listings
+                    Product List
                   </p>
                   <h3 className="text-3xl font-black text-white mb-2">
                     {myProducts.length}
