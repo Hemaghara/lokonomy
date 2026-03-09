@@ -159,7 +159,7 @@ const PostStory = () => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    type: "News / Updates",
+    type: "News",
     image: "",
     latitude: null,
     longitude: null,
@@ -179,13 +179,12 @@ const PostStory = () => {
   }, [storyLocation]);
 
   const storyTypes = [
-    "News / Updates",
-    "Trending Offer",
-    "Sale / Offer",
-    "Product Promotion",
-    "Events / Campaigns",
-    "Announcement",
-    "Tips / Info",
+    "News",
+    "Offers",
+    "Promotions",
+    "Events",
+    "Announcements",
+    "Tips",
   ];
 
   const handleChange = (e) => {

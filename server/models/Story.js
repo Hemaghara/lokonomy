@@ -13,15 +13,7 @@ const storySchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, "Story type is required"],
-    enum: [
-      "News / Updates",
-      "Trending Offer",
-      "Sale / Offer",
-      "Product Promotion",
-      "Events / Campaigns",
-      "Announcement",
-      "Tips / Info",
-    ],
+    enum: ["News", "Offers", "Promotions", "Events", "Announcements", "Tips"],
   },
   image: {
     type: String,

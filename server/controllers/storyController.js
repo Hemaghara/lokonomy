@@ -21,12 +21,11 @@ exports.getAllStories = async (req, res, next) => {
 
     if (lat && lng) {
       query.location = {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [parseFloat(lng), parseFloat(lat)],
-          },
-          $maxDistance: parseFloat(radius),
+        $geoWithin: {
+          $centerSphere: [
+            [parseFloat(lng), parseFloat(lat)],
+            parseFloat(radius) / 6378100, // convert radius to radians
+          ],
         },
       };
     } else if (district) {
@@ -44,12 +43,7 @@ exports.getAllStories = async (req, res, next) => {
       ];
     }
 
-    let stories;
-    if (lat && lng) {
-      stories = await Story.find(query);
-    } else {
-      stories = await Story.find(query).sort({ createdAt: -1 });
-    }
+    const stories = await Story.find(query).sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       count: stories.length,
@@ -71,12 +65,10 @@ exports.getStoryById = async (req, res, next) => {
     }
 
     if (story.expiresAt && story.expiresAt < new Date()) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "This story has expired and is no longer available",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "This story has expired and is no longer available",
+      });
     }
 
     res.status(200).json({
@@ -98,7 +90,7 @@ exports.createStory = async (req, res, next) => {
     }
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); 
+    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     const storyData = {
       title,

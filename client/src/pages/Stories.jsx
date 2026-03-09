@@ -85,13 +85,12 @@ const Stories = () => {
 
   const storyCategories = [
     "All",
-    "News / Updates",
-    "Trending Offer",
-    "Sale / Offer",
-    "Product Promotion",
-    "Events / Campaigns",
-    "Announcement",
-    "Tips / Info",
+    "News",
+    "Offers",
+    "Promotions",
+    "Events",
+    "Announcements",
+    "Tips",
   ];
 
   useEffect(() => {
@@ -125,19 +124,17 @@ const Stories = () => {
 
   const getIconForType = (type) => {
     switch (type) {
-      case "News / Updates":
+      case "News":
         return <HiOutlineNewspaper className="text-sky-400" />;
-      case "Trending Offer":
-        return <HiOutlineFire className="text-orange-400" />;
-      case "Sale / Offer":
+      case "Offers":
         return <HiOutlineTag className="text-emerald-400" />;
-      case "Product Promotion":
+      case "Promotions":
         return <HiOutlineRocketLaunch className="text-violet-400" />;
-      case "Events / Campaigns":
+      case "Events":
         return <HiOutlineCalendarDays className="text-pink-400" />;
-      case "Announcement":
+      case "Announcements":
         return <HiOutlineMegaphone className="text-amber-400" />;
-      case "Tips / Info":
+      case "Tips":
         return <HiOutlineLightBulb className="text-yellow-400" />;
       default:
         return <HiOutlineSparkles className="text-slate-400" />;
@@ -146,19 +143,17 @@ const Stories = () => {
 
   const getTypeColor = (type) => {
     switch (type) {
-      case "News / Updates":
+      case "News":
         return "bg-sky-500/10 text-sky-400 border-sky-500/20";
-      case "Trending Offer":
-        return "bg-orange-500/10 text-orange-400 border-orange-500/20";
-      case "Sale / Offer":
+      case "Offers":
         return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "Product Promotion":
+      case "Promotions":
         return "bg-violet-500/10 text-violet-400 border-violet-500/20";
-      case "Events / Campaigns":
+      case "Events":
         return "bg-pink-500/10 text-pink-400 border-pink-500/20";
-      case "Announcement":
+      case "Announcements":
         return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-      case "Tips / Info":
+      case "Tips":
         return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
       default:
         return "bg-slate-500/10 text-slate-400 border-slate-500/20";
