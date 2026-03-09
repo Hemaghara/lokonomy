@@ -5,6 +5,7 @@ import { useLocation } from "../context/LocationContext";
 import { authService, businessService, jobService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+
 import {
   HiOutlineArrowUpRight,
   HiOutlineTrash,
@@ -20,7 +21,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineBookmark,
 } from "react-icons/hi2";
-import { FiUser, FiMapPin, FiBriefcase } from "react-icons/fi";
+import { FiUser, FiMapPin, FiBriefcase,FiPlus } from "react-icons/fi";
 
 const Profile = () => {
   const navigate = useNavigate();
