@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useLocation } from "../context/LocationContext";
-import { authService, businessService, jobService } from "../services";
+import { authService, businessService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
@@ -12,21 +12,13 @@ import {
   HiOutlineEnvelope,
   HiOutlineArrowRightOnRectangle,
   HiOutlinePencilSquare,
-  HiOutlinePhone,
-  HiOutlineWrenchScrewdriver,
   HiOutlineClock,
-  HiOutlineAcademicCap,
-  HiOutlineDocumentText,
   HiOutlineShoppingBag,
   HiOutlineCurrencyRupee,
   HiOutlineCreditCard,
-  HiOutlineQrCode,
   HiOutlineArrowUpTray,
-  HiOutlineUserGroup,
-  HiOutlineChevronDown,
-  HiOutlineCalendarDays,
 } from "react-icons/hi2";
-import { FiUser, FiMapPin, FiBriefcase, FiPlus } from "react-icons/fi";
+import { FiUser, FiMapPin, FiBriefcase } from "react-icons/fi";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -35,9 +27,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [myBusinesses, setMyBusinesses] = useState([]);
-  const [myJobs, setMyJobs] = useState([]);
-  const [expandedJob, setExpandedJob] = useState(null);
-  const [expandedApplicant, setExpandedApplicant] = useState(null);
+
   const [formData, setFormData] = useState({
     name: user?.name || "",
     upiId: user?.upiId || "",
@@ -54,13 +44,11 @@ const Profile = () => {
         paymentQrCode: user.paymentQrCode || null,
       });
       fetchMyBusinesses();
-      fetchMyJobs();
     }
   }, [user]);
 
   useEffect(() => {
     if (activeTab === "businesses" && user) fetchMyBusinesses();
-    if (activeTab === "jobs" && user) fetchMyJobs();
   }, [activeTab, user]);
 
   const fetchMyBusinesses = async () => {
@@ -69,15 +57,6 @@ const Profile = () => {
       setMyBusinesses(response.data);
     } catch (err) {
       console.error("Error fetching businesses:", err);
-    }
-  };
-
-  const fetchMyJobs = async () => {
-    try {
-      const response = await jobService.getMyJobs();
-      setMyJobs(response.data);
-    } catch (err) {
-      console.error("Error fetching jobs:", err);
     }
   };
 
@@ -96,20 +75,6 @@ const Profile = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not delete business");
-    }
-  };
-
-  const handleDeleteJob = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this job listing?"))
-      return;
-    try {
-      const response = await jobService.deleteJob(id);
-      if (response.data.success) {
-        toast.success("Job listing deleted successfully");
-        fetchMyJobs();
-      }
-    } catch (err) {
-      toast.error("Could not delete job");
     }
   };
 
@@ -263,15 +228,6 @@ const Profile = () => {
                 </p>
                 <p className="text-slate-600 text-[10px] uppercase tracking-wider mt-1">
                   Business
-                </p>
-              </div>
-              <div className="w-px h-7 bg-[#1f2a3d]" />
-              <div className="text-center">
-                <p className="text-white font-bold text-xl leading-none">
-                  {myJobs.length}
-                </p>
-                <p className="text-slate-600 text-[10px] uppercase tracking-wider mt-1">
-                  Jobs
                 </p>
               </div>
             </div>
@@ -609,348 +565,22 @@ const Profile = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.18 }}
+              className={`${card} p-8 text-center`}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-white font-semibold text-base">
-                    Job Listings
-                  </h2>
-                  <p className="text-slate-500 text-xs">
-                    {myJobs.length} active ·{" "}
-                    {myJobs.reduce(
-                      (sum, j) => sum + (j.applications?.length || 0),
-                      0,
-                    )}{" "}
-                    total applicants
-                  </p>
-                </div>
-                <button
-                  onClick={() => navigate("/jobs/post")}
-                  className={btnPrimary}
-                >
-                  <FiPlus /> Post Job
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {myJobs.map((job) => (
-                  <div key={job._id} className={`${card} overflow-hidden`}>
-                    <div className="p-4 flex items-center gap-3">
-                      <div
-                        className="w-11 h-11 rounded-xl bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center text-lg shrink-0 cursor-pointer"
-                        onClick={() => navigate(`/jobs/${job._id}`)}
-                      >
-                        💼
-                      </div>
-
-                      <div
-                        className="flex-1 min-w-0 cursor-pointer group"
-                        onClick={() => navigate(`/jobs/${job._id}`)}
-                      >
-                        <h4 className="text-slate-200 font-semibold text-sm group-hover:text-violet-400 transition-colors truncate">
-                          {job.position}
-                        </h4>
-                        <p className="text-slate-600 text-xs mt-0.5 truncate">
-                          {job.location} · {job.district}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center gap-1.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 px-2.5 py-1 rounded-lg">
-                          <HiOutlineUserGroup className="text-xs" />
-                          <span className="text-[11px] font-bold">
-                            {job.applications?.length || 0}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setExpandedJob(
-                              expandedJob === job._id ? null : job._id,
-                            );
-                            setExpandedApplicant(null);
-                          }}
-                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1
-                            ${
-                              expandedJob === job._id
-                                ? "bg-violet-600 text-white"
-                                : "bg-[#1a2540] text-slate-400 hover:text-slate-200 border border-[#1f2a3d]"
-                            }`}
-                        >
-                          {expandedJob === job._id ? "Hide" : "View"}
-                          <HiOutlineChevronDown
-                            className={`text-xs transition-transform ${expandedJob === job._id ? "rotate-180" : ""}`}
-                          />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteJob(job._id)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                          <HiOutlineTrash />
-                        </button>
-                      </div>
-                    </div>
-
-                    <AnimatePresence>
-                      {expandedJob === job._id && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden border-t border-[#1f2a3d] bg-[#0a0f1c]"
-                        >
-                          <div className="px-4 py-3 flex items-center justify-between border-b border-[#1f2a3d]">
-                            <p className="text-slate-400 text-xs font-semibold">
-                              <span className="text-white">
-                                {job.applications?.length || 0}
-                              </span>{" "}
-                              Applicant
-                              {job.applications?.length !== 1 ? "s" : ""}
-                            </p>
-                            <p className="text-slate-600 text-[10px]">
-                              Click on an applicant to view full details
-                            </p>
-                          </div>
-
-                          <div className="p-4 space-y-2">
-                            {job.applications?.length > 0 ? (
-                              job.applications.map((app, idx) => {
-                                const appKey = `${job._id}-${idx}`;
-                                const isExpanded = expandedApplicant === appKey;
-                                return (
-                                  <div
-                                    key={idx}
-                                    className="bg-[#111827] border border-[#1f2a3d] rounded-xl overflow-hidden hover:border-violet-500/20 transition-all"
-                                  >
-                                    <div
-                                      className="p-3.5 flex items-center gap-3 cursor-pointer"
-                                      onClick={() =>
-                                        setExpandedApplicant(
-                                          isExpanded ? null : appKey,
-                                        )
-                                      }
-                                    >
-                                      <div className="w-10 h-10 bg-violet-500/10 border border-violet-500/20 rounded-xl flex items-center justify-center text-violet-400 text-sm font-bold shrink-0">
-                                        {app.candidateName?.[0]?.toUpperCase()}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-slate-200 font-semibold text-sm truncate">
-                                          {app.candidateName}
-                                        </p>
-                                        <div className="flex items-center gap-3 mt-0.5">
-                                          <p className="text-slate-500 text-[11px] truncate flex items-center gap-1">
-                                            <HiOutlineEnvelope className="text-[10px]" />{" "}
-                                            {app.candidateEmail}
-                                          </p>
-                                          {app.candidateExperience && (
-                                            <span className="text-slate-600 text-[10px] font-medium hidden sm:block">
-                                              • {app.candidateExperience}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2 shrink-0">
-                                        {app.appliedAt && (
-                                          <span className="text-slate-600 text-[10px] font-medium hidden sm:flex items-center gap-1">
-                                            <HiOutlineCalendarDays className="text-[10px]" />
-                                            {new Date(
-                                              app.appliedAt,
-                                            ).toLocaleDateString()}
-                                          </span>
-                                        )}
-                                        <HiOutlineChevronDown
-                                          className={`text-slate-500 text-xs transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                                        />
-                                      </div>
-                                    </div>
-
-                                    <AnimatePresence>
-                                      {isExpanded && (
-                                        <motion.div
-                                          initial={{ height: 0, opacity: 0 }}
-                                          animate={{
-                                            height: "auto",
-                                            opacity: 1,
-                                          }}
-                                          exit={{ height: 0, opacity: 0 }}
-                                          transition={{ duration: 0.15 }}
-                                          className="overflow-hidden"
-                                        >
-                                          <div className="px-4 pb-4 pt-1 border-t border-[#1f2a3d]">
-                                            <div className="grid grid-cols-2 gap-2.5 mt-3">
-                                              <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-lg p-3">
-                                                <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-widest mb-1 flex items-center gap-1">
-                                                  <HiOutlinePhone className="text-violet-400" />{" "}
-                                                  Phone
-                                                </p>
-                                                <p className="text-slate-200 font-semibold text-xs">
-                                                  {app.candidateContact ||
-                                                    "N/A"}
-                                                </p>
-                                              </div>
-                                              <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-lg p-3">
-                                                <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-widest mb-1 flex items-center gap-1">
-                                                  <HiOutlineClock className="text-amber-400" />{" "}
-                                                  Experience
-                                                </p>
-                                                <p className="text-slate-200 font-semibold text-xs">
-                                                  {app.candidateExperience ||
-                                                    "N/A"}
-                                                </p>
-                                              </div>
-                                              <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-lg p-3">
-                                                <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-widest mb-1 flex items-center gap-1">
-                                                  <HiOutlineAcademicCap className="text-blue-400" />{" "}
-                                                  Education
-                                                </p>
-                                                <p className="text-slate-200 font-semibold text-xs">
-                                                  {app.candidateEducation ||
-                                                    "N/A"}
-                                                </p>
-                                              </div>
-                                              <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-lg p-3">
-                                                <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-widest mb-1 flex items-center gap-1">
-                                                  <HiOutlineCalendarDays className="text-emerald-400" />{" "}
-                                                  Applied
-                                                </p>
-                                                <p className="text-slate-200 font-semibold text-xs">
-                                                  {app.appliedAt
-                                                    ? new Date(
-                                                        app.appliedAt,
-                                                      ).toLocaleDateString(
-                                                        undefined,
-                                                        {
-                                                          day: "numeric",
-                                                          month: "short",
-                                                          year: "numeric",
-                                                        },
-                                                      )
-                                                    : "N/A"}
-                                                </p>
-                                              </div>
-                                            </div>
-
-                                            {app.candidateSkills && (
-                                              <div className="mt-3">
-                                                <p className="text-[9px] text-slate-600 font-semibold uppercase tracking-widest mb-2 flex items-center gap-1">
-                                                  <HiOutlineWrenchScrewdriver className="text-violet-400" />{" "}
-                                                  Skills
-                                                </p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                  {app.candidateSkills
-                                                    .split(",")
-                                                    .map((skill, si) => (
-                                                      <span
-                                                        key={si}
-                                                        className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-lg text-[10px] font-semibold"
-                                                      >
-                                                        {skill.trim()}
-                                                      </span>
-                                                    ))}
-                                                </div>
-                                              </div>
-                                            )}
-
-                                            <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[#1f2a3d]">
-                                              {app.candidateBiodata && (
-                                                <a
-                                                  href={
-                                                    app.candidateBiodata.includes(
-                                                      "cloudinary.com",
-                                                    )
-                                                      ? app.candidateBiodata.replace(
-                                                          "/upload/",
-                                                          "/upload/fl_attachment/",
-                                                        )
-                                                      : app.candidateBiodata
-                                                  }
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  download={`${app.candidateName}_biodata.pdf`}
-                                                  className="flex items-center gap-1.5 px-3 py-2 bg-[#0d1424] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 rounded-xl text-[11px] font-semibold transition-all"
-                                                >
-                                                  <HiOutlineDocumentText className="text-sm" />{" "}
-                                                  Download Biodata
-                                                </a>
-                                              )}
-                                              {app.candidateCertificate && (
-                                                <a
-                                                  href={
-                                                    app.candidateCertificate.includes(
-                                                      "cloudinary.com",
-                                                    )
-                                                      ? app.candidateCertificate.replace(
-                                                          "/upload/",
-                                                          "/upload/fl_attachment/",
-                                                        )
-                                                      : app.candidateCertificate
-                                                  }
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  download={`${app.candidateName}_certificate`}
-                                                  className="flex items-center gap-1.5 px-3 py-2 bg-[#0d1424] border border-[#1f2a3d] hover:border-blue-500/30 hover:text-blue-400 text-slate-400 rounded-xl text-[11px] font-semibold transition-all"
-                                                >
-                                                  <HiOutlineAcademicCap className="text-sm" />{" "}
-                                                  Download Certificate
-                                                </a>
-                                              )}
-                                              <a
-                                                href={`https://wa.me/${app.candidateContact}`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white text-emerald-400 rounded-xl text-[11px] font-semibold transition-all"
-                                              >
-                                                <HiOutlineArrowUpRight className="text-sm" />{" "}
-                                                WhatsApp
-                                              </a>
-                                              <a
-                                                href={`mailto:${app.candidateEmail}`}
-                                                className="flex items-center gap-1.5 px-3 py-2 bg-[#0d1424] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 rounded-xl text-[11px] font-semibold transition-all"
-                                              >
-                                                <HiOutlineEnvelope className="text-sm" />{" "}
-                                                Email
-                                              </a>
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <div className="py-10 text-center">
-                                <div className="text-2xl mb-2 opacity-20">
-                                  📭
-                                </div>
-                                <p className="text-slate-600 text-xs">
-                                  No applicants yet
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
-
-                {myJobs.length === 0 && (
-                  <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-16 text-center">
-                    <div className="text-4xl mb-3 opacity-20">💼</div>
-                    <p className="text-slate-600 text-xs mb-4">
-                      No job listings yet
-                    </p>
-                    <button
-                      onClick={() => navigate("/jobs/post")}
-                      className={btnOutline}
-                    >
-                      <FiPlus /> Post your first job
-                    </button>
-                  </div>
-                )}
-              </div>
+              <div className="text-4xl mb-4 opacity-20">💼</div>
+              <h3 className="text-white font-bold text-lg mb-2">
+                Job Dashboard
+              </h3>
+              <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
+                Manage your job listings, track applicants, and review
+                candidates.
+              </p>
+              <button
+                onClick={() => navigate("/job-dashboard")}
+                className={btnPrimary}
+              >
+                Open Job Dashboard <HiOutlineArrowUpRight />
+              </button>
             </motion.div>
           )}
 
