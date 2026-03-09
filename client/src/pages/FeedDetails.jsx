@@ -201,7 +201,6 @@ const FeedDetails = () => {
       `}</style>
 
       <div className="fd max-w-5xl mx-auto px-4">
-        {/* Top Bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -248,16 +247,13 @@ const FeedDetails = () => {
           </div>
         </motion.div>
 
-        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Sidebar */}
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
             className="lg:col-span-4 space-y-3"
           >
-            {/* Image */}
             {feed.image ? (
               <div
                 className={`relative overflow-hidden ${card} aspect-4/3 group`}
@@ -290,9 +286,7 @@ const FeedDetails = () => {
               </div>
             )}
 
-            {/* Info Cards */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Location Card */}
               <div
                 className={`${card} p-4 group hover:border-rose-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
               >
@@ -312,7 +306,6 @@ const FeedDetails = () => {
                 </p>
               </div>
 
-              {/* Date Card */}
               <div
                 className={`${card} p-4 group hover:border-${accent}-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
               >
@@ -340,7 +333,6 @@ const FeedDetails = () => {
               </div>
             </div>
 
-            {/* Author Card */}
             <div
               className={`${card} p-4 group hover:border-emerald-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
             >
@@ -363,7 +355,6 @@ const FeedDetails = () => {
               </div>
             </div>
 
-            {/* Category Card */}
             <div
               className={`${card} p-4 group hover:border-${accent}-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
             >
@@ -392,14 +383,12 @@ const FeedDetails = () => {
             </div>
           </motion.div>
 
-          {/* Right Content */}
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, delay: 0.08 }}
             className="lg:col-span-8 space-y-5"
           >
-            {/* Title Section */}
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span
@@ -416,15 +405,8 @@ const FeedDetails = () => {
               <h1 className="text-white font-bold text-2xl md:text-3xl leading-snug mb-4">
                 {feed.title}
               </h1>
-
-              <div className="flex items-center gap-1.5 mb-5">
-                <div className="h-0.5 w-10 bg-emerald-500 rounded-full" />
-                <div className="h-0.5 w-4 bg-emerald-500/30 rounded-full" />
-                <div className="h-0.5 w-2 bg-emerald-500/10 rounded-full" />
-              </div>
             </div>
 
-            {/* Content */}
             <div className={`${card} p-6 relative overflow-hidden`}>
               <div className="absolute left-0 top-6 bottom-6 w-0.5 bg-linear-to-b from-emerald-500/60 via-emerald-500/20 to-transparent rounded-full" />
               <p className="text-slate-400 text-sm md:text-base leading-[1.9] whitespace-pre-wrap pl-5">
@@ -432,7 +414,6 @@ const FeedDetails = () => {
               </p>
             </div>
 
-            {/* Meta Info Bar */}
             <div className={`${card} p-4`}>
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -460,7 +441,6 @@ const FeedDetails = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <button
                 onClick={handleShare}
