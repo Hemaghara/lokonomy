@@ -251,7 +251,6 @@ const BusinessDetails = () => {
           </div>
         </motion.div>
 
-        {/* ── Tabs ── */}
         <div className="flex items-center gap-1 bg-[#111827] border border-[#1f2a3d] rounded-2xl p-1 mb-5">
           {tabs.map((tab) => (
             <button
