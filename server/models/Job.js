@@ -57,6 +57,11 @@ const jobSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["Open", "Closed"],
+      default: "Open",
+    },
     applications: [
       {
         candidateName: { type: String, required: true },

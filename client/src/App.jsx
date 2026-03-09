@@ -27,6 +27,7 @@ import Feed from "./pages/Feed";
 import PostFeed from "./pages/PostFeed";
 import FeedDetails from "./pages/FeedDetails";
 import JobDashboard from "./pages/JobDashboard";
+import EditJob from "./pages/EditJob";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import MainLayout from "./layouts/MainLayout";
@@ -93,6 +94,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/job-dashboard" element={<JobDashboard />} />
+                <Route path="/edit-job/:id" element={<EditJob />} />
                 <Route path="/add-business" element={<AddBusiness />} />
                 <Route path="/edit-business/:id" element={<EditBusiness />} />
                 <Route path="/market/sell" element={<SellProduct />} />

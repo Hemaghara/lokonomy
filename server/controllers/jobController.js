@@ -5,6 +5,9 @@ exports.getAllJobs = async (req, res) => {
   try {
     const { district, taluka, gender, search } = req.query;
     let query = {};
+
+    query.$or = [{ status: "Open" }, { status: { $exists: false } }];
+
     if (district) {
       query.district = district;
     }
@@ -15,9 +18,13 @@ exports.getAllJobs = async (req, res) => {
       query.gender = gender;
     }
     if (search) {
-      query.$or = [
-        { position: { $regex: search, $options: "i" } },
-        { location: { $regex: search, $options: "i" } },
+      query.$and = [
+        {
+          $or: [
+            { position: { $regex: search, $options: "i" } },
+            { location: { $regex: search, $options: "i" } },
+          ],
+        },
       ];
     }
     const jobs = await Job.find(query).sort({ createdAt: -1 });
@@ -142,5 +149,73 @@ exports.deleteJob = async (req, res) => {
     res.json({ success: true, message: "Job deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    if (job.posterId.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this job" });
+    }
+
+    const allowedFields = [
+      "position",
+      "location",
+      "vacancies",
+      "education",
+      "district",
+      "experience",
+      "skills",
+      "salary",
+      "gender",
+      "posterName",
+      "posterEmail",
+      "posterContact",
+      "status",
+    ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        job[field] = req.body[field];
+      }
+    });
+
+    await job.save();
+    res.json({ success: true, message: "Job updated successfully", job });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.toggleJobStatus = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    if (job.posterId.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this job" });
+    }
+
+    job.status = job.status === "Open" ? "Closed" : "Open";
+    await job.save();
+
+    res.json({
+      success: true,
+      message: `Job marked as ${job.status}`,
+      status: job.status,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
