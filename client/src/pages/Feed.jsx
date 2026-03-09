@@ -220,7 +220,8 @@ const Feed = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.97 }}
                     transition={{ duration: 0.18 }}
-                    className={`${card} flex flex-col overflow-hidden hover:border-emerald-500/30 hover:bg-[#131d2e] transition-all duration-300 group relative`}
+                    onClick={() => navigate(`/feed/${item._id}`)}
+                    className={`${card} flex flex-col overflow-hidden hover:border-emerald-500/30 hover:bg-[#131d2e] transition-all duration-300 group relative cursor-pointer`}
                   >
                     <div className="relative aspect-video overflow-hidden bg-[#0d1424]">
                       {item.image ? (

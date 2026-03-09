@@ -25,6 +25,7 @@ import MyOrders from "./pages/MyOrders";
 import SellerOrders from "./pages/SellerOrders";
 import Feed from "./pages/Feed";
 import PostFeed from "./pages/PostFeed";
+import FeedDetails from "./pages/FeedDetails";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import MainLayout from "./layouts/MainLayout";
@@ -87,6 +88,7 @@ function App() {
               <Route path="/stories" element={<Stories />} />
               <Route path="/stories/:id" element={<StoryDetails />} />
               <Route path="/feed" element={<Feed />} />
+              <Route path="/feed/:id" element={<FeedDetails />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/add-business" element={<AddBusiness />} />
