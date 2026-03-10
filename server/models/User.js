@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
   otpExpires: { type: Date },
   upiId: { type: String, default: null },
   paymentQrCode: { type: String, default: null },
+  bankName: { type: String, default: null },
+  ifscCode: { type: String, default: null },
+  branch: { type: String, default: null },
+  accountNumber: { type: String, default: null },
   phoneNumber: { type: String, default: null },
   savedJobs: [
     {

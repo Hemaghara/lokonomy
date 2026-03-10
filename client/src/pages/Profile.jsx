@@ -21,7 +21,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineBookmark,
 } from "react-icons/hi2";
-import { FiUser, FiMapPin, FiBriefcase,FiPlus } from "react-icons/fi";
+import { FiUser, FiMapPin, FiBriefcase, FiPlus } from "react-icons/fi";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -38,6 +38,10 @@ const Profile = () => {
     upiId: user?.upiId || "",
     phoneNumber: user?.phoneNumber || "",
     paymentQrCode: user?.paymentQrCode || null,
+    bankName: user?.bankName || "",
+    ifscCode: user?.ifscCode || "",
+    branch: user?.branch || "",
+    accountNumber: user?.accountNumber || "",
   });
 
   useEffect(() => {
@@ -47,6 +51,10 @@ const Profile = () => {
         upiId: user.upiId || "",
         phoneNumber: user.phoneNumber || "",
         paymentQrCode: user.paymentQrCode || null,
+        bankName: user.bankName || "",
+        ifscCode: user.ifscCode || "",
+        branch: user.branch || "",
+        accountNumber: user.accountNumber || "",
       });
       fetchMyBusinesses();
       fetchAppliedJobs();
@@ -113,6 +121,10 @@ const Profile = () => {
         upiId: formData.upiId,
         phoneNumber: formData.phoneNumber,
         paymentQrCode: formData.paymentQrCode,
+        bankName: formData.bankName,
+        ifscCode: formData.ifscCode,
+        branch: formData.branch,
+        accountNumber: formData.accountNumber,
       });
       if (response.data.success) {
         login({ ...user, ...response.data.user });
@@ -434,6 +446,73 @@ const Profile = () => {
                     }
                     placeholder="e.g. +91 9876543210"
                   />
+                </div>
+
+                <div className="pt-4 pb-2 border-t border-slate-800">
+                  <h3 className="text-white font-semibold text-sm mb-4">
+                    Bank Account Details
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className={label}>Bank Name</label>
+                      <input
+                        type="text"
+                        className={inputCls}
+                        value={formData.bankName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, bankName: e.target.value })
+                        }
+                        placeholder="e.g. State Bank of India"
+                      />
+                    </div>
+
+                    <div>
+                      <label className={label}>Account Number</label>
+                      <input
+                        type="text"
+                        className={inputCls}
+                        value={formData.accountNumber}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            accountNumber: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. 1234567890"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className={label}>IFSC Code</label>
+                        <input
+                          type="text"
+                          className={inputCls}
+                          value={formData.ifscCode}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              ifscCode: e.target.value,
+                            })
+                          }
+                          placeholder="SBIN0001234"
+                        />
+                      </div>
+                      <div>
+                        <label className={label}>Branch Name</label>
+                        <input
+                          type="text"
+                          className={inputCls}
+                          value={formData.branch}
+                          onChange={(e) =>
+                            setFormData({ ...formData, branch: e.target.value })
+                          }
+                          placeholder="Main Branch"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>

@@ -336,13 +336,73 @@ const Checkout = () => {
             )}
 
             {orderForm.paymentMethod !== "upi" && (
-              <div className="p-4 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl text-center mb-4">
-                <p className="text-slate-400 text-xs mb-1 font-medium">
-                  For non-UPI payments
-                </p>
-                <p className="text-slate-500 text-[10px] italic">
-                  Coordinate payment details with the seller via call or chat.
-                </p>
+              <div className="p-4 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl mb-4">
+                <div className="text-center mb-4">
+                  <p className="text-slate-400 text-xs mb-1 font-medium">
+                    Bank Transfer Details
+                  </p>
+                  <p className="text-slate-500 text-[10px] italic">
+                    Pay using the details below and enter transaction ID.
+                  </p>
+                </div>
+
+                {product.sellerId?.bankName ||
+                product.sellerId?.accountNumber ? (
+                  <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                      <div>
+                        <p className="text-slate-500 uppercase text-[9px] font-bold tracking-wider mb-0.5">
+                          Bank Name
+                        </p>
+                        <p className="text-slate-200 font-semibold">
+                          {product.sellerId.bankName || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 uppercase text-[9px] font-bold tracking-wider mb-0.5">
+                          Account Number
+                        </p>
+                        <p className="text-slate-200 font-semibold font-mono">
+                          {product.sellerId.accountNumber || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 uppercase text-[9px] font-bold tracking-wider mb-0.5">
+                          IFSC Code
+                        </p>
+                        <p className="text-slate-200 font-semibold font-mono">
+                          {product.sellerId.ifscCode || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500 uppercase text-[9px] font-bold tracking-wider mb-0.5">
+                          Branch
+                        </p>
+                        <p className="text-slate-200 font-semibold">
+                          {product.sellerId.branch || "N/A"}
+                        </p>
+                      </div>
+                      <div className="col-span-2 pt-2 border-t border-white/5">
+                        <p className="text-slate-500 uppercase text-[9px] font-bold tracking-wider mb-0.5">
+                          Account Holder
+                        </p>
+                        <p className="text-slate-200 font-semibold">
+                          {product.sellerId.name}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <p className="text-amber-400 text-xs font-medium">
+                      Seller hasn't provided bank details.
+                    </p>
+                    <p className="text-slate-500 text-[10px] mt-1">
+                      Please contact them via phone or chat to get payment
+                      details.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

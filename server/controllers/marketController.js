@@ -110,7 +110,7 @@ exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "sellerId",
-      "upiId paymentQrCode phoneNumber name email",
+      "upiId paymentQrCode phoneNumber name email bankName ifscCode branch accountNumber",
     );
     if (!product) {
       return res.status(404).json({ message: "Product not found" });

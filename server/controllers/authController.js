@@ -158,6 +158,10 @@ exports.verifyOtp = async (req, res) => {
         locationPermission: user.locationPermission,
         upiId: user.upiId,
         paymentQrCode: user.paymentQrCode,
+        bankName: user.bankName,
+        ifscCode: user.ifscCode,
+        branch: user.branch,
+        accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
       },
     });
@@ -188,6 +192,10 @@ exports.getMe = async (req, res) => {
         locationPermission: user.locationPermission,
         upiId: user.upiId,
         paymentQrCode: user.paymentQrCode,
+        bankName: user.bankName,
+        ifscCode: user.ifscCode,
+        branch: user.branch,
+        accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
       },
     });
@@ -252,6 +260,10 @@ exports.register = async (req, res) => {
         locationPermission: user.locationPermission,
         upiId: user.upiId,
         paymentQrCode: user.paymentQrCode,
+        bankName: user.bankName,
+        ifscCode: user.ifscCode,
+        branch: user.branch,
+        accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
       },
       message: "User registered successfully",
@@ -274,6 +286,10 @@ exports.updateProfile = async (req, res) => {
       upiId,
       phoneNumber,
       paymentQrCode,
+      bankName,
+      ifscCode,
+      branch,
+      accountNumber,
     } = req.body;
     const user = await User.findById(req.user.id);
 
@@ -294,6 +310,10 @@ exports.updateProfile = async (req, res) => {
 
     if (upiId !== undefined) user.upiId = upiId;
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+    if (bankName !== undefined) user.bankName = bankName;
+    if (ifscCode !== undefined) user.ifscCode = ifscCode;
+    if (branch !== undefined) user.branch = branch;
+    if (accountNumber !== undefined) user.accountNumber = accountNumber;
 
     if (paymentQrCode !== undefined) {
       if (paymentQrCode && paymentQrCode.startsWith("data:image")) {
@@ -302,7 +322,7 @@ exports.updateProfile = async (req, res) => {
           "payments",
         );
       } else {
-        user.paymentQrCode = paymentQrCode; 
+        user.paymentQrCode = paymentQrCode;
       }
     }
 
@@ -322,6 +342,10 @@ exports.updateProfile = async (req, res) => {
         taluka: user.taluka,
         upiId: user.upiId,
         paymentQrCode: user.paymentQrCode,
+        bankName: user.bankName,
+        ifscCode: user.ifscCode,
+        branch: user.branch,
+        accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
       },
       message: "Profile updated successfully",
