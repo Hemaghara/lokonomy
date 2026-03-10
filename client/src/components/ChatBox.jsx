@@ -228,14 +228,7 @@ const ChatBox = ({
             <p className="text-white font-semibold text-sm truncate">
               {displayName}
             </p>
-            <p className="text-slate-500 text-[10px] truncate">
-              {productName}
-              {isSeller && (
-                <span className="text-emerald-400 ml-1.5">
-                  • You're the seller
-                </span>
-              )}
-            </p>
+          
           </div>
         </div>
         <button
