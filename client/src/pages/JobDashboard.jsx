@@ -575,7 +575,6 @@ const JobDashboard = () => {
                                         </div>
                                       </div>
 
-                                      {/* Applicant detail */}
                                       <AnimatePresence>
                                         {isExpApp && (
                                           <motion.div

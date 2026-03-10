@@ -18,7 +18,7 @@ const MyChats = () => {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeChat, setActiveChat] = useState(null); // currently open chat
+  const [activeChat, setActiveChat] = useState(null); 
 
   useEffect(() => {
     window.scrollTo(0, 0);

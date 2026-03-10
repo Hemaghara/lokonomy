@@ -687,7 +687,6 @@ const EditBusiness = () => {
               Location
             </h2>
 
-            {/* Map Picker */}
             <div className="mb-5">
               <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                 <HiOutlineMapPin className="text-violet-400" /> Pin Exact Shop
@@ -854,7 +853,6 @@ const EditBusiness = () => {
             </div>
           </div>
 
-          {/* ── Gallery ── */}
           <div className={card + " p-6"}>
             <div className="flex items-center justify-between mb-5 pb-4 border-b border-[#1f2a3d]">
               <h2 className="flex items-center gap-2.5 text-slate-200 font-semibold text-sm">

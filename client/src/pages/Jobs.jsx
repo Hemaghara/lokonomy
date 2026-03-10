@@ -210,7 +210,6 @@ const Jobs = () => {
 
           <div className="h-px lg:h-7 w-full lg:w-px bg-[#1f2a3d] shrink-0" />
 
-          {/* Location selects */}
           <div className="flex flex-wrap gap-3 flex-1 w-full">
             <div className="relative flex-1 min-w-36">
               <select
