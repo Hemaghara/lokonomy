@@ -13,7 +13,7 @@ exports.login = async (req, res) => {
     locationName,
     locationPermission,
   } = req.body;
-  console.log(`\n--- Login Attempt: ${email} ---`);
+  console.log(`Login Attempt: ${email}`);
 
   try {
     const user = await User.findOne({ email });
@@ -41,6 +41,7 @@ exports.login = async (req, res) => {
       );
     } else if (locationPermission === "denied") {
       user.locationPermission = "denied";
+      console.log(`Location permission denied for ${user.name}`);
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -52,6 +53,7 @@ exports.login = async (req, res) => {
     console.log(`OTP generated for ${user.name}: ${otp}`);
 
     const isConfigMissing = !process.env.EMAIL_USER || !process.env.EMAIL_PASS;
+
     const isPlaceholder =
       process.env.EMAIL_USER && process.env.EMAIL_USER.includes("your-email");
 
@@ -115,6 +117,7 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error("SERVER ERROR:", err.message);
     let msg = "A server error occurred.";
+    console.log(msg);
     if (err.message.includes("ENOTFOUND")) {
       msg = "Database Connection Error: Please check your internet connection.";
     }
@@ -125,7 +128,9 @@ exports.login = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    console.log(` Verify OTP Attempt: ${email}`);
     const user = await User.findOne({ email });
+    console.log(`User found: ${user.name}`);
 
     if (!user || user.otp !== otp || new Date() > user.otpExpires) {
       return res
@@ -175,6 +180,7 @@ exports.verifyOtp = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+    console.log(`User found: ${user.name}`);
     if (!user) {
       return res
         .status(404)

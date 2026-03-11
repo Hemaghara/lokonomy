@@ -37,6 +37,7 @@ const buildSubscriptionResponse = (user) => ({
 exports.getPlans = async (req, res) => {
   try {
     const plans = await Plan.find().sort({ "prices.3": 1 });
+    console.log(`Plans:${plans}`);
 
     const plansObj = {};
     plans.forEach((p) => {
@@ -55,6 +56,8 @@ exports.getPlans = async (req, res) => {
 exports.createOrder = async (req, res) => {
   try {
     const { plan, durationMonths } = req.body;
+    console.log(`Plan:${plan}`);
+    console.log(`Duration Months:${durationMonths}`);
 
     if (!plan || !durationMonths) {
       return res
@@ -63,6 +66,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const planDoc = await Plan.findOne({ slug: plan });
+
     if (!planDoc || plan === "free") {
       return res
         .status(400)
@@ -77,6 +81,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const rzpKey = process.env.RAZORPAY_KEY_ID || "";
+    console.log(`Razorpay Key ID:${rzpKey}`);
     console.log(
       `[Subscription] Creating order for user ${req.user.id}, plan: ${plan}, dur: ${durationMonths}`,
     );
@@ -210,6 +215,7 @@ exports.verifyPayment = async (req, res) => {
 exports.getStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+    console.log(`User:${user}`);
     if (!user)
       return res
         .status(404)
@@ -222,7 +228,6 @@ exports.getStatus = async (req, res) => {
     const isActive = effectivePlan !== "free";
 
     const subData = user.subscription?.toObject?.() || {};
-    // Fallback: Calculate duration if missing (for legacy users)
     if (!subData.durationMonths && subData.startDate && subData.expiryDate) {
       const start = new Date(subData.startDate);
       const end = new Date(subData.expiryDate);
@@ -249,7 +254,6 @@ exports.getStatus = async (req, res) => {
 
 exports.cancelSubscription = async (req, res) => {
   try {
-    // Subscription cancellation is no longer allowed after payment
     return res.status(403).json({
       success: false,
       message: "Subscription cancellation is not allowed. Please contact support for assistance.",

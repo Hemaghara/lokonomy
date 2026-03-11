@@ -9,4 +9,5 @@ router.post("/register", authController.register);
 router.get("/me", auth, authController.getMe);
 router.put("/update-profile", auth, authController.updateProfile);
 
+
 module.exports = router;

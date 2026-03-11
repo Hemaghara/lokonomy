@@ -4,6 +4,7 @@ const { uploadToCloudinary } = require("../utils/cloudinary");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
+  console.log(`Location data: ${latitude}, ${longitude}`);
   if (latitude && longitude) {
     return {
       location: {
@@ -127,6 +128,7 @@ exports.addBusiness = async (req, res) => {
 exports.getBusinessById = async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
+    console.log(`Business found: ${business.businessName}`);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }

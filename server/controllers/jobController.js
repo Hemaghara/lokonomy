@@ -5,6 +5,10 @@ const { uploadToCloudinary } = require("../utils/cloudinary");
 exports.getAllJobs = async (req, res) => {
   try {
     const { district, taluka, gender, search } = req.query;
+    console.log(`District: ${district}`);
+    console.log(`Taluka: ${taluka}`);
+    console.log(`Gender: ${gender}`);
+    console.log(`Search: ${search}`);
     let query = {};
 
     query.$or = [{ status: "Open" }, { status: { $exists: false } }];
@@ -29,6 +33,7 @@ exports.getAllJobs = async (req, res) => {
       ];
     }
     const jobs = await Job.find(query).sort({ createdAt: -1 });
+    console.log(`Jobs: ${jobs}`);
     res.json(jobs);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -38,6 +43,7 @@ exports.getAllJobs = async (req, res) => {
 exports.createJob = async (req, res) => {
   try {
     const jobData = { ...req.body, posterId: req.user.id };
+    console.log(`Job Data: ${jobData}`);
     const newJob = new Job(jobData);
     await newJob.save();
 
@@ -58,6 +64,7 @@ exports.createJob = async (req, res) => {
 exports.getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
+
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
@@ -79,6 +86,7 @@ exports.applyForJob = async (req, res) => {
       candidateCertificate,
     } = req.body;
     const job = await Job.findById(req.params.id);
+    console.log(`Job: ${job}`);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
@@ -94,6 +102,8 @@ exports.applyForJob = async (req, res) => {
       });
     }
     let biodataUrl = candidateBiodata;
+    console.log(`Candidate Biodata:${biodataUrl}`);
+
     if (candidateBiodata && candidateBiodata.includes("base64")) {
       biodataUrl = await uploadToCloudinary(candidateBiodata, "jobs/biodatas");
     }
@@ -141,6 +151,7 @@ exports.getMyJobs = async (req, res) => {
 exports.deleteJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
+    console.log(`Job: ${job}`);
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -161,6 +172,7 @@ exports.deleteJob = async (req, res) => {
 exports.updateJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
+    console.log(`Job: ${job}`);
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -203,6 +215,7 @@ exports.updateJob = async (req, res) => {
 exports.toggleJobStatus = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
+    console.log(`Job: ${job}`);
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -257,10 +270,12 @@ exports.updateApplicationStatus = async (req, res) => {
 exports.getAppliedJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ "applications.candidateId": req.user.id });
+    console.log(`Jobs: ${jobs}`);
     const applications = jobs.map((job) => {
       const myApp = job.applications.find(
         (app) => app.candidateId?.toString() === req.user.id,
       );
+      console.log(`My App: ${myApp}`);
       return {
         jobId: job._id,
         position: job.position,
@@ -279,6 +294,7 @@ exports.getAppliedJobs = async (req, res) => {
 exports.toggleSaveJob = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    console.log(`User:${user}`);
     const jobId = req.params.id;
 
     const index = user.savedJobs.indexOf(jobId);
@@ -307,8 +323,10 @@ exports.toggleSaveJob = async (req, res) => {
 exports.getSavedJobs = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate("savedJobs");
+    console.log(`User:${user}`);
     res.json(user.savedJobs);
   } catch (err) {
+    console.log(`Error:${err}`);
     res.status(500).json({ message: err.message });
   }
 };

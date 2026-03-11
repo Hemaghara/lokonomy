@@ -10,6 +10,7 @@ const getMessages = async (req, res) => {
   try {
     const { productId, buyerId, sellerId } = req.params;
     const chatRoom = generateChatRoom(productId, buyerId, sellerId);
+    console.log(`Chat room: ${chatRoom}`);
 
     const messages = await Message.find({ chatRoom })
       .sort({ createdAt: 1 })
@@ -25,7 +26,9 @@ const getMessages = async (req, res) => {
 const getUserChats = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log(`User ID: ${userId}`);
     const userObjectId = new mongoose.Types.ObjectId(userId);
+    console.log(`User Object ID: ${userObjectId}`);
 
     const chatRooms = await Message.aggregate([
       {
@@ -85,6 +88,7 @@ const getUserChats = async (req, res) => {
           receiverId: userObjectId,
           read: false,
         });
+        console.log(`Unread count: ${unreadCount}`);
 
         const allParticipantIds = [
           ...chat.allSenderIds.map((id) => id.toString()),
@@ -102,6 +106,7 @@ const getUserChats = async (req, res) => {
         }
 
         const isSeller = chat.product?.sellerId?.toString() === userId;
+        console.log(`Is seller: ${isSeller}`);
 
         const chatRoomParts = chat._id.split("_");
         const productIdFromRoom = chatRoomParts[0];
@@ -156,7 +161,10 @@ const getUnreadCount = async (req, res) => {
 const markAsRead = async (req, res) => {
   try {
     const { chatRoom } = req.params;
+    console.log(`Chat room:${chatRoom}`);
+
     const userId = req.user.id;
+    console.log(`User ID:${userId}`);
 
     await Message.updateMany(
       {

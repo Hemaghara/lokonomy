@@ -5,6 +5,7 @@ const { getPlanLimits } = require("../config/plans");
 const checkFeature = (featureName) => async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
+    console.log(`User:${user}`);
     if (!user)
       return res
         .status(404)

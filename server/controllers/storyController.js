@@ -3,6 +3,9 @@ const User = require("../models/User");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
+  console.log(`Latitude:${latitude}`);
+  console.log(`Longitude:${longitude}`);
+  console.log(`Location Address:${locationAddress}`);
   if (latitude && longitude) {
     return {
       location: {
@@ -45,6 +48,7 @@ exports.getAllStories = async (req, res, next) => {
     }
 
     const stories = await Story.find(query).sort({ createdAt: -1 });
+    console.log(`Stories:${stories}`);
     res.status(200).json({
       success: true,
       count: stories.length,
@@ -58,6 +62,7 @@ exports.getAllStories = async (req, res, next) => {
 exports.getStoryById = async (req, res, next) => {
   try {
     const story = await Story.findById(req.params.id);
+    console.log(`Story:${story}`);
 
     if (!story) {
       return res
@@ -84,11 +89,19 @@ exports.getStoryById = async (req, res, next) => {
 exports.createStory = async (req, res, next) => {
   try {
     const { title, content, type, image, district, taluka, author } = req.body;
+    console.log(`Title:${title}`);
+    console.log(`Content:${content}`);
+    console.log(`Type:${type}`);
+    console.log(`Image:${image}`);
+    console.log(`District:${district}`);
+    console.log(`Taluka:${taluka}`);
+    console.log(`Author:${author}`);
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {
       imageUrl = await uploadToCloudinary(image, "stories");
     }
+    console.log(`Image URL:${imageUrl}`);
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -105,14 +118,17 @@ exports.createStory = async (req, res, next) => {
       createdAt: now,
       expiresAt,
     };
+    console.log(`Story Data:${storyData}`);
 
     const geoData = buildLocationGeoJSON(req.body);
+    console.log(`Geo Data:${geoData}`);
     if (geoData.location) {
       storyData.location = geoData.location;
       storyData.locationAddress = geoData.locationAddress;
     }
 
     const story = await Story.create(storyData);
+    console.log(`Story:${story}`);
 
     await User.findByIdAndUpdate(req.user.id, {
       $inc: { "usage.storiesPosted": 1 },
@@ -131,7 +147,7 @@ exports.createStory = async (req, res, next) => {
 exports.deleteStory = async (req, res, next) => {
   try {
     const story = await Story.findById(req.params.id);
-
+    console.log(`Story:${story}`);
     if (!story) {
       return res
         .status(404)

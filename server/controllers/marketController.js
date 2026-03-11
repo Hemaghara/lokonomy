@@ -4,6 +4,9 @@ const { uploadToCloudinary } = require("../utils/cloudinary");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
+  console.log(`Latitude: ${latitude}`);
+  console.log(`Longitude: ${longitude}`);
+  console.log(`Location Address: ${locationAddress}`);
   if (latitude && longitude) {
     return {
       location: {
@@ -27,6 +30,13 @@ exports.getAllProducts = async (req, res) => {
       subCategory,
       priceType,
     } = req.query;
+    console.log(`Lat: ${lat}`);
+    console.log(`Lng: ${lng}`);
+    console.log(`Radius: ${radius}`);
+    console.log(`District: ${district}`);
+    console.log(`Main Category: ${mainCategory}`);
+    console.log(`Sub Category: ${subCategory}`);
+    console.log(`Price Type: ${priceType}`);
 
     let query = {};
 
@@ -70,6 +80,7 @@ exports.getAllProducts = async (req, res) => {
 exports.addProduct = async (req, res) => {
   try {
     const productData = req.body;
+    console.log(`Product Data: ${productData}`);
     if (productData.productImages && Array.isArray(productData.productImages)) {
       const uploadedImages = await Promise.all(
         productData.productImages.map(async (image) => {
@@ -79,10 +90,12 @@ exports.addProduct = async (req, res) => {
           return image;
         }),
       );
+      console.log(`Uploaded Images: ${uploadedImages}`);
       productData.productImages = uploadedImages;
     }
 
     const user = await User.findById(req.user.id);
+    console.log(`User: ${user}`);
     if (!user) {
       return res
         .status(404)
@@ -90,7 +103,9 @@ exports.addProduct = async (req, res) => {
     }
     productData.sellerProfile.name = user.name;
     productData.sellerId = req.user.id;
+    console.log(`Seller Profile: ${productData.sellerProfile}`);
     const geoData = buildLocationGeoJSON(productData);
+    console.log(`Geo Data: ${geoData}`);
     if (geoData.location) {
       productData.location = geoData.location;
       productData.address = geoData.locationAddress;
@@ -132,7 +147,9 @@ exports.getProductById = async (req, res) => {
     }
 
     const productObj = product.toObject();
+    console.log(`Product Object: ${productObj}`);
     productObj.isSold = productObj.isSold === true;
+
     res.json(productObj);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -144,6 +161,7 @@ exports.getMyProducts = async (req, res) => {
     const products = await Product.find({ sellerId: req.user.id }).sort({
       createdAt: -1,
     });
+    console.log(`Products: ${products}`);
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -153,6 +171,7 @@ exports.getMyProducts = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
+    console.log(`Product: ${product}`);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }

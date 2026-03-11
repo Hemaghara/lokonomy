@@ -21,6 +21,7 @@ const startSubscriptionCron = () => {
           },
         },
       );
+      console.log(`Result:${result}`);
 
       if (result.modifiedCount > 0) {
         console.log(

@@ -3,6 +3,9 @@ const { uploadToCloudinary } = require("../utils/cloudinary");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
+  console.log(`Latitude: ${latitude}`);
+  console.log(`Longitude: ${longitude}`);
+  console.log(`Location Address: ${locationAddress}`);
   if (latitude && longitude) {
     return {
       location: {
@@ -65,6 +68,7 @@ exports.getAllFeeds = async (req, res, next) => {
 exports.getFeedById = async (req, res, next) => {
   try {
     const feed = await Feed.findById(req.params.id);
+    console.log(`Feed: ${feed}`);
 
     if (!feed) {
       return res
@@ -84,6 +88,13 @@ exports.getFeedById = async (req, res, next) => {
 exports.createFeed = async (req, res, next) => {
   try {
     const { title, content, type, image, district, taluka, author } = req.body;
+    console.log(`Title: ${title}`);
+    console.log(`Content: ${content}`);
+    console.log(`Type: ${type}`);
+    console.log(`Image: ${image}`);
+    console.log(`District: ${district}`);
+    console.log(`Taluka: ${taluka}`);
+    console.log(`Author: ${author}`);
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {
@@ -101,6 +112,7 @@ exports.createFeed = async (req, res, next) => {
       authorId: req.user.id,
       createdAt: new Date(),
     };
+    console.log(`Feed Data: ${feedData}`);
 
     const geoData = buildLocationGeoJSON(req.body);
     if (geoData.location) {
@@ -109,6 +121,7 @@ exports.createFeed = async (req, res, next) => {
     }
 
     const feed = await Feed.create(feedData);
+    console.log(`Feed: ${feed}`);
 
     res.status(201).json({
       success: true,

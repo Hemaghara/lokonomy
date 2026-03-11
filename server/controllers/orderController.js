@@ -10,6 +10,11 @@ exports.createOrder = async (req, res) => {
       contactNumber,
       transactionId,
     } = req.body;
+    console.log(`Product ID: ${productId}`);
+    console.log(`Payment Method: ${paymentMethod}`);
+    console.log(`Shipping Address: ${shippingAddress}`);
+    console.log(`Contact Number: ${contactNumber}`);
+    console.log(`Transaction ID: ${transactionId}`);
 
     if (!productId || !paymentMethod || !shippingAddress || !contactNumber) {
       return res.status(400).json({
@@ -20,6 +25,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const product = await Product.findById(productId);
+    console.log(`Product: ${product}`);
     if (!product) {
       return res
         .status(404)
@@ -51,6 +57,7 @@ exports.createOrder = async (req, res) => {
       product: productId,
       buyer: req.user.id,
     });
+    console.log(`Existing Order: ${existingOrder}`);
     if (existingOrder) {
       return res.status(400).json({
         success: false,
@@ -69,8 +76,10 @@ exports.createOrder = async (req, res) => {
       transactionId,
       paymentStatus: "completed",
     });
+    console.log(`New Order: ${newOrder}`);
 
     const savedOrder = await newOrder.save();
+    console.log(`Saved Order: ${savedOrder}`);
 
     await Product.findByIdAndUpdate(
       productId,
@@ -109,6 +118,7 @@ exports.getBuyerOrders = async (req, res) => {
       .populate("product")
       .populate("seller", "name email")
       .sort({ createdAt: -1 });
+    console.log(`Orders:${orders}`);
     res.status(200).json({ success: true, orders });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -130,6 +140,8 @@ exports.getSellerOrders = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus } = req.body;
+
+    console.log(`Order Status: ${orderStatus}`);
     const order = await Order.findById(req.params.id);
 
     if (!order) {
@@ -154,8 +166,9 @@ exports.updateOrderStatus = async (req, res) => {
 exports.getSellerDashboardStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
+    console.log(`Seller ID:${sellerId}`);
     const orders = await Order.find({ seller: sellerId });
-
+    console.log(`Orders:${orders}`);
     const stats = {
       totalOrders: orders.length,
       totalEarnings: orders
@@ -170,7 +183,7 @@ exports.getSellerDashboardStats = async (req, res) => {
         delivered: 0,
         cancelled: 0,
       },
-      dailySales: [], 
+      dailySales: [],
     };
 
     orders.forEach((o) => {
