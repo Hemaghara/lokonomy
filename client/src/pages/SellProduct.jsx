@@ -174,6 +174,7 @@ const SellProduct = () => {
       contactPreference: "call",
       email: user?.email || "",
     },
+    isFeatured: false,
   });
 
   useEffect(() => {
@@ -250,7 +251,50 @@ const SellProduct = () => {
         navigate("/market");
       }
     } catch (err) {
-      toast.error(`Error: ${err.response?.data?.message || err.message}`);
+      const errorData = err.response?.data;
+      if (errorData?.code === "LIMIT_REACHED") {
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-medium text-slate-200">
+                {errorData.message}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    navigate("/upgrade-plan");
+                  }}
+                  className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                >
+                  Upgrade Plan
+                </button>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-700"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            duration: 6000,
+            position: "top-center",
+            style: {
+              background: "#111827",
+              border: "1px solid #1f2a3d",
+              padding: "16px",
+              color: "#fff",
+              borderRadius: "16px",
+              maxWidth: "350px",
+            },
+            icon: "🚀",
+          },
+        );
+      } else {
+        toast.error(`Error: ${errorData?.message || err.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -367,6 +411,63 @@ const SellProduct = () => {
                   disabled={!formData.mainCategory}
                 />
               </Field>
+
+              <Divider label="Premium Features" />
+              <div className="sm:col-span-2">
+                <div
+                  onClick={() => {
+                    if (user?.subscription?.plan !== "platinum") {
+                      if (
+                        window.confirm(
+                          "Featured listings are exclusive to Platinum members. Update your plan now?",
+                        )
+                      ) {
+                        navigate("/upgrade-plan");
+                      }
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        isFeatured: !prev.isFeatured,
+                      }));
+                    }
+                  }}
+                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer group
+                    ${
+                      formData.isFeatured
+                        ? "bg-violet-600/10 border-violet-500/40 shadow-lg shadow-violet-500/10"
+                        : user?.subscription?.plan === "platinum"
+                          ? "bg-white/2 border-white/6 hover:border-violet-500/30"
+                          : "bg-white/2 border-white/6 opacity-60 hover:opacity-100"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md
+                      ${formData.isFeatured ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400 group-hover:text-amber-400"} transition-all`}
+                    >
+                      ✨
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm">
+                        Featured Listing
+                      </p>
+                      <p className="text-slate-500 text-[10px]">
+                        Your product will appear at the top of category searches
+                      </p>
+                    </div>
+                  </div>
+                  {user?.subscription?.plan !== "platinum" && (
+                    <div className="px-2 py-0.5 rounded-lg bg-linear-to-r from-violet-600 to-purple-600 text-white text-[9px] font-black uppercase tracking-widest shadow-lg">
+                      Platinum Only
+                    </div>
+                  )}
+                  {formData.isFeatured && (
+                    <div className="w-5 h-5 rounded-full bg-linear-to-br from-violet-400 to-indigo-500 flex items-center justify-center text-[10px] text-white">
+                      ✓
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <Field label="Description" required span2>
                 <textarea

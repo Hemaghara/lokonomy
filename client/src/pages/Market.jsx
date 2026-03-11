@@ -567,7 +567,9 @@ const Market = () => {
                       className={`${card} overflow-hidden flex flex-col hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 cursor-pointer group`}
                       onClick={() => navigate(`/market/product/${p._id}`)}
                     >
-                      <div className="relative aspect-4/3 overflow-hidden bg-[#0d1424]">
+                      <div
+                        className={`relative aspect-4/3 overflow-hidden bg-[#0d1424] ${p.isFeatured ? "ring-2 ring-violet-500/50" : ""}`}
+                      >
                         {p.productImages?.[0] || p.productImage ? (
                           <img
                             src={p.productImages?.[0] || p.productImage}
@@ -580,7 +582,13 @@ const Market = () => {
                           </div>
                         )}
 
-                        <div className="absolute top-3 left-3">
+                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                          {p.isFeatured && (
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-linear-to-r from-violet-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest shadow-xl shadow-violet-900/40 border border-violet-400/30">
+                              <HiOutlineSparkles className="text-sm animate-pulse" />{" "}
+                              Featured
+                            </span>
+                          )}
                           <span
                             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm
                             ${

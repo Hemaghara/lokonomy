@@ -20,6 +20,8 @@ import {
   HiOutlineArrowUpTray,
   HiOutlineUserGroup,
   HiOutlineBookmark,
+  HiOutlineShieldCheck,
+  HiOutlineSparkles,
 } from "react-icons/hi2";
 import { FiUser, FiMapPin, FiBriefcase, FiPlus } from "react-icons/fi";
 
@@ -212,6 +214,7 @@ const Profile = () => {
     { id: "saved", label: "Saved Jobs", icon: <HiOutlineBookmark /> },
     { id: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
+    { id: "membership", label: "Membership", icon: <HiOutlineSparkles /> },
   ];
 
   const avatarLetter = user?.name?.[0]?.toUpperCase();
@@ -910,6 +913,155 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "membership" && (
+            <motion.div
+              key="membership"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`${card} p-6`}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-white font-bold text-lg">
+                    My Membership
+                  </h2>
+                  <p className="text-slate-500 text-xs">
+                    Manage your subscription and features
+                  </p>
+                </div>
+                <div
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                  ${
+                    user?.subscription?.plan === "platinum"
+                      ? "bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                      : user?.subscription?.plan === "gold"
+                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                        : user?.subscription?.plan === "silver"
+                          ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                          : "bg-slate-700/30 text-slate-500 border border-slate-700/50"
+                  }`}
+                >
+                  {user?.subscription?.plan || "Free"} Plan
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-2xl p-4">
+                  <p className="text-[10px] text-slate-600 uppercase font-bold tracking-widest mb-1">
+                    Upload Limits
+                  </p>
+                  <div className="space-y-3 mt-3">
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-1.5">
+                        <span className="text-slate-400">Products</span>
+                        <span className="text-white font-bold">
+                          {user?.usage?.productsUploaded || 0} used
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-violet-500"
+                          style={{
+                            width: `${Math.min(((user?.usage?.productsUploaded || 0) / (user?.subscription?.plan === "platinum" ? 1000 : user?.subscription?.plan === "gold" ? 100 : user?.subscription?.plan === "silver" ? 20 : 3)) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-1.5">
+                        <span className="text-slate-400">Stories</span>
+                        <span className="text-white font-bold">
+                          {user?.usage?.storiesPosted || 0} used
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-500"
+                          style={{
+                            width: `${Math.min(((user?.usage?.storiesPosted || 0) / (user?.subscription?.plan === "platinum" ? 1000 : user?.subscription?.plan === "gold" ? 200 : user?.subscription?.plan === "silver" ? 50 : 5)) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-1.5">
+                        <span className="text-slate-400">Jobs Posted</span>
+                        <span className="text-white font-bold">
+                          {user?.usage?.jobsPosted || 0} used
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500"
+                          style={{
+                            width: `${Math.min(((user?.usage?.jobsPosted || 0) / (user?.subscription?.plan === "platinum" ? 1000 : user?.subscription?.plan === "gold" ? 50 : user?.subscription?.plan === "silver" ? 10 : 2)) * 100, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-2xl p-4 flex flex-col justify-center">
+                  <p className="text-[10px] text-slate-600 uppercase font-bold tracking-widest mb-1">
+                    Status
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                      <HiOutlineShieldCheck className="text-xl" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm">
+                        {user?.subscription?.status === "active"
+                          ? "Connected"
+                          : "Not Active"}
+                      </p>
+                      {user?.subscription?.expiryDate && (
+                        <p className="text-[10px] text-slate-500">
+                          Expires:{" "}
+                          {new Date(
+                            user.subscription.expiryDate,
+                          ).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {user?.subscription?.plan === "platinum" && (
+                    <div className="mt-4 p-3 rounded-xl bg-violet-500/5 border border-violet-500/10 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
+                        <HiOutlineSparkles className="text-lg animate-pulse" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-violet-400">
+                          Priority Support
+                        </p>
+                        <p className="text-[9px] text-slate-500">
+                          Your queries are moved to the top of the queue
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => navigate("/upgrade-plan")}
+                  className={`${btnPrimary} flex-1 justify-center py-3`}
+                >
+                  <HiOutlineSparkles /> Upgrade Membership
+                </button>
+                <button
+                  onClick={() => navigate("/market/sell")}
+                  className={`${btnOutline} flex-1 justify-center py-3`}
+                >
+                  Sell Product
+                </button>
               </div>
             </motion.div>
           )}

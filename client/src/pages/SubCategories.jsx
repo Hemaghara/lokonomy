@@ -44,7 +44,6 @@ const SubCategories = () => {
   }
 
   const handleSubClick = (sub) => {
-    // Check if we have ANY valid location info (GPS address or manual selection)
     const hasLocation = user?.locationName || (district && taluka);
 
     if (!hasLocation) {

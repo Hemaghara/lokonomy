@@ -1,4 +1,5 @@
 const Story = require("../models/Story");
+const User = require("../models/User");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
@@ -24,7 +25,7 @@ exports.getAllStories = async (req, res, next) => {
         $geoWithin: {
           $centerSphere: [
             [parseFloat(lng), parseFloat(lat)],
-            parseFloat(radius) / 6378100, // convert radius to radians
+            parseFloat(radius) / 6378100,
           ],
         },
       };
@@ -112,6 +113,10 @@ exports.createStory = async (req, res, next) => {
     }
 
     const story = await Story.create(storyData);
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $inc: { "usage.storiesPosted": 1 },
+    });
 
     res.status(201).json({
       success: true,

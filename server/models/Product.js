@@ -34,6 +34,7 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   isSold: { type: Boolean, default: false },
+  isFeatured: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

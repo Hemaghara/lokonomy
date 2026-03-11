@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { orderService, marketService } from "../services";
+import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
 import {
   HiOutlineShoppingBag,
@@ -22,6 +24,8 @@ import {
 } from "react-icons/hi2";
 
 const SellerOrders = () => {
+  const navigate = useNavigate();
+  const { user } = useUser();
   const [orders, setOrders] = useState([]);
   const [myProducts, setMyProducts] = useState([]);
   const [stats, setStats] = useState(null);
@@ -241,118 +245,171 @@ const SellerOrders = () => {
                   </p>
                 </div>
 
-                <div className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-3xl">
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
-                    Pending Sync
-                  </p>
-                  <h3 className="text-3xl font-black text-white mb-2">
-                    {stats?.statusCounts.pending}
-                  </h3>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
-                    <HiOutlineClock className="text-xs" /> Awaiting action
-                  </div>
-                </div>
-
-                <div className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-3xl">
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
-                    Product List
-                  </p>
-                  <h3 className="text-3xl font-black text-white mb-2">
-                    {myProducts.length}
-                  </h3>
-                  <p className="text-slate-600 text-[10px] font-medium uppercase tracking-tight">
-                    Market visibility: 100%
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-[#111827] border border-[#1f2a3d] p-8 rounded-[2.5rem] relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h4 className="text-white font-bold text-lg">
-                        Daily Revenue
-                      </h4>
-                      <p className="text-slate-500 text-xs">
-                        Last 7 days performance
+                {user?.subscription?.plan === "gold" ||
+                user?.subscription?.plan === "platinum" ? (
+                  <>
+                    <div className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-3xl">
+                      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
+                        Pending Sync
                       </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />{" "}
-                        Sales
+                      <h3 className="text-3xl font-black text-white mb-2">
+                        {stats?.statusCounts.pending}
+                      </h3>
+                      <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
+                        <HiOutlineClock className="text-xs" /> Awaiting action
                       </div>
                     </div>
+
+                    <div className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-3xl">
+                      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
+                        Product List
+                      </p>
+                      <h3 className="text-3xl font-black text-white mb-2">
+                        {myProducts.length}
+                      </h3>
+                      <p className="text-slate-600 text-[10px] font-medium uppercase tracking-tight">
+                        Market visibility: 100%
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="lg:col-span-2 bg-linear-to-br from-violet-600/10 to-indigo-600/10 border border-violet-500/20 p-6 rounded-3xl flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-xl text-amber-400 border border-amber-500/20">
+                        🔒
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold text-sm">
+                          Unlock Premium Stats
+                        </h4>
+                        <p className="text-slate-500 text-[10px]">
+                          Get deeper insights with Gold or Platinum
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate("/upgrade-plan")}
+                      className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-violet-900/40"
+                    >
+                      Upgrade
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {user?.subscription?.plan === "gold" ||
+              user?.subscription?.plan === "platinum" ? (
+                <div className="grid lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 bg-[#111827] border border-[#1f2a3d] p-8 rounded-[2.5rem] relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h4 className="text-white font-bold text-lg">
+                          Daily Revenue
+                        </h4>
+                        <p className="text-slate-500 text-xs">
+                          Last 7 days performance
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />{" "}
+                          Sales
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="h-48 flex items-end justify-between gap-4 px-2">
+                      {stats?.dailySales.map((day, i) => {
+                        const maxAmount = Math.max(
+                          ...stats.dailySales.map((d) => d.amount),
+                          1,
+                        );
+                        const height = (day.amount / maxAmount) * 100;
+                        return (
+                          <div
+                            key={i}
+                            className="flex-1 flex flex-col items-center gap-3 group relative"
+                          >
+                            <div className="w-full flex justify-center items-end h-32 relative">
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: `${height}%` }}
+                                transition={{ duration: 1, delay: i * 0.1 }}
+                                className="w-full sm:w-8 bg-linear-to-t from-violet-600 via-indigo-500 to-indigo-400 rounded-lg sm:rounded-xl relative z-10 shadow-lg shadow-indigo-900/20 group-hover:from-violet-500 group-hover:to-indigo-300 transition-all duration-300"
+                              />
+                              <div className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-white text-black px-2 py-1 rounded text-xs font-bold z-20 whitespace-nowrap">
+                                ₹{day.amount}
+                              </div>
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">
+                              {new Date(day.date).toLocaleDateString("en-IN", {
+                                weekday: "short",
+                              })}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  <div className="h-48 flex items-end justify-between gap-4 px-2">
-                    {stats?.dailySales.map((day, i) => {
-                      const maxAmount = Math.max(
-                        ...stats.dailySales.map((d) => d.amount),
-                        1,
-                      );
-                      const height = (day.amount / maxAmount) * 100;
-                      return (
-                        <div
-                          key={i}
-                          className="flex-1 flex flex-col items-center gap-3 group relative"
-                        >
-                          <div className="w-full flex justify-center items-end h-32 relative">
-                            <motion.div
-                              initial={{ height: 0 }}
-                              animate={{ height: `${height}%` }}
-                              transition={{ duration: 1, delay: i * 0.1 }}
-                              className="w-full sm:w-8 bg-linear-to-t from-violet-600 via-indigo-500 to-indigo-400 rounded-lg sm:rounded-xl relative z-10 shadow-lg shadow-indigo-900/20 group-hover:from-violet-500 group-hover:to-indigo-300 transition-all duration-300"
-                            />
-                            <div className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-white text-black px-2 py-1 rounded text-xs font-bold z-20 whitespace-nowrap">
-                              ₹{day.amount}
+                  <div className="bg-[#111827] border border-[#1f2a3d] p-8 rounded-[2.5rem]">
+                    <h4 className="text-white font-bold text-lg mb-6">
+                      Order Status
+                    </h4>
+                    <div className="space-y-4">
+                      {statusOptions.slice(0, 5).map((opt) => {
+                        const count = stats?.statusCounts[opt.value] || 0;
+                        const percentage =
+                          stats?.totalOrders > 0
+                            ? (count / stats.totalOrders) * 100
+                            : 0;
+                        return (
+                          <div key={opt.value} className="space-y-2">
+                            <div className="flex justify-between items-end">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                {opt.icon} {opt.label}
+                              </span>
+                              <span className="text-white text-xs font-bold">
+                                {count}
+                              </span>
+                            </div>
+                            <div className="h-1.5 bg-[#0d1424] rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                className={`h-full ${opt.bg.replace("/10", "")}`}
+                              />
                             </div>
                           </div>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">
-                            {new Date(day.date).toLocaleDateString("en-IN", {
-                              weekday: "short",
-                            })}
-                          </p>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-
-                <div className="bg-[#111827] border border-[#1f2a3d] p-8 rounded-[2.5rem]">
-                  <h4 className="text-white font-bold text-lg mb-6">
-                    Order Status
-                  </h4>
-                  <div className="space-y-4">
-                    {statusOptions.slice(0, 5).map((opt) => {
-                      const count = stats?.statusCounts[opt.value] || 0;
-                      const percentage =
-                        stats?.totalOrders > 0
-                          ? (count / stats.totalOrders) * 100
-                          : 0;
-                      return (
-                        <div key={opt.value} className="space-y-2">
-                          <div className="flex justify-between items-end">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                              {opt.icon} {opt.label}
-                            </span>
-                            <span className="text-white text-xs font-bold">
-                              {count}
-                            </span>
-                          </div>
-                          <div className="h-1.5 bg-[#0d1424] rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${percentage}%` }}
-                              className={`h-full ${opt.bg.replace("/10", "")}`}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+              ) : (
+                <div className="bg-[#111827] border border-[#1f2a3d] rounded-[2.5rem] p-12 text-center overflow-hidden relative">
+                  <div className="absolute inset-0 bg-linear-to-br from-violet-600/5 to-indigo-600/5" />
+                  <div className="relative z-10">
+                    <div className="w-20 h-20 bg-linear-to-br from-amber-400 to-yellow-600 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-2xl shadow-amber-500/20">
+                      📊
+                    </div>
+                    <h3 className="text-white font-black text-2xl mb-3 tracking-tight">
+                      Advanced Analytics Locked
+                    </h3>
+                    <p className="text-slate-500 text-sm max-w-sm mx-auto mb-8">
+                      Upgrade to Gold or Platinum plan to unlock daily revenue
+                      charts, order distribution metrics, and detailed business
+                      growth tracking.
+                    </p>
+                    <button
+                      onClick={() => navigate("/upgrade-plan")}
+                      className="px-8 py-3.5 bg-linear-to-r from-violet-600 to-indigo-600 text-white font-black text-[13px] uppercase tracking-widest rounded-2xl shadow-xl shadow-violet-900/40 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      Unlock Charts Now
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           )}
 

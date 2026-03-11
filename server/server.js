@@ -6,6 +6,7 @@ require("dotenv").config();
 
 const globalErrorHandler = require("./middleware/globalErrorHandler");
 const initSocket = require("./socket");
+const { startSubscriptionCron } = require("./cron/subscriptionExpiry");
 
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +40,7 @@ app.use("/api/stories", require("./routes/stories"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/feeds", require("./routes/feeds"));
 app.use("/api/chat", require("./routes/chat"));
+app.use("/api/subscription", require("./routes/subscription"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });
@@ -46,7 +48,10 @@ app.use(globalErrorHandler);
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
+  .then(() => {
+    console.log("MongoDB Connected");
+    startSubscriptionCron();
+  })
   .catch((err) => {
     console.error("MongoDB Connection Error:");
     if (err.message.includes("ENOTFOUND")) {

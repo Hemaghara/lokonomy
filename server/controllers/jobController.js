@@ -40,6 +40,11 @@ exports.createJob = async (req, res) => {
     const jobData = { ...req.body, posterId: req.user.id };
     const newJob = new Job(jobData);
     await newJob.save();
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $inc: { "usage.jobsPosted": 1 },
+    });
+
     res.status(201).json({
       success: true,
       message: "Job posted successfully",

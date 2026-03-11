@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
-// Models
 const User = require("./models/User");
 const Business = require("./models/Business");
 const Product = require("./models/Product");
@@ -161,7 +160,6 @@ async function seedData() {
     await mongoose.connect(MONGO_URI);
     console.log("Connected to MongoDB for seeding...");
 
-    // Clear existing data
     await User.deleteMany({});
     await Business.deleteMany({});
     await Product.deleteMany({});
@@ -180,7 +178,6 @@ async function seedData() {
     const createdUsers = await User.insertMany(hashedUsers);
     console.log(`Created ${createdUsers.length} users.`);
 
-    // Map authors/owners to created users
     const rajesh = createdUsers.find((u) => u.email === "rajesh@example.com");
     const priya = createdUsers.find((u) => u.email === "priya@example.com");
 

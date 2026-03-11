@@ -163,6 +163,8 @@ exports.verifyOtp = async (req, res) => {
         branch: user.branch,
         accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
+        subscription: user.subscription,
+        usage: user.usage,
       },
     });
   } catch (err) {
@@ -197,6 +199,8 @@ exports.getMe = async (req, res) => {
         branch: user.branch,
         accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
+        subscription: user.subscription,
+        usage: user.usage,
       },
     });
   } catch (err) {
@@ -265,6 +269,8 @@ exports.register = async (req, res) => {
         branch: user.branch,
         accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
+        subscription: user.subscription,
+        usage: user.usage,
       },
       message: "User registered successfully",
     });
@@ -347,6 +353,8 @@ exports.updateProfile = async (req, res) => {
         branch: user.branch,
         accountNumber: user.accountNumber,
         phoneNumber: user.phoneNumber,
+        subscription: user.subscription,
+        usage: user.usage,
       },
       message: "Profile updated successfully",
     });

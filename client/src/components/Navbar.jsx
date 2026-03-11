@@ -130,6 +130,12 @@ const Navbar = () => {
                         )}
                       </AnimatePresence>
                     </Link>
+                    <Link
+                      to="/upgrade-plan"
+                      className="ml-2 px-3 py-1.5 bg-linear-to-r from-amber-400 to-yellow-600 text-[10px] font-black text-black uppercase tracking-widest rounded-lg shadow-lg shadow-amber-500/20 hover:scale-105 transition-all duration-300 flex items-center gap-1.5 border border-amber-300/30"
+                    >
+                      <span>✨</span> Upgrade
+                    </Link>
                   </div>
 
                   <div className="w-px h-6 bg-white/10" />
@@ -145,8 +151,19 @@ const Navbar = () => {
                       <span className="text-[12px] font-bold text-white">
                         {user.name?.split(" ")[0]}
                       </span>
-                      <span className="text-[9px] font-semibold text-white/30 uppercase tracking-widest mt-0.5">
-                        Profile
+                      <span
+                        className={`text-[8px] font-black uppercase tracking-tighter mt-0.5 px-1 rounded-sm
+                        ${
+                          user.subscription?.plan === "platinum"
+                            ? "bg-violet-500/20 text-violet-300"
+                            : user.subscription?.plan === "gold"
+                              ? "bg-amber-500/20 text-amber-300"
+                              : user.subscription?.plan === "silver"
+                                ? "bg-slate-500/20 text-slate-300"
+                                : "bg-white/5 text-white/30"
+                        }`}
+                      >
+                        {user.subscription?.plan || "Free"}
                       </span>
                     </div>
                   </Link>
@@ -301,6 +318,18 @@ const Navbar = () => {
                       >
                         <span className="text-base">🏷️</span>
                         Sell
+                      </Link>
+
+                      <Link
+                        to="/upgrade-plan"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl bg-linear-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 text-amber-400 transition-all text-[14px] font-bold"
+                      >
+                        <span className="text-base">✨</span>
+                        Upgrade Membership
+                        <span className="ml-auto text-[10px] bg-amber-500 text-black px-2 py-0.5 rounded-full uppercase">
+                          PRO
+                        </span>
                       </Link>
 
                       <button

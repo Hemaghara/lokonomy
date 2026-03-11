@@ -224,8 +224,51 @@ const PostStory = () => {
         navigate("/stories");
       }
     } catch (error) {
-      console.error("Error posting story:", error);
-      toast.error(error.response?.data?.message || "Broadcast failed");
+      const errorData = error.response?.data;
+      if (errorData?.code === "LIMIT_REACHED") {
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-medium text-slate-200">
+                {errorData.message}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    navigate("/upgrade-plan");
+                  }}
+                  className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                >
+                  Upgrade Plan
+                </button>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-slate-700"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            duration: 6000,
+            position: "top-center",
+            style: {
+              background: "#111827",
+              border: "1px solid #1f2a3d",
+              padding: "16px",
+              color: "#fff",
+              borderRadius: "16px",
+              maxWidth: "350px",
+            },
+            icon: "🚀",
+          },
+        );
+      } else {
+        console.error("Error posting story:", error);
+        toast.error(errorData?.message || "Broadcast failed");
+      }
     } finally {
       setLoading(false);
     }

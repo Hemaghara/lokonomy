@@ -44,6 +44,28 @@ const userSchema = new mongoose.Schema({
   branch: { type: String, default: null },
   accountNumber: { type: String, default: null },
   phoneNumber: { type: String, default: null },
+  subscription: {
+    plan: {
+      type: String,
+      enum: ["free", "silver", "gold", "platinum"],
+      default: "free",
+    },
+    status: {
+      type: String,
+      enum: ["active", "expired", "none"],
+      default: "none",
+    },
+    startDate: { type: Date, default: null },
+    expiryDate: { type: Date, default: null },
+    razorpayOrderId: { type: String, default: null },
+    razorpayPaymentId: { type: String, default: null },
+    durationMonths: { type: Number, default: null },
+  },
+  usage: {
+    productsUploaded: { type: Number, default: 0 },
+    storiesPosted: { type: Number, default: 0 },
+    jobsPosted: { type: Number, default: 0 },
+  },
   savedJobs: [
     {
       type: mongoose.Schema.Types.ObjectId,

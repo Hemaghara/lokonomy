@@ -50,9 +50,12 @@ exports.getAllProducts = async (req, res) => {
 
     let products;
     if (lat && lng) {
-      products = await Product.find(query);
+      products = await Product.find(query).sort({ isFeatured: -1 });
     } else {
-      products = await Product.find(query).sort({ createdAt: -1 });
+      products = await Product.find(query).sort({
+        isFeatured: -1,
+        createdAt: -1,
+      });
     }
     const result = products.map((p) => {
       const obj = p.toObject();
@@ -97,8 +100,20 @@ exports.addProduct = async (req, res) => {
     delete productData.latitude;
     delete productData.longitude;
 
+    if (
+      productData.isFeatured === true &&
+      user.subscription?.plan !== "platinum"
+    ) {
+      productData.isFeatured = false;
+    }
+
     const product = new Product(productData);
     const newProduct = await product.save();
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $inc: { "usage.productsUploaded": 1 },
+    });
+
     res.status(201).json({ success: true, product: newProduct });
   } catch (err) {
     console.error("Error adding product:", err);

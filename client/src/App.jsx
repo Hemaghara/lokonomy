@@ -29,6 +29,7 @@ import FeedDetails from "./pages/FeedDetails";
 import JobDashboard from "./pages/JobDashboard";
 import EditJob from "./pages/EditJob";
 import MyChats from "./pages/MyChats";
+import UpgradePlan from "./pages/UpgradePlan";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import MainLayout from "./layouts/MainLayout";
@@ -110,6 +111,7 @@ function App() {
                 <Route path="/my-orders" element={<MyOrders />} />
                 <Route path="/sales-management" element={<SellerOrders />} />
                 <Route path="/my-chats" element={<MyChats />} />
+                <Route path="/upgrade-plan" element={<UpgradePlan />} />
               </Route>
             </Route>
           </Routes>
