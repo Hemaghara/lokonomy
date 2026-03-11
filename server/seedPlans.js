@@ -50,7 +50,7 @@ const PLAN_DATA = [
     slug: "platinum",
     prices: { 3: 799, 6: 1399, 12: 2399 },
     limits: {
-      productsUpload: 999999, // use a large number instead of infinity in JS for DB compatibility
+      productsUpload: 999999, 
       storiesPost: 999999,
       jobsPost: 999999,
       analytics: true,
