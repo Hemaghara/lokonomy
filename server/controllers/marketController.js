@@ -188,3 +188,50 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+exports.addProductReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (product.sellerId.toString() === req.user.id) {
+      return res
+        .status(400)
+        .json({ message: "You cannot review your own product" });
+    }
+
+    const alreadyReviewed = product.reviews.find(
+      (r) => r.userId.toString() === req.user.id,
+    );
+
+    if (alreadyReviewed) {
+      return res
+        .status(400)
+        .json({ message: "Product already reviewed" });
+    }
+
+    const review = {
+      userId: req.user.id,
+      userName: user.name,
+      rating: Number(rating),
+      comment,
+    };
+
+    product.reviews.push(review);
+    product.numReviews = product.reviews.length;
+    product.rating =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      product.reviews.length;
+
+    await product.save();
+    res.status(201).json({ success: true, message: "Review added" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+

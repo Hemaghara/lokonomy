@@ -9,5 +9,6 @@ router.get("/my", auth, marketController.getMyProducts);
 router.get("/:id", marketController.getProductById);
 router.post("/", auth, checkProductLimit, marketController.addProduct);
 router.delete("/:id", auth, marketController.deleteProduct);
+router.post("/:id/review", auth, marketController.addProductReview);
 
 module.exports = router;

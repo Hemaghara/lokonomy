@@ -31,6 +31,7 @@ import {
   HiOutlineBuildingOffice2,
   HiOutlineBeaker,
   HiOutlineSun,
+  HiStar,
 } from "react-icons/hi2";
 import {
   FiPackage,
@@ -628,6 +629,20 @@ const Market = () => {
                         <h3 className="text-slate-100 font-semibold text-sm leading-snug line-clamp-2 mb-3 group-hover:text-violet-400 transition-colors flex-1">
                           {p.productName}
                         </h3>
+
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <HiStar
+                                key={i}
+                                className={`text-[10px] ${i < Math.round(p.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-slate-600 text-[10px] font-bold">
+                            ({p.numReviews || 0})
+                          </span>
+                        </div>
 
                         <div className="flex items-center justify-between pt-3 border-t border-[#1f2a3d]">
                           <div className="flex items-center gap-0.5 text-white font-bold text-base">

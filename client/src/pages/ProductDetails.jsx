@@ -18,6 +18,8 @@ import {
   HiOutlineShoppingBag,
   HiOutlineClipboardDocument,
   HiOutlineCheckCircle,
+  HiOutlineStar,
+  HiStar,
 } from "react-icons/hi2";
 import WishlistButton from "../components/WishlistButton";
 
@@ -34,6 +36,9 @@ const ProductDetails = () => {
   const [sellerChats, setSellerChats] = useState([]); 
   const [activeBuyerId, setActiveBuyerId] = useState(null); 
   const [activeBuyerName, setActiveBuyerName] = useState("");
+  const [activeTab, setActiveTab] = useState("details");
+  const [productReview, setProductReview] = useState({ rating: 5, comment: "" });
+  const [submittingProduct, setSubmittingProduct] = useState(false);
 
   const isSeller =
     user &&
@@ -97,6 +102,24 @@ const ProductDetails = () => {
     toast.success("Link copied");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+  
+  const handleProductReview = async (e) => {
+    e.preventDefault();
+    if (!user) return toast.error("Please login to review");
+    if (isSeller) return toast.error("You cannot review your own product");
+    
+    setSubmittingProduct(true);
+    try {
+      await marketService.addProductReview(id, productReview);
+      toast.success("Product review added");
+      setProductReview({ rating: 5, comment: "" });
+      fetchProductDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to add review");
+    } finally {
+      setSubmittingProduct(false);
+    }
   };
 
   if (loading)
@@ -477,6 +500,144 @@ const ProductDetails = () => {
               )}
             </div>
           </motion.div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12 space-y-8">
+          <div className="flex border-b border-[#1f2a3d]">
+            <button
+              onClick={() => setActiveTab("details")}
+              className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === "details" ? "border-violet-500 text-white" : "border-transparent text-slate-500 hover:text-slate-300"}`}
+            >
+              Description & Details
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === "reviews" ? "border-violet-500 text-white" : "border-transparent text-slate-500 hover:text-slate-300"}`}
+            >
+              Reviews ({product.reviews?.length || 0})
+            </button>
+          </div>
+
+          {activeTab === "details" ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-2 gap-8">
+               <div className={`${card} p-6`}>
+                  <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                    <HiOutlineClipboardDocument className="text-violet-400" /> Additional Context
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1">Posted On</p>
+                      <p className="text-slate-300 text-sm">{new Date(product.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1">Category</p>
+                      <p className="text-slate-300 text-sm">{product.mainCategory} › {product.subCategory}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1">Verified Listing</p>
+                        <p className="text-emerald-400 text-sm flex items-center gap-1.5"><HiOutlineCheckCircle /> This listing checked for community safety</p>
+                    </div>
+                  </div>
+               </div>
+               <div className={`${card} p-6`}>
+                  <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                    <HiOutlineUser className="text-violet-400" /> Seller Information
+                  </h3>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-xl text-violet-400 font-bold uppercase">
+                      {product.sellerProfile?.name?.[0] || 'S'}
+                    </div>
+                    <div>
+                      <p className="text-white font-bold">{product.sellerProfile?.name || 'Seller'}</p>
+                      <p className="text-slate-500 text-xs">Community Member</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-500 text-[10px] leading-relaxed">For safety, always meet in public places and inspect the product before payment.</p>
+               </div>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+              {/* Product Reviews */}
+              <div className="grid lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-4">
+                  <h3 className="text-white font-bold flex items-center gap-2 mb-2">
+                    Product Reviews
+                  </h3>
+                  {product.reviews?.length > 0 ? (
+                    product.reviews.map((r, i) => (
+                      <div key={i} className={`${card} p-5`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-bold text-sm">{r.userName}</span>
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, idx) => (
+                                <HiStar key={idx} className={`text-[10px] ${idx < r.rating ? "text-amber-400" : "text-slate-700"}`} />
+                              ))}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-slate-600">{new Date(r.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-slate-400 text-sm leading-relaxed">{r.comment}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 border border-dashed border-[#1f2a3d] rounded-2xl">
+                      <p className="text-slate-600 text-sm">No reviews for this product yet.</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Product Review Form */}
+                <div className={`${card} p-6 h-fit`}>
+                  <h4 className="text-white font-bold text-sm mb-4">Rate Product</h4>
+                  {!user ? (
+                    <div className="text-center py-6">
+                      <p className="text-slate-500 text-xs mb-4">Please login to rate this product.</p>
+                      <button onClick={() => navigate("/login")} className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all">
+                        Login to Review
+                      </button>
+                    </div>
+                  ) : isSeller ? (
+                    <div className="text-center py-6 bg-amber-500/5 border border-amber-500/10 rounded-xl">
+                      <p className="text-amber-400/80 text-[11px] font-medium px-4">Owners cannot review their own products.</p>
+                    </div>
+                  ) : product.reviews?.some(r => r.userId === user.id) ? (
+                    <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
+                      <p className="text-emerald-400/80 text-[11px] font-medium">Thank you! You have already reviewed this product.</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleProductReview} className="space-y-4">
+                      <div>
+                        <div className="flex gap-2 mb-3">
+                          {[1, 2, 3, 4, 5].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => setProductReview(prev => ({ ...prev, rating: num }))}
+                              className={`p-2 rounded-lg border transition-all ${productReview.rating >= num ? "bg-amber-500/20 border-amber-500/50 text-amber-500" : "bg-[#0d1424] border-[#1f2a3d] text-slate-700"}`}
+                            >
+                              <HiStar />
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          placeholder="Your thoughts on this product..."
+                          className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-3 text-xs text-slate-300 outline-none focus:border-violet-500 transition-all h-24 resize-none"
+                          value={productReview.comment}
+                          onChange={(e) => setProductReview(prev => ({ ...prev, comment: e.target.value }))}
+                          required
+                        />
+                      </div>
+                      <button disabled={submittingProduct} className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50">
+                        {submittingProduct ? "Submitting..." : "Post Review"}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 

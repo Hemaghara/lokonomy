@@ -12,6 +12,7 @@ import {
   HiOutlineTrash,
   HiOutlineMapPin,
   HiOutlineCurrencyRupee,
+  HiStar,
 } from "react-icons/hi2";
 import WishlistButton from "../components/WishlistButton";
 
@@ -143,7 +144,20 @@ const Wishlist = () => {
                       </div>
                     </div>
                     <div className="p-5">
-                      <h3 className="text-white font-bold text-base mb-2 line-clamp-1 group-hover:text-violet-400 transition-colors">{p.productName}</h3>
+                      <h3 className="text-white font-bold text-base mb-1 line-clamp-1 group-hover:text-violet-400 transition-colors">{p.productName}</h3>
+                      
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <HiStar
+                              key={i}
+                              className={`text-[10px] ${i < Math.round(p.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-slate-600 text-[10px] font-bold">({p.numReviews || 0})</span>
+                      </div>
+
                       <div className="flex items-center justify-between">
                         <span className="text-emerald-400 font-bold flex items-center">
                           <HiOutlineCurrencyRupee /> {p.price.toLocaleString()}

@@ -42,6 +42,8 @@ export const marketService = {
   getProductById: (id) => api.get(`/market/${id}`),
   addProduct: (productData) => api.post("/market", productData),
   deleteProduct: (id) => api.delete(`/market/${id}`),
+  addProductReview: (id, reviewData) =>
+    api.post(`/market/${id}/review`, reviewData),
 };
 
 export const storyService = {
