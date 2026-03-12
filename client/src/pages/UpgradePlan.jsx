@@ -15,12 +15,13 @@ import {
   HiOutlineChartBar,
   HiOutlineStar,
 } from "react-icons/hi";
-
+import { Award, Medal, Tag, Gem } from "lucide-react";
+import { Check, X } from "lucide-react";
 const PLANS_CONFIG = [
   {
     key: "silver",
     name: "Silver",
-    icon: "🥈",
+    icon: <Medal />,
     color: "from-slate-400 to-slate-500",
     borderColor: "border-slate-500/40",
     glowColor: "shadow-slate-500/20",
@@ -38,7 +39,7 @@ const PLANS_CONFIG = [
   {
     key: "gold",
     name: "Gold",
-    icon: "🥇",
+    icon: <Award />,
     color: "from-amber-400 to-yellow-500",
     borderColor: "border-amber-500/60",
     glowColor: "shadow-amber-500/25",
@@ -57,7 +58,7 @@ const PLANS_CONFIG = [
   {
     key: "platinum",
     name: "Platinum",
-    icon: "💎",
+    icon: <Gem />,
     color: "from-violet-400 to-purple-500",
     borderColor: "border-violet-500/60",
     glowColor: "shadow-violet-500/25",
@@ -209,7 +210,6 @@ const UpgradePlan = () => {
     }
   };
 
-
   const currentPlan = subStatus?.subscription?.plan || "free";
   const isActive = subStatus?.subscription?.isActive;
   const expiry = subStatus?.subscription?.expiryDate;
@@ -218,6 +218,18 @@ const UpgradePlan = () => {
   const usage = subStatus?.usage;
 
   const card = "bg-[#111827] border border-[#1f2a3d] rounded-2xl";
+
+  const FeatureIcon = ({ value }) => {
+    if (value === "✓") {
+      return <Check size={16} className="mx-auto text-emerald-400" />;
+    }
+
+    if (value === "✗") {
+      return <X size={16} className="mx-auto text-slate-600" />;
+    }
+
+    return <span className="text-slate-400 font-medium">{value ?? "-"}</span>;
+  };
 
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
@@ -285,13 +297,15 @@ const UpgradePlan = () => {
                           : "bg-slate-700/30"
                   }`}
                 >
-                  {currentPlan === "platinum"
-                    ? "💎"
-                    : currentPlan === "gold"
-                      ? "🥇"
-                      : currentPlan === "silver"
-                        ? "🥈"
-                        : "🆓"}
+                  {currentPlan === "platinum" ? (
+                    <Gem />
+                  ) : currentPlan === "gold" ? (
+                    <Award />
+                  ) : currentPlan === "silver" ? (
+                    <Medal />
+                  ) : (
+                    <Tag />
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-0.5">
@@ -299,7 +313,9 @@ const UpgradePlan = () => {
                   </p>
                   <h3 className="text-white font-bold text-lg capitalize">
                     {currentPlan}{" "}
-                    {isActive && activeDuration ? `(${activeDuration} Months)` : ""}
+                    {isActive && activeDuration
+                      ? `(${activeDuration} Months)`
+                      : ""}
                     {!isActive && currentPlan !== "free" && "(Expired)"}
                   </h3>
                   {isActive && expiry && (
@@ -396,7 +412,8 @@ const UpgradePlan = () => {
             const price = plan.prices[selectedDuration];
             const perMonth = Math.round(price / selectedDuration);
             const isCurrentTier = currentPlan === plan.key && isActive;
-            const isCurrentPlan = isCurrentTier && activeDuration === selectedDuration;
+            const isCurrentPlan =
+              isCurrentTier && activeDuration === selectedDuration;
             const isBuying = loading && selectedPlan === plan.key;
 
             return (
@@ -405,7 +422,7 @@ const UpgradePlan = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 + idx * 0.08 }}
-                 className={`plan-card relative ${card} ${plan.borderColor} p-6 flex flex-col shadow-xl ${plan.glowColor}
+                className={`plan-card relative ${card} ${plan.borderColor} p-6 flex flex-col shadow-xl ${plan.glowColor}
                   ${plan.badge ? "ring-1 ring-amber-500/30" : ""}
                   ${isCurrentTier ? "ring-1 ring-violet-500/40" : ""}
                   ${isCurrentPlan ? "ring-2 ring-emerald-500/50" : ""}
@@ -516,26 +533,40 @@ const UpgradePlan = () => {
             Full Feature Comparison
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#1f2a3d]">
                   <th className="text-left text-slate-500 pb-3 font-semibold uppercase tracking-widest w-1/3">
                     Feature
                   </th>
+
                   <th className="text-center text-slate-500 pb-3 font-semibold uppercase tracking-widest">
                     Free
                   </th>
-                  <th className="text-center text-slate-400 pb-3 font-semibold uppercase tracking-widest">
-                    🥈 Silver
+
+                  <th className="text-center text-slate-300 pb-3 font-semibold uppercase tracking-widest">
+                    <div className="flex items-center justify-center gap-1">
+                      <Medal size={16} />
+                      Silver
+                    </div>
                   </th>
+
                   <th className="text-center text-amber-400 pb-3 font-semibold uppercase tracking-widest">
-                    🥇 Gold
+                    <div className="flex items-center justify-center gap-1">
+                      <Award size={16} />
+                      Gold
+                    </div>
                   </th>
+
                   <th className="text-center text-violet-400 pb-3 font-semibold uppercase tracking-widest">
-                    💎 Platinum
+                    <div className="flex items-center justify-center gap-1">
+                      <Gem size={16} />
+                      Platinum
+                    </div>
                   </th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-[#1f2a3d]">
                 {[
                   ["Product Listings", "3", "20", "100", "Unlimited"],
@@ -545,45 +576,28 @@ const UpgradePlan = () => {
                   ["Priority Support", "✗", "✗", "✗", "✓"],
                   ["Chat Messaging", "✓", "✓", "✓", "✓"],
                 ].map(([feature, free, silver, gold, platinum], i) => (
-                  <tr key={i} className="hover:bg-white/2 transition-colors">
+                  <tr
+                    key={i}
+                    className="hover:bg-[#0f172a]/40 transition-colors"
+                  >
                     <td className="py-3 text-slate-400 font-medium">
                       {feature}
                     </td>
-                    <td className="py-3 text-center text-slate-600">
-                      {free === "✓" ? (
-                        <span className="text-emerald-500">✓</span>
-                      ) : free === "✗" ? (
-                        <span className="text-slate-700">✗</span>
-                      ) : (
-                        free
-                      )}
+
+                    <td className="py-3 text-center">
+                      <FeatureIcon value={free} />
                     </td>
-                    <td className="py-3 text-center text-slate-400">
-                      {silver === "✓" ? (
-                        <span className="text-emerald-400">✓</span>
-                      ) : silver === "✗" ? (
-                        <span className="text-slate-700">✗</span>
-                      ) : (
-                        silver
-                      )}
+
+                    <td className="py-3 text-center">
+                      <FeatureIcon value={silver} />
                     </td>
-                    <td className="py-3 text-center text-amber-300">
-                      {gold === "✓" ? (
-                        <span className="text-emerald-400">✓</span>
-                      ) : gold === "✗" ? (
-                        <span className="text-slate-700">✗</span>
-                      ) : (
-                        gold
-                      )}
+
+                    <td className="py-3 text-center">
+                      <FeatureIcon value={gold} />
                     </td>
-                    <td className="py-3 text-center text-violet-300">
-                      {platinum === "✓" ? (
-                        <span className="text-emerald-400">✓</span>
-                      ) : platinum === "✗" ? (
-                        <span className="text-slate-700">✗</span>
-                      ) : (
-                        platinum
-                      )}
+
+                    <td className="py-3 text-center">
+                      <FeatureIcon value={platinum} />
                     </td>
                   </tr>
                 ))}
