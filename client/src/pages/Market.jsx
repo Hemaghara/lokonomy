@@ -658,7 +658,6 @@ const Market = () => {
                   animate={{ opacity: 1 }}
                   className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-24 text-center"
                 >
-                  <div className="text-5xl mb-4 opacity-20">📦</div>
                   <h3 className="text-slate-500 font-semibold text-base mb-1">
                     No Products Found
                   </h3>

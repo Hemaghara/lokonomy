@@ -114,7 +114,6 @@ const ProductDetails = () => {
   if (!product)
     return (
       <div className="min-h-screen bg-[#080e1a] flex flex-col items-center justify-center text-center p-6">
-        <div className="text-5xl mb-4 opacity-20">📦</div>
         <h2 className="text-white font-semibold text-lg mb-2">
           Product Not Found
         </h2>
@@ -345,9 +344,7 @@ const ProductDetails = () => {
             <div className="flex flex-col gap-3 pt-1">
               {product.isSold && (
                 <div className="w-full flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                  <div className="w-9 h-9 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0 text-lg">
-                    🚫
-                  </div>
+                
                   <div>
                     <p className="text-red-400 font-bold text-sm">
                       Product Sold Out

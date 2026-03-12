@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { authService } from "../services";
 import { toast } from "react-hot-toast";
-
+import { MapPin,Hourglass,CheckCircle,Ban,AlertTriangle} from "lucide-react";
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useUser();
@@ -206,31 +206,31 @@ const Login = () => {
 
   const gpsStatusConfig = {
     idle: {
-      icon: "📍",
+      icon: <MapPin/>,
       label: "Enable GPS to update your location",
       color: "text-primary",
       bg: "bg-primary/10 border-primary/30",
     },
     fetching: {
-      icon: "⏳",
+      icon: <Hourglass/>,
       label: "Fetching location...",
       color: "text-yellow-400",
       bg: "bg-yellow-500/10 border-yellow-500/30",
     },
     granted: {
-      icon: "✅",
+      icon: <CheckCircle/>,
       label: "Location Ready",
       color: "text-green-400",
       bg: "bg-green-500/10 border-green-500/30",
     },
     denied: {
-      icon: "🚫",
+      icon: <Ban/>,
       label: "GPS Required — Please enable in browser",
       color: "text-rose-400",
       bg: "bg-rose-500/10 border-rose-500/30",
     },
     error: {
-      icon: "⚠️",
+      icon: <AlertTriangle/>,
       label: "Location required — click Allow",
       color: "text-orange-400",
       bg: "bg-orange-500/10 border-orange-500/30",
@@ -311,7 +311,7 @@ const Login = () => {
                         className="mt-1"
                       >
                         <p className="text-xs text-green-300 truncate">
-                          📌 {gpsState.locationName}
+                           {gpsState.locationName}
                         </p>
                         <p className="text-xs text-text-dim">
                           ±{gpsState.accuracy}m accuracy

@@ -158,7 +158,6 @@ const StoryDetails = () => {
   if (!story) {
     return (
       <div className="min-h-screen bg-[#080e1a] flex flex-col items-center justify-center text-center px-6">
-        <div className="text-5xl mb-4 opacity-20">📡</div>
         <h2 className="text-white font-semibold text-lg mb-2">
           Story Not Found
         </h2>

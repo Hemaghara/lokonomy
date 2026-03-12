@@ -386,9 +386,7 @@ const Profile = () => {
                     <HiOutlineClock className={loading ? "animate-spin" : ""} />
                     {loading ? "Updating GPS…" : "Update to Current Location"}
                   </button>
-                  <p className="text-center text-slate-600 text-[10px] font-medium uppercase tracking-wider">
-                    Powered by Browser Geolocation
-                  </p>
+                 
                 </div>
               </div>
             </motion.div>
@@ -646,7 +644,6 @@ const Profile = () => {
 
                 {myBusinesses.length === 0 && (
                   <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-16 text-center">
-                    <div className="text-4xl mb-3 opacity-20">🏢</div>
                     <p className="text-slate-600 text-xs mb-4">
                       No businesses added yet
                     </p>
@@ -670,7 +667,6 @@ const Profile = () => {
               exit={{ opacity: 0, y: -10 }}
               className={`${card} p-8 text-center`}
             >
-              <div className="text-4xl mb-4 opacity-20">💼</div>
               <h3 className="text-white font-bold text-lg mb-2">
                 Job Dashboard
               </h3>
@@ -697,9 +693,7 @@ const Profile = () => {
             >
               <div className={`${card} p-6`}>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-2xl">
-                    📝
-                  </div>
+                  
                   <div>
                     <h2 className="text-white font-bold text-lg">
                       My Applications
@@ -718,9 +712,7 @@ const Profile = () => {
                         className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-violet-500/20 transition-all"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-violet-500/10 border border-violet-500/20 rounded-xl flex items-center justify-center text-violet-400">
-                            💼
-                          </div>
+                       
                           <div>
                             <h4 className="text-white font-semibold text-sm">
                               {app.position}
@@ -810,7 +802,6 @@ const Profile = () => {
               exit={{ opacity: 0, y: -10 }}
               className={`${card} p-8 text-center`}
             >
-              <div className="text-4xl mb-4 opacity-20">🛒</div>
               <h3 className="text-white font-bold text-lg mb-2">My Orders</h3>
               <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
                 Track your purchases, view delivery status, and contact sellers.
@@ -982,7 +973,6 @@ const Profile = () => {
               exit={{ opacity: 0, y: -10 }}
               className={`${card} p-8 text-center`}
             >
-              <div className="text-4xl mb-4 opacity-20">💰</div>
               <h3 className="text-white font-bold text-lg mb-2">Seller Hub</h3>
               <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
                 Manage your product listings and process incoming buyer orders.

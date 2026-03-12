@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-
+import { FaBullseye } from "react-icons/fa";
+import { MapPin } from "lucide-react";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -125,10 +126,16 @@ const MapPicker = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-[11px] text-slate-500 font-medium">
-          {value?.lat
-            ? `📍 ${value.address || `${value.lat.toFixed(5)}, ${value.lng.toFixed(5)}`}`
-            : "Click on the map to pin your shop location"}
+        <p className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+          {value?.lat ? (
+            <>
+              <MapPin size={14} />
+              {value.address ||
+                `${value.lat.toFixed(5)}, ${value.lng.toFixed(5)}`}
+            </>
+          ) : (
+            "Click on the map to pin your shop location"
+          )}
         </p>
         <button
           type="button"
@@ -143,7 +150,10 @@ const MapPicker = ({
             </>
           ) : (
             <>
-              <span>🎯</span> Use My GPS
+              <span>
+                <FaBullseye />
+              </span>{" "}
+              Use My GPS
             </>
           )}
         </button>

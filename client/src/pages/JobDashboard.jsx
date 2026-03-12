@@ -747,7 +747,6 @@ const JobDashboard = () => {
                                 })
                               ) : (
                                 <div className="py-12 text-center">
-                                  <p className="text-4xl mb-3 opacity-10">📭</p>
                                   <p className="text-slate-600 text-xs font-medium">
                                     No applicants yet
                                   </p>

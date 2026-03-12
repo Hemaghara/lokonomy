@@ -171,7 +171,6 @@ const Services = () => {
         </div>
         {geoStatus === "denied" && (
           <div className="mb-8 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-center gap-3">
-            <span className="text-xl">⚠️</span>
             <p className="text-amber-400 text-sm">
               Location access denied. Showing all businesses without distance
               filter.{" "}
@@ -197,7 +196,6 @@ const Services = () => {
             </div>
           ) : filteredListings.length === 0 ? (
             <div className="text-center py-40 border border-dashed border-white/10 rounded-3xl bg-white/2">
-              <div className="text-7xl mb-8 grayscale opacity-30">🛰️</div>
               <h3 className="text-white text-2xl font-bold mb-3 tracking-tight">
                 No businesses nearby
               </h3>

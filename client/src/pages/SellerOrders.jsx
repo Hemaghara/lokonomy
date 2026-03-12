@@ -275,9 +275,7 @@ const SellerOrders = () => {
                 ) : (
                   <div className="lg:col-span-2 bg-linear-to-br from-violet-600/10 to-indigo-600/10 border border-violet-500/20 p-6 rounded-3xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-xl text-amber-400 border border-amber-500/20">
-                        🔒
-                      </div>
+                      
                       <div>
                         <h4 className="text-white font-bold text-sm">
                           Unlock Premium Stats
@@ -390,9 +388,7 @@ const SellerOrders = () => {
                 <div className="bg-[#111827] border border-[#1f2a3d] rounded-[2.5rem] p-12 text-center overflow-hidden relative">
                   <div className="absolute inset-0 bg-linear-to-br from-violet-600/5 to-indigo-600/5" />
                   <div className="relative z-10">
-                    <div className="w-20 h-20 bg-linear-to-br from-amber-400 to-yellow-600 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-2xl shadow-amber-500/20">
-                      📊
-                    </div>
+                   
                     <h3 className="text-white font-black text-2xl mb-3 tracking-tight">
                       Advanced Analytics Locked
                     </h3>
@@ -451,9 +447,7 @@ const SellerOrders = () => {
 
               {filteredOrders.length === 0 ? (
                 <div className="text-center py-24 bg-[#111827] border border-[#1f2a3d] rounded-[2.5rem]">
-                  <div className="w-16 h-16 bg-[#0d1424] rounded-full flex items-center justify-center text-3xl mx-auto mb-6 opacity-30">
-                    📭
-                  </div>
+                 
                   <h2 className="text-white font-bold text-xl mb-2">
                     No results found
                   </h2>
