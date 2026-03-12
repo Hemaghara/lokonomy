@@ -284,7 +284,7 @@ const StoryDetails = () => {
                 <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-violet-500/20 transition-all duration-300">
-                    <HiOutlineClock className="text-violet-400 text-sm" />
+                    <HiOutlineClock className="text-violet-400 text-sm " />
                   </div>
                   <StoryExpiryStatus
                     expiresAt={

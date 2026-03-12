@@ -578,7 +578,7 @@ const UpgradePlan = () => {
                 ].map(([feature, free, silver, gold, platinum], i) => (
                   <tr
                     key={i}
-                    className="hover:bg-[#0f172a]/40 transition-colors"
+                    className="hover:bg-dark-bg/40 transition-colors"
                   >
                     <td className="py-3 text-slate-400 font-medium">
                       {feature}
