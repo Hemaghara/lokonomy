@@ -24,6 +24,7 @@ import {
   HiOutlineClipboardDocument,
   HiOutlineArrowRight,
 } from "react-icons/hi2";
+import WishlistButton from "../components/WishlistButton";
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -143,6 +144,7 @@ const JobDetails = () => {
             <HiOutlineArrowLeft className="text-sm" /> Back to Jobs
           </button>
           <div className="flex items-center gap-2">
+            <WishlistButton type="job" id={id} />
             {isOwner && (
               <button
                 onClick={handleDeleteJob}

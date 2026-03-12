@@ -25,6 +25,7 @@ import {
 import { HiStar } from "react-icons/hi2";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import WishlistButton from "../components/WishlistButton";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -247,6 +248,11 @@ const BusinessDetails = () => {
                   <HiOutlineArrowTopRightOnSquare className="text-xs" />
                 </a>
               )}
+              <WishlistButton
+                type="business"
+                id={business._id}
+                className="flex-1 sm:w-44 flex items-center justify-center gap-2"
+              />
             </div>
           </div>
         </motion.div>

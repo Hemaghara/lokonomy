@@ -131,6 +131,12 @@ const Navbar = () => {
                       </AnimatePresence>
                     </Link>
                     <Link
+                      to="/wishlist"
+                      className="px-3 py-1.5 text-[11px] font-bold text-white/40 hover:text-white uppercase tracking-wider hover:bg-white/6 rounded-lg transition-all duration-200"
+                    >
+                      Wishlist
+                    </Link>
+                    <Link
                       to="/upgrade-plan"
                       className="ml-2 px-3 py-1.5 bg-linear-to-r from-amber-400 to-yellow-600 text-[10px] font-black text-black uppercase tracking-widest rounded-lg shadow-lg shadow-amber-500/20 hover:scale-105 transition-all duration-300 flex items-center gap-1.5 border border-amber-300/30"
                     >
@@ -300,6 +306,15 @@ const Navbar = () => {
                             {unreadCount > 9 ? "9+" : unreadCount}
                           </span>
                         )}
+                      </Link>
+
+                      <Link
+                        to="/wishlist"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 text-white/50 hover:text-white transition-all text-[14px] font-semibold"
+                      >
+                        <span className="text-base">❤️</span>
+                        My Wishlist
                       </Link>
 
                       <Link

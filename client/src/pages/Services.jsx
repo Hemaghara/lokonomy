@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { businessService } from "../services";
 import { toast } from "react-hot-toast";
+import WishlistButton from "../components/WishlistButton";
 
 const useUserLocation = () => {
   const [coords, setCoords] = useState(() => {
@@ -245,6 +246,10 @@ const Services = () => {
                         {(shop.rating || 0.0).toFixed(1)}
                       </span>
                     </div>
+                  </div>
+
+                  <div className="absolute top-4 left-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <WishlistButton type="business" id={shop._id} />
                   </div>
 
                   <div className="p-8 flex-1">

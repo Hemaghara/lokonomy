@@ -21,10 +21,9 @@ import {
   HiOutlinePhone,
   HiOutlineChevronDown,
   HiOutlineClock,
-  HiOutlineBookmark,
 } from "react-icons/hi2";
-import { HiBookmark } from "react-icons/hi2";
 import { FiExternalLink } from "react-icons/fi";
+import WishlistButton from "../components/WishlistButton";
 
 const Jobs = () => {
   const navigate = useNavigate();
@@ -39,7 +38,6 @@ const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
-  const [savedJobIds, setSavedJobIds] = useState([]);
 
   const [selectedDistrict, setSelectedDistrict] = useState(userDistrict || "");
   const [selectedTaluka, setSelectedTaluka] = useState(userTaluka || "");
@@ -55,7 +53,6 @@ const Jobs = () => {
 
   useEffect(() => {
     fetchJobs();
-    if (user) fetchSavedJobs();
   }, [selectedDistrict, selectedTaluka, filter, user]);
 
   const fetchJobs = async () => {
@@ -71,15 +68,6 @@ const Jobs = () => {
       console.error("Job fetch error:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSavedJobs = async () => {
-    try {
-      const response = await jobService.getSavedJobs();
-      setSavedJobIds(response.data.map((j) => j._id));
-    } catch (err) {
-      console.error("Error fetching saved jobs:", err);
     }
   };
 
@@ -106,25 +94,6 @@ const Jobs = () => {
     }
   };
 
-  const handleSaveJob = async (id) => {
-    if (!user) {
-      toast.error("Please login to save jobs");
-      return;
-    }
-    try {
-      const response = await jobService.saveJob(id);
-      if (response.data.success) {
-        toast.success(response.data.message);
-        if (response.data.isSaved) {
-          setSavedJobIds((prev) => [...prev, id]);
-        } else {
-          setSavedJobIds((prev) => prev.filter((sid) => sid !== id));
-        }
-      }
-    } catch (err) {
-      toast.error("Failed to save job");
-    }
-  };
 
   const filters = [
     { label: "All", value: "All" },
@@ -285,29 +254,7 @@ const Jobs = () => {
                         >
                           {job.gender === "Both" ? "Universal" : job.gender}
                         </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSaveJob(job._id);
-                          }}
-                          className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all active:scale-90
-                            ${
-                              savedJobIds.includes(job._id)
-                                ? "bg-amber-500/15 border-amber-500/30 text-amber-500"
-                                : "bg-[#0d1424] border-[#1f2a3d] text-slate-500 hover:border-amber-500/30 hover:text-amber-500"
-                            }`}
-                          title={
-                            savedJobIds.includes(job._id)
-                              ? "Remove from Saved"
-                              : "Save for Later"
-                          }
-                        >
-                          {savedJobIds.includes(job._id) ? (
-                            <HiBookmark />
-                          ) : (
-                            <HiOutlineBookmark />
-                          )}
-                        </button>
+                        <WishlistButton type="job" id={job._id} />
                       </div>
 
                       <h3 className="text-slate-100 font-semibold text-base leading-snug mb-1 group-hover:text-violet-400 transition-colors line-clamp-1">

@@ -19,6 +19,7 @@ import {
   HiOutlineClipboardDocument,
   HiOutlineCheckCircle,
 } from "react-icons/hi2";
+import WishlistButton from "../components/WishlistButton";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -457,6 +458,11 @@ const ProductDetails = () => {
                       WhatsApp
                     </a>
                   </div>
+                  <WishlistButton
+                    type="product"
+                    id={product._id}
+                    className="w-full flex items-center justify-center gap-2 py-3.5"
+                  />
                   {user && (
                     <button
                       onClick={() => setShowChat(!showChat)}

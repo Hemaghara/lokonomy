@@ -31,15 +31,7 @@ app.use(
   }),
 );
 
-// app.use(
-//   cors({
-//     origin: [
-//       "http://localhost:5173",
-//       "https://lokonomy.vercel.app"
-//     ],
-//     credentials: true,
-//   })
-// );
+
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use("/api/businesses", require("./routes/businesses"));
@@ -51,6 +43,7 @@ app.use("/api/orders", require("./routes/orders"));
 app.use("/api/feeds", require("./routes/feeds"));
 app.use("/api/chat", require("./routes/chat"));
 app.use("/api/subscription", require("./routes/subscription"));
+app.use("/api/wishlist", require("./routes/wishlist"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });

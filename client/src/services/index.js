@@ -33,8 +33,6 @@ export const jobService = {
   getAppliedJobs: () => api.get("/jobs/applied"),
   updateApplicationStatus: (id, applicantId, status) =>
     api.patch(`/jobs/${id}/applications/${applicantId}/status`, { status }),
-  getSavedJobs: () => api.get("/jobs/saved"),
-  saveJob: (id) => api.post(`/jobs/${id}/save`),
   deleteJob: (id) => api.delete(`/jobs/${id}`),
 };
 
@@ -84,3 +82,12 @@ export const subscriptionService = {
   verifyPayment: (data) => api.post("/subscription/verify-payment", data),
   getStatus: () => api.get("/subscription/status"),
 };
+
+export const wishlistService = {
+  toggleWishlist: (type, id) =>
+    api.post("/wishlist/toggle", { type, id }).then((res) => res.data),
+  getWishlist: () => api.get("/wishlist").then((res) => res.data),
+  checkWishlistStatus: (type, id) =>
+    api.get(`/wishlist/status/${type}/${id}`).then((res) => res.data),
+};
+

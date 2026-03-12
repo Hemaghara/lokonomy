@@ -55,6 +55,7 @@ import {
   MdOutlineToys,
   MdOutlineMedicalServices,
 } from "react-icons/md";
+import WishlistButton from "../components/WishlistButton";
 import {
   TbCar,
   TbBike,
@@ -607,6 +608,10 @@ const Market = () => {
                               </>
                             )}
                           </span>
+                        </div>
+
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <WishlistButton type="product" id={p._id} />
                         </div>
                       </div>
 

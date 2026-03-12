@@ -72,6 +72,18 @@ const userSchema = new mongoose.Schema({
       ref: "Job",
     },
   ],
+  savedProducts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
+  savedBusinesses: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Business",
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);
