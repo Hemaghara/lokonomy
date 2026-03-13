@@ -1,24 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "../context/LocationContext";
 import { categories } from "../data/categories";
 
 const Home = () => {
   const navigate = useNavigate();
-  const {
-    state,
-    setState,
-    district,
-    taluka,
-    setDistrict,
-    setTaluka,
-    availableStates,
-    availableDistricts,
-    availableTalukas,
-  } = useLocation();
-
   const displayedCategories = categories.slice(0, 6);
-
   return (
     <div className="min-h-screen bg-dark-bg">
       <main className="container pt-32 pb-24">
