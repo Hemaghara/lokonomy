@@ -14,32 +14,21 @@ const PORT = process.env.PORT || 5000;
 
 const io = initSocket(server);
 
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       callback(null, true);
-//     },
-//     credentials: true,
-//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-//     allowedHeaders: [
-//       "Content-Type",
-//       "Authorization",
-//       "X-Requested-With",
-//       "Accept",
-//     ],
-//     exposedHeaders: ["Content-Range", "X-Content-Range"],
-//   }),
-// );
-app.set("trust proxy", 1);
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://lokonomy.vercel.app"
-    ],
+    origin: (origin, callback) => {
+      callback(null, true);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  })
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+  }),
 );
 
 

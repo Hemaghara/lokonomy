@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://lokonomy.onrender.com/api",
-  timeout:30000,
+  baseURL: "http://localhost:5000/api",
 });
 api.interceptors.request.use(
   (config) => {
