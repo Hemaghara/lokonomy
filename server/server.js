@@ -13,6 +13,7 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 const io = initSocket(server);
+app.set("io", io);
 
 app.use(
   cors({
@@ -43,6 +44,7 @@ app.use("/api/orders", require("./routes/orders"));
 app.use("/api/feeds", require("./routes/feeds"));
 app.use("/api/chat", require("./routes/chat"));
 app.use("/api/subscription", require("./routes/subscription"));
+app.use("/api/growth", require("./routes/growth"));
 app.use("/api/wishlist", require("./routes/wishlist"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");

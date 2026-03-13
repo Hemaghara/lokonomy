@@ -70,6 +70,12 @@ const businessSchema = new mongoose.Schema({
   ownerId: { type: String },
   rating: { type: Number, default: 0.0 },
   verified: { type: Boolean, default: false },
+  dailyVisits: [
+    {
+      date: { type: String, required: true },
+      count: { type: Number, default: 0 },
+    },
+  ],
   createdAt: { type: Date, default: Date.now },
 });
 

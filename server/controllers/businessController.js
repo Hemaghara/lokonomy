@@ -140,14 +140,27 @@ exports.getBusinessById = async (req, res) => {
 
 exports.incrementVisitCount = async (req, res) => {
   try {
-    const business = await Business.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { visits: 1 } },
-      { new: true },
-    );
+    const today = new Date().toISOString().split("T")[0];
+    const business = await Business.findById(req.params.id);
+
     if (!business)
       return res.status(404).json({ message: "Business not found" });
-    res.json({ visits: business.visits });
+
+    business.visits = (business.visits || 0) + 1;
+
+    const visitEntry = business.dailyVisits.find((v) => v.date === today);
+    if (visitEntry) {
+      visitEntry.count += 1;
+    } else {
+      business.dailyVisits.push({ date: today, count: 1 });
+    }
+
+    if (business.dailyVisits.length > 30) {
+      business.dailyVisits.shift();
+    }
+
+    await business.save();
+    res.json({ visits: business.visits, dailyVisits: business.dailyVisits });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

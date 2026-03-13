@@ -21,7 +21,12 @@ import {
   HiOutlineTag,
   HiOutlineCalendarDays,
   HiOutlineArrowTopRightOnSquare,
+  HiOutlineChartBar,
+  HiOutlineTicket,
 } from "react-icons/hi2";
+import BusinessAnalytics from "../components/growth/BusinessAnalytics";
+import CouponManager from "../components/growth/CouponManager";
+import BookingSystem from "../components/growth/BookingSystem";
 import { HiStar } from "react-icons/hi2";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -53,10 +58,30 @@ const BusinessDetails = () => {
     fetchBusinessDetails();
   }, [id]);
 
+  const incrementVisits = async (businessData) => {
+    try {
+      // Don't count if owner is viewing their own business
+      if (user?.id === businessData?.ownerId) return;
+
+      // Unique visit check: Only count once per day per browser
+      const storageKey = `loko_v_${id}`;
+      const lastVisit = localStorage.getItem(storageKey);
+      const today = new Date().toDateString();
+
+      if (lastVisit === today) return;
+
+      await businessService.incrementVisits(id);
+      localStorage.setItem(storageKey, today);
+    } catch (err) {
+      console.error("Error incrementing visits:", err);
+    }
+  };
+
   const fetchBusinessDetails = async () => {
     try {
       const response = await businessService.getBusinessById(id);
       setBusiness(response.data);
+      incrementVisits(response.data);
     } catch (err) {
       console.error("Error fetching business:", err);
     } finally {
@@ -133,7 +158,12 @@ const BusinessDetails = () => {
     { id: "info", label: "Details", icon: <HiOutlineInformationCircle /> },
     { id: "gallery", label: "Gallery", icon: <HiOutlinePhoto /> },
     { id: "reviews", label: "Reviews", icon: <HiOutlineStar /> },
+    { id: "booking", label: "Appointments", icon: <HiOutlineCalendarDays /> },
   ];
+
+  if (user?.id === business?.ownerId) {
+    tabs.push({ id: "growth", label: "Growth Tools", icon: <HiOutlineChartBar /> });
+  }
 
   const format12h = (time) => {
     if (!time) return "";
@@ -776,6 +806,22 @@ const BusinessDetails = () => {
                     </form>
                   )}
                 </div>
+              </div>
+            )}
+            {activeTab === "booking" && (
+              <div className="max-w-2xl mx-auto">
+                <BookingSystem 
+                  businessId={id} 
+                  isOwner={user?.id === business.ownerId}
+                  ownerId={business.ownerId}
+                />
+              </div>
+            )}
+
+            {activeTab === "growth" && user?.id === business.ownerId && (
+              <div className="space-y-6">
+                <BusinessAnalytics businessId={id} plan={user.subscription?.plan} />
+                <CouponManager businessId={id} />
               </div>
             )}
           </motion.div>
