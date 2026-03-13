@@ -37,8 +37,14 @@ import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+    fetch("https://lokonomy.onrender.com/")
+      .then(() => console.log("Backend awake"))
+      .catch(() => console.log("Backend not awake"));
+  }, []);
   return (
     <LocationProvider>
       <UserProvider>
