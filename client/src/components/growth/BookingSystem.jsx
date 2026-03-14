@@ -53,7 +53,8 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
     }
   };
 
-  const hasActiveBooking = bookings.some(b => b.status === 'pending' || b.status === 'confirmed') && !isOwner;
+  // Owners are never blocked from self-booking
+  const hasActiveBooking = !isOwner && bookings.some(b => b.status === 'pending' || b.status === 'confirmed');
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -115,14 +116,14 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Bell className="text-blue-500" /> Incoming Requests
             </h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <button 
                 onClick={() => setShowModal(true)}
-                className="bg-blue-600/20 text-blue-400 text-[10px] px-3 py-1 rounded-full uppercase font-bold hover:bg-blue-600/40 transition-all"
+                className="flex items-center gap-1.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white text-[10px] px-4 py-2 rounded-full uppercase font-bold hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-900/30 active:scale-95"
               >
-                + Self Booking
+                <Calendar size={11} /> Self Book
               </button>
-              <span className="bg-gray-800 text-gray-400 text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider">
+              <span className="bg-gray-800/60 border border-gray-700/50 text-gray-400 text-[10px] px-3 py-1.5 rounded-full uppercase font-bold tracking-wider">
                 {bookings.length} Total
               </span>
             </div>
@@ -138,11 +139,16 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
                 className="bg-gray-800/40 border border-gray-700/50 p-4 rounded-xl flex items-center justify-between hover:border-gray-600 transition-all"
               >
                 <div className="flex gap-4 items-center">
-                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
                     {booking.userName[0]}
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-sm">{booking.serviceName}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-white text-sm">{booking.serviceName}</h4>
+                      {booking.isOwnerSelf && (
+                        <span className="bg-violet-500/15 border border-violet-500/25 text-violet-400 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Self</span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-400 flex items-center gap-1">
                       <User size={10} /> {booking.userName}
                     </p>

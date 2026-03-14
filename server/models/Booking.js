@@ -35,6 +35,10 @@ const bookingSchema = new mongoose.Schema({
   message: {
     type: String,
   },
+  isOwnerSelf: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

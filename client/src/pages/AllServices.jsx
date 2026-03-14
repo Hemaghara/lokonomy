@@ -11,6 +11,7 @@ import {
   HiOutlineXMark,
   HiOutlineChevronRight,
 } from "react-icons/hi2";
+import { FaSearch } from "react-icons/fa";
 
 const AllServices = () => {
   const navigate = useNavigate();
@@ -160,7 +161,7 @@ const AllServices = () => {
           </div>
         ) : (
           <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-20 text-center">
-            <div className="text-4xl mb-3 opacity-20">🔍</div>
+            <div className="text-4xl mb-3 opacity-20"><FaSearch/></div>
             <p className="text-slate-500 text-sm font-semibold mb-4">
               No services found for "{search}"
             </p>

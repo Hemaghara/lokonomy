@@ -134,16 +134,21 @@ exports.createBooking = async (req, res) => {
     }
 
     // Constraint: Only one active/pending booking per user for this business
-    const existingUserBooking = await Booking.findOne({
-      businessId,
-      userId: req.user.id,
-      status: { $in: ["pending", "confirmed"] },
-    });
+    // Skip this check for the business owner (they can self-book freely)
+    const isBusinessOwner = business.ownerId.toString() === req.user.id;
 
-    if (existingUserBooking) {
-      return res.status(400).json({ 
-        message: "You already have an active appointment request with this business." 
+    if (!isBusinessOwner) {
+      const existingUserBooking = await Booking.findOne({
+        businessId,
+        userId: req.user.id,
+        status: { $in: ["pending", "confirmed"] },
       });
+
+      if (existingUserBooking) {
+        return res.status(400).json({
+          message: "You already have an active appointment request with this business.",
+        });
+      }
     }
 
     const user = await User.findById(req.user.id);
@@ -156,6 +161,7 @@ exports.createBooking = async (req, res) => {
       date,
       timeSlot,
       message,
+      isOwnerSelf: isBusinessOwner,
     });
 
     await newBooking.save();

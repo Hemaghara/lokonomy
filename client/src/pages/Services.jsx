@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { businessService } from "../services";
 import { toast } from "react-hot-toast";
 import WishlistButton from "../components/WishlistButton";
-
+import { FaSearch } from "react-icons/fa";
 const useUserLocation = () => {
   const [coords, setCoords] = useState(() => {
     const cached = sessionStorage.getItem("lokonomy_user_coords");
@@ -157,7 +157,7 @@ const Services = () => {
             <div className="w-full lg:w-80 relative group">
               <div className="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000" />
               <div className="relative flex items-center bg-[#1a2133] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-                <span className="pl-5 text-text-dim">🔍</span>
+                <span className="pl-5 text-text-dim"><FaSearch/></span>
                 <input
                   type="text"
                   placeholder="Search by name or keyword..."
