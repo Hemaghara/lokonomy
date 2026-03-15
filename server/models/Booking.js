@@ -39,6 +39,11 @@ const bookingSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  couponApplied: {
+    code: { type: String },
+    discount: { type: Number },
+    discountType: { type: String, enum: ["percentage", "fixed"] },
+  },
   createdAt: {
     type: Date,
     default: Date.now,
