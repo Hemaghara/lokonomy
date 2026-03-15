@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const User = require("../models/User");
+const Order = require("../models/Order");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 
 const buildLocationGeoJSON = (body) => {
@@ -191,13 +192,22 @@ exports.deleteProduct = async (req, res) => {
 exports.addProductReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
-    const product = await Product.findById(req.params.id);
 
+    if (!rating || rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ message: "Rating must be between 1 and 5" });
+    }
+    if (!comment || comment.trim().length < 3) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a comment (min 3 characters)" });
+    }
+
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-
-    const user = await User.findById(req.user.id);
 
     if (product.sellerId.toString() === req.user.id) {
       return res
@@ -205,21 +215,33 @@ exports.addProductReview = async (req, res) => {
         .json({ message: "You cannot review your own product" });
     }
 
+    const completedOrder = await Order.findOne({
+      product: req.params.id,
+      buyer: req.user.id,
+      paymentStatus: "completed",
+    });
+    if (!completedOrder) {
+      return res.status(403).json({
+        message: "You can only review products you have purchased.",
+        requiresPurchase: true,
+      });
+    }
+
     const alreadyReviewed = product.reviews.find(
       (r) => r.userId.toString() === req.user.id,
     );
-
     if (alreadyReviewed) {
       return res
         .status(400)
-        .json({ message: "Product already reviewed" });
+        .json({ message: "You have already reviewed this product" });
     }
 
+    const user = await User.findById(req.user.id);
     const review = {
       userId: req.user.id,
       userName: user.name,
       rating: Number(rating),
-      comment,
+      comment: comment.trim(),
     };
 
     product.reviews.push(review);
@@ -229,9 +251,32 @@ exports.addProductReview = async (req, res) => {
       product.reviews.length;
 
     await product.save();
-    res.status(201).json({ success: true, message: "Review added" });
+    res
+      .status(201)
+      .json({ success: true, message: "Review added successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
+exports.getProductReviews = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).select(
+      "reviews rating numReviews productName",
+    );
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    const sorted = [...product.reviews].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    );
+    res.json({
+      success: true,
+      reviews: sorted,
+      avgRating: product.rating,
+      reviewCount: product.numReviews,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

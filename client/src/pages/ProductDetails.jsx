@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { marketService, chatService } from "../services";
@@ -18,6 +18,7 @@ import {
   HiOutlineShoppingBag,
   HiOutlineClipboardDocument,
   HiOutlineCheckCircle,
+  HiOutlineShoppingCart,
   HiStar,
 } from "react-icons/hi2";
 import WishlistButton from "../components/WishlistButton";
@@ -41,6 +42,8 @@ const ProductDetails = () => {
     comment: "",
   });
   const [submittingProduct, setSubmittingProduct] = useState(false);
+  const [reviewsData, setReviewsData] = useState(null); // { reviews, avgRating, reviewCount }
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const isSeller =
     user &&
@@ -99,6 +102,20 @@ const ProductDetails = () => {
     }
   };
 
+  const fetchReviews = useCallback(async () => {
+    setReviewsLoading(true);
+    try {
+      const res = await marketService.getProductReviews(id);
+      if (res.data.success) {
+        setReviewsData(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [id]);
+
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied");
@@ -117,8 +134,14 @@ const ProductDetails = () => {
       toast.success("Product review added");
       setProductReview({ rating: 5, comment: "" });
       fetchProductDetails();
+      fetchReviews();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to add review");
+      const msg = err.response?.data?.message || "Failed to add review";
+      if (err.response?.data?.requiresPurchase) {
+        toast.error("Purchase required to leave a review");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSubmittingProduct(false);
     }
@@ -512,10 +535,24 @@ const ProductDetails = () => {
               Description & Details
             </button>
             <button
-              onClick={() => setActiveTab("reviews")}
-              className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === "reviews" ? "border-violet-500 text-white" : "border-transparent text-slate-500 hover:text-slate-300"}`}
+              onClick={() => {
+                setActiveTab("reviews");
+                if (!reviewsData) fetchReviews();
+              }}
+              className={`px-6 py-3 text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${activeTab === "reviews" ? "border-violet-500 text-white" : "border-transparent text-slate-500 hover:text-slate-300"}`}
             >
-              Reviews ({product.reviews?.length || 0})
+              Reviews
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                activeTab === "reviews" ? "bg-violet-500/20 text-violet-300" : "bg-[#1f2a3d] text-slate-500"
+              }`}>
+                {reviewsData ? reviewsData.reviewCount : (product.numReviews || 0)}
+              </span>
+              {(reviewsData?.avgRating || product.rating) > 0 && (
+                <span className="flex items-center gap-0.5 text-amber-400 text-[11px] font-bold">
+                  <HiStar className="text-xs" />
+                  {(reviewsData?.avgRating || product.rating).toFixed(1)}
+                </span>
+              )}
             </button>
           </div>
 
@@ -578,24 +615,67 @@ const ProductDetails = () => {
             >
               <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-4">
-                  <h3 className="text-white font-bold flex items-center gap-2 mb-2">
-                    Product Reviews
-                  </h3>
-                  {product.reviews?.length > 0 ? (
-                    product.reviews.map((r, i) => (
-                      <div key={i} className={`${card} p-5`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white font-bold flex items-center gap-2">
+                      Product Reviews
+                    </h3>
+                    {(reviewsData?.avgRating || 0) > 0 && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <HiStar
+                              key={i}
+                              className={`text-xs ${
+                                i < Math.round(reviewsData.avgRating)
+                                  ? "text-amber-400"
+                                  : "text-slate-700"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-amber-400 font-bold text-sm">
+                          {reviewsData.avgRating.toFixed(1)}
+                        </span>
+                        <span className="text-slate-600 text-[10px]">
+                          ({reviewsData.reviewCount} review{reviewsData.reviewCount !== 1 ? "s" : ""})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {reviewsLoading ? (
+                    <div className="space-y-3">
+                      {[...Array(2)].map((_, i) => (
+                        <div key={i} className="bg-[#111827] border border-[#1f2a3d] rounded-2xl h-24 animate-pulse opacity-40" />
+                      ))}
+                    </div>
+                  ) : (reviewsData?.reviews || []).length > 0 ? (
+                    (reviewsData?.reviews || []).map((r, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className={`${card} p-5`}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-bold text-sm">
-                              {r.userName}
-                            </span>
-                            <div className="flex items-center gap-0.5">
-                              {[...Array(5)].map((_, idx) => (
-                                <HiStar
-                                  key={idx}
-                                  className={`text-[10px] ${idx < r.rating ? "text-amber-400" : "text-slate-700"}`}
-                                />
-                              ))}
+                            <div className="w-8 h-8 rounded-lg bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400 font-bold text-xs uppercase shrink-0">
+                              {r.userName?.[0] || "U"}
+                            </div>
+                            <div>
+                              <span className="text-white font-bold text-sm block leading-tight">
+                                {r.userName}
+                              </span>
+                              <div className="flex items-center gap-0.5 mt-0.5">
+                                {[...Array(5)].map((_, idx) => (
+                                  <HiStar
+                                    key={idx}
+                                    className={`text-[10px] ${
+                                      idx < r.rating ? "text-amber-400" : "text-slate-700"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           </div>
                           <span className="text-[10px] text-slate-600">
@@ -605,7 +685,7 @@ const ProductDetails = () => {
                         <p className="text-slate-400 text-sm leading-relaxed">
                           {r.comment}
                         </p>
-                      </div>
+                      </motion.div>
                     ))
                   ) : (
                     <div className="text-center py-12 border border-dashed border-[#1f2a3d] rounded-2xl">
@@ -638,15 +718,41 @@ const ProductDetails = () => {
                         Owners cannot review their own products.
                       </p>
                     </div>
-                  ) : product.reviews?.some((r) => r.userId === user.id) ? (
+                  ) : reviewsData?.reviews?.some(
+                      (r) => r.userId?.toString() === user.id
+                    ) ||
+                    product.reviews?.some(
+                      (r) => r.userId?.toString() === user.id
+                    ) ? (
                     <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
+                      <HiOutlineCheckCircle className="text-emerald-400 text-2xl mx-auto mb-2" />
                       <p className="text-emerald-400/80 text-[11px] font-medium">
                         Thank you! You have already reviewed this product.
                       </p>
                     </div>
+                  ) : !product.isSold ? (
+                    // Product not purchased — show purchase-required notice
+                    <div className="text-center py-6 space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto">
+                        <HiOutlineShoppingCart className="text-violet-400 text-xl" />
+                      </div>
+                      <p className="text-slate-400 text-xs leading-relaxed px-2">
+                        Only verified buyers can leave reviews. Purchase this product to share your experience.
+                      </p>
+                      <button
+                        onClick={() =>
+                          navigate(`/market/product/${product._id}/checkout`)
+                        }
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all"
+                      >
+                        Buy to Review
+                      </button>
+                    </div>
                   ) : (
+                 
                     <form onSubmit={handleProductReview} className="space-y-4">
                       <div>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Your Rating</p>
                         <div className="flex gap-2 mb-3">
                           {[1, 2, 3, 4, 5].map((num) => (
                             <button
@@ -658,11 +764,18 @@ const ProductDetails = () => {
                                   rating: num,
                                 }))
                               }
-                              className={`p-2 rounded-lg border transition-all ${productReview.rating >= num ? "bg-amber-500/20 border-amber-500/50 text-amber-500" : "bg-[#0d1424] border-[#1f2a3d] text-slate-700"}`}
+                              className={`p-2 rounded-lg border transition-all ${
+                                productReview.rating >= num
+                                  ? "bg-amber-500/20 border-amber-500/50 text-amber-400 scale-110"
+                                  : "bg-[#0d1424] border-[#1f2a3d] text-slate-700 hover:text-slate-500"
+                              }`}
                             >
                               <HiStar />
                             </button>
                           ))}
+                          <span className="ml-1 text-amber-400 text-xs font-bold self-center">
+                            {productReview.rating}/5
+                          </span>
                         </div>
                         <textarea
                           placeholder="Your thoughts on this product..."
@@ -675,13 +788,18 @@ const ProductDetails = () => {
                             }))
                           }
                           required
+                          minLength={3}
                         />
                       </div>
                       <button
                         disabled={submittingProduct}
-                        className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50"
+                        className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
-                        {submittingProduct ? "Submitting..." : "Post Review"}
+                        {submittingProduct ? (
+                          <><div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
+                        ) : (
+                          <>Post Review</>
+                        )}
                       </button>
                     </form>
                   )}
@@ -708,7 +826,7 @@ const ProductDetails = () => {
               setShowChat(false);
               setActiveBuyerId(null);
               setActiveBuyerName("");
-              if (isSeller) fetchSellerChats(); // refresh unread counts
+              if (isSeller) fetchSellerChats();
             }}
           />
         )}

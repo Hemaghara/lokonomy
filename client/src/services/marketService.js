@@ -4,6 +4,7 @@ export const marketService = {
   getProducts: (params) => api.get("/market", { params }),
   getMyProducts: () => api.get("/market/my"),
   getProductById: (id) => api.get(`/market/${id}`),
+  getProductReviews: (id) => api.get(`/market/${id}/reviews`),
   addProduct: (productData) => api.post("/market", productData),
   deleteProduct: (id) => api.delete(`/market/${id}`),
   addProductReview: (id, reviewData) =>
