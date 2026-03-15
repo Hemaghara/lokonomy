@@ -60,6 +60,17 @@ const initSocket = (server) => {
             message: savedMessage,
           });
         }
+
+        // Send push notification
+        const { sendPushNotification } = require("./utils/pushService");
+        await sendPushNotification(receiverId, {
+          title: `New message from ${senderName}`,
+          body: message.length > 50 ? message.substring(0, 50) + "..." : message,
+          data: {
+            url: `/chat/${chatRoom}`,
+            type: "chat",
+          },
+        });
       } catch (err) {
         console.error("Error saving message:", err);
         socket.emit("messageError", { error: "Failed to send message" });

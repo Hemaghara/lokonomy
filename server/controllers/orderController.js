@@ -87,6 +87,16 @@ exports.createOrder = async (req, res) => {
       { strict: false },
     );
 
+    const { sendPushNotification } = require("../utils/pushService");
+    await sendPushNotification(product.sellerId, {
+      title: "New Order Received",
+      body: `You have a new order for ${product.name}.`,
+      data: {
+        url: "/seller/orders",
+        type: "order",
+      },
+    });
+
     res.status(201).json({ success: true, order: savedOrder });
   } catch (err) {
     console.error("Order Creation Error:", err);
@@ -156,6 +166,16 @@ exports.updateOrderStatus = async (req, res) => {
 
     order.orderStatus = orderStatus;
     await order.save();
+
+    const { sendPushNotification } = require("../utils/pushService");
+    await sendPushNotification(order.buyer, {
+      title: "Order Update",
+      body: `Your order status has been updated to ${orderStatus}.`,
+      data: {
+        url: "/my-orders",
+        type: "order_update",
+      },
+    });
 
     res.status(200).json({ success: true, order });
   } catch (err) {

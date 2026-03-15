@@ -46,6 +46,7 @@ app.use("/api/chat", require("./routes/chat"));
 app.use("/api/subscription", require("./routes/subscription"));
 app.use("/api/growth", require("./routes/growth"));
 app.use("/api/wishlist", require("./routes/wishlist"));
+app.use("/api/push", require("./routes/pushRoutes"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });

@@ -5,6 +5,7 @@ import { useUser } from "../context/UserContext";
 import { authService } from "../services";
 import { toast } from "react-hot-toast";
 import { MapPin,Hourglass,CheckCircle,Ban,AlertTriangle} from "lucide-react";
+import { subscribeToPush } from "../services/pushService";
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useUser();
@@ -187,6 +188,12 @@ const Login = () => {
           ...response.data.user,
           token: response.data.token,
         });
+        
+        // Subscribe to push notifications if enabled
+        if (response.data.user.notificationsEnabled !== false) {
+          subscribeToPush().catch(err => console.error("Push subscription failed", err));
+        }
+
         navigate("/home");
       } else {
         toast.error(response.data.message || "Verification failed");

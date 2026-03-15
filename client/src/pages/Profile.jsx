@@ -5,6 +5,7 @@ import { useLocation } from "../context/LocationContext";
 import { authService, businessService, jobService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { subscribeToPush, unsubscribeFromPush, toggleNotifications } from "../services/pushService";
 
 import {
   HiOutlineArrowUpRight,
@@ -45,6 +46,8 @@ const Profile = () => {
     accountNumber: user?.accountNumber || "",
   });
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? true);
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -57,6 +60,7 @@ const Profile = () => {
         branch: user.branch || "",
         accountNumber: user.accountNumber || "",
       });
+      setNotificationsEnabled(user.notificationsEnabled ?? true);
       fetchMyBusinesses();
       fetchAppliedJobs();
     }
@@ -186,6 +190,37 @@ const Profile = () => {
     );
   };
 
+  const handleToggleNotifications = async () => {
+    const newState = !notificationsEnabled;
+    try {
+      setLoading(true);
+      await toggleNotifications(newState);
+      
+      if (newState) {
+        // Permission check
+        if (Notification.permission === "default") {
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            toast.error("Notification permission denied");
+            return;
+          }
+        }
+        await subscribeToPush();
+        toast.success("Push notifications enabled");
+      } else {
+        await unsubscribeFromPush();
+        toast.success("Push notifications disabled");
+      }
+      
+      setNotificationsEnabled(newState);
+      login({ ...user, notificationsEnabled: newState });
+    } catch (err) {
+      toast.error("Failed to update notification settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const tabs = [
     { id: "profile", label: "Profile", icon: <FiUser /> },
     { id: "location", label: "Location", icon: <FiMapPin /> },
@@ -204,6 +239,7 @@ const Profile = () => {
     { id: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
     { id: "membership", label: "Membership", icon: <HiOutlineSparkles /> },
+    { id: "settings", label: "Settings", icon: <HiOutlineShieldCheck /> },
   ];
 
   const avatarLetter = user?.name?.[0]?.toUpperCase();
@@ -983,6 +1019,43 @@ const Profile = () => {
               >
                 Open Seller Dashboard <HiOutlineArrowUpRight />
               </button>
+            </motion.div>
+          )}
+
+          {activeTab === "settings" && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18 }}
+              className={`${card} p-6`}
+            >
+              <h2 className="text-white font-bold text-lg mb-1">Settings</h2>
+              <p className="text-slate-500 text-xs mb-8">
+                Manage your notification preferences and account security.
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl">
+                  <div>
+                    <h4 className="text-slate-200 font-semibold text-sm">Push Notifications</h4>
+                    <p className="text-slate-500 text-[11px] mt-0.5">Receive updates about orders, bookings, and messages</p>
+                  </div>
+                  <button
+                    onClick={handleToggleNotifications}
+                    disabled={loading}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none 
+                      ${notificationsEnabled ? "bg-violet-600" : "bg-slate-700"}
+                      ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                        ${notificationsEnabled ? "translate-x-5" : "translate-x-0"}`}
+                    />
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

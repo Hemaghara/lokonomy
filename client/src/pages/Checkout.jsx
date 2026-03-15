@@ -90,7 +90,7 @@ const Checkout = () => {
         productId: product._id,
         ...orderForm,
       });
-      toast.success("Order placed successfully! 🎉");
+      toast.success("Order placed successfully!");
       navigate("/my-orders");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to place order");

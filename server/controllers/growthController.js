@@ -352,6 +352,16 @@ exports.createBooking = async (req, res) => {
       });
     }
 
+    const { sendPushNotification } = require("../utils/pushService");
+    await sendPushNotification(business.ownerId, {
+      title: "New Booking Request",
+      body: `${user.name} has requested a booking for ${serviceName}.`,
+      data: {
+        url: "/dashboard/bookings",
+        type: "booking",
+      },
+    });
+
     res.json({ success: true, booking: newBooking, appliedCoupon });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -391,6 +401,16 @@ exports.updateBookingStatus = async (req, res) => {
 
     booking.status = status;
     await booking.save();
+
+    const { sendPushNotification } = require("../utils/pushService");
+    await sendPushNotification(booking.userId, {
+      title: "Booking Update",
+      body: `Your booking for ${booking.serviceName} has been ${status}.`,
+      data: {
+        url: "/my-bookings",
+        type: "booking_update",
+      },
+    });
 
     res.json({ success: true, booking });
   } catch (err) {

@@ -84,6 +84,21 @@ const userSchema = new mongoose.Schema({
       ref: "Business",
     },
   ],
+  pushSubscriptions: [
+    {
+      endpoint: String,
+      keys: {
+        p256dh: String,
+        auth: String,
+      },
+      deviceType: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  notificationsEnabled: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);
