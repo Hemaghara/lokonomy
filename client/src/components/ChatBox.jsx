@@ -28,6 +28,7 @@ const ChatBox = ({
   onClose,
 }) => {
   const { user } = useUser();
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -80,7 +81,6 @@ const ChatBox = ({
     socket.on("userStopTyping", () => {
       setTypingUser(null);
     });
-
     socket.on("messagesRead", () => {
       setMessages((prev) =>
         prev.map((msg) => {
@@ -96,7 +96,6 @@ const ChatBox = ({
     });
 
     fetchMessages();
-
     return () => {
       leaveRoom(chatRoom);
       socket.off("receiveMessage");
@@ -125,7 +124,6 @@ const ChatBox = ({
       setLoading(false);
     }
   };
-
   const handleSend = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || sending || !chatRoom) return;
@@ -169,7 +167,6 @@ const ChatBox = ({
       hour12: true,
     });
   };
-
   const formatDate = (date) => {
     const d = new Date(date);
     const today = new Date();
@@ -228,7 +225,6 @@ const ChatBox = ({
             <p className="text-white font-semibold text-sm truncate">
               {displayName}
             </p>
-          
           </div>
         </div>
         <button

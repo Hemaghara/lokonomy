@@ -10,7 +10,6 @@ const initSocket = (server) => {
   });
 
   const onlineUsers = new Map();
-
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
@@ -18,12 +17,10 @@ const initSocket = (server) => {
       onlineUsers.set(userId, socket.id);
       console.log(`User registered: ${userId}`);
     });
-
     socket.on("joinRoom", ({ chatRoom }) => {
       socket.join(chatRoom);
       console.log(`Socket ${socket.id} joined room: ${chatRoom}`);
     });
-
     socket.on("leaveRoom", ({ chatRoom }) => {
       socket.leave(chatRoom);
       console.log(`Socket ${socket.id} left room: ${chatRoom}`);
@@ -64,7 +61,8 @@ const initSocket = (server) => {
         const { sendPushNotification } = require("./utils/pushService");
         await sendPushNotification(receiverId, {
           title: `New message from ${senderName}`,
-          body: message.length > 50 ? message.substring(0, 50) + "..." : message,
+          body:
+            message.length > 50 ? message.substring(0, 50) + "..." : message,
           data: {
             url: `/chat/${chatRoom}`,
             type: "chat",

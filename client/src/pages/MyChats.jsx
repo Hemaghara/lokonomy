@@ -38,7 +38,6 @@ const MyChats = () => {
       setLoading(false);
     }
   };
-
   const formatTime = (date) => {
     const d = new Date(date);
     const now = new Date();
@@ -62,7 +61,6 @@ const MyChats = () => {
     setActiveChat(null);
     fetchConversations();
   };
-
   if (!user) {
     return (
       <div className="min-h-screen bg-[#080e1a] flex items-center justify-center pt-20">

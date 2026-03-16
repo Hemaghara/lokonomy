@@ -104,7 +104,6 @@ const getUserChats = async (req, res) => {
         if (senderEntry) {
           otherUserName = senderEntry.name;
         }
-
         const isSeller = chat.product?.sellerId?.toString() === userId;
         console.log(`Is seller: ${isSeller}`);
 
