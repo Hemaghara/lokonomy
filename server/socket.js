@@ -61,7 +61,6 @@ const initSocket = (server) => {
           });
         }
 
-        // Send push notification
         const { sendPushNotification } = require("./utils/pushService");
         await sendPushNotification(receiverId, {
           title: `New message from ${senderName}`,
