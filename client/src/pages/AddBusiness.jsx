@@ -312,7 +312,7 @@ const AddBusiness = () => {
       );
 
       setFormData((prev) => ({ ...prev, description }));
-      toast.success("✨ Description generated! Feel free to edit it.");
+      toast.success("Description generated! Feel free to edit it.");
     } catch (err) {
       console.error("AI Generation Error:", err);
       toast.error(err.message || "Failed to generate description.");
@@ -524,7 +524,7 @@ const AddBusiness = () => {
                         Generating...
                       </>
                     ) : (
-                      <>✨ Generate with AI</>
+                      <>Generate with AI</>
                     )}
                   </button>
                   <p className="text-[10px] text-slate-500">

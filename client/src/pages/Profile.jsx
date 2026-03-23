@@ -6,6 +6,7 @@ import { authService, businessService, jobService, referralService } from "../se
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { subscribeToPush, unsubscribeFromPush, toggleNotifications } from "../services/pushService";
+import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 
 import {
   HiOutlineArrowUpRight,
@@ -1158,7 +1159,7 @@ const Profile = () => {
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 text-xs font-bold py-3 rounded-xl transition-all"
                       >
-                        <span>💬</span>
+                        <span><HiOutlineChatBubbleLeftRight/></span>
                         Share on WhatsApp
                       </a>
                     </div>

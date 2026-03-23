@@ -209,7 +209,7 @@ const UpgradePlan = () => {
             if (verifyRes.data.success) {
               updateUser(verifyRes.data.user);
               toast.success(`${plan.name} plan activated!`);
-              if (refApplied) toast.success("Referral reward credited to your referrer! 🔥");
+              if (refApplied) toast.success("Referral reward credited to your referrer!");
               fetchStatus();
             }
           } catch (err) {

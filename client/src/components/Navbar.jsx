@@ -140,7 +140,7 @@ const Navbar = () => {
                       to="/upgrade-plan"
                       className="ml-2 px-3 py-1.5 bg-linear-to-r from-amber-400 to-yellow-600 text-[10px] font-black text-black uppercase tracking-widest rounded-lg shadow-lg shadow-amber-500/20 hover:scale-105 transition-all duration-300 flex items-center gap-1.5 border border-amber-300/30"
                     >
-                      <span>✨</span> Upgrade
+                       Upgrade
                     </Link>
                   </div>
 

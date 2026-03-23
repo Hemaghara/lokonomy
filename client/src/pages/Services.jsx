@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import WishlistButton from "../components/WishlistButton";
 import BusinessMapView from "../components/BusinessMapView";
 import { FaSearch, FaThLarge, FaMapMarkedAlt } from "react-icons/fa";
+import { HiOutlineMapPin,HiStar,} from "react-icons/hi2";
 const useUserLocation = () => {
   const [coords, setCoords] = useState(() => {
     const cached = sessionStorage.getItem("lokonomy_user_coords");
@@ -276,7 +277,7 @@ const Services = () => {
                     >
                       <div className="absolute top-4 right-4 z-10">
                         <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                          <span className="text-xs">★</span>
+                          <span className="text-xs"><HiStar/></span>
                           <span className="text-[10px] font-black">
                             {(shop.rating || 0.0).toFixed(1)}
                           </span>
@@ -314,7 +315,7 @@ const Services = () => {
 
                         <div className="space-y-3">
                           <div className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-white/5">
-                            <span className="text-lg">📍</span>
+                            <span className="text-lg"><HiOutlineMapPin/></span>
                             <div className="flex flex-col min-w-0">
                               <span className="text-[8px] font-black text-text-dim uppercase tracking-widest">
                                 Location
