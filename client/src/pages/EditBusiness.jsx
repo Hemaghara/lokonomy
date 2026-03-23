@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { businessService } from "../services";
+import { businessService, generateBusinessDescription } from "../services";
 import { categories } from "../data/categories";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
@@ -174,6 +174,7 @@ const EditBusiness = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [fetching, setFetching] = useState(true);
   // shopLocation: { lat, lng, address } | null
   const [shopLocation, setShopLocation] = useState(null);
@@ -353,6 +354,32 @@ const EditBusiness = () => {
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
     }));
+  };
+
+  const handleAIGeneration = async () => {
+    if (!formData.businessName || !formData.mainCategory) {
+      toast.error("Please fill in Business Name and Category first");
+      return;
+    }
+
+    setGeneratingAI(true);
+    try {
+      const locationStr = formData.address || formData.district || "Ahmedabad, Gujarat";
+      const description = await generateBusinessDescription(
+        formData.businessName,
+        formData.mainCategory,
+        formData.subCategory || "",
+        locationStr,
+      );
+
+      setFormData((prev) => ({ ...prev, description }));
+      toast.success("✨ Description generated! Feel free to edit it.");
+    } catch (err) {
+      console.error("AI Generation Error:", err);
+      toast.error(err.message || "Failed to generate description.");
+    } finally {
+      setGeneratingAI(false);
+    }
   };
 
   const applyToAllDays = (sourceDay) => {
@@ -565,6 +592,29 @@ const EditBusiness = () => {
                   <HiOutlineDocumentText className="text-violet-400" />{" "}
                   Description
                 </label>
+
+                <div className="flex flex-col gap-1.5 mb-2.5">
+                  <button
+                    type="button"
+                    onClick={handleAIGeneration}
+                    disabled={generatingAI}
+                    className="w-fit bg-violet-600/10 hover:bg-violet-600 border border-violet-500/30 text-violet-400 hover:text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {generatingAI ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-violet-400/30 border-t-white rounded-full animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>✨ Generate with AI</>
+                    )}
+                  </button>
+                  <p className="text-[10px] text-slate-500">
+                    AI will use your business name, category and location to
+                    generate a description
+                  </p>
+                </div>
+
                 <textarea
                   name="description"
                   placeholder="Tell customers about your services, experience, and what makes you special…"
