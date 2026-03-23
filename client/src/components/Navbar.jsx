@@ -154,8 +154,13 @@ const Navbar = () => {
                       {user.name?.[0].toUpperCase()}
                     </div>
                     <div className="flex flex-col leading-none">
-                      <span className="text-[12px] font-bold text-white">
+                      <span className="text-[12px] font-bold text-white flex items-center gap-1">
                         {user.name?.split(" ")[0]}
+                        {(user.referralRewards?.totalReferrals > 0) && (
+                          <span className="text-[10px] text-orange-400" title={`${user.referralRewards.totalReferrals} referrals`}>
+                            🔥{user.referralRewards.totalReferrals}
+                          </span>
+                        )}
                       </span>
                       <span
                         className={`text-[8px] font-black uppercase tracking-tighter mt-0.5 px-1 rounded-sm

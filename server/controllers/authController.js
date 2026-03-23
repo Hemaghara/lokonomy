@@ -170,6 +170,9 @@ exports.verifyOtp = async (req, res) => {
         phoneNumber: user.phoneNumber,
         subscription: user.subscription,
         usage: user.usage,
+        referralCode: user.referralCode,
+        referredBy: user.referredBy,
+        referralRewards: user.referralRewards,
       },
     });
   } catch (err) {
@@ -207,6 +210,9 @@ exports.getMe = async (req, res) => {
         phoneNumber: user.phoneNumber,
         subscription: user.subscription,
         usage: user.usage,
+        referralCode: user.referralCode,
+        referredBy: user.referredBy,
+        referralRewards: user.referralRewards,
       },
     });
   } catch (err) {
@@ -224,6 +230,7 @@ exports.register = async (req, res) => {
       longitude,
       locationName,
       locationPermission,
+      referralCode: incomingReferralCode,
     } = req.body;
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: "User already exists" });
@@ -246,8 +253,26 @@ exports.register = async (req, res) => {
       );
     }
 
+    let referrerUser = null;
+    if (incomingReferralCode) {
+      referrerUser = await User.findOne({ referralCode: incomingReferralCode.toUpperCase() });
+      if (referrerUser) {
+        userData.referredBy = referrerUser._id;
+      }
+    }
+
     user = new User(userData);
     await user.save();
+
+    const suffix = user._id.toString().slice(-4).toUpperCase();
+    user.referralCode = `LOKO-${suffix}`;
+    await user.save();
+
+    if (referrerUser) {
+      await User.findByIdAndUpdate(referrerUser._id, {
+        $inc: { "referralRewards.totalReferrals": 1 },
+      });
+    }
 
     const token = jwt.sign(
       { user: { id: user.id } },
@@ -277,10 +302,14 @@ exports.register = async (req, res) => {
         phoneNumber: user.phoneNumber,
         subscription: user.subscription,
         usage: user.usage,
+        referralCode: user.referralCode,
+        referredBy: user.referredBy,
+        referralRewards: user.referralRewards,
       },
       message: "User registered successfully",
     });
   } catch (err) {
+    console.error("Register Error:", err.message);
     res.status(501).json({ success: false, message: "Registration failed" });
   }
 };
@@ -361,6 +390,9 @@ exports.updateProfile = async (req, res) => {
         phoneNumber: user.phoneNumber,
         subscription: user.subscription,
         usage: user.usage,
+        referralCode: user.referralCode,
+        referredBy: user.referredBy,
+        referralRewards: user.referralRewards,
       },
       message: "Profile updated successfully",
     });

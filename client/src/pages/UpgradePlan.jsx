@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "../context/UserContext";
-import { subscriptionService } from "../services";
+import { subscriptionService, referralService } from "../services";
 import { toast } from "react-hot-toast";
 import {
   HiOutlineCheckCircle,
@@ -14,6 +14,7 @@ import {
   HiOutlineClock,
   HiOutlineChartBar,
   HiOutlineStar,
+  HiOutlineTicket,
 } from "react-icons/hi";
 import { Award, Medal, Tag, Gem } from "lucide-react";
 import { Check, X } from "lucide-react";
@@ -91,6 +92,21 @@ const UpgradePlan = () => {
   const [loading, setLoading] = useState(false);
   const [subStatus, setSubStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
+  const [refCodeInput, setRefCodeInput] = useState("");
+  const [appliedRefCode, setAppliedRefCode] = useState("");
+  const [refValidating, setRefValidating] = useState(false);
+  const [refApplied, setRefApplied] = useState(false);
+
+  useEffect(() => {
+    if (user?.referredBy) {
+      setRefApplied(true);
+    }
+  }, [user]);
+
+  const DISCOUNT = 0.15; 
+
+  const getPrice = (basePrice) =>
+    refApplied ? Math.round(basePrice * (1 - DISCOUNT)) : basePrice;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -109,6 +125,23 @@ const UpgradePlan = () => {
     } catch {
     } finally {
       setStatusLoading(false);
+    }
+  };
+
+  const handleValidateRef = async () => {
+    if (!refCodeInput.trim()) return;
+    setRefValidating(true);
+    try {
+      const res = await referralService.validateReferralCode(refCodeInput.trim());
+      if (res.data.success) {
+        setAppliedRefCode(res.data.referralCode);
+        setRefApplied(true);
+        toast.success("Referral code applied! 15% discount unlocked");
+      }
+    } catch {
+      toast.error("Invalid referral code");
+    } finally {
+      setRefValidating(false);
     }
   };
 
@@ -152,14 +185,14 @@ const UpgradePlan = () => {
 
       const plan = PLANS_CONFIG.find((p) => p.key === planKey);
 
-      console.log("plan=====>", plan);
+      console.log("plan=====>" , plan);
 
       const options = {
         key: keyId,
-        amount,
+        amount: refApplied ? Math.round(amount * (1 - DISCOUNT)) : amount,
         currency,
         name: "Lokonomy",
-        description: `${plan.name} Plan — ${selectedDuration} Month${selectedDuration > 1 ? "s" : ""}`,
+        description: `${plan.name} Plan — ${selectedDuration} Month${selectedDuration > 1 ? "s" : ""}${refApplied ? " (15% off)": ""}`,
         image: "https://via.placeholder.com/80x80?text=L",
         order_id: orderId,
         handler: async (response) => {
@@ -170,11 +203,13 @@ const UpgradePlan = () => {
               razorpay_signature: response.razorpay_signature,
               plan: planKey,
               durationMonths: selectedDuration,
+              referralCode: appliedRefCode || "",
             });
 
             if (verifyRes.data.success) {
               updateUser(verifyRes.data.user);
-              toast.success(`🎉 ${plan.name} plan activated!`);
+              toast.success(`${plan.name} plan activated!`);
+              if (refApplied) toast.success("Referral reward credited to your referrer! 🔥");
               fetchStatus();
             }
           } catch (err) {
@@ -372,6 +407,48 @@ const UpgradePlan = () => {
           </motion.div>
         )}
 
+        {!user?.referredBy && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.12 }}
+            className={`${card} p-5 mb-8`}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <HiOutlineTicket className="text-violet-400 text-lg" />
+              <h3 className="text-white font-semibold text-sm">Have a Referral Code?</h3>
+              {refApplied && (
+                <span className="ml-auto flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                  <HiOutlineCheckCircle className="text-base" />
+                  Applied! 15% discount unlocked
+                </span>
+              )}
+            </div>
+            {!refApplied ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={refCodeInput}
+                  onChange={(e) => setRefCodeInput(e.target.value.toUpperCase())}
+                  placeholder="e.g. LOKO-AB12"
+                  className="flex-1 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 font-mono tracking-wider placeholder:text-slate-600"
+                />
+                <button
+                  onClick={handleValidateRef}
+                  disabled={refValidating || !refCodeInput.trim()}
+                  className="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
+                >
+                  {refValidating ? "Checking..." : "Apply"}
+                </button>
+              </div>
+            ) : (
+              <p className="text-slate-500 text-xs">
+                Your referral discount will be applied at checkout automatically.
+              </p>
+            )}
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -454,17 +531,24 @@ const UpgradePlan = () => {
                   </div>
                   <h3 className="text-white font-bold text-xl">{plan.name}</h3>
 
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-slate-500 text-sm">₹</span>
-                    <span className="text-white font-extrabold text-3xl">
-                      {price}
-                    </span>
-                    <span className="text-slate-500 text-xs ml-1">
-                      / {selectedDuration}mo
-                    </span>
+                  <div className="mt-3 flex items-baseline gap-1 flex-wrap">
+                    {refApplied ? (
+                      <>
+                        <span className="text-slate-500 line-through text-sm">₹{price}</span>
+                        <span className="text-slate-500 text-sm">₹</span>
+                        <span className="text-emerald-400 font-extrabold text-3xl">{getPrice(price)}</span>
+                        <span className="text-slate-500 text-xs ml-1">/ {selectedDuration}mo</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-slate-500 text-sm">₹</span>
+                        <span className="text-white font-extrabold text-3xl">{price}</span>
+                        <span className="text-slate-500 text-xs ml-1">/ {selectedDuration}mo</span>
+                      </>
+                    )}
                   </div>
                   <p className="text-slate-600 text-[11px] mt-1">
-                    ₹{perMonth}/month billed{" "}
+                    ₹{Math.round(getPrice(price) / selectedDuration)}/month billed{" "}
                     {selectedDuration === 1
                       ? "monthly"
                       : `every ${selectedDuration} months`}

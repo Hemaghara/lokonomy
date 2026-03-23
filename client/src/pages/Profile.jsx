@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { useLocation } from "../context/LocationContext";
-import { authService, businessService, jobService } from "../services";
+import { authService, businessService, jobService, referralService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { subscribeToPush, unsubscribeFromPush, toggleNotifications } from "../services/pushService";
@@ -23,6 +23,8 @@ import {
   HiOutlineBookmark,
   HiOutlineShieldCheck,
   HiOutlineSparkles,
+  HiOutlineClipboardDocument,
+  HiOutlineGift,
 } from "react-icons/hi2";
 import { FiUser, FiMapPin, FiBriefcase, FiPlus } from "react-icons/fi";
 
@@ -34,7 +36,9 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [myBusinesses, setMyBusinesses] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
-
+  const [referralData, setReferralData] = useState(null);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     upiId: user?.upiId || "",
@@ -69,7 +73,48 @@ const Profile = () => {
   useEffect(() => {
     if (activeTab === "businesses" && user) fetchMyBusinesses();
     if (activeTab === "applications" && user) fetchAppliedJobs();
+    if (activeTab === "referrals" && user) fetchReferralData();
   }, [activeTab, user]);
+
+  const fetchReferralData = async () => {
+    setReferralLoading(true);
+    try {
+      const codeRes = await referralService.getMyReferralCode();
+      setReferralData(codeRes.data);
+    } catch (err) {
+      console.error("Referral fetch error:", err);
+    } finally {
+      setReferralLoading(false);
+    }
+  };
+
+  const handleCopyCode = async () => {
+    const code = referralData?.referralCode || user?.referralCode;
+    if (!code) return;
+    const link = `${window.location.origin}/register?ref=${code}`;
+    try {
+      await navigator.clipboard.writeText(code);
+      setCodeCopied(true);
+      toast.success("Code copied!");
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
+  const handleShare = async () => {
+    const code = referralData?.referralCode || user?.referralCode;
+    const link = `${window.location.origin}/register?ref=${code}`;
+    const text = `Join Lokonomy using my referral code ${code} and get 15% off your first plan! ${link}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Join Lokonomy!", text, url: link });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      toast.success("Share text copied to clipboard!");
+    }
+  };
 
   const fetchMyBusinesses = async () => {
     try {
@@ -197,7 +242,6 @@ const Profile = () => {
       await toggleNotifications(newState);
       
       if (newState) {
-        // Permission check
         if (Notification.permission === "default") {
           const permission = await Notification.requestPermission();
           if (permission !== "granted") {
@@ -239,6 +283,7 @@ const Profile = () => {
     { id: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
     { id: "membership", label: "Membership", icon: <HiOutlineSparkles /> },
+    { id: "referrals", label: "Referrals", icon: <HiOutlineGift /> },
     { id: "settings", label: "Settings", icon: <HiOutlineShieldCheck /> },
   ];
 
@@ -1019,6 +1064,107 @@ const Profile = () => {
               >
                 Open Seller Dashboard <HiOutlineArrowUpRight />
               </button>
+            </motion.div>
+          )}
+
+          {activeTab === "referrals" && (
+            <motion.div
+              key="referrals"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-4"
+            >
+              <div className={`${card} p-6`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                    <HiOutlineGift className="text-xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-white font-bold text-base">Referral Program</h2>
+                    <p className="text-slate-500 text-xs">Share your code. Earn free days. Win-win.</p>
+                  </div>
+                </div>
+
+                {referralLoading ? (
+                  <div className="py-12 flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2">Your Unique Code</p>
+                      <motion.div
+                        animate={codeCopied ? { scale: [1, 1.06, 1] } : {}}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center gap-3 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-3 group"
+                      >
+                        <span className="flex-1 font-mono text-xl font-bold tracking-[0.2em] text-violet-300 select-all">
+                          {referralData?.referralCode || user?.referralCode || "—"}
+                        </span>
+                        <button
+                          id="copy-referral-code-btn"
+                          onClick={handleCopyCode}
+                          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-400 transition-colors"
+                        >
+                          <HiOutlineClipboardDocument className="text-base" />
+                          {codeCopied ? "Copied!" : "Copy"}
+                        </button>
+                      </motion.div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 text-center">
+                        <p className="text-white font-bold text-2xl">{referralData?.stats?.totalReferrals || 0}</p>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">Friends Joined</p>
+                      </div>
+                      <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 text-center">
+                        <p className="text-white font-bold text-2xl">{referralData?.stats?.appliedDays || 0}</p>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">Free Days Earned</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-violet-500/5 border border-violet-500/10 rounded-xl p-4">
+                      <p className="text-violet-400 text-[10px] font-black uppercase tracking-widest mb-2">How it works</p>
+                      <ul className="space-y-1.5">
+                        {[
+                          "Share your code with friends",
+                          "Friend signs up using your link",
+                          "Friend upgrades to any paid plan — gets 15% off",
+                          "You earn 15 free days added to your subscription!",
+                        ].map((step, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-slate-400">
+                            <span className="w-4 h-4 rounded-full bg-violet-600/30 text-violet-400 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                            {step}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        id="share-referral-btn"
+                        onClick={handleShare}
+                        className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold py-3 rounded-xl transition-all"
+                      >
+                        <HiOutlineArrowUpRight />
+                        Share My Code
+                      </button>
+                      <a
+                        id="whatsapp-share-btn"
+                        href={`https://wa.me/?text=${encodeURIComponent(`Join Lokonomy using my referral code ${referralData?.referralCode || user?.referralCode} and get 15% off your first plan! ${window.location.origin}/register?ref=${referralData?.referralCode || user?.referralCode}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 text-xs font-bold py-3 rounded-xl transition-all"
+                      >
+                        <span>💬</span>
+                        Share on WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 

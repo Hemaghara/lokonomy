@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { authService } from "../services";
+import { authService, referralService } from "../services";
 import { toast } from "react-hot-toast";
 import { MapPin,Hourglass,CheckCircle,Ban,AlertTriangle} from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
   const { login } = useUser();
+  const [searchParams] = useSearchParams();
+
+  const [refCode] = useState(() => searchParams.get("ref") || "");
+  const [referrerName, setReferrerName] = useState("");
+  const [refValidated, setRefValidated] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -28,6 +33,18 @@ const Register = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!refCode) return;
+    referralService.validateReferralCode(refCode)
+      .then((res) => {
+        if (res.data.success) {
+          setReferrerName(res.data.referrerName);
+          setRefValidated(true);
+        }
+      })
+      .catch(() => {});
+  }, [refCode]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -135,6 +152,10 @@ const Register = () => {
         payload.taluka = gpsState.taluka;
       }
 
+      if (refCode && refValidated) {
+        payload.referralCode = refCode.toUpperCase();
+      }
+
       const response = await authService.register(payload);
 
       if (response.data.token) {
@@ -206,6 +227,26 @@ const Register = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-2xl bg-card-bg border border-border p-10 md:p-12 rounded-2xl shadow-2xl"
       >
+        <AnimatePresence>
+          {refValidated && referrerName && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3"
+            >
+              <div>
+                <p className="text-emerald-400 font-semibold text-sm">
+                  You were invited by {referrerName}!
+                </p>
+                <p className="text-emerald-300/70 text-xs mt-0.5">
+                  Sign up to get 15% off your first plan upgrade.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="text-center mb-10">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-6">
             L

@@ -197,6 +197,30 @@ exports.verifyPayment = async (req, res) => {
       { new: true },
     );
 
+    if (updatedUser.referredBy) {
+      try {
+        const referrer = await User.findById(updatedUser.referredBy);
+        if (referrer) {
+          const currentExpiry = referrer.subscription?.expiryDate
+            ? new Date(referrer.subscription.expiryDate)
+            : new Date();
+          const newExpiry = new Date(
+            currentExpiry.getTime() + 15 * 24 * 60 * 60 * 1000,
+          );
+          await User.findByIdAndUpdate(referrer._id, {
+            "subscription.expiryDate": newExpiry,
+            $inc: { "referralRewards.appliedDays": 15 },
+          });
+        }
+        await User.findByIdAndUpdate(updatedUser.referredBy, {
+          $inc: { "referralRewards.totalDiscountsGiven": 1 },
+        });
+        console.log(`[Referral] Reward applied: 15 days added to referrer ${updatedUser.referredBy}`);
+      } catch (referralErr) {
+        console.error("[Referral] Error applying reward:", referralErr.message);
+      }
+    }
+
     const planDoc = await Plan.findOne({ slug: plan });
 
     res.json({

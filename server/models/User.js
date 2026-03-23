@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  // coordinates: [longitude, latitude] (GeoJSON order)
   latitude: { type: Number, default: null },
   longitude: { type: Number, default: null },
   locationName: { type: String, default: null },
@@ -98,6 +97,24 @@ const userSchema = new mongoose.Schema({
   notificationsEnabled: {
     type: Boolean,
     default: true,
+  },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+    default: null,
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  referralRewards: {
+    totalReferrals: { type: Number, default: 0 },
+    pendingDays: { type: Number, default: 0 },
+    appliedDays: { type: Number, default: 0 },
+    totalDiscountsGiven: { type: Number, default: 0 },
   },
 });
 
