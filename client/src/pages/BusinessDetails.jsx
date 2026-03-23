@@ -22,11 +22,11 @@ import {
   HiOutlineCalendarDays,
   HiOutlineArrowTopRightOnSquare,
   HiOutlineChartBar,
-  HiOutlineTicket,
 } from "react-icons/hi2";
 import BusinessAnalytics from "../components/growth/BusinessAnalytics";
 import CouponManager from "../components/growth/CouponManager";
 import BookingSystem from "../components/growth/BookingSystem";
+import BusinessQA from "../components/BusinessQA";
 import { HiStar } from "react-icons/hi2";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -60,10 +60,8 @@ const BusinessDetails = () => {
 
   const incrementVisits = async (businessData) => {
     try {
-      // Don't count if owner is viewing their own business
       if (user?.id === businessData?.ownerId) return;
 
-      // Unique visit check: Only count once per day per browser
       const storageKey = `loko_v_${id}`;
       const lastVisit = localStorage.getItem(storageKey);
       const today = new Date().toDateString();
@@ -159,10 +157,15 @@ const BusinessDetails = () => {
     { id: "gallery", label: "Gallery", icon: <HiOutlinePhoto /> },
     { id: "reviews", label: "Reviews", icon: <HiOutlineStar /> },
     { id: "booking", label: "Appointments", icon: <HiOutlineCalendarDays /> },
+    { id: "qa", label: "Q&A", icon: <HiOutlineChatBubbleLeftRight /> },
   ];
 
   if (user?.id === business?.ownerId) {
-    tabs.push({ id: "growth", label: "Growth Tools", icon: <HiOutlineChartBar /> });
+    tabs.push({
+      id: "growth",
+      label: "Growth Tools",
+      icon: <HiOutlineChartBar />,
+    });
   }
 
   const format12h = (time) => {
@@ -810,17 +813,27 @@ const BusinessDetails = () => {
             )}
             {activeTab === "booking" && (
               <div className="max-w-2xl mx-auto">
-                <BookingSystem 
-                  businessId={id} 
+                <BookingSystem
+                  businessId={id}
                   isOwner={user?.id === business.ownerId}
                   ownerId={business.ownerId}
                 />
               </div>
             )}
 
+            {activeTab === "qa" && (
+              <BusinessQA
+                businessId={id}
+                isOwner={user?.id === business.ownerId}
+              />
+            )}
+
             {activeTab === "growth" && user?.id === business.ownerId && (
               <div className="space-y-6">
-                <BusinessAnalytics businessId={id} plan={user.subscription?.plan} />
+                <BusinessAnalytics
+                  businessId={id}
+                  plan={user.subscription?.plan}
+                />
                 <CouponManager businessId={id} />
               </div>
             )}

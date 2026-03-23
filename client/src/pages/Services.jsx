@@ -3,7 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { businessService } from "../services";
 import { toast } from "react-hot-toast";
 import WishlistButton from "../components/WishlistButton";
-import { FaSearch } from "react-icons/fa";
+import BusinessMapView from "../components/BusinessMapView";
+import { FaSearch, FaThLarge, FaMapMarkedAlt } from "react-icons/fa";
 const useUserLocation = () => {
   const [coords, setCoords] = useState(() => {
     const cached = sessionStorage.getItem("lokonomy_user_coords");
@@ -40,8 +41,8 @@ const Services = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [radius, setRadius] = useState(5000); 
-
+  const [radius, setRadius] = useState(5000);
+  const [viewMode, setViewMode] = useState("list");
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
@@ -154,10 +155,35 @@ const Services = () => {
               </div>
             )}
 
+            <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                  viewMode === "list"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-text-dim hover:text-white"
+                }`}
+              >
+                <FaThLarge className="text-[10px]" /> List
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                  viewMode === "map"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-text-dim hover:text-white"
+                }`}
+              >
+                <FaMapMarkedAlt className="text-[10px]" /> Map
+              </button>
+            </div>
+
             <div className="w-full lg:w-80 relative group">
               <div className="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000" />
               <div className="relative flex items-center bg-[#1a2133] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-                <span className="pl-5 text-text-dim"><FaSearch/></span>
+                <span className="pl-5 text-text-dim">
+                  <FaSearch />
+                </span>
                 <input
                   type="text"
                   placeholder="Search by name or keyword..."
@@ -185,120 +211,141 @@ const Services = () => {
         )}
 
         <div className="min-h-100">
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-white/2 border border-white/5 h-80 rounded-2xl animate-pulse"
-                />
-              ))}
-            </div>
-          ) : filteredListings.length === 0 ? (
-            <div className="text-center py-40 border border-dashed border-white/10 rounded-3xl bg-white/2">
-              <h3 className="text-white text-2xl font-bold mb-3 tracking-tight">
-                No businesses nearby
-              </h3>
-              <p className="text-text-dim max-w-md mx-auto mb-10 text-lg">
-                {coords
-                  ? `No businesses found within ${radiusOptions.find((r) => r.value === radius)?.label}. Try a larger radius.`
-                  : "Enable GPS or try a different search."}
-              </p>
-              {coords && (
-                <button
-                  onClick={() =>
-                    setRadius(
-                      radiusOptions[
-                        Math.min(
-                          radiusOptions.findIndex((r) => r.value === radius) +
-                            1,
-                          radiusOptions.length - 1,
+          {viewMode === "map" && !loading && (
+            <BusinessMapView
+              businesses={filteredListings}
+              userCoords={coords}
+              radius={radius}
+            />
+          )}
+
+          {viewMode === "list" && (
+            <>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-white/2 border border-white/5 h-80 rounded-2xl animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : filteredListings.length === 0 ? (
+                <div className="text-center py-40 border border-dashed border-white/10 rounded-3xl bg-white/2">
+                  <h3 className="text-white text-2xl font-bold mb-3 tracking-tight">
+                    No businesses nearby
+                  </h3>
+                  <p className="text-text-dim max-w-md mx-auto mb-10 text-lg">
+                    {coords
+                      ? `No businesses found within ${radiusOptions.find((r) => r.value === radius)?.label}. Try a larger radius.`
+                      : "Enable GPS or try a different search."}
+                  </p>
+                  {coords && (
+                    <button
+                      onClick={() =>
+                        setRadius(
+                          radiusOptions[
+                            Math.min(
+                              radiusOptions.findIndex(
+                                (r) => r.value === radius,
+                              ) + 1,
+                              radiusOptions.length - 1,
+                            )
+                          ].value,
                         )
-                      ].value,
-                    )
-                  }
-                  className="btn-primary px-10 rounded-xl font-bold mr-4"
-                >
-                  Expand Radius
-                </button>
-              )}
-              <button
-                onClick={() => navigate(-1)}
-                className="btn-primary px-10 rounded-xl font-bold"
-              >
-                ← Back
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredListings.map((shop) => (
-                <div
-                  key={shop._id}
-                  className="group relative bg-[#1a2133] border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 flex flex-col"
-                  onClick={() => navigate(`/business/${shop._id}`)}
-                >
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                      <span className="text-xs">★</span>
-                      <span className="text-[10px] font-black">
-                        {(shop.rating || 0.0).toFixed(1)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-4 left-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <WishlistButton type="business" id={shop._id} />
-                  </div>
-
-                  <div className="p-8 flex-1">
-                    <div className="mb-8">
-                      <div className="w-16 h-16 bg-dark-bg rounded-2xl border border-white/10 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:border-primary/50 transition-colors">
-                        {shop.logo ? (
-                          <img
-                            src={shop.logo}
-                            className="w-full h-full object-cover rounded-2xl"
-                            alt=""
-                          />
-                        ) : (
-                          "🏢"
-                        )}
-                      </div>
-                      <h3 className="text-white text-2xl font-black mb-2 tracking-tight group-hover:text-primary transition-colors leading-tight">
-                        {shop.businessName}
-                      </h3>
-                      <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">
-                        {shop.subCategory}
-                      </div>
-                      <p className="text-text-dim text-sm leading-relaxed line-clamp-2">
-                        {shop.description ||
-                          "A verified local provider specializing in professional services."}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-white/5">
-                        <span className="text-lg">📍</span>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[8px] font-black text-text-dim uppercase tracking-widest">
-                            Location
-                          </span>
-                          <span className="text-xs font-bold text-white/80 truncate">
-                            {shop.locationAddress ||
-                              shop.address ||
-                              "Location not available"}
+                      }
+                      className="btn-primary px-10 rounded-xl font-bold mr-4"
+                    >
+                      Expand Radius
+                    </button>
+                  )}
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="btn-primary px-10 rounded-xl font-bold"
+                  >
+                    ← Back
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredListings.map((shop) => (
+                    <div
+                      key={shop._id}
+                      className="group relative bg-[#1a2133] border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 flex flex-col"
+                      onClick={() => navigate(`/business/${shop._id}`)}
+                    >
+                      <div className="absolute top-4 right-4 z-10">
+                        <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                          <span className="text-xs">★</span>
+                          <span className="text-[10px] font-black">
+                            {(shop.rating || 0.0).toFixed(1)}
                           </span>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="p-6 pt-0 mt-auto">
-                    <button className="w-full bg-white/5 hover:bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-primary/20">
-                      View Business →
-                    </button>
-                  </div>
+                      <div className="absolute top-4 left-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <WishlistButton type="business" id={shop._id} />
+                      </div>
+
+                      <div className="p-8 flex-1">
+                        <div className="mb-8">
+                          <div className="w-16 h-16 bg-dark-bg rounded-2xl border border-white/10 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:border-primary/50 transition-colors">
+                            {shop.logo ? (
+                              <img
+                                src={shop.logo}
+                                className="w-full h-full object-cover rounded-2xl"
+                                alt=""
+                              />
+                            ) : (
+                              "🏢"
+                            )}
+                          </div>
+                          <h3 className="text-white text-2xl font-black mb-2 tracking-tight group-hover:text-primary transition-colors leading-tight">
+                            {shop.businessName}
+                          </h3>
+                          <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">
+                            {shop.subCategory}
+                          </div>
+                          <p className="text-text-dim text-sm leading-relaxed line-clamp-2">
+                            {shop.description ||
+                              "A verified local provider specializing in professional services."}
+                          </p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-white/5">
+                            <span className="text-lg">📍</span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[8px] font-black text-text-dim uppercase tracking-widest">
+                                Location
+                              </span>
+                              <span className="text-xs font-bold text-white/80 truncate">
+                                {shop.locationAddress ||
+                                  shop.address ||
+                                  "Location not available"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-6 pt-0 mt-auto">
+                        <button className="w-full bg-white/5 hover:bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-primary/20">
+                          View Business →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+            </>
+          )}
+
+          {viewMode === "map" && loading && (
+            <div className="h-155 rounded-2xl border border-[#1f2a3d] bg-white/2 animate-pulse flex items-center justify-center">
+              <p className="text-slate-600 text-sm font-semibold">
+                Loading map…
+              </p>
             </div>
           )}
         </div>
