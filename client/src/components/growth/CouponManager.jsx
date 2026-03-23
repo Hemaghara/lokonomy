@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { growthService } from "../../services";
 import { QRCodeSVG } from "qrcode.react";
 import {

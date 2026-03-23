@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { businessService } from "../services";
-import { toast } from "react-hot-toast";
 import WishlistButton from "../components/WishlistButton";
 import BusinessMapView from "../components/BusinessMapView";
 import { FaSearch, FaThLarge, FaMapMarkedAlt } from "react-icons/fa";

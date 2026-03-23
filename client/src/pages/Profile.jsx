@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { useLocation } from "../context/LocationContext";
 import { authService, businessService, jobService, referralService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -21,7 +20,6 @@ import {
   HiOutlineCreditCard,
   HiOutlineArrowUpTray,
   HiOutlineUserGroup,
-  HiOutlineBookmark,
   HiOutlineShieldCheck,
   HiOutlineSparkles,
   HiOutlineClipboardDocument,

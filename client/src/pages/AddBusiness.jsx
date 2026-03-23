@@ -22,7 +22,6 @@ import {
   HiOutlineClipboardDocument,
   HiOutlineCheckCircle,
   HiOutlineCamera,
-  HiOutlineChevronUp,
   HiOutlineChevronDown,
   HiOutlineSun,
   HiOutlineMoon,

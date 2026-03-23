@@ -5,7 +5,6 @@ import { orderService } from "../services";
 import { toast } from "react-hot-toast";
 import {
   HiOutlineShoppingBag,
-  HiOutlineArrowLeft,
   HiOutlineMapPin,
   HiOutlinePhone,
   HiOutlineClock,
@@ -15,7 +14,6 @@ import {
   HiOutlineCurrencyRupee,
   HiOutlineTag,
   HiOutlineInbox,
-  HiOutlineArrowPath,
 } from "react-icons/hi2";
 
 const MyOrders = () => {

@@ -10,7 +10,6 @@ import {
   HiOutlineClock,
   HiOutlineShare,
   HiOutlineNewspaper,
-  HiOutlineFire,
   HiOutlineTag,
   HiOutlineRocketLaunch,
   HiOutlineCalendarDays,

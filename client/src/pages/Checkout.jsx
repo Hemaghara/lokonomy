@@ -58,14 +58,12 @@ const Checkout = () => {
       const response = await marketService.getProductById(id);
       const p = response.data;
 
-      // Block if already sold
       if (p.isSold) {
         toast.error("This product has already been sold.");
         navigate(`/market/product/${id}`);
         return;
       }
 
-      // Block seller from buying their own product
       if (user && user.id === p.sellerId?._id) {
         toast.error("You cannot purchase your own product");
         navigate(`/market/product/${id}`);

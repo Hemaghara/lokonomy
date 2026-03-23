@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { marketService } from "../services";
 import { MARKET_CATEGORIES } from "../data/marketCategories";
 import { useLocation } from "../context/LocationContext";
-import { getTalukas } from "../data/locations";
 import { useUser } from "../context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
