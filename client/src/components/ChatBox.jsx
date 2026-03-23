@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "../context/UserContext";
 import { chatService } from "../services";
 import {
-  getSocket,
   connectSocket,
   joinRoom,
   leaveRoom,
