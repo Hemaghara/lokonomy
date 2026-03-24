@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const planSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    slug: { type: String, required: true, unique: true }, 
+    slug: { type: String, required: true, unique: true },
     prices: {
       3: { type: Number, required: true },
       6: { type: Number, required: true },

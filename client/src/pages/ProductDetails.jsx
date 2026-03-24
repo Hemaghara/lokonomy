@@ -542,10 +542,16 @@ const ProductDetails = () => {
               className={`px-6 py-3 text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${activeTab === "reviews" ? "border-violet-500 text-white" : "border-transparent text-slate-500 hover:text-slate-300"}`}
             >
               Reviews
-              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                activeTab === "reviews" ? "bg-violet-500/20 text-violet-300" : "bg-[#1f2a3d] text-slate-500"
-              }`}>
-                {reviewsData ? reviewsData.reviewCount : (product.numReviews || 0)}
+              <span
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                  activeTab === "reviews"
+                    ? "bg-violet-500/20 text-violet-300"
+                    : "bg-[#1f2a3d] text-slate-500"
+                }`}
+              >
+                {reviewsData
+                  ? reviewsData.reviewCount
+                  : product.numReviews || 0}
               </span>
               {(reviewsData?.avgRating || product.rating) > 0 && (
                 <span className="flex items-center gap-0.5 text-amber-400 text-[11px] font-bold">
@@ -637,7 +643,8 @@ const ProductDetails = () => {
                           {reviewsData.avgRating.toFixed(1)}
                         </span>
                         <span className="text-slate-600 text-[10px]">
-                          ({reviewsData.reviewCount} review{reviewsData.reviewCount !== 1 ? "s" : ""})
+                          ({reviewsData.reviewCount} review
+                          {reviewsData.reviewCount !== 1 ? "s" : ""})
                         </span>
                       </div>
                     )}
@@ -645,7 +652,10 @@ const ProductDetails = () => {
                   {reviewsLoading ? (
                     <div className="space-y-3">
                       {[...Array(2)].map((_, i) => (
-                        <div key={i} className="bg-[#111827] border border-[#1f2a3d] rounded-2xl h-24 animate-pulse opacity-40" />
+                        <div
+                          key={i}
+                          className="bg-[#111827] border border-[#1f2a3d] rounded-2xl h-24 animate-pulse opacity-40"
+                        />
                       ))}
                     </div>
                   ) : (reviewsData?.reviews || []).length > 0 ? (
@@ -671,7 +681,9 @@ const ProductDetails = () => {
                                   <HiStar
                                     key={idx}
                                     className={`text-[10px] ${
-                                      idx < r.rating ? "text-amber-400" : "text-slate-700"
+                                      idx < r.rating
+                                        ? "text-amber-400"
+                                        : "text-slate-700"
                                     }`}
                                   />
                                 ))}
@@ -719,10 +731,10 @@ const ProductDetails = () => {
                       </p>
                     </div>
                   ) : reviewsData?.reviews?.some(
-                      (r) => r.userId?.toString() === user.id
+                      (r) => r.userId?.toString() === user.id,
                     ) ||
                     product.reviews?.some(
-                      (r) => r.userId?.toString() === user.id
+                      (r) => r.userId?.toString() === user.id,
                     ) ? (
                     <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
                       <HiOutlineCheckCircle className="text-emerald-400 text-2xl mx-auto mb-2" />
@@ -737,7 +749,8 @@ const ProductDetails = () => {
                         <HiOutlineShoppingCart className="text-violet-400 text-xl" />
                       </div>
                       <p className="text-slate-400 text-xs leading-relaxed px-2">
-                        Only verified buyers can leave reviews. Purchase this product to share your experience.
+                        Only verified buyers can leave reviews. Purchase this
+                        product to share your experience.
                       </p>
                       <button
                         onClick={() =>
@@ -749,10 +762,11 @@ const ProductDetails = () => {
                       </button>
                     </div>
                   ) : (
-                 
                     <form onSubmit={handleProductReview} className="space-y-4">
                       <div>
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">Your Rating</p>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
+                          Your Rating
+                        </p>
                         <div className="flex gap-2 mb-3">
                           {[1, 2, 3, 4, 5].map((num) => (
                             <button
@@ -796,7 +810,10 @@ const ProductDetails = () => {
                         className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {submittingProduct ? (
-                          <><div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
+                          <>
+                            <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                            Submitting...
+                          </>
                         ) : (
                           <>Post Review</>
                         )}

@@ -255,7 +255,9 @@ exports.register = async (req, res) => {
 
     let referrerUser = null;
     if (incomingReferralCode) {
-      referrerUser = await User.findOne({ referralCode: incomingReferralCode.toUpperCase() });
+      referrerUser = await User.findOne({
+        referralCode: incomingReferralCode.toUpperCase(),
+      });
       if (referrerUser) {
         userData.referredBy = referrerUser._id;
       }

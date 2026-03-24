@@ -7,7 +7,7 @@ const answerSchema = new mongoose.Schema(
     isOwner: { type: Boolean, default: false },
     answer: { type: String, required: true, trim: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const businessQASchema = new mongoose.Schema(
@@ -19,7 +19,7 @@ const businessQASchema = new mongoose.Schema(
     upvotes: [{ type: String }],
     answers: [answerSchema],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("BusinessQA", businessQASchema);

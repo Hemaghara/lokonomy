@@ -215,7 +215,9 @@ exports.verifyPayment = async (req, res) => {
         await User.findByIdAndUpdate(updatedUser.referredBy, {
           $inc: { "referralRewards.totalDiscountsGiven": 1 },
         });
-        console.log(`[Referral] Reward applied: 15 days added to referrer ${updatedUser.referredBy}`);
+        console.log(
+          `[Referral] Reward applied: 15 days added to referrer ${updatedUser.referredBy}`,
+        );
       } catch (referralErr) {
         console.error("[Referral] Error applying reward:", referralErr.message);
       }
@@ -280,7 +282,8 @@ exports.cancelSubscription = async (req, res) => {
   try {
     return res.status(403).json({
       success: false,
-      message: "Subscription cancellation is not allowed. Please contact support for assistance.",
+      message:
+        "Subscription cancellation is not allowed. Please contact support for assistance.",
     });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });

@@ -103,7 +103,7 @@ const UpgradePlan = () => {
     }
   }, [user]);
 
-  const DISCOUNT = 0.15; 
+  const DISCOUNT = 0.15;
 
   const getPrice = (basePrice) =>
     refApplied ? Math.round(basePrice * (1 - DISCOUNT)) : basePrice;
@@ -132,7 +132,9 @@ const UpgradePlan = () => {
     if (!refCodeInput.trim()) return;
     setRefValidating(true);
     try {
-      const res = await referralService.validateReferralCode(refCodeInput.trim());
+      const res = await referralService.validateReferralCode(
+        refCodeInput.trim(),
+      );
       if (res.data.success) {
         setAppliedRefCode(res.data.referralCode);
         setRefApplied(true);
@@ -185,14 +187,14 @@ const UpgradePlan = () => {
 
       const plan = PLANS_CONFIG.find((p) => p.key === planKey);
 
-      console.log("plan=====>" , plan);
+      console.log("plan=====>", plan);
 
       const options = {
         key: keyId,
         amount: refApplied ? Math.round(amount * (1 - DISCOUNT)) : amount,
         currency,
         name: "Lokonomy",
-        description: `${plan.name} Plan — ${selectedDuration} Month${selectedDuration > 1 ? "s" : ""}${refApplied ? " (15% off)": ""}`,
+        description: `${plan.name} Plan — ${selectedDuration} Month${selectedDuration > 1 ? "s" : ""}${refApplied ? " (15% off)" : ""}`,
         image: "https://via.placeholder.com/80x80?text=L",
         order_id: orderId,
         handler: async (response) => {
@@ -209,7 +211,8 @@ const UpgradePlan = () => {
             if (verifyRes.data.success) {
               updateUser(verifyRes.data.user);
               toast.success(`${plan.name} plan activated!`);
-              if (refApplied) toast.success("Referral reward credited to your referrer!");
+              if (refApplied)
+                toast.success("Referral reward credited to your referrer!");
               fetchStatus();
             }
           } catch (err) {
@@ -416,7 +419,9 @@ const UpgradePlan = () => {
           >
             <div className="flex items-center gap-2 mb-3">
               <HiOutlineTicket className="text-violet-400 text-lg" />
-              <h3 className="text-white font-semibold text-sm">Have a Referral Code?</h3>
+              <h3 className="text-white font-semibold text-sm">
+                Have a Referral Code?
+              </h3>
               {refApplied && (
                 <span className="ml-auto flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full">
                   <HiOutlineCheckCircle className="text-base" />
@@ -429,7 +434,9 @@ const UpgradePlan = () => {
                 <input
                   type="text"
                   value={refCodeInput}
-                  onChange={(e) => setRefCodeInput(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setRefCodeInput(e.target.value.toUpperCase())
+                  }
                   placeholder="e.g. LOKO-AB12"
                   className="flex-1 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 font-mono tracking-wider placeholder:text-slate-600"
                 />
@@ -443,7 +450,8 @@ const UpgradePlan = () => {
               </div>
             ) : (
               <p className="text-slate-500 text-xs">
-                Your referral discount will be applied at checkout automatically.
+                Your referral discount will be applied at checkout
+                automatically.
               </p>
             )}
           </motion.div>
@@ -534,21 +542,32 @@ const UpgradePlan = () => {
                   <div className="mt-3 flex items-baseline gap-1 flex-wrap">
                     {refApplied ? (
                       <>
-                        <span className="text-slate-500 line-through text-sm">₹{price}</span>
+                        <span className="text-slate-500 line-through text-sm">
+                          ₹{price}
+                        </span>
                         <span className="text-slate-500 text-sm">₹</span>
-                        <span className="text-emerald-400 font-extrabold text-3xl">{getPrice(price)}</span>
-                        <span className="text-slate-500 text-xs ml-1">/ {selectedDuration}mo</span>
+                        <span className="text-emerald-400 font-extrabold text-3xl">
+                          {getPrice(price)}
+                        </span>
+                        <span className="text-slate-500 text-xs ml-1">
+                          / {selectedDuration}mo
+                        </span>
                       </>
                     ) : (
                       <>
                         <span className="text-slate-500 text-sm">₹</span>
-                        <span className="text-white font-extrabold text-3xl">{price}</span>
-                        <span className="text-slate-500 text-xs ml-1">/ {selectedDuration}mo</span>
+                        <span className="text-white font-extrabold text-3xl">
+                          {price}
+                        </span>
+                        <span className="text-slate-500 text-xs ml-1">
+                          / {selectedDuration}mo
+                        </span>
                       </>
                     )}
                   </div>
                   <p className="text-slate-600 text-[11px] mt-1">
-                    ₹{Math.round(getPrice(price) / selectedDuration)}/month billed{" "}
+                    ₹{Math.round(getPrice(price) / selectedDuration)}/month
+                    billed{" "}
                     {selectedDuration === 1
                       ? "monthly"
                       : `every ${selectedDuration} months`}
@@ -660,10 +679,7 @@ const UpgradePlan = () => {
                   ["Priority Support", "✗", "✗", "✗", "✓"],
                   ["Chat Messaging", "✓", "✓", "✓", "✓"],
                 ].map(([feature, free, silver, gold, platinum], i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-dark-bg/40 transition-colors"
-                  >
+                  <tr key={i} className="hover:bg-dark-bg/40 transition-colors">
                     <td className="py-3 text-slate-400 font-medium">
                       {feature}
                     </td>

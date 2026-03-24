@@ -161,7 +161,9 @@ const AllServices = () => {
           </div>
         ) : (
           <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-20 text-center">
-            <div className="text-4xl mb-3 opacity-20"><FaSearch/></div>
+            <div className="text-4xl mb-3 opacity-20">
+              <FaSearch />
+            </div>
             <p className="text-slate-500 text-sm font-semibold mb-4">
               No services found for "{search}"
             </p>

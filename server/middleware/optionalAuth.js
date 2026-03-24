@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 
-// Optional auth: sets req.user if token is present, but doesn't block the request if no token
 module.exports = function (req, res, next) {
   const authHeader = req.header("Authorization");
 

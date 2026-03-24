@@ -20,11 +20,11 @@ const bookingSchema = new mongoose.Schema({
     required: true,
   },
   date: {
-    type: String, 
+    type: String,
     required: true,
   },
   timeSlot: {
-    type: String, 
+    type: String,
     required: true,
   },
   status: {
@@ -49,7 +49,6 @@ const bookingSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-
 
 bookingSchema.index({ businessId: 1, date: 1, timeSlot: 1 }, { unique: false });
 
