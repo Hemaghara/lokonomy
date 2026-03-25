@@ -14,6 +14,10 @@ exports.login = async (req, res) => {
     locationPermission,
   } = req.body;
   console.log(`Login Attempt: ${email}`);
+  
+  if(!email || !password){
+    return res.status(400).json({success:false,message:"Please provide email and password"})
+  }
 
   try {
     const user = await User.findOne({ email });
@@ -32,6 +36,7 @@ exports.login = async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
     if (locationPermission === "granted" && latitude && longitude) {
+      //string to float
       user.latitude = parseFloat(latitude);
       user.longitude = parseFloat(longitude);
       user.locationName = locationName || null;
@@ -58,13 +63,12 @@ exports.login = async (req, res) => {
       process.env.EMAIL_USER && process.env.EMAIL_USER.includes("your-email");
 
     if (isConfigMissing || isPlaceholder) {
-      console.warn(
-        "[Config Alert] EMAIL_USER placeholder still exists in .env. Please update line 7.",
-      );
+      console.log("configmissing");
+      
       return res.json({
         success: true,
         message:
-          "Configuration Needed: Please change 'your-email@gmail.com' in your .env file to your actual Gmail address.",
+          "give the orignal email and password",
         step: "otp",
         devOtp: otp,
       });
@@ -80,7 +84,7 @@ exports.login = async (req, res) => {
       });
 
       await transporter.sendMail({
-        from: `"Lokonomy Security" <${process.env.EMAIL_USER}>`,
+        from: `"Lokonomy Service" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your Verification Code",
         html: `
