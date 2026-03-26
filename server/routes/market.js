@@ -11,5 +11,6 @@ router.get("/:id", marketController.getProductById);
 router.post("/", auth, checkProductLimit, marketController.addProduct);
 router.delete("/:id", auth, marketController.deleteProduct);
 router.post("/:id/review", auth, marketController.addProductReview);
+router.post("/:id/bid", auth, marketController.placeBid);
 
 module.exports = router;

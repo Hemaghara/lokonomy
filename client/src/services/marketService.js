@@ -9,4 +9,5 @@ export const marketService = {
   deleteProduct: (id) => api.delete(`/market/${id}`),
   addProductReview: (id, reviewData) =>
     api.post(`/market/${id}/review`, reviewData),
+  placeBid: (id, bidData) => api.post(`/market/${id}/bid`, bidData),
 };

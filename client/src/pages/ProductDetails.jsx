@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { marketService, chatService } from "../services";
+import { getSocket } from "../services/socket";
 import recommendationService from "../services/recommendationService";
 import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
@@ -45,6 +46,8 @@ const ProductDetails = () => {
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [reviewsData, setReviewsData] = useState(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [bidAmount, setBidAmount] = useState("");
+  const [submittingBid, setSubmittingBid] = useState(false);
 
   const isSeller =
     user &&
@@ -103,6 +106,53 @@ const ProductDetails = () => {
       console.error("Error fetching product:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on("bidUpdate", (data) => {
+      if (data.productId === id) {
+        setProduct((prev) =>
+          prev
+            ? {
+                ...prev,
+                currentHighestBid: data.currentHighestBid,
+                bids: data.bidHistory,
+              }
+            : null,
+        );
+      }
+    });
+
+    return () => {
+      socket.off("bidUpdate");
+    };
+  }, [id]);
+
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
+    if (!user) return toast.error("Please login to place a bid");
+    if (isSeller) return toast.error("You cannot bid on your own product");
+
+    if (Number(bidAmount) <= (product.currentHighestBid || 0)) {
+      return toast.error("Bid must be higher than current highest bid");
+    }
+
+    setSubmittingBid(true);
+    try {
+      const res = await marketService.placeBid(id, {
+        amount: Number(bidAmount),
+      });
+      if (res.data.success) {
+        toast.success("Bid placed successfully!");
+        setBidAmount("");
+        setProduct(res.data.product);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to place bid");
+    } finally {
+      setSubmittingBid(false);
     }
   };
 
@@ -346,15 +396,101 @@ const ProductDetails = () => {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1 text-white font-bold text-2xl">
                   <HiOutlineCurrencyRupee className="text-emerald-400 text-2xl" />
-                  {product.price.toLocaleString()}
+                  {(product.isAuction
+                    ? product.currentHighestBid || product.startingPrice
+                    : product.price
+                  ).toLocaleString()}
                 </div>
                 <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide bg-[#111827] border border-[#1f2a3d] px-2.5 py-1 rounded-lg">
-                  {product.priceType === "sell"
-                    ? "Purchase Price"
-                    : "Rental Price"}
+                  {product.isAuction
+                    ? "Current Bid"
+                    : product.priceType === "sell"
+                      ? "Purchase Price"
+                      : "Rental Price"}
                 </span>
               </div>
             </div>
+
+            {product.isAuction && (
+              <div
+                className={`${card} p-5 space-y-4 bg-primary/2 border-primary/10`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                      <HiOutlineTag className="text-primary" /> Current Highest
+                      Bid
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-primary font-black text-2xl">
+                        ₹
+                        {(
+                          product.currentHighestBid || product.startingPrice
+                        ).toLocaleString()}
+                      </span>
+                      {product.bids?.length > 0 && (
+                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-tight">
+                          {product.bids.length} bids
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1">
+                      Auction Ends
+                    </p>
+                    <p className="text-white text-[11px] font-semibold">
+                      {new Date(product.auctionEnd).toLocaleString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {!product.isSold && (
+                  <div className="pt-2">
+                    {new Date(product.auctionEnd) > new Date() ? (
+                      <form onSubmit={handlePlaceBid} className="flex gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-sm">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            placeholder={`Min ₹${(product.currentHighestBid || product.startingPrice) + 1}`}
+                            className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-xl pl-8 pr-4 py-3 text-sm text-white outline-none focus:border-primary/50 transition-all font-bold"
+                            value={bidAmount}
+                            onChange={(e) => setBidAmount(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={submittingBid}
+                          className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-primary/40 disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-30"
+                        >
+                          {submittingBid ? (
+                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            "Place Bid"
+                          )}
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="w-full py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+                        <span className="text-red-400 font-bold text-xs uppercase tracking-widest">
+                          Auction Ended
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <div className={`${card} p-5`}>
               <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                 <HiOutlineClipboardDocument className="text-violet-400" />{" "}
@@ -408,7 +544,7 @@ const ProductDetails = () => {
                 </div>
               )}
 
-              {user && !isSeller && !product.isSold && (
+              {user && !isSeller && !product.isSold && !product.isAuction && (
                 <button
                   onClick={() =>
                     navigate(`/market/product/${product._id}/checkout`)
@@ -616,6 +752,75 @@ const ProductDetails = () => {
                   </div>
                 </div>
               </div>
+
+              {product.isAuction && (
+                <div
+                  className={`${card} p-6 h-fit md:col-span-2 shadow-2xl shadow-primary/5`}
+                >
+                  <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                    <HiOutlineTag className="text-primary" /> Bid History
+                  </h3>
+                  {product.bids?.length > 0 ? (
+                    <div className="space-y-3">
+                      {[...product.bids].reverse().map((bid, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all
+                            ${
+                              idx === 0
+                                ? "bg-primary/10 border-primary/30 ring-1 ring-primary/20"
+                                : "bg-white/2 border-white/5 hover:bg-white/4"
+                            }`}
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm
+                              ${idx === 0 ? "bg-primary text-white" : "bg-white/5 text-slate-400"}`}
+                            >
+                              {bid.userName?.[0] || "U"}
+                            </div>
+                            <div>
+                              <p className="text-white text-[13px] font-bold">
+                                {bid.userName}
+                              </p>
+                              <p className="text-slate-500 text-[10px] font-medium">
+                                {new Date(bid.createdAt).toLocaleString(
+                                  undefined,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-primary font-black text-base">
+                              ₹{bid.amount.toLocaleString()}
+                            </p>
+                            {idx === 0 && (
+                              <span className="inline-block text-[8px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-md font-black uppercase tracking-widest mt-1">
+                                Current High
+                              </span>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/2">
+                      <p className="text-slate-500 font-medium text-xs">
+                        No bids placed yet. Be the first to start!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -747,7 +952,6 @@ const ProductDetails = () => {
                       </p>
                     </div>
                   ) : !product.isSold ? (
-                    // Product not purchased — show purchase-required notice
                     <div className="text-center py-6 space-y-3">
                       <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto">
                         <HiOutlineShoppingCart className="text-violet-400 text-xl" />

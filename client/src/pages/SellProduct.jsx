@@ -174,6 +174,9 @@ const SellProduct = () => {
       email: user?.email || "",
     },
     isFeatured: false,
+    isAuction: false,
+    startingPrice: "",
+    auctionEnd: "",
   });
 
   useEffect(() => {
@@ -183,7 +186,7 @@ const SellProduct = () => {
         address: shopLocation.address || prev.address,
         pincode: shopLocation.pincode || prev.pincode,
         state: shopLocation.state || prev.state,
-        // Optional: you might want to try and auto-select district/taluka if they match your location data
+        
       }));
     }
   }, [shopLocation]);
@@ -467,6 +470,73 @@ const SellProduct = () => {
                   )}
                 </div>
               </div>
+
+              <Divider label="Auction Settings" />
+              <div className="sm:col-span-2">
+                <div
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isAuction: !prev.isAuction,
+                    }))
+                  }
+                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer group
+                    ${
+                      formData.isAuction
+                        ? "bg-primary/10 border-primary/40 shadow-lg shadow-primary/10"
+                        : "bg-white/2 border-white/6 hover:border-primary/30"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md
+                      ${formData.isAuction ? "bg-primary text-white" : "bg-white/5 text-slate-400 group-hover:text-primary"} transition-all`}
+                    >
+                      🔨
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm">
+                        Enable Bidding
+                      </p>
+                      <p className="text-slate-500 text-[10px]">
+                        Allow buyers to place bids instead of a fixed price
+                      </p>
+                    </div>
+                  </div>
+                  {formData.isAuction && (
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] text-white">
+                      ✓
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {formData.isAuction && (
+                <>
+                  <Field label="Starting Price (₹)" required>
+                    <input
+                      type="number"
+                      name="startingPrice"
+                      placeholder="0"
+                      className={inputCls}
+                      required={formData.isAuction}
+                      value={formData.startingPrice}
+                      onChange={handleChange}
+                    />
+                  </Field>
+                  <Field label="Auction End Date & Time" required>
+                    <input
+                      type="datetime-local"
+                      name="auctionEnd"
+                      className={inputCls}
+                      required={formData.isAuction}
+                      value={formData.auctionEnd}
+                      onChange={handleChange}
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                  </Field>
+                </>
+              )}
 
               <Field label="Description" required span2>
                 <textarea

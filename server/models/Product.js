@@ -46,6 +46,18 @@ const productSchema = new mongoose.Schema({
   numReviews: { type: Number, default: 0 },
   isSold: { type: Boolean, default: false },
   isFeatured: { type: Boolean, default: false },
+  isAuction: { type: Boolean, default: false },
+  startingPrice: { type: Number },
+  auctionEnd: { type: Date },
+  bids: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      userName: { type: String },
+      amount: { type: Number },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  currentHighestBid: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 

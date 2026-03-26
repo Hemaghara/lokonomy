@@ -124,6 +124,15 @@ exports.addProduct = async (req, res) => {
       productData.isFeatured = false;
     }
 
+    if (productData.isAuction === "true" || productData.isAuction === true) {
+      productData.isAuction = true;
+      productData.startingPrice = Number(productData.startingPrice);
+      productData.currentHighestBid = productData.startingPrice;
+      productData.auctionEnd = new Date(productData.auctionEnd);
+    } else {
+      productData.isAuction = false;
+    }
+
     const product = new Product(productData);
     const newProduct = await product.save();
 
@@ -300,6 +309,67 @@ exports.getProductReviews = async (req, res) => {
       avgRating: product.rating,
       reviewCount: product.numReviews,
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.placeBid = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const productId = req.params.id;
+
+    if (!amount || isNaN(amount)) {
+      return res.status(400).json({ message: "Invalid bid amount" });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (!product.isAuction) {
+      return res
+        .status(400)
+        .json({ message: "This product is not for bidding" });
+    }
+
+    if (new Date() > new Date(product.auctionEnd)) {
+      return res.status(400).json({ message: "Auction has ended" });
+    }
+
+    const minBid = Math.max(
+      product.startingPrice || 0,
+      product.currentHighestBid || 0,
+    );
+    if (amount <= minBid) {
+      return res
+        .status(400)
+        .json({ message: `Bid must be higher than ${minBid}` });
+    }
+
+    const user = await User.findById(req.user.id);
+    const bid = {
+      userId: req.user.id,
+      userName: user.name,
+      amount: Number(amount),
+      createdAt: new Date(),
+    };
+
+    product.bids.push(bid);
+    product.currentHighestBid = amount;
+    await product.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("bidUpdate", {
+        productId,
+        currentHighestBid: amount,
+        bidHistory: product.bids,
+      });
+    }
+
+    res.status(200).json({ success: true, product });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
