@@ -218,7 +218,6 @@ const Profile = () => {
 
             if (district) localStorage.setItem("lokonomy_district", district);
             if (taluka) localStorage.setItem("lokonomy_taluka", taluka);
-
             toast.success("Location updated successfully");
           }
         } catch (err) {

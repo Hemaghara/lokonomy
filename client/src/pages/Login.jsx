@@ -274,7 +274,7 @@ const Login = () => {
                 type="email"
                 name="email"
                 className="w-full bg-dark-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"
-                placeholder="you@example.com"
+                placeholder="you@gmail.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -380,7 +380,7 @@ const Login = () => {
                 to="/register"
                 className="text-primary font-bold hover:underline"
               >
-                Create new citizen profile
+                Create new signup
               </Link>
             </div>
           </form>
