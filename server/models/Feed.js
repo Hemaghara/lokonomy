@@ -13,7 +13,13 @@ const feedSchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, "Feed type is required"],
-    enum: ["Sale", "Offer", "Information", "New Arrival", "Exhibition"],
+    enum: ["Sale", "Offer", "Information", "New Arrival", "Exhibition", "Event"],
+  },
+  eventDate: {
+    type: String,
+  },
+  eventTime: {
+    type: String,
   },
   image: {
     type: String,

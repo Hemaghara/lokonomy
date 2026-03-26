@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { categories } from "../data/categories";
 import SmartSearch from "../components/SmartSearch";
 import recommendationService from "../services/recommendationService";
+import { feedService } from "../services/feedService";
 import {
   Store,
   ShoppingBag,
@@ -17,6 +18,8 @@ import {
   Globe,
   MapPin,
   ChevronRight,
+  Calendar,
+  Clock,
 } from "lucide-react";
 
 const Pill = ({ children }) => (
@@ -43,6 +46,8 @@ const Home = () => {
     jobs: [],
   });
   const [isRecLoading, setIsRecLoading] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
 
   useEffect(() => {
     const fetchRecs = async () => {
@@ -56,6 +61,20 @@ const Home = () => {
       }
     };
     fetchRecs();
+
+    const fetchEvents = async () => {
+      try {
+        const res = await feedService.getFeeds({ type: "Event" });
+        if (res.data.success) {
+          setEvents(res.data.data.slice(0, 4));
+        }
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+      } finally {
+        setIsEventsLoading(false);
+      }
+    };
+    fetchEvents();
   }, []);
 
   const displayedCategories = categories.slice(0, 8);
@@ -460,6 +479,105 @@ const Home = () => {
             </div>
           </section>
         )}
+
+        <section className="px-4 py-20 max-w-6xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+            <div>
+              <Pill>
+                <Calendar size={11} /> Events
+              </Pill>
+              <h2
+                className="text-white font-black tracking-[-0.02em] mt-2.5"
+                style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)" }}
+              >
+                Events Near You
+              </h2>
+              <p className="text-white/40 text-sm mt-1">
+                Don't miss out on what's happening in your neighborhood.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/events-map")}
+              className="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all"
+            >
+              Open Events Map <MapPin size={14} />
+            </button>
+          </div>
+
+          {isEventsLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-8 h-8 border-2 border-white/5 border-t-purple-500 rounded-full animate-spin" />
+            </div>
+          ) : events.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {events.map((event, idx) => (
+                <motion.div
+                  key={event._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.1 }}
+                  whileHover={{ y: -6 }}
+                  onClick={() => navigate(`/feed/${event._id}`)}
+                  className="bg-[#0d1120] border border-white/[0.07] rounded-2xl hover:border-purple-500/30 transition-all cursor-pointer overflow-hidden group"
+                >
+                  <div className="relative h-40 overflow-hidden">
+                    {event.image ? (
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-purple-500/5 flex items-center justify-center">
+                        <Calendar className="text-purple-500/20" size={40} />
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3 bg-[#0d1120]/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                      <span className="text-[10px] font-black text-purple-400 uppercase tracking-wider">
+                        Event
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-white font-bold text-sm mb-3 line-clamp-1 group-hover:text-purple-400 transition-colors">
+                      {event.title}
+                    </h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-[11px] text-white/40">
+                        <Calendar size={12} className="text-purple-500" />
+                        {event.eventDate}
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-white/40">
+                        <Clock size={12} className="text-purple-500" />
+                        {event.eventTime}
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-white/40">
+                        <MapPin size={12} className="text-rose-500" />
+                        <span className="truncate">{event.locationAddress || "Local Area"}</span>
+                      </div>
+                    </div>
+                    <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                      <span className="text-[10px] font-medium text-white/25">By {event.author}</span>
+                      <ChevronRight size={14} className="text-purple-500" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-white/2 border border-white/5 rounded-3xl">
+              <Calendar className="mx-auto text-white/10 mb-4" size={48} />
+              <p className="text-white/30 text-sm font-medium">No events scheduled recently near you.</p>
+              <button 
+                onClick={() => navigate("/feed/post")}
+                className="mt-4 text-purple-400 font-bold text-xs hover:text-purple-300 transition-colors"
+              >
+                + Create First Event
+              </button>
+            </div>
+          )}
+        </section>
         <section className="px-4 py-20 max-w-6xl mx-auto">
           <div className="bg-linear-to-br from-[rgba(79,110,247,0.06)] to-[rgba(124,58,237,0.06)] border border-[rgba(79,110,247,0.15)] rounded-[28px] p-[clamp(32px,6vw,72px)]">
             <div className="text-center mb-14">

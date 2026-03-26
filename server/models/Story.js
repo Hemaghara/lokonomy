@@ -40,6 +40,15 @@ const storySchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  isHighlighted: {
+    type: Boolean,
+    default: false,
+  },
+  highlightCategory: {
+    type: String,
+    enum: ["Offers", "Gallery", "Events", "Announcements", "Other"],
+    default: "Other",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

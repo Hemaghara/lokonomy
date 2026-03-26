@@ -35,6 +35,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import WishlistButton from "../components/WishlistButton";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import Highlights from "../components/Highlights";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -304,6 +305,14 @@ const BusinessDetails = () => {
               />
             </div>
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <Highlights ownerId={business.ownerId} />
         </motion.div>
 
         <div className="flex items-center gap-1 bg-[#111827] border border-[#1f2a3d] rounded-2xl p-1 mb-5">

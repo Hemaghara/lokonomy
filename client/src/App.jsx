@@ -32,6 +32,7 @@ import MyChats from "./pages/MyChats";
 import UpgradePlan from "./pages/UpgradePlan";
 import Wishlist from "./pages/Wishlist";
 import Rewards from "./pages/Rewards";
+import EventsMap from "./pages/EventsMap";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import MainLayout from "./layouts/MainLayout";
@@ -101,6 +102,7 @@ function App() {
               <Route path="/stories/:id" element={<StoryDetails />} />
               <Route path="/feed" element={<Feed />} />
               <Route path="/feed/:id" element={<FeedDetails />} />
+              <Route path="/events-map" element={<EventsMap />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/job-dashboard" element={<JobDashboard />} />

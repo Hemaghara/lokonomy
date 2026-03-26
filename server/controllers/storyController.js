@@ -21,7 +21,9 @@ const buildLocationGeoJSON = (body) => {
 exports.getAllStories = async (req, res, next) => {
   try {
     const { lat, lng, radius = 5000, district, type, search } = req.query;
-    let query = { expiresAt: { $gt: new Date() } };
+    let query = {
+      $or: [{ expiresAt: { $gt: new Date() } }, { isHighlighted: true }],
+    };
 
     if (lat && lng) {
       query.location = {
@@ -88,7 +90,33 @@ exports.getStoryById = async (req, res, next) => {
 
 exports.createStory = async (req, res, next) => {
   try {
-    const { title, content, type, image, district, taluka, author } = req.body;
+    const {
+      title,
+      content,
+      type,
+      image,
+      district,
+      taluka,
+      author,
+      isHighlighted,
+      highlightCategory,
+    } = req.body;
+
+    if (isHighlighted) {
+      const user = await User.findById(req.user.id);
+      if (
+        !user ||
+        (user.subscription.plan !== "gold" &&
+          user.subscription.plan !== "platinum")
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Only Gold and Platinum members can create story highlights.",
+        });
+      }
+    }
+
     console.log(`Title:${title}`);
     console.log(`Content:${content}`);
     console.log(`Type:${type}`);
@@ -104,7 +132,9 @@ exports.createStory = async (req, res, next) => {
     console.log(`Image URL:${imageUrl}`);
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const expiresAt = isHighlighted
+      ? null
+      : new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     const storyData = {
       title,
@@ -115,13 +145,15 @@ exports.createStory = async (req, res, next) => {
       taluka,
       author,
       authorId: req.user.id,
+      isHighlighted: isHighlighted || false,
+      highlightCategory: highlightCategory || "Other",
       createdAt: now,
       expiresAt,
     };
-    console.log(`Story Data:${storyData}`);
+    console.log(`Story Data:${JSON.stringify(storyData)}`);
 
     const geoData = buildLocationGeoJSON(req.body);
-    console.log(`Geo Data:${geoData}`);
+    console.log(`Geo Data:${JSON.stringify(geoData)}`);
     if (geoData.location) {
       storyData.location = geoData.location;
       storyData.locationAddress = geoData.locationAddress;
@@ -137,13 +169,34 @@ exports.createStory = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: story,
-      message: "Story will be automatically removed after 24 hours",
+      message: isHighlighted
+        ? "Highlight created successfully!"
+        : "Story will be automatically removed after 24 hours",
     });
   } catch (error) {
     console.error("Error creating story:", error);
     next(error);
   }
 };
+
+exports.getHighlightsByBusiness = async (req, res, next) => {
+  try {
+    const { ownerId } = req.params;
+    const highlights = await Story.find({
+      authorId: ownerId,
+      isHighlighted: true,
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: highlights.length,
+      data: highlights,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.deleteStory = async (req, res, next) => {
   try {
     const story = await Story.findById(req.params.id);

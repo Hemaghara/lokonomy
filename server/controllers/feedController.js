@@ -105,6 +105,8 @@ exports.createFeed = async (req, res, next) => {
       title,
       content,
       type,
+      eventDate: req.body.eventDate,
+      eventTime: req.body.eventTime,
       image: imageUrl,
       district,
       taluka,

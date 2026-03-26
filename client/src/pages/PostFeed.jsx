@@ -166,6 +166,8 @@ const PostFeed = () => {
     latitude: null,
     longitude: null,
     locationAddress: "",
+    eventDate: "",
+    eventTime: "",
   });
 
   useEffect(() => {
@@ -185,6 +187,7 @@ const PostFeed = () => {
     "Information",
     "New Arrival",
     "Exhibition",
+    "Event",
   ];
 
   const handleChange = (e) => {
@@ -302,6 +305,30 @@ const PostFeed = () => {
                   onChange={handleChange}
                 />
               </Field>
+              {formData.type === "Event" && (
+                <>
+                  <Field label="Event Date" required>
+                    <input
+                      type="date"
+                      name="eventDate"
+                      className={inputCls}
+                      required
+                      value={formData.eventDate}
+                      onChange={handleChange}
+                    />
+                  </Field>
+                  <Field label="Event Time" required>
+                    <input
+                      type="time"
+                      name="eventTime"
+                      className={inputCls}
+                      required
+                      value={formData.eventTime}
+                      onChange={handleChange}
+                    />
+                  </Field>
+                </>
+              )}
 
               <Divider label="Location Details" />
               <div className="sm:col-span-2">

@@ -316,15 +316,21 @@ const Stories = () => {
                             story.district}
                         </span>
                         <span className="w-1 h-1 bg-slate-700 rounded-full" />
-                        <ExpiryBadge
-                          expiresAt={
-                            story.expiresAt ||
-                            new Date(
-                              new Date(story.createdAt).getTime() +
-                                24 * 60 * 60 * 1000,
-                            )
-                          }
-                        />
+                        {story.isHighlighted ? (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                            <HiOutlineSparkles className="text-xs" /> Highlight
+                          </span>
+                        ) : (
+                          <ExpiryBadge
+                            expiresAt={
+                              story.expiresAt ||
+                              new Date(
+                                new Date(story.createdAt).getTime() +
+                                  24 * 60 * 60 * 1000,
+                              )
+                            }
+                          />
+                        )}
                       </div>
 
                       <h3 className="text-slate-100 font-semibold text-base leading-snug mb-2 group-hover:text-violet-400 transition-colors line-clamp-2 flex-1">
