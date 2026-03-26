@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { jobService } from "../services";
+import recommendationService from "../services/recommendationService";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
 import {
@@ -49,6 +50,9 @@ const JobDetails = () => {
     try {
       const response = await jobService.getJobById(id);
       setJob(response.data);
+      if (user) {
+        recommendationService.trackInteraction("view", "job", id);
+      }
     } catch (err) {
       console.error("Error fetching job:", err);
     } finally {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { businessService } from "../services";
+import recommendationService from "../services/recommendationService";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
 import {
@@ -80,6 +81,9 @@ const BusinessDetails = () => {
       const response = await businessService.getBusinessById(id);
       setBusiness(response.data);
       incrementVisits(response.data);
+      if (user) {
+        recommendationService.trackInteraction("view", "business", id);
+      }
     } catch (err) {
       console.error("Error fetching business:", err);
     } finally {

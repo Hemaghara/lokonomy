@@ -116,6 +116,13 @@ const userSchema = new mongoose.Schema({
     appliedDays: { type: Number, default: 0 },
     totalDiscountsGiven: { type: Number, default: 0 },
   },
+  browsingHistory: [
+    {
+      itemId: mongoose.Schema.Types.ObjectId,
+      itemType: { type: String, enum: ["business", "product", "job"] },
+      visitedAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

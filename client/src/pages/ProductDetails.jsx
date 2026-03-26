@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { marketService, chatService } from "../services";
+import recommendationService from "../services/recommendationService";
 import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
 import ChatBox from "../components/ChatBox";
@@ -42,7 +43,7 @@ const ProductDetails = () => {
     comment: "",
   });
   const [submittingProduct, setSubmittingProduct] = useState(false);
-  const [reviewsData, setReviewsData] = useState(null); // { reviews, avgRating, reviewCount }
+  const [reviewsData, setReviewsData] = useState(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const isSeller =
@@ -95,6 +96,9 @@ const ProductDetails = () => {
     try {
       const response = await marketService.getProductById(id);
       setProduct(response.data);
+      if (user) {
+        recommendationService.trackInteraction("view", "product", id);
+      }
     } catch (err) {
       console.error("Error fetching product:", err);
     } finally {
