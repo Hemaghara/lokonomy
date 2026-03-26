@@ -3,12 +3,19 @@ const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const {
   getMessages,
+  getBusinessMessages,
   getUserChats,
   getUnreadCount,
   markAsRead,
 } = require("../controllers/chatController");
 
+// Product chats
 router.get("/messages/:productId/:buyerId/:sellerId", auth, getMessages);
+
+// Business inquiry chats
+router.get("/business-messages/:businessId/:userId/:ownerId", auth, getBusinessMessages);
+
+// Shared
 router.get("/conversations", auth, getUserChats);
 router.get("/unread", auth, getUnreadCount);
 router.patch("/read/:chatRoom", auth, markAsRead);

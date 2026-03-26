@@ -6,10 +6,20 @@ const messageSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  chatType: {
+    type: String,
+    enum: ["product", "business_inquiry"],
+    default: "product",
+  },
   productId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Product",
-    required: true,
+    default: null,
+  },
+  businessId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Business",
+    default: null,
   },
   senderId: {
     type: mongoose.Schema.Types.ObjectId,

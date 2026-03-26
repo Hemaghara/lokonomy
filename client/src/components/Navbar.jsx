@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "../context/UserContext";
 import { chatService } from "../services";
 import { connectSocket } from "../services/socket";
+import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 
 const Navbar = () => {
   const { user, logout } = useUser();
@@ -155,6 +156,18 @@ const Navbar = () => {
                     <span className="text-[12px] font-black text-violet-400 group-hover:text-violet-300 tabular-nums">
                       {(user.loyaltyPoints || 0).toLocaleString()}
                     </span>
+                  </Link>
+                  <Link
+                    to="/my-chats"
+                    className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/8 hover:border-white/15 transition-all duration-200 group"
+                    title="Messages"
+                  >
+                    <HiOutlineChatBubbleLeftRight className="text-lg text-white/40 group-hover:text-white transition-colors" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-violet-600 rounded-full flex items-center justify-center text-[10px] text-white font-black px-1 shadow-lg shadow-violet-600/40 ring-2 ring-[#0d0d14]">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
                   </Link>
 
                   <Link

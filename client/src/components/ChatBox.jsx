@@ -25,6 +25,10 @@ const ChatBox = ({
   otherUserName,
   productName,
   onClose,
+  chatType = "product",
+  businessId,
+  businessName,
+  ownerId, 
 }) => {
   const { user } = useUser();
 
@@ -37,17 +41,30 @@ const ChatBox = ({
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
 
-  const isSeller = user?.id === sellerId;
-  const buyerId = propBuyerId || (isSeller ? null : user?.id);
-  const chatRoom = generateChatRoom(productId, buyerId, sellerId);
+  const isBusinessInquiry = chatType === "business_inquiry";
+  
+  const isSeller = !isBusinessInquiry && user?.id === sellerId;
+  const isBusinessOwner = isBusinessInquiry && user?.id === ownerId;
+  
+  const buyerId = propBuyerId || (isSeller || isBusinessOwner ? null : user?.id);
+  const effectiveSellerId = isBusinessInquiry ? ownerId : sellerId;
 
-  const displayName = otherUserName || (isSeller ? "Customer" : "Seller");
 
-  function generateChatRoom(productId, buyerId, sellerId) {
-    if (!buyerId || !sellerId) return null;
-    const ids = [buyerId, sellerId].sort();
-    return `${productId}_${ids[0]}_${ids[1]}`;
-  }
+  const generateChatRoom = (pId, bId, sId, type, bizId) => {
+    if (!bId || !sId) return null;
+    const ids = [bId, sId].sort();
+    if (type === "business_inquiry") {
+      return `biz_${bizId}_${ids[0]}_${ids[1]}`;
+    }
+    return `${pId}_${ids[0]}_${ids[1]}`;
+  };
+
+  const chatRoom = generateChatRoom(productId, buyerId, effectiveSellerId, chatType, businessId);
+
+  const displayName = otherUserName || 
+    (isBusinessInquiry 
+      ? (isBusinessOwner ? "Customer" : businessName) 
+      : (isSeller ? "Customer" : "Seller"));
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,7 +74,6 @@ const ChatBox = ({
     if (!user || !chatRoom) return;
 
     const socket = connectSocket(user.id);
-
     joinRoom(chatRoom);
 
     socket.on("receiveMessage", (message) => {
@@ -80,6 +96,7 @@ const ChatBox = ({
     socket.on("userStopTyping", () => {
       setTypingUser(null);
     });
+
     socket.on("messagesRead", () => {
       setMessages((prev) =>
         prev.map((msg) => {
@@ -102,17 +119,20 @@ const ChatBox = ({
       socket.off("userStopTyping");
       socket.off("messagesRead");
     };
-  }, [user?.id, sellerId, buyerId, productId]);
+  }, [user?.id, effectiveSellerId, buyerId, productId, businessId, chatRoom]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, typingUser]);
 
   const fetchMessages = async () => {
-    if (!buyerId || !sellerId) return;
+    if (!buyerId || !effectiveSellerId) return;
     try {
       setLoading(true);
-      const res = await chatService.getMessages(productId, buyerId, sellerId);
+      const res = isBusinessInquiry
+        ? await chatService.getBusinessMessages(businessId, buyerId, effectiveSellerId)
+        : await chatService.getMessages(productId, buyerId, effectiveSellerId);
+      
       if (res.data.success) {
         setMessages(res.data.messages);
         emitMarkRead(chatRoom, user.id);
@@ -123,17 +143,20 @@ const ChatBox = ({
       setLoading(false);
     }
   };
+
   const handleSend = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || sending || !chatRoom) return;
 
     setSending(true);
 
-    const receiverId = user.id === sellerId ? buyerId : sellerId;
+    const receiverId = user.id === effectiveSellerId ? buyerId : effectiveSellerId;
 
     socketSendMessage({
       chatRoom,
-      productId,
+      productId: isBusinessInquiry ? null : productId,
+      businessId: isBusinessInquiry ? businessId : null,
+      chatType,
       senderId: user.id,
       receiverId,
       senderName: user.name,
@@ -148,7 +171,6 @@ const ChatBox = ({
 
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
-
     emitTyping(chatRoom, user.name);
 
     if (typingTimeoutRef.current) {
@@ -166,6 +188,7 @@ const ChatBox = ({
       hour12: true,
     });
   };
+
   const formatDate = (date) => {
     const d = new Date(date);
     const today = new Date();
@@ -190,6 +213,10 @@ const ChatBox = ({
 
   if (!user || !chatRoom) return null;
 
+  const headerColorClass = (isSeller || isBusinessOwner)
+    ? "bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20"
+    : "bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-500/20";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -212,11 +239,7 @@ const ChatBox = ({
       >
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg ${
-              isSeller
-                ? "bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20"
-                : "bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-500/20"
-            }`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg ${headerColorClass}`}
           >
             {displayName?.charAt(0)?.toUpperCase() || "?"}
           </div>
@@ -224,6 +247,9 @@ const ChatBox = ({
             <p className="text-white font-semibold text-sm truncate">
               {displayName}
             </p>
+            {isBusinessInquiry && !isBusinessOwner && (
+              <span className="text-[10px] text-violet-400/80 font-medium">Business Inquiry</span>
+            )}
           </div>
         </div>
         <button
@@ -249,18 +275,18 @@ const ChatBox = ({
             </div>
             <div>
               <p className="text-slate-400 text-sm font-medium">
-                {isSeller ? "No messages yet" : "Start the conversation"}
+                {isSeller || isBusinessOwner ? "No messages yet" : "Start the conversation"}
               </p>
               <p className="text-slate-600 text-xs mt-1">
-                {isSeller ? (
+                {isSeller || isBusinessOwner ? (
                   <>
-                    Waiting for customer questions about{" "}
-                    <span className="text-violet-400">{productName}</span>
+                    Waiting for inquiries about{" "}
+                    <span className="text-violet-400">{isBusinessInquiry ? businessName : productName}</span>
                   </>
                 ) : (
                   <>
-                    Send a message about{" "}
-                    <span className="text-violet-400">{productName}</span>
+                    Send a message to{" "}
+                    <span className="text-violet-400">{isBusinessInquiry ? businessName : productName}</span>
                   </>
                 )}
               </p>
@@ -288,7 +314,7 @@ const ChatBox = ({
                     <div
                       className={`max-w-[75%] px-3.5 py-2 rounded-2xl relative group ${
                         isMine
-                          ? isSeller
+                          ? (isSeller || isBusinessOwner)
                             ? "bg-linear-to-br from-emerald-600 to-teal-600 text-white rounded-br-md shadow-lg shadow-emerald-900/20"
                             : "bg-linear-to-br from-violet-600 to-indigo-600 text-white rounded-br-md shadow-lg shadow-violet-900/20"
                           : "bg-white/6 text-slate-200 rounded-bl-md border border-white/4"
@@ -374,14 +400,14 @@ const ChatBox = ({
             type="text"
             value={newMessage}
             onChange={handleTyping}
-            placeholder={isSeller ? "Reply to customer…" : "Type a message…"}
+            placeholder={isSeller || isBusinessOwner ? "Reply to customer…" : "Ask about the business…"}
             className="flex-1 bg-transparent text-sm text-white placeholder-slate-600 outline-none py-1.5"
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all active:scale-90 shrink-0 disabled:opacity-30 ${
-              isSeller
+            className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all active:scale-[0.98] shrink-0 disabled:opacity-30 ${
+              isSeller || isBusinessOwner
                 ? "bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
                 : "bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500"
             }`}

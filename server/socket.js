@@ -31,6 +31,8 @@ const initSocket = (server) => {
         const {
           chatRoom,
           productId,
+          businessId,
+          chatType,
           senderId,
           receiverId,
           senderName,
@@ -39,7 +41,9 @@ const initSocket = (server) => {
 
         const newMessage = new Message({
           chatRoom,
-          productId,
+          chatType: chatType || "product",
+          productId: productId || null,
+          businessId: businessId || null,
           senderId,
           receiverId,
           senderName,
@@ -60,12 +64,14 @@ const initSocket = (server) => {
 
         const { sendPushNotification } = require("./utils/pushService");
         await sendPushNotification(receiverId, {
-          title: `New message from ${senderName}`,
+          title: chatType === "business_inquiry"
+            ? `New Business Inquiry from ${senderName}`
+            : `New message from ${senderName}`,
           body:
             message.length > 50 ? message.substring(0, 50) + "..." : message,
           data: {
-            url: `/chat/${chatRoom}`,
-            type: "chat",
+            url: `/my-chats`,
+            type: chatType === "business_inquiry" ? "business_inquiry" : "chat",
           },
         });
       } catch (err) {

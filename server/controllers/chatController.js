@@ -1,4 +1,6 @@
 const Message = require("../models/Message");
+const Business = require("../models/Business");
+const User = require("../models/User");
 const mongoose = require("mongoose");
 
 const generateChatRoom = (productId, buyerId, sellerId) => {
@@ -6,11 +8,15 @@ const generateChatRoom = (productId, buyerId, sellerId) => {
   return `${productId}_${ids[0]}_${ids[1]}`;
 };
 
+const generateBusinessChatRoom = (businessId, userId, ownerId) => {
+  const ids = [userId, ownerId].sort();
+  return `biz_${businessId}_${ids[0]}_${ids[1]}`;
+};
+
 const getMessages = async (req, res) => {
   try {
     const { productId, buyerId, sellerId } = req.params;
     const chatRoom = generateChatRoom(productId, buyerId, sellerId);
-    console.log(`Chat room: ${chatRoom}`);
 
     const messages = await Message.find({ chatRoom })
       .sort({ createdAt: 1 })
@@ -23,22 +29,44 @@ const getMessages = async (req, res) => {
   }
 };
 
+const getBusinessMessages = async (req, res) => {
+  try {
+    const { businessId, userId, ownerId } = req.params;
+    const chatRoom = generateBusinessChatRoom(businessId, userId, ownerId);
+
+    const messages = await Message.find({ chatRoom })
+      .sort({ createdAt: 1 })
+      .limit(200);
+
+    res.json({ success: true, messages });
+  } catch (err) {
+    console.error("Error fetching business messages:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 const getUserChats = async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(`User ID: ${userId}`);
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    console.log(`User Object ID: ${userObjectId}`);
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (e) {
+      userObjectId = userId;
+    }
 
     const chatRooms = await Message.aggregate([
       {
         $match: {
-          $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
+          $or: [
+            { senderId: userObjectId }, 
+            { receiverId: userObjectId },
+            { senderId: userId },
+            { receiverId: userId }
+          ],
         },
       },
-      {
-        $sort: { createdAt: -1 },
-      },
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: "$chatRoom",
@@ -47,6 +75,8 @@ const getUserChats = async (req, res) => {
           lastSenderId: { $first: "$senderId" },
           lastSenderName: { $first: "$senderName" },
           productId: { $first: "$productId" },
+          businessId: { $first: "$businessId" },
+          chatType: { $first: "$chatType" },
           allSenderIds: { $addToSet: "$senderId" },
           allReceiverIds: { $addToSet: "$receiverId" },
           allSenderNames: {
@@ -55,19 +85,34 @@ const getUserChats = async (req, res) => {
         },
       },
       {
-        $sort: { lastMessageAt: -1 },
+        // Convert string IDs to ObjectIds if possible for lookups
+        $addFields: {
+          productIdObj: { 
+            $cond: [
+              { $eq: ["$productId", null] }, 
+              null, 
+              { $convert: { input: "$productId", to: "objectId", onError: null, onNull: null } }
+            ]
+          },
+          businessIdObj: { 
+            $cond: [
+              { $eq: ["$businessId", null] }, 
+              null, 
+              { $convert: { input: "$businessId", to: "objectId", onError: null, onNull: null } }
+            ]
+          }
+        }
       },
+      { $sort: { lastMessageAt: -1 } },
       {
         $lookup: {
           from: "products",
-          localField: "productId",
+          localField: "productIdObj",
           foreignField: "_id",
           as: "product",
         },
       },
-      {
-        $unwind: { path: "$product", preserveNullAndEmptyArrays: true },
-      },
+      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "users",
@@ -76,9 +121,16 @@ const getUserChats = async (req, res) => {
           as: "sellerUser",
         },
       },
+      { $unwind: { path: "$sellerUser", preserveNullAndEmptyArrays: true } },
       {
-        $unwind: { path: "$sellerUser", preserveNullAndEmptyArrays: true },
+        $lookup: {
+          from: "businesses",
+          localField: "businessIdObj",
+          foreignField: "_id",
+          as: "business",
+        },
       },
+      { $unwind: { path: "$business", preserveNullAndEmptyArrays: true } },
     ]);
 
     const chatsWithDetails = await Promise.all(
@@ -88,7 +140,6 @@ const getUserChats = async (req, res) => {
           receiverId: userObjectId,
           read: false,
         });
-        console.log(`Unread count: ${unreadCount}`);
 
         const allParticipantIds = [
           ...chat.allSenderIds.map((id) => id.toString()),
@@ -99,19 +150,47 @@ const getUserChats = async (req, res) => {
 
         let otherUserName = "User";
         const senderEntry = chat.allSenderNames.find(
-          (entry) => entry.id.toString() === otherUserId,
+          (entry) => entry.id && entry.id.toString() === otherUserId,
         );
+        
         if (senderEntry) {
           otherUserName = senderEntry.name;
+        } else if (otherUserId) {
+          try {
+             const fallbackUser = await User.findById(otherUserId).select("name");
+             if (fallbackUser) otherUserName = fallbackUser.name;
+          } catch (e) {}
         }
-        const isSeller = chat.product?.sellerId?.toString() === userId;
-        console.log(`Is seller: ${isSeller}`);
 
+        const chatType = chat.chatType || "product";
+
+        if (chatType === "business_inquiry") {
+          const isOwner =
+            chat.business?.ownerId?.toString() === userId ||
+            chat.business?.ownerId === userId;
+          
+          const displayOtherName = (!isOwner && chat.business?.businessName) 
+            ? chat.business.businessName 
+            : otherUserName;
+
+          return {
+            ...chat,
+            chatType: "business_inquiry",
+            unreadCount,
+            otherUserName: displayOtherName,
+            otherUserId,
+            isOwner,
+            buyerId: isOwner ? otherUserId : userId,
+            sellerId: chat.business?.ownerId?.toString(),
+          };
+        }
+
+        // Product chat
+        const isSeller = chat.product?.sellerId?.toString() === userId;
         const chatRoomParts = chat._id.split("_");
-        const productIdFromRoom = chatRoomParts[0];
+        const sellerIdFromProduct = chat.product?.sellerId?.toString();
         const participantId1 = chatRoomParts[1];
         const participantId2 = chatRoomParts[2];
-        const sellerIdFromProduct = chat.product?.sellerId?.toString();
         const buyerIdFromRoom =
           participantId1 === sellerIdFromProduct
             ? participantId2
@@ -119,6 +198,7 @@ const getUserChats = async (req, res) => {
 
         return {
           ...chat,
+          chatType: "product",
           unreadCount,
           otherUserName,
           otherUserId,
@@ -129,9 +209,6 @@ const getUserChats = async (req, res) => {
             chat.product?.sellerProfile?.name ||
             chat.sellerUser?.name ||
             "Seller",
-          allSenderIds: undefined,
-          allReceiverIds: undefined,
-          allSenderNames: undefined,
         };
       }),
     );
@@ -160,10 +237,7 @@ const getUnreadCount = async (req, res) => {
 const markAsRead = async (req, res) => {
   try {
     const { chatRoom } = req.params;
-    console.log(`Chat room:${chatRoom}`);
-
     const userId = req.user.id;
-    console.log(`User ID:${userId}`);
 
     await Message.updateMany(
       {
@@ -183,8 +257,10 @@ const markAsRead = async (req, res) => {
 
 module.exports = {
   getMessages,
+  getBusinessMessages,
   getUserChats,
   getUnreadCount,
   markAsRead,
   generateChatRoom,
+  generateBusinessChatRoom,
 };

@@ -28,6 +28,7 @@ import BusinessAnalytics from "../components/growth/BusinessAnalytics";
 import CouponManager from "../components/growth/CouponManager";
 import BookingSystem from "../components/growth/BookingSystem";
 import BusinessQA from "../components/BusinessQA";
+import ChatBox from "../components/ChatBox";
 import { HiStar } from "react-icons/hi2";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
@@ -53,6 +54,7 @@ const BusinessDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("info");
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -273,6 +275,17 @@ const BusinessDetails = () => {
               >
                 <HiOutlinePhone className="text-sm" /> Call Now
               </a>
+              {user?.id !== business.ownerId && (
+                <button
+                  onClick={() => {
+                    if (!user) return navigate("/login");
+                    setShowChat(true);
+                  }}
+                  className="flex-1 sm:w-44 flex items-center justify-center gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-[.98] text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30"
+                >
+                  <HiOutlineChatBubbleLeftRight className="text-sm" /> Message
+                </button>
+              )}
               {business.website && (
                 <a
                   href={business.website}
@@ -843,6 +856,18 @@ const BusinessDetails = () => {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {showChat && (
+          <ChatBox
+            chatType="business_inquiry"
+            businessId={business._id}
+            businessName={business.businessName}
+            ownerId={business.ownerId}
+            onClose={() => setShowChat(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
