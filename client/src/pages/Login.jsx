@@ -189,7 +189,6 @@ const Login = () => {
           token: response.data.token,
         });
         
-        // Subscribe to push notifications if enabled
         if (response.data.user.notificationsEnabled !== false) {
           subscribeToPush().catch(err => console.error("Push subscription failed", err));
         }
