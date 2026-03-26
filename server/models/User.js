@@ -127,6 +127,27 @@ const userSchema = new mongoose.Schema({
       visitedAt: { type: Date, default: Date.now },
     },
   ],
+  loyaltyPoints: { type: Number, default: 0 },
+  lastLoginDate: { type: Date, default: null },
+  pointsHistory: [
+    {
+      type: { type: String, enum: ["earn", "redeem"] },
+      amount: Number,
+      event: {
+        type: String,
+        enum: [
+          "daily_login",
+          "listing_product",
+          "making_order",
+          "five_star_review",
+          "redeem_coupon",
+          "redeem_upgrade",
+        ],
+      },
+      description: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

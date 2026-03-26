@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const { awardPoints } = require("./rewardsController");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -96,6 +97,16 @@ exports.createOrder = async (req, res) => {
         type: "order",
       },
     });
+
+    try {
+      await awardPoints(
+        req.user.id,
+        "making_order",
+        `Order placed for ${product.name}`,
+      );
+    } catch (pointsErr) {
+      console.error("Points award error:", pointsErr.message);
+    }
 
     res.status(201).json({ success: true, order: savedOrder });
   } catch (err) {

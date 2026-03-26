@@ -177,6 +177,8 @@ exports.verifyOtp = async (req, res) => {
         referralCode: user.referralCode,
         referredBy: user.referredBy,
         referralRewards: user.referralRewards,
+        loyaltyPoints: user.loyaltyPoints || 0,
+        lastLoginDate: user.lastLoginDate,
       },
     });
   } catch (err) {
@@ -217,6 +219,8 @@ exports.getMe = async (req, res) => {
         referralCode: user.referralCode,
         referredBy: user.referredBy,
         referralRewards: user.referralRewards,
+        loyaltyPoints: user.loyaltyPoints || 0,
+        lastLoginDate: user.lastLoginDate,
       },
     });
   } catch (err) {
@@ -311,6 +315,8 @@ exports.register = async (req, res) => {
         referralCode: user.referralCode,
         referredBy: user.referredBy,
         referralRewards: user.referralRewards,
+        loyaltyPoints: user.loyaltyPoints || 0,
+        lastLoginDate: user.lastLoginDate,
       },
       message: "User registered successfully",
     });
@@ -399,6 +405,8 @@ exports.updateProfile = async (req, res) => {
         referralCode: user.referralCode,
         referredBy: user.referredBy,
         referralRewards: user.referralRewards,
+        loyaltyPoints: user.loyaltyPoints || 0,
+        lastLoginDate: user.lastLoginDate,
       },
       message: "Profile updated successfully",
     });

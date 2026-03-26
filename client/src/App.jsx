@@ -31,6 +31,7 @@ import EditJob from "./pages/EditJob";
 import MyChats from "./pages/MyChats";
 import UpgradePlan from "./pages/UpgradePlan";
 import Wishlist from "./pages/Wishlist";
+import Rewards from "./pages/Rewards";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import MainLayout from "./layouts/MainLayout";
@@ -120,6 +121,7 @@ function App() {
                 <Route path="/my-chats" element={<MyChats />} />
                 <Route path="/upgrade-plan" element={<UpgradePlan />} />
                 <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/rewards" element={<Rewards />} />
               </Route>
             </Route>
           </Routes>

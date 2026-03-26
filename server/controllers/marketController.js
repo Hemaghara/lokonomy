@@ -2,6 +2,7 @@ const Product = require("../models/Product");
 const User = require("../models/User");
 const Order = require("../models/Order");
 const { uploadToCloudinary } = require("../utils/cloudinary");
+const { awardPoints } = require("./rewardsController");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
@@ -130,6 +131,16 @@ exports.addProduct = async (req, res) => {
       $inc: { "usage.productsUploaded": 1 },
     });
 
+    try {
+      await awardPoints(
+        req.user.id,
+        "listing_product",
+        `Listed product: ${newProduct.productName || newProduct.name || "New product"}`,
+      );
+    } catch (pointsErr) {
+      console.error("Points award error:", pointsErr.message);
+    }
+
     res.status(201).json({ success: true, product: newProduct });
   } catch (err) {
     console.error("Error adding product:", err);
@@ -251,6 +262,19 @@ exports.addProductReview = async (req, res) => {
       product.reviews.length;
 
     await product.save();
+
+    if (Number(rating) === 5) {
+      try {
+        await awardPoints(
+          req.user.id,
+          "five_star_review",
+          `5-star review on ${product.productName || product.name || "a product"}`,
+        );
+      } catch (pointsErr) {
+        console.error("Points award error:", pointsErr.message);
+      }
+    }
+
     res
       .status(201)
       .json({ success: true, message: "Review added successfully" });

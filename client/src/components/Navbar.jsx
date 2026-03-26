@@ -147,6 +147,17 @@ const Navbar = () => {
                   <div className="w-px h-6 bg-white/10" />
 
                   <Link
+                    to="/rewards"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/30 rounded-xl transition-all duration-200 group"
+                    title="Loyalty Points"
+                  >
+                    <span className="text-sm">💎</span>
+                    <span className="text-[12px] font-black text-violet-400 group-hover:text-violet-300 tabular-nums">
+                      {(user.loyaltyPoints || 0).toLocaleString()}
+                    </span>
+                  </Link>
+
+                  <Link
                     to="/profile"
                     className="flex items-center gap-2.5 group bg-white/5 hover:bg-white/10 pl-2 pr-4 py-1.5 rounded-2xl border border-white/8 hover:border-white/15 transition-all duration-200"
                   >
@@ -294,6 +305,18 @@ const Navbar = () => {
                             Profile Settings
                           </p>
                         </div>
+                      </Link>
+
+                      <Link
+                        to="/rewards"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-violet-500/10 text-white/50 hover:text-violet-400 transition-all text-[14px] font-semibold"
+                      >
+                        <span className="text-base">💎</span>
+                        Rewards
+                        <span className="ml-auto text-xs font-black text-violet-400 bg-violet-500/15 px-2 py-0.5 rounded-full">
+                          {(user.loyaltyPoints || 0).toLocaleString()} pts
+                        </span>
                       </Link>
 
                       <Link

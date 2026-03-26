@@ -12,3 +12,4 @@ export * from "./growthService";
 export * from "./qaService";
 export * from "./referralService";
 export * from "./aiService";
+export * from "./rewardsService";
