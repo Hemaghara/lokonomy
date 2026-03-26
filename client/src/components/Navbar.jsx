@@ -164,7 +164,7 @@ const Navbar = () => {
                   >
                     <HiOutlineChatBubbleLeftRight className="text-lg text-white/40 group-hover:text-white transition-colors" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-violet-600 rounded-full flex items-center justify-center text-[10px] text-white font-black px-1 shadow-lg shadow-violet-600/40 ring-2 ring-[#0d0d14]">
+                      <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 bg-violet-600 rounded-full flex items-center justify-center text-[10px] text-white font-black px-1 shadow-lg shadow-violet-600/40 ring-2 ring-[#0d0d14]">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     )}
