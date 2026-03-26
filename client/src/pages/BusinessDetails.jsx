@@ -30,6 +30,8 @@ import BookingSystem from "../components/growth/BookingSystem";
 import BusinessQA from "../components/BusinessQA";
 import ChatBox from "../components/ChatBox";
 import { HiStar } from "react-icons/hi2";
+import { useComparison } from "../context/ComparisonContext";
+import { FaChartBar, FaCheck, FaPlus } from "react-icons/fa";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import WishlistButton from "../components/WishlistButton";
@@ -55,6 +57,7 @@ const BusinessDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("info");
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const { selectedIds, toggleSelection } = useComparison();
   const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {

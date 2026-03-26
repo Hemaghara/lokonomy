@@ -4,7 +4,10 @@ import { businessService } from "../services";
 import WishlistButton from "../components/WishlistButton";
 import BusinessMapView from "../components/BusinessMapView";
 import { FaSearch, FaThLarge, FaMapMarkedAlt } from "react-icons/fa";
-import { HiOutlineMapPin,HiStar,} from "react-icons/hi2";
+import { HiOutlineMapPin, HiStar } from "react-icons/hi2";
+import { useComparison } from "../context/ComparisonContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaChartBar, FaPlus, FaCheck } from "react-icons/fa";
 const useUserLocation = () => {
   const [coords, setCoords] = useState(() => {
     const cached = sessionStorage.getItem("lokonomy_user_coords");
@@ -43,6 +46,12 @@ const Services = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [radius, setRadius] = useState(5000);
   const [viewMode, setViewMode] = useState("list");
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const { selectedIds, toggleSelection } = useComparison();
+
+  useEffect(() => {
+    // Optional: Auto-fetch businesses when selection changes if needed
+  }, [selectedIds]);
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
@@ -178,6 +187,18 @@ const Services = () => {
               </button>
             </div>
 
+            <button
+              onClick={() => setIsCompareMode(!isCompareMode)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest border ${
+                isCompareMode
+                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                  : "bg-white/5 text-text-dim border-white/10 hover:border-white/30"
+              }`}
+            >
+              <FaChartBar className={isCompareMode ? "animate-pulse" : ""} />
+              {isCompareMode ? "Close Selection" : "Compare Mode"}
+            </button>
+
             <div className="w-full lg:w-80 relative group">
               <div className="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000" />
               <div className="relative flex items-center bg-[#1a2133] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
@@ -271,19 +292,25 @@ const Services = () => {
                   {filteredListings.map((shop) => (
                     <div
                       key={shop._id}
-                      className="group relative bg-[#1a2133] border border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 flex flex-col"
+                      className={`group relative bg-[#1a2133] border ${
+                        selectedIds.includes(shop._id)
+                          ? "border-primary shadow-2xl shadow-primary/20 scale-[1.01]"
+                          : "border-white/5"
+                      } rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 flex flex-col cursor-pointer`}
                       onClick={() => navigate(`/business/${shop._id}`)}
                     >
                       <div className="absolute top-4 right-4 z-10">
                         <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                          <span className="text-xs"><HiStar/></span>
+                          <span className="text-xs">
+                            <HiStar />
+                          </span>
                           <span className="text-[10px] font-black">
                             {(shop.rating || 0.0).toFixed(1)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="absolute top-4 left-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-4 right-14 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                         <WishlistButton type="business" id={shop._id} />
                       </div>
 
@@ -314,7 +341,9 @@ const Services = () => {
 
                         <div className="space-y-3">
                           <div className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-white/5">
-                            <span className="text-lg"><HiOutlineMapPin/></span>
+                            <span className="text-lg">
+                              <HiOutlineMapPin />
+                            </span>
                             <div className="flex flex-col min-w-0">
                               <span className="text-[8px] font-black text-text-dim uppercase tracking-widest">
                                 Location
@@ -330,8 +359,28 @@ const Services = () => {
                       </div>
 
                       <div className="p-6 pt-0 mt-auto">
-                        <button className="w-full bg-white/5 hover:bg-primary text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-primary/20">
-                          View Business →
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isCompareMode) {
+                              toggleSelection(shop._id);
+                            } else {
+                              navigate(`/business/${shop._id}`);
+                            }
+                          }}
+                          className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg ${
+                            isCompareMode
+                              ? selectedIds.includes(shop._id)
+                                ? "bg-primary text-white shadow-primary/40"
+                                : "bg-[#252a3d] text-white border border-white/10 hover:border-primary"
+                              : "bg-white/5 hover:bg-primary text-white group-hover:shadow-primary/20"
+                          }`}
+                        >
+                          {isCompareMode
+                            ? selectedIds.includes(shop._id)
+                              ? "Selected ✓"
+                              : "+ Add to Compare"
+                            : "View Profile →"}
                         </button>
                       </div>
                     </div>
@@ -350,6 +399,8 @@ const Services = () => {
           )}
         </div>
       </div>
+
+      
     </div>
   );
 };
