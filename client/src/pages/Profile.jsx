@@ -4,7 +4,7 @@ import { useUser } from "../context/UserContext";
 import { authService, businessService, jobService, referralService } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { subscribeToPush, unsubscribeFromPush, toggleNotifications } from "../services/pushService";
+import { subscribeToPush, unsubscribeFromPush, toggleNotifications, toggleAppointmentReminders } from "../services/pushService";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 
 import {
@@ -50,6 +50,7 @@ const Profile = () => {
   });
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? true);
+  const [remindersEnabled, setRemindersEnabled] = useState(user?.appointmentRemindersEnabled ?? true);
 
   useEffect(() => {
     if (user) {
@@ -64,6 +65,7 @@ const Profile = () => {
         accountNumber: user.accountNumber || "",
       });
       setNotificationsEnabled(user.notificationsEnabled ?? true);
+      setRemindersEnabled(user.appointmentRemindersEnabled ?? true);
       fetchMyBusinesses();
       fetchAppliedJobs();
     }
@@ -258,6 +260,21 @@ const Profile = () => {
       login({ ...user, notificationsEnabled: newState });
     } catch (err) {
       toast.error("Failed to update notification settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleReminders = async () => {
+    const newState = !remindersEnabled;
+    try {
+      setLoading(true);
+      await toggleAppointmentReminders(newState);
+      setRemindersEnabled(newState);
+      login({ ...user, appointmentRemindersEnabled: newState });
+      toast.success(`Appointment reminders ${newState ? "enabled" : "disabled"}`);
+    } catch (err) {
+      toast.error("Failed to update reminder settings");
     } finally {
       setLoading(false);
     }
@@ -1196,6 +1213,25 @@ const Profile = () => {
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
                         ${notificationsEnabled ? "translate-x-5" : "translate-x-0"}`}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl">
+                  <div>
+                    <h4 className="text-slate-200 font-semibold text-sm">Appointment Reminders</h4>
+                    <p className="text-slate-500 text-[11px] mt-0.5">Get push notifications for upcoming bookings (1h & 24h before)</p>
+                  </div>
+                  <button
+                    onClick={handleToggleReminders}
+                    disabled={loading}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none 
+                      ${remindersEnabled ? "bg-violet-600" : "bg-slate-700"}
+                      ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                        ${remindersEnabled ? "translate-x-5" : "translate-x-0"}`}
                     />
                   </button>
                 </div>

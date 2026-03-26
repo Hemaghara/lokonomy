@@ -98,6 +98,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  appointmentRemindersEnabled: {
+    type: Boolean,
+    default: true,
+  },
   referralCode: {
     type: String,
     unique: true,

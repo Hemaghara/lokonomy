@@ -48,6 +48,14 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  reminderSent24h: {
+    type: Boolean,
+    default: false,
+  },
+  reminderSent1h: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 bookingSchema.index({ businessId: 1, date: 1, timeSlot: 1 }, { unique: false });

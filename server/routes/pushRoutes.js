@@ -73,4 +73,26 @@ router.put("/toggle", auth, async (req, res) => {
   }
 });
 
+router.put("/toggle-reminders", auth, async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.appointmentRemindersEnabled = enabled;
+    await user.save();
+
+    res.json({
+      message: `Appointment reminders ${enabled ? "enabled" : "disabled"}`,
+      enabled: user.appointmentRemindersEnabled,
+    });
+  } catch (error) {
+    console.error("Error toggling reminders:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;

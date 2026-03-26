@@ -7,6 +7,7 @@ require("dotenv").config();
 const globalErrorHandler = require("./middleware/globalErrorHandler");
 const initSocket = require("./socket");
 const { startSubscriptionCron } = require("./cron/subscriptionExpiry");
+const { startBookingRemindersCron } = require("./cron/bookingReminders");
 
 const app = express();
 const server = http.createServer(app);
@@ -60,6 +61,7 @@ mongoose
   .then(() => {
     console.log("MongoDB Connected");
     startSubscriptionCron();
+    startBookingRemindersCron();
   })
   .catch((err) => {
     console.error("MongoDB Connection Error:");

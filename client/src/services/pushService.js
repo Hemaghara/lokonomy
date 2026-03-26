@@ -70,3 +70,15 @@ export const toggleNotifications = async (enabled) => {
     throw error;
   }
 };
+
+export const toggleAppointmentReminders = async (enabled) => {
+  try {
+    const response = await api.put("/push/toggle-reminders", {
+      enabled,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error toggling reminders:", error);
+    throw error;
+  }
+};
