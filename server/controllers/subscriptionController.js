@@ -74,6 +74,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const validDurations = [3, 6, 12];
+    //string to int
     if (!validDurations.includes(parseInt(durationMonths))) {
       return res
         .status(400)
