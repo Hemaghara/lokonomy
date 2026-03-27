@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -401,6 +402,10 @@ const Market = () => {
 
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
+      <Helmet>
+        <title>Local Marketplace - Buy and Sell | Lokonomy</title>
+        <meta name="description" content="Buy, sell, or rent local items within your community. Discover products for sale or rent near you on the Lokonomy Marketplace." />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .mk * { font-family: 'DM Sans', sans-serif; }

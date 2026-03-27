@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { categories } from "../data/categories";
 import { motion } from "framer-motion";
@@ -18,6 +19,10 @@ const ExploreServices = () => {
 
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
+      <Helmet>
+        <title>Explore Local Services Directory | Lokonomy</title>
+        <meta name="description" content="Browse hundreds of local services categorized for your convenience. Connect with local business owners GPS-based and get what you need instantly." />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .es * { font-family: 'DM Sans', sans-serif; }

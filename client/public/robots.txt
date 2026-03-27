@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /add-business
+Disallow: /edit-business
+Disallow: /market/sell
+Disallow: /jobs/post
+Disallow: /my-orders
+Disallow: /my-chats
+Disallow: /sales-management
+
+Sitemap: https://lokonomy.com/sitemap.xml

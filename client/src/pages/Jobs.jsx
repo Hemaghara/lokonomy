@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -120,6 +121,10 @@ const Jobs = () => {
 
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
+      <Helmet>
+        <title>Find Local Jobs Near You | Lokonomy Careers</title>
+        <meta name="description" content="Explore local job opportunities in your area. Apply to positions posted by verified local businesses and expand your professional career on Lokonomy." />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .jb * { font-family: 'DM Sans', sans-serif; }

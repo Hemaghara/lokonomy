@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -202,6 +203,10 @@ const Home = () => {
       className="min-h-screen overflow-x-hidden bg-[#07090f]"
       style={{ fontFamily: "'DM Sans', sans-serif" }}
     >
+      <Helmet>
+        <title>Lokonomy | Your Local Economy Connected</title>
+        <meta name="description" content="Lokonomy is the all-in-one platform to discover, connect, and grow with the businesses and people right in your neighborhood." />
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,800;0,9..40,900;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
 
