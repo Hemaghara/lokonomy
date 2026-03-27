@@ -84,9 +84,9 @@ exports.createOrder = async (req, res) => {
     const rzpKey = process.env.RAZORPAY_KEY_ID || "";
     console.log(`Razorpay Key ID:${rzpKey}`);
     console.log(
-      `[Subscription] Creating order for user ${req.user.id}, plan: ${plan}, dur: ${durationMonths}`,
+      `Subscription Creating order for user ${req.user.id}, plan: ${plan}, dur: ${durationMonths}`,
     );
-    console.log(`[Subscription] Using Key ID: ${rzpKey.substring(0, 8)}...`);
+    console.log(`Subscription Using Key ID: ${rzpKey.substring(0, 8)}...`);
 
     const amount = planDoc.prices[durationMonths.toString()];
     console.log("amount1:", amount);
