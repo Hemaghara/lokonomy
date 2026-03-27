@@ -77,6 +77,9 @@ exports.login = async (req, res) => {
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,
@@ -106,26 +109,24 @@ exports.login = async (req, res) => {
         step: "otp",
       });
     } catch (mailErr) {
-      console.error("SMTP ERROR:", mailErr.message);
-      if (mailErr.message.includes("535")) {
-        return res.json({
-          success: true,
-          message:
-            "Gmail Error: Using Debug OTP because App Password is incorrect.",
-          step: "otp",
-          devOtp: otp,
-        });
-      }
-      throw mailErr;
+      console.error("SMTP ERROR:", mailErr);
+      
+      return res.json({
+        success: true,
+        message: "OTP Service currently unavailable. Using Debug OTP.",
+        step: "otp",
+        devOtp: otp,
+      });
     }
   } catch (err) {
-    console.error("SERVER ERROR:", err.message);
+    console.error("SERVER ERROR FULL:", err);
     let msg = "A server error occurred.";
-    console.log(msg);
     if (err.message.includes("ENOTFOUND")) {
       msg = "Database Connection Error: Please check your internet connection.";
+    } else if (err.message.includes("timeout")) {
+      msg = "Database request timed out. Please check your Atlas IP Whitelist.";
     }
-    res.status(500).json({ success: false, message: msg });
+    res.status(500).json({ success: false, message: msg, details: err.message });
   }
 };
 
