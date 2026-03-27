@@ -46,7 +46,10 @@ import { useEffect } from "react";
 
 function App() {
   useEffect(() => {
-    fetch("https://lokonomy.onrender.com/")
+    const wakeupURL = import.meta.env.MODE === "development" 
+      ? "http://localhost:5000/" 
+      : "https://lokonomy.onrender.com/";
+    fetch(wakeupURL)
       .then(() => console.log("Backend awake"))
       .catch(() => console.log("Backend not awake"));
   }, []);

@@ -16,10 +16,26 @@ const PORT = process.env.PORT || 5000;
 const io = initSocket(server);
 app.set("io", io);
 
+const allowedOrigins = [
+  process.env.APP_URL,
+  "https://lokonomy.vercel.app",
+  "https://lokonomy.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      callback(null, true);
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        console.error(`Origin ${origin} not allowed by CORS`);
+        callback(new Error("Not allowed by CORS"));
+      }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -32,7 +48,6 @@ app.use(
     exposedHeaders: ["Content-Range", "X-Content-Range"],
   }),
 );
-
 
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));

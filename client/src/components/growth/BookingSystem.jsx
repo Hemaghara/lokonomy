@@ -42,7 +42,9 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
   useEffect(() => {
     fetchBookings();
 
-    const socket = io("http://localhost:5000");
+    const socket = io(import.meta.env.MODE === "development" 
+      ? "http://localhost:5000" 
+      : "https://lokonomy.onrender.com");
     if (isOwner) {
       socket.on(`newBooking_${ownerId}`, (data) => {
         toast.success(data.message, {
