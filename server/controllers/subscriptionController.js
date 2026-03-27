@@ -86,13 +86,14 @@ exports.createOrder = async (req, res) => {
     console.log(
       `Subscription Creating order for user ${req.user.id}, plan: ${plan}, dur: ${durationMonths}`,
     );
+    //starting index to --> ending index
     console.log(`Subscription Using Key ID: ${rzpKey.substring(0, 8)}...`);
 
     const amount = planDoc.prices[durationMonths.toString()];
     console.log("amount1:", amount);
     if (!amount) {
       console.error(
-        `[Subscription] Price missing for duration ${durationMonths} in plan ${plan}`,
+        `Subscription Price missing for duration ${durationMonths} in plan ${plan}`,
       );
       return res.status(400).json({
         success: false,
@@ -100,6 +101,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    //last 8 digit of user id  and current time
     const receipt = `sub_${req.user.id.toString().slice(-8)}_${Date.now()}`;
     const options = {
       amount: Math.round(amount * 100),
@@ -114,7 +116,7 @@ exports.createOrder = async (req, res) => {
 
     try {
       const order = await razorpay.orders.create(options);
-      console.log(`[Subscription] Razorpay order created: ${order.id}`);
+      console.log(`Subscription Razorpay order created: ${order.id}`);
 
       await User.findByIdAndUpdate(req.user.id, {
         "subscription.razorpayOrderId": order.id,
@@ -130,7 +132,7 @@ exports.createOrder = async (req, res) => {
         durationMonths,
       });
     } catch (rzpErr) {
-      console.error("[Subscription] Razorpay API Error:", rzpErr);
+      console.error("Subscription Razorpay API Error:", rzpErr);
       const errorMsg =
         rzpErr.error?.description || rzpErr.message || "Razorpay API error";
       res.status(500).json({
@@ -141,7 +143,7 @@ exports.createOrder = async (req, res) => {
       });
     }
   } catch (err) {
-    console.error("[Subscription] Internal error:", err);
+    console.error("Subscription Internal error:", err);
     res.status(500).json({
       success: false,
       message: "Server internal error during order creation",
