@@ -80,6 +80,9 @@ exports.login = async (req, res) => {
         host: "smtp.gmail.com",
         port: 465,
         secure: true,
+        connectionTimeout: 10000, // 10s timeout
+        greetingTimeout: 5000,
+        socketTimeout: 15000,
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,
@@ -87,7 +90,7 @@ exports.login = async (req, res) => {
       });
 
       await transporter.sendMail({
-        from: `"Lokonomy Service" <${process.env.EMAIL_USER}>`,
+        from: `"Lokonomy Service" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your Verification Code",
         html: `
