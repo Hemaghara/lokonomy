@@ -1,5 +1,5 @@
 const Feed = require("../models/Feed");
-const { uploadToCloudinary } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/uploadMedia");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
@@ -98,7 +98,8 @@ exports.createFeed = async (req, res, next) => {
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {
-      imageUrl = await uploadToCloudinary(image, "feeds");
+      const res = await uploadMedia(image, "feeds");
+      imageUrl = res.secure_url;
     }
 
     const feedData = {

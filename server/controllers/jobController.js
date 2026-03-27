@@ -1,6 +1,6 @@
 const Job = require("../models/Job");
 const User = require("../models/User");
-const { uploadToCloudinary } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/uploadMedia");
 
 exports.getAllJobs = async (req, res) => {
   try {
@@ -105,14 +105,13 @@ exports.applyForJob = async (req, res) => {
     console.log(`Candidate Biodata:${biodataUrl}`);
 
     if (candidateBiodata && candidateBiodata.includes("base64")) {
-      biodataUrl = await uploadToCloudinary(candidateBiodata, "jobs/biodatas");
+      const res = await uploadMedia(candidateBiodata, "jobs/biodatas");
+      biodataUrl = res.secure_url;
     }
     let certificateUrl = candidateCertificate;
     if (candidateCertificate && candidateCertificate.includes("base64")) {
-      certificateUrl = await uploadToCloudinary(
-        candidateCertificate,
-        "jobs/certificates",
-      );
+      const res = await uploadMedia(candidateCertificate, "jobs/certificates");
+      certificateUrl = res.secure_url;
     }
 
     job.applications.push({

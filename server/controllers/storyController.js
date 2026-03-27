@@ -1,6 +1,6 @@
 const Story = require("../models/Story");
 const User = require("../models/User");
-const { uploadToCloudinary } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/uploadMedia");
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
   console.log(`Latitude:${latitude}`);
@@ -127,7 +127,8 @@ exports.createStory = async (req, res, next) => {
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {
-      imageUrl = await uploadToCloudinary(image, "stories");
+      const res = await uploadMedia(image, "stories");
+      imageUrl = res.secure_url;
     }
     console.log(`Image URL:${imageUrl}`);
 

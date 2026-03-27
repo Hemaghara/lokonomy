@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
-const { uploadToCloudinary } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/uploadMedia");
 
 exports.login = async (req, res) => {
   const {
@@ -374,10 +374,8 @@ exports.updateProfile = async (req, res) => {
 
     if (paymentQrCode !== undefined) {
       if (paymentQrCode && paymentQrCode.startsWith("data:image")) {
-        user.paymentQrCode = await uploadToCloudinary(
-          paymentQrCode,
-          "payments",
-        );
+        const res = await uploadMedia(paymentQrCode, "payments");
+        user.paymentQrCode = res.secure_url;
       } else {
         user.paymentQrCode = paymentQrCode;
       }

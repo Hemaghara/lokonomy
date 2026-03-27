@@ -1,6 +1,6 @@
 const Business = require("../models/Business");
 const User = require("../models/User");
-const { uploadToCloudinary } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/uploadMedia");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
@@ -68,16 +68,15 @@ exports.addBusiness = async (req, res) => {
   try {
     const businessData = { ...req.body };
     if (businessData.logo && businessData.logo.startsWith("data:image")) {
-      businessData.logo = await uploadToCloudinary(
-        businessData.logo,
-        "businesses/logos",
-      );
+      const res = await uploadMedia(businessData.logo, "businesses/logos");
+      businessData.logo = res.secure_url;
     }
     if (businessData.photos && Array.isArray(businessData.photos)) {
       const uploadedPhotos = await Promise.all(
         businessData.photos.map(async (photo) => {
           if (photo.startsWith("data:image")) {
-            return await uploadToCloudinary(photo, "businesses/gallery");
+            const res = await uploadMedia(photo, "businesses/gallery");
+            return res.secure_url;
           }
           return photo;
         }),
@@ -270,17 +269,16 @@ exports.updateBusiness = async (req, res) => {
     }
     updateData.ownerName = user.name;
     if (updateData.logo && updateData.logo.startsWith("data:image")) {
-      updateData.logo = await uploadToCloudinary(
-        updateData.logo,
-        "businesses/logos",
-      );
+      const res = await uploadMedia(updateData.logo, "businesses/logos");
+      updateData.logo = res.secure_url;
     }
 
     if (updateData.photos && Array.isArray(updateData.photos)) {
       const uploadedPhotos = await Promise.all(
         updateData.photos.map(async (photo) => {
           if (photo.startsWith("data:image")) {
-            return await uploadToCloudinary(photo, "businesses/gallery");
+            const res = await uploadMedia(photo, "businesses/gallery");
+            return res.secure_url;
           }
           return photo;
         }),

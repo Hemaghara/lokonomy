@@ -1,7 +1,7 @@
 const Product = require("../models/Product");
 const User = require("../models/User");
 const Order = require("../models/Order");
-const { uploadToCloudinary } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/uploadMedia");
 const { awardPoints } = require("./rewardsController");
 
 const buildLocationGeoJSON = (body) => {
@@ -87,7 +87,8 @@ exports.addProduct = async (req, res) => {
       const uploadedImages = await Promise.all(
         productData.productImages.map(async (image) => {
           if (image.startsWith("data:image")) {
-            return await uploadToCloudinary(image, "products");
+            const res = await uploadMedia(image, "products");
+            return res.secure_url;
           }
           return image;
         }),

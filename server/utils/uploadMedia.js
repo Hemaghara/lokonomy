@@ -1,0 +1,65 @@
+const sharp = require("sharp");
+const getStorageProvider = require("../services/storage/getStorageProvider");
+const crypto = require("crypto");
+
+const generateUniqueId = () => crypto.randomBytes(8).toString("hex");
+
+const parseBase64ToBuffer = (base64) => {
+  if (base64.startsWith("data:")) {
+    const parts = base64.split(",");
+    return Buffer.from(parts[1], "base64");
+  }
+  return Buffer.from(base64, "base64");
+};
+
+/**
+ * Global function for resizing and uploading media
+ * @param {string} fileBase64 - The raw image arriving from frontend
+ * @param {string} folder - Destination folder on cloud (e.g., 'market', 'profiles')
+ * @param {object} options - Options containing realWidth and thumbWidth
+ * @returns {object|string} - Object with thumb and real urls, or standard url
+ */
+const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
+  if (!fileBase64) return null;
+
+  if (fileBase64.startsWith("http")) return fileBase64;
+
+  const storage = getStorageProvider();
+
+  const fileBuffer = parseBase64ToBuffer(fileBase64);
+  const customId = generateUniqueId();
+
+  const realWidth = options.realWidth || undefined;
+  const thumbWidth = options.thumbWidth || 300;
+
+  try {
+    const realBuffer = await sharp(fileBuffer)
+      .resize({ width: realWidth, withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer();
+
+    const thumbBuffer = await sharp(fileBuffer)
+      .resize({ width: thumbWidth, height: thumbWidth, fit: "cover" })
+      .webp({ quality: 70 })
+      .toBuffer();
+
+    const prefix = `lokonomy/${folder}`;
+
+    const [realResult, thumbResult] = await Promise.all([
+      storage.upload(realBuffer, `${prefix}/${customId}-real.webp`),
+      storage.upload(thumbBuffer, `${prefix}/${customId}-thumb.webp`),
+    ]);
+
+    return {
+      mediaId: customId,
+      secure_url: realResult,
+      realUrl: realResult,
+      thumbUrl: thumbResult,
+    };
+  } catch (err) {
+    console.error("Global Media Upload Error:", err);
+    throw err;
+  }
+};
+
+module.exports = { uploadMedia };
