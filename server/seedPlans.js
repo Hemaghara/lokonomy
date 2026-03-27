@@ -20,7 +20,7 @@ const PLAN_DATA = [
   {
     name: "Silver",
     slug: "silver",
-    prices: { 3: 1, 6: 349, 12: 599 },
+    prices: { 3: 199, 6: 349, 12: 599 },
     limits: {
       productsUpload: 20,
       storiesPost: 50,
