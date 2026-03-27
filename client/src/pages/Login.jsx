@@ -4,7 +4,13 @@ import { useNavigate, Link } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { authService } from "../services";
 import { toast } from "react-hot-toast";
-import { MapPin,Hourglass,CheckCircle,Ban,AlertTriangle} from "lucide-react";
+import {
+  MapPin,
+  Hourglass,
+  CheckCircle,
+  Ban,
+  AlertTriangle,
+} from "lucide-react";
 import { subscribeToPush } from "../services/pushService";
 const Login = () => {
   const navigate = useNavigate();
@@ -66,6 +72,11 @@ const Login = () => {
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en`,
+            {
+              headers: {
+                "User-Agent": "lokonomy-app",
+              },
+            },
           );
           const data = await res.json();
           if (data && data.display_name) {
@@ -85,6 +96,7 @@ const Login = () => {
             ).trim();
           }
         } catch {
+          console.error("Geocoding Error:", error.message);
         }
 
         setGpsState({
@@ -188,9 +200,11 @@ const Login = () => {
           ...response.data.user,
           token: response.data.token,
         });
-        
+
         if (response.data.user.notificationsEnabled !== false) {
-          subscribeToPush().catch(err => console.error("Push subscription failed", err));
+          subscribeToPush().catch((err) =>
+            console.error("Push subscription failed", err),
+          );
         }
 
         navigate("/home");
@@ -212,31 +226,31 @@ const Login = () => {
 
   const gpsStatusConfig = {
     idle: {
-      icon: <MapPin/>,
+      icon: <MapPin />,
       label: "Enable GPS to update your location",
       color: "text-primary",
       bg: "bg-primary/10 border-primary/30",
     },
     fetching: {
-      icon: <Hourglass/>,
+      icon: <Hourglass />,
       label: "Fetching location...",
       color: "text-yellow-400",
       bg: "bg-yellow-500/10 border-yellow-500/30",
     },
     granted: {
-      icon: <CheckCircle/>,
+      icon: <CheckCircle />,
       label: "Location Ready",
       color: "text-green-400",
       bg: "bg-green-500/10 border-green-500/30",
     },
     denied: {
-      icon: <Ban/>,
+      icon: <Ban />,
       label: "GPS Required — Please enable in browser",
       color: "text-rose-400",
       bg: "bg-rose-500/10 border-rose-500/30",
     },
     error: {
-      icon: <AlertTriangle/>,
+      icon: <AlertTriangle />,
       label: "Location required — click Allow",
       color: "text-orange-400",
       bg: "bg-orange-500/10 border-orange-500/30",
@@ -317,7 +331,7 @@ const Login = () => {
                         className="mt-1"
                       >
                         <p className="text-xs text-green-300 truncate">
-                           {gpsState.locationName}
+                          {gpsState.locationName}
                         </p>
                         <p className="text-xs text-text-dim">
                           ±{gpsState.accuracy}m accuracy
