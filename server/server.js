@@ -18,9 +18,7 @@ app.set("io", io);
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      callback(null, true);
-    },
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
@@ -32,7 +30,6 @@ app.use(
     exposedHeaders: ["Content-Range", "X-Content-Range"],
   }),
 );
-
 
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
