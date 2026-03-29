@@ -5,29 +5,29 @@ import { useUser } from "../context/UserContext";
 import { chatService } from "../services";
 import { connectSocket } from "../services/socket";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { 
-  Home, 
-  Compass, 
-  ShoppingBag, 
-  Briefcase, 
-  Library, 
-  LayoutGrid, 
-  Map as MapIcon, 
-  Menu, 
-  X, 
-  LogOut, 
-  Crown, 
-  Gem, 
-  Heart, 
-  Package, 
-  Tag, 
-  ChevronRight, 
+import {
+  Home,
+  Compass,
+  ShoppingBag,
+  Briefcase,
+  Library,
+  LayoutGrid,
+  Map as MapIcon,
+  Menu,
+  X,
+  LogOut,
+  Crown,
+  Gem,
+  Heart,
+  Package,
+  Tag,
+  ChevronRight,
   Bell,
   Search,
   MessageCircle,
   User as UserIcon,
   Zap,
-  Star
+  Star,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -71,13 +71,41 @@ const Navbar = () => {
   }, [user]);
 
   const navLinks = [
-    { name: "Home", path: "/home", icon: <Home className="w-5 h-5 md:w-4 md:h-4" /> },
-    { name: "Explore", path: "/explore", icon: <Compass className="w-5 h-5 md:w-4 md:h-4" /> },
-    { name: "Market", path: "/market", icon: <ShoppingBag className="w-5 h-5 md:w-4 md:h-4" /> },
-    { name: "Jobs", path: "/jobs", icon: <Briefcase className="w-5 h-5 md:w-4 md:h-4" /> },
-    { name: "Stories", path: "/stories", icon: <Library className="w-5 h-5 md:w-4 md:h-4" /> },
-    { name: "Feed", path: "/feed", icon: <LayoutGrid className="w-5 h-5 md:w-4 md:h-4" /> },
-    { name: "Map", path: "/events-map", icon: <MapIcon className="w-5 h-5 md:w-4 md:h-4" /> },
+    {
+      name: "Home",
+      path: "/home",
+      icon: <Home className="w-5 h-5 md:w-4 md:h-4" />,
+    },
+    {
+      name: "Explore",
+      path: "/explore",
+      icon: <Compass className="w-5 h-5 md:w-4 md:h-4" />,
+    },
+    {
+      name: "Market",
+      path: "/market",
+      icon: <ShoppingBag className="w-5 h-5 md:w-4 md:h-4" />,
+    },
+    {
+      name: "Jobs",
+      path: "/jobs",
+      icon: <Briefcase className="w-5 h-5 md:w-4 md:h-4" />,
+    },
+    {
+      name: "Stories",
+      path: "/stories",
+      icon: <Library className="w-5 h-5 md:w-4 md:h-4" />,
+    },
+    {
+      name: "Feed",
+      path: "/feed",
+      icon: <LayoutGrid className="w-5 h-5 md:w-4 md:h-4" />,
+    },
+    {
+      name: "Map",
+      path: "/events-map",
+      icon: <MapIcon className="w-5 h-5 md:w-4 md:h-4" />,
+    },
   ];
 
   return (
@@ -90,12 +118,16 @@ const Navbar = () => {
         }`}
       >
         <div className="max-w-425 mx-auto px-4 md:px-10 flex items-center gap-0 h-14 md:h-16">
-          {/* Logo Section - Ultra Compact */}
-          <Link to="/home" className="flex items-center gap-2.5 group shrink-0 mr-12 h-10">
+          <Link
+            to="/home"
+            className="flex items-center gap-2.5 group shrink-0 mr-12 h-10"
+          >
             <div className="relative w-10 h-10">
               <div className="absolute inset-0 bg-primary/30 rounded-xl blur-xl group-hover:bg-primary/50 transition-all duration-500 scale-125" />
               <div className="relative w-full h-full bg-[#0d0d14] border border-white/10 rounded-xl flex items-center justify-center text-lg font-black text-white shadow-2xl group-hover:border-primary/40 group-hover:scale-105 transition-all duration-500">
-                <span className="bg-linear-to-br from-primary to-violet-500 bg-clip-text text-transparent">L</span>
+                <span className="bg-linear-to-br from-primary to-violet-500 bg-clip-text text-transparent">
+                  L
+                </span>
               </div>
             </div>
             <div className="flex flex-col leading-tight">
@@ -110,7 +142,6 @@ const Navbar = () => {
 
           <div className="hidden lg:flex items-center flex-1 ml-4 py-1">
             <div className="flex items-center gap-1 bg-white/3 p-1 rounded-2xl border border-white/5 backdrop-blur-xl group/hub hover:border-white/10 transition-colors overflow-hidden">
-              {/* Core Ecosystem */}
               <div className="flex items-center gap-0.5 px-1 pr-1.5 border-r border-white/5">
                 {navLinks.map((link) => (
                   <Link
@@ -121,33 +152,52 @@ const Navbar = () => {
                     <div className="w-4 h-4 text-white/30 group-hover:text-primary transition-all group-hover:scale-110">
                       {link.icon}
                     </div>
-                    <span className="hidden xl:block whitespace-nowrap">{link.name}</span>
+                    <span className="hidden xl:block whitespace-nowrap">
+                      {link.name}
+                    </span>
                     <span className="absolute bottom-1 left-4 right-4 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                   </Link>
                 ))}
               </div>
 
-              {/* Utility Tools */}
               <div className="flex items-center gap-0.5 pl-1.5 pr-1.5 border-r border-white/5 flex-nowrap">
                 {[
-                  { name: "My Orders", path: "/my-orders", icon: <Package className="w-4 h-4" />, color: "text-blue-400" },
-                  { name: "Sell Hub", path: "/sales-management", icon: <Tag className="w-4 h-4" />, color: "text-emerald-400" },
-                  { name: "Wishlist", path: "/wishlist", icon: <Heart className="w-4 h-4" />, color: "text-rose-400" },
+                  {
+                    name: "My Orders",
+                    path: "/my-orders",
+                    icon: <Package className="w-4 h-4" />,
+                    color: "text-blue-400",
+                  },
+                  {
+                    name: "Sell Hub",
+                    path: "/sales-management",
+                    icon: <Tag className="w-4 h-4" />,
+                    color: "text-emerald-400",
+                  },
+                  {
+                    name: "Wishlist",
+                    path: "/wishlist",
+                    icon: <Heart className="w-4 h-4" />,
+                    color: "text-rose-400",
+                  },
                 ].map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
                     className="px-3.5 py-2 text-[11px] font-black text-white/30 hover:text-white uppercase tracking-[0.15em] hover:bg-white/5 rounded-xl transition-all flex items-center gap-2.5 shrink-0 group/item"
                   >
-                    <div className={`${item.color} opacity-40 group-hover/item:opacity-100 group-hover/item:scale-110 transition-all duration-500`}>
+                    <div
+                      className={`${item.color} opacity-40 group-hover/item:opacity-100 group-hover/item:scale-110 transition-all duration-500`}
+                    >
                       {item.icon}
                     </div>
-                    <span className="hidden b-xl:block whitespace-nowrap font-bold">{item.name}</span>
+                    <span className="hidden b-xl:block whitespace-nowrap font-bold">
+                      {item.name}
+                    </span>
                   </Link>
                 ))}
               </div>
 
-              {/* Messaging Layer */}
               <div className="flex items-center pl-1.5 pr-2">
                 <Link
                   to="/my-chats"
@@ -155,7 +205,9 @@ const Navbar = () => {
                   onClick={() => setUnreadCount(0)}
                 >
                   <MessageCircle className="w-4 h-4 text-violet-400 opacity-40 group-hover/chat:opacity-100 group-hover/chat:scale-110 transition-all duration-500" />
-                  <span className="hidden b-xl:block whitespace-nowrap font-bold">Inbox</span>
+                  <span className="hidden b-xl:block whitespace-nowrap font-bold">
+                    Inbox
+                  </span>
                   {unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 bg-violet-600 rounded-full flex items-center justify-center text-[9px] text-white font-black px-1.5 shadow-[0_0_15px_rgba(139,92,246,0.3)] ring-1 ring-[#050508]">
                       {unreadCount}
@@ -166,11 +218,9 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* User Terminal Area */}
           <div className="flex items-center gap-4 ml-auto pl-10 shrink-0">
             {user ? (
               <>
-                {/* Rewards Terminal */}
                 <div className="hidden min-[1200px]:flex items-center gap-3">
                   <Link
                     to="/rewards"
@@ -193,7 +243,6 @@ const Navbar = () => {
 
                 <div className="hidden xl:block w-px h-6 bg-white/5 mx-1" />
 
-                {/* Notifications & Search Trigger */}
                 <div className="hidden sm:flex items-center gap-2">
                   <button className="p-2.5 bg-white/3 hover:bg-white/8 rounded-xl border border-white/5 transition-all group/tool">
                     <Search className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" />
@@ -204,14 +253,15 @@ const Navbar = () => {
                   </button>
                 </div>
 
-                {/* Profile Widget - Final Polish */}
                 <Link
                   to="/profile"
                   className="flex items-center gap-3.5 bg-white/3 hover:bg-white/8 p-1.5 pr-4 rounded-xl border border-white/5 transition-all hidden sm:flex group/profile active:scale-95 shadow-lg"
                 >
                   <div className="w-9 h-9 bg-[#0d0d14] border border-white/10 rounded-lg flex items-center justify-center text-sm font-black text-white shadow-xl group-hover/profile:border-primary/50 group-hover/profile:shadow-primary/10 transition-all relative overflow-hidden">
                     <div className="absolute inset-0 bg-linear-to-br from-primary/10 to-violet-600/10 opacity-0 group-hover/profile:opacity-100 transition-opacity" />
-                    <span className="relative z-10">{user.name?.[0].toUpperCase()}</span>
+                    <span className="relative z-10">
+                      {user.name?.[0].toUpperCase()}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[12px] font-bold text-white whitespace-nowrap leading-none tracking-tight">
@@ -223,7 +273,6 @@ const Navbar = () => {
                   </div>
                 </Link>
 
-                {/* Mobile Menu Toggle Trigger */}
                 <button
                   onClick={() => setIsOpen(!isOpen)}
                   className="lg:hidden w-11 h-11 flex items-center justify-center bg-white/5 rounded-xl border border-white/8 transition-all active:scale-90"
@@ -242,7 +291,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -252,21 +300,22 @@ const Navbar = () => {
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="lg:hidden absolute top-full left-0 right-0 h-[calc(100vh-64px)] overflow-y-auto bg-[#0d0d14]/98 backdrop-blur-3xl border-t border-white/8 p-5"
             >
-              {/* Mobile User Header */}
               {user && (
                 <div className="mb-8 p-4 bg-white/5 rounded-3xl border border-white/8 flex items-center gap-4">
                   <div className="w-14 h-14 bg-linear-to-br from-primary to-violet-600 rounded-2xl flex items-center justify-center text-xl font-black text-white shadow-2xl">
                     {user.name?.[0].toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-white">{user.name}</h3>
+                    <h3 className="text-lg font-bold text-white">
+                      {user.name}
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] font-black bg-primary/20 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">
                         {user.subscription?.plan || "Free"}
                       </span>
                       <span className="text-white/20">•</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                        {user.email?.split('@')[0]}
+                        {user.email?.split("@")[0]}
                       </span>
                     </div>
                   </div>
@@ -280,9 +329,8 @@ const Navbar = () => {
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                {/* Action Grid for User Settings */}
                 {user && (
-                   <>
+                  <>
                     <Link
                       to="/my-chats"
                       onClick={() => setIsOpen(false)}
@@ -292,8 +340,12 @@ const Navbar = () => {
                         <MessageCircle className="w-5 h-5" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">Inbox</span>
-                        <span className="text-[10px] text-white/30 uppercase tracking-tight">Recent Messages</span>
+                        <span className="text-sm font-bold text-white">
+                          Inbox
+                        </span>
+                        <span className="text-[10px] text-white/30 uppercase tracking-tight">
+                          Recent Messages
+                        </span>
                       </div>
                       {unreadCount > 0 && (
                         <span className="ml-auto w-6 h-6 bg-violet-500 rounded-full flex items-center justify-center text-[10px] font-black text-white ring-4 ring-violet-500/20">
@@ -311,8 +363,12 @@ const Navbar = () => {
                         <Star className="w-5 h-5" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">Rewards</span>
-                        <span className="text-[10px] text-white/30 uppercase tracking-tight">{(user.loyaltyPoints || 0).toLocaleString()} Points</span>
+                        <span className="text-sm font-bold text-white">
+                          Rewards
+                        </span>
+                        <span className="text-[10px] text-white/30 uppercase tracking-tight">
+                          {(user.loyaltyPoints || 0).toLocaleString()} Points
+                        </span>
                       </div>
                       <ChevronRight className="ml-auto w-4 h-4 text-white/20" />
                     </Link>
@@ -329,24 +385,31 @@ const Navbar = () => {
                         <Zap className="w-5 h-5" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-white uppercase tracking-wider">Premium Access</span>
-                        <span className="text-[10px] text-primary font-bold">Unlock exclusive features & tools</span>
+                        <span className="text-sm font-black text-white uppercase tracking-wider">
+                          Premium Access
+                        </span>
+                        <span className="text-[10px] text-primary font-bold">
+                          Unlock exclusive features & tools
+                        </span>
                       </div>
-                      <div className="ml-auto bg-white text-black px-3 py-1 rounded-full text-[9px] font-black">GO PRO</div>
+                      <div className="ml-auto bg-white text-black px-3 py-1 rounded-full text-[9px] font-black">
+                        GO PRO
+                      </div>
                     </Link>
-                   </>
+                  </>
                 )}
               </div>
 
-              {/* Main Navigation Links */}
               <div className="space-y-2 mb-10">
-                <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] px-3 mb-2 block">General Hub</span>
+                <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] px-3 mb-2 block">
+                  General Hub
+                </span>
                 {navLinks.map((link, i) => (
                   <motion.div
                     key={link.path}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 + (i * 0.05) }}
+                    transition={{ delay: 0.2 + i * 0.05 }}
                   >
                     <Link
                       to={link.path}
@@ -367,14 +430,33 @@ const Navbar = () => {
                 ))}
               </div>
 
-              {/* Commerce Section for User */}
               {user && (
                 <div className="grid grid-cols-2 gap-3 mb-20">
                   {[
-                    { name: "My Orders", path: "/my-orders", icon: <Package className="w-4 h-4" />, color: "blue" },
-                    { name: "My Wishlist", path: "/wishlist", icon: <Heart className="w-4 h-4" />, color: "rose" },
-                    { name: "Sell Hub", path: "/sales-management", icon: <Tag className="w-4 h-4" />, color: "emerald" },
-                    { name: "My Profile", path: "/profile", icon: <UserIcon className="w-4 h-4" />, color: "primary" },
+                    {
+                      name: "My Orders",
+                      path: "/my-orders",
+                      icon: <Package className="w-4 h-4" />,
+                      color: "blue",
+                    },
+                    {
+                      name: "My Wishlist",
+                      path: "/wishlist",
+                      icon: <Heart className="w-4 h-4" />,
+                      color: "rose",
+                    },
+                    {
+                      name: "Sell Hub",
+                      path: "/sales-management",
+                      icon: <Tag className="w-4 h-4" />,
+                      color: "emerald",
+                    },
+                    {
+                      name: "My Profile",
+                      path: "/profile",
+                      icon: <UserIcon className="w-4 h-4" />,
+                      color: "primary",
+                    },
                   ].map((item, i) => (
                     <Link
                       key={item.path}
@@ -382,7 +464,9 @@ const Navbar = () => {
                       onClick={() => setIsOpen(false)}
                       className="flex flex-col gap-3 p-4 bg-white/5 border border-white/8 rounded-2xl hover:bg-white/10 transition-all group"
                     >
-                      <div className={`w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center text-white/40 group-hover:scale-110 transition-transform`}>
+                      <div
+                        className={`w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center text-white/40 group-hover:scale-110 transition-transform`}
+                      >
                         {item.icon}
                       </div>
                       <span className="text-xs font-bold text-white/60 group-hover:text-white">
@@ -393,7 +477,6 @@ const Navbar = () => {
                 </div>
               )}
 
-              {/* Footer info in Menu */}
               <div className="mt-auto pt-10 border-t border-white/5 text-center">
                 <p className="text-[10px] font-black text-white/10 uppercase tracking-[0.2em]">
                   Lokonomy Secure Session Hub v2.5

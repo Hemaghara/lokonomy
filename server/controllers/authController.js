@@ -36,7 +36,6 @@ exports.login = async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
     if (locationPermission === "granted" && latitude && longitude) {
-      //string to float
       user.latitude = parseFloat(latitude);
       user.longitude = parseFloat(longitude);
       user.locationName = locationName || null;
@@ -80,7 +79,7 @@ exports.login = async (req, res) => {
         host: "smtp.gmail.com",
         port: 465,
         secure: true,
-        connectionTimeout: 10000, // 10s timeout
+        connectionTimeout: 10000, 
         greetingTimeout: 5000,
         socketTimeout: 15000,
         auth: {

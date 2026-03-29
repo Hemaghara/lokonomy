@@ -32,9 +32,7 @@ const migrate = async () => {
 
     for (const fileUrl of files) {
       try {
-        // Extract the logical path from the URL.
-        // e.g., "https://res.cloudinary.com/.../upload/v1234/lokonomy/market/item.webp"
-        // -> "lokonomy/market/item.webp"
+       
         const pathMatch = fileUrl.split("/upload/")[1];
         const logicalPath = pathMatch.replace(/^v\d+\//, "");
 
