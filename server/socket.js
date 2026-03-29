@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const Message = require("./models/Message");
+const { createNotification } = require("./controllers/notificationController");
 
 const initSocket = (server) => {
   const io = new Server(server, {
@@ -15,6 +16,7 @@ const initSocket = (server) => {
 
     socket.on("registerUser", (userId) => {
       onlineUsers.set(userId, socket.id);
+      socket.join(`user_${userId}`);
       console.log(`User registered: ${userId}`);
     });
     socket.on("joinRoom", ({ chatRoom }) => {
@@ -73,6 +75,18 @@ const initSocket = (server) => {
             url: `/my-chats`,
             type: chatType === "business_inquiry" ? "business_inquiry" : "chat",
           },
+        });
+
+        await createNotification({
+          recipientId: receiverId,
+          type: "message",
+          title: chatType === "business_inquiry"
+            ? `New inquiry from ${senderName}`
+            : `New message from ${senderName}`,
+          message: message.length > 80 ? message.substring(0, 80) + "..." : message,
+          actionUrl: "/my-chats",
+          metadata: { chatRoom, senderId },
+          io,
         });
       } catch (err) {
         console.error("Error saving message:", err);

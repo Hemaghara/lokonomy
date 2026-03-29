@@ -4,6 +4,7 @@ const Booking = require("../models/Booking");
 const QRCode = require("qrcode");
 const { getPlanLimits } = require("../config/plans");
 const User = require("../models/User");
+const { createNotification } = require("./notificationController");
 
 exports.getBusinessAnalytics = async (req, res) => {
   try {
@@ -362,6 +363,16 @@ exports.createBooking = async (req, res) => {
       },
     });
 
+    await createNotification({
+      recipientId: business.ownerId,
+      type: "booking",
+      title: "New Booking Request",
+      message: `${user.name} requested a booking for ${serviceName} on ${date}.`,
+      actionUrl: `/business/${businessId}`,
+      metadata: { bookingId: newBooking._id, businessId },
+      io,
+    });
+
     res.json({ success: true, booking: newBooking, appliedCoupon });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -410,6 +421,17 @@ exports.updateBookingStatus = async (req, res) => {
         url: "/my-bookings",
         type: "booking_update",
       },
+    });
+
+    const io = req.app.get("io");
+    await createNotification({
+      recipientId: booking.userId.toString(),
+      type: "booking",
+      title: "Booking Status Updated",
+      message: `Your booking for ${booking.serviceName} has been ${status}.`,
+      actionUrl: `/business/${booking.businessId}`,
+      metadata: { bookingId: booking._id, status },
+      io,
     });
 
     res.json({ success: true, booking });

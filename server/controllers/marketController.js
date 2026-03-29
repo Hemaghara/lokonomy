@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Order = require("../models/Order");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { awardPoints } = require("./rewardsController");
+const { createNotification } = require("./notificationController");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
@@ -273,6 +274,17 @@ exports.addProductReview = async (req, res) => {
 
     await product.save();
 
+    const io = req.app.get("io");
+    await createNotification({
+      recipientId: product.sellerId.toString(),
+      type: "review",
+      title: "New Product Review",
+      message: `${user.name} left a ${rating}★ review on ${product.productName || product.name || "your product"}.`,
+      actionUrl: `/market/product/${product._id}`,
+      metadata: { productId: product._id, rating },
+      io,
+    });
+
     if (Number(rating) === 5) {
       try {
         await awardPoints(
@@ -369,6 +381,16 @@ exports.placeBid = async (req, res) => {
         bidHistory: product.bids,
       });
     }
+
+    await createNotification({
+      recipientId: product.sellerId.toString(),
+      type: "order",
+      title: "New Bid Received",
+      message: `${user.name} placed a ₹${Number(amount).toLocaleString()} bid on ${product.productName || product.name || "your auction"}.`,
+      actionUrl: `/market/product/${productId}`,
+      metadata: { productId, bidAmount: amount },
+      io,
+    });
 
     res.status(200).json({ success: true, product });
   } catch (err) {

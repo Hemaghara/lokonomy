@@ -45,6 +45,7 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Rewards = lazy(() => import("./pages/Rewards"));
 const EventsMap = lazy(() => import("./pages/EventsMap"));
 const CompareBusinesses = lazy(() => import("./pages/CompareBusinesses"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 
 function App() {
   useEffect(() => {
@@ -135,6 +136,7 @@ function App() {
                     <Route path="/upgrade-plan" element={<UpgradePlan />} />
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/rewards" element={<Rewards />} />
+                    <Route path="/notifications" element={<Notifications />} />
                   </Route>
                 </Route>
               </Routes>

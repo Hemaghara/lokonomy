@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const { awardPoints } = require("./rewardsController");
+const { createNotification } = require("./notificationController");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -98,6 +99,17 @@ exports.createOrder = async (req, res) => {
       },
     });
 
+    const io = req.app.get("io");
+    await createNotification({
+      recipientId: product.sellerId,
+      type: "order",
+      title: "New Order Received",
+      message: `You have a new order for ${product.name} — ₹${product.price}.`,
+      actionUrl: "/sales-management",
+      metadata: { orderId: savedOrder._id, productId },
+      io,
+    });
+
     try {
       await awardPoints(
         req.user.id,
@@ -186,6 +198,17 @@ exports.updateOrderStatus = async (req, res) => {
         url: "/my-orders",
         type: "order_update",
       },
+    });
+
+    const io = req.app.get("io");
+    await createNotification({
+      recipientId: order.buyer.toString(),
+      type: "order",
+      title: "Order Status Updated",
+      message: `Your order has been updated to: ${orderStatus}.`,
+      actionUrl: "/my-orders",
+      metadata: { orderId: order._id, status: orderStatus },
+      io,
     });
 
     res.status(200).json({ success: true, order });

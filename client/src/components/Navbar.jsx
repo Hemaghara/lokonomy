@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "../context/UserContext";
 import { chatService } from "../services";
 import { connectSocket } from "../services/socket";
+import NotificationBell from "./NotificationBell";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import {
   Home,
@@ -147,7 +148,7 @@ const Navbar = () => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className="relative px-4 py-2 text-[12px] font-bold text-white/40 hover:text-white transition-all duration-500 rounded-xl hover:bg-white/5 group flex items-center gap-2.5 flex-nowrap shrink-0"
+                    className="relative px-4 py-2 text-[12px] font-bold text-white transition-all duration-500 rounded-xl hover:bg-white/5 group flex items-center gap-2.5 flex-nowrap shrink-0"
                   >
                     <div className="w-4 h-4 text-white/30 group-hover:text-primary transition-all group-hover:scale-110">
                       {link.icon}
@@ -247,10 +248,7 @@ const Navbar = () => {
                   <button className="p-2.5 bg-white/3 hover:bg-white/8 rounded-xl border border-white/5 transition-all group/tool">
                     <Search className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" />
                   </button>
-                  <button className="relative p-2.5 bg-white/3 hover:bg-white/8 rounded-xl border border-white/5 transition-all group/tool">
-                    <Bell className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" />
-                    <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-primary rounded-full group-hover:animate-ping" />
-                  </button>
+                  <NotificationBell />
                 </div>
 
                 <Link

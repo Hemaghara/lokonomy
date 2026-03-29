@@ -1,6 +1,7 @@
 const Job = require("../models/Job");
 const User = require("../models/User");
 const { uploadMedia } = require("../utils/uploadMedia");
+const { createNotification } = require("./notificationController");
 
 exports.getAllJobs = async (req, res) => {
   try {
@@ -127,6 +128,18 @@ exports.applyForJob = async (req, res) => {
     });
 
     await job.save();
+
+    const io = req.app.get("io");
+    await createNotification({
+      recipientId: job.posterId,
+      type: "job_application",
+      title: "New Job Application",
+      message: `${candidateName} applied for your ${job.position} position.`,
+      actionUrl: `/job-dashboard`,
+      metadata: { jobId: job._id, applicantName: candidateName },
+      io,
+    });
+
     res
       .status(201)
       .json({ success: true, message: "Application submitted successfully" });
@@ -256,6 +269,19 @@ exports.updateApplicationStatus = async (req, res) => {
 
     application.applicationStatus = status;
     await job.save();
+
+    if (application.candidateId) {
+      const io = req.app.get("io");
+      await createNotification({
+        recipientId: application.candidateId.toString(),
+        type: "job_application",
+        title: `Application ${status}`,
+        message: `Your application for ${job.position} has been ${status.toLowerCase()}.`,
+        actionUrl: `/jobs/${job._id}`,
+        metadata: { jobId: job._id, status },
+        io,
+      });
+    }
 
     res.json({
       success: true,

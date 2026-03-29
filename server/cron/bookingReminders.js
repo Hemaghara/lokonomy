@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const Booking = require("../models/Booking");
 const { sendPushNotification } = require("../utils/pushService");
+const { createNotification } = require("../controllers/notificationController");
 const Business = require("../models/Business");
 
 const startBookingRemindersCron = () => {
@@ -49,6 +50,14 @@ const startBookingRemindersCron = () => {
               body: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} is in 24 hours (Tomorrow, ${booking.date} at ${booking.timeSlot}).`,
               data: { url: "/profile" },
             });
+            await createNotification({
+              recipientId: booking.userId._id,
+              type: "booking",
+              title: "Appointment Tomorrow",
+              message: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} is tomorrow at ${booking.timeSlot}.`,
+              actionUrl: `/business/${booking.businessId?._id}`,
+              metadata: { bookingId: booking._id },
+            });
             booking.reminderSent24h = true;
             await booking.save();
           }
@@ -60,6 +69,14 @@ const startBookingRemindersCron = () => {
               title: "Appointment Reminder (1 Hour)",
               body: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} is in 1 hour (${booking.timeSlot}). See you soon!`,
               data: { url: "/profile" },
+            });
+            await createNotification({
+              recipientId: booking.userId._id,
+              type: "booking",
+              title: "Appointment in 1 Hour",
+              message: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} starts at ${booking.timeSlot}. Get ready!`,
+              actionUrl: `/business/${booking.businessId?._id}`,
+              metadata: { bookingId: booking._id },
             });
             booking.reminderSent1h = true;
             await booking.save();

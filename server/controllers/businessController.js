@@ -1,6 +1,7 @@
 const Business = require("../models/Business");
 const User = require("../models/User");
 const { uploadMedia } = require("../utils/uploadMedia");
+const { createNotification } = require("./notificationController");
 
 const buildLocationGeoJSON = (body) => {
   const { latitude, longitude, locationAddress } = body;
@@ -218,6 +219,19 @@ exports.addReview = async (req, res) => {
     business.rating = totalRating / business.reviews.length;
 
     await business.save();
+
+    if (business.ownerId) {
+      const io = req.app.get("io");
+      await createNotification({
+        recipientId: business.ownerId,
+        type: "review",
+        title: "New Business Review",
+        message: `${userName || "Someone"} left a ${rating}★ review on ${business.businessName}.`,
+        actionUrl: `/business/${business._id}`,
+        metadata: { businessId: business._id, rating },
+        io,
+      });
+    }
 
     res.status(201).json({
       success: true,
