@@ -74,37 +74,37 @@ const Navbar = () => {
     {
       name: "Home",
       path: "/home",
-      icon: <Home className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <Home className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
     {
       name: "Explore",
       path: "/explore",
-      icon: <Compass className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <Compass className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
     {
       name: "Market",
       path: "/market",
-      icon: <ShoppingBag className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <ShoppingBag className="w-5 h-5 md:w-4 md:h-4 text-white " />,
     },
     {
       name: "Jobs",
       path: "/jobs",
-      icon: <Briefcase className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <Briefcase className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
     {
       name: "Stories",
       path: "/stories",
-      icon: <Library className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <Library className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
     {
       name: "Feed",
       path: "/feed",
-      icon: <LayoutGrid className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <LayoutGrid className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
     {
       name: "Map",
       path: "/events-map",
-      icon: <MapIcon className="w-5 h-5 md:w-4 md:h-4" />,
+      icon: <MapIcon className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
   ];
 
@@ -134,7 +134,7 @@ const Navbar = () => {
               <span className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-0.5">
                 Loko<span className="text-primary">nomy</span>
               </span>
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] -translate-y-px">
+              <span className="text-[9px] font-black text-white/80 uppercase tracking-[0.4em] -translate-y-px">
                 Global Hub
               </span>
             </div>
