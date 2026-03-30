@@ -216,10 +216,10 @@ exports.verifyPayment = async (req, res) => {
           $inc: { "referralRewards.totalDiscountsGiven": 1 },
         });
         console.log(
-          `[Referral] Reward applied: 15 days added to referrer ${updatedUser.referredBy}`,
+          `Referral Reward applied: 15 days added to referrer ${updatedUser.referredBy}`,
         );
       } catch (referralErr) {
-        console.error("[Referral] Error applying reward:", referralErr.message);
+        console.error("Referral Error applying reward:", referralErr.message);
       }
     }
 

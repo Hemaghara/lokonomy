@@ -58,7 +58,7 @@ const MyChats = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">Messages</h1>
-            <p className="text-slate-500 text-sm">Manage your private conversations</p>
+            <p className="text-slate-300 text-sm">Manage your private conversations</p>
           </div>
 
           <div className="flex p-1 bg-white/5 border border-white/10 rounded-2xl w-fit">
@@ -114,7 +114,7 @@ const MyChats = () => {
             <h3 className="text-xl font-bold text-white mb-2">
               {activeTab === "product" ? "No product chats" : "No business inquiries"}
             </h3>
-            <p className="text-slate-500 max-w-sm mx-auto mb-8">
+            <p className="text-slate-300 max-w-sm mx-auto mb-8">
               {activeTab === "product" 
                 ? "Items you've inquired about or messages from buyers will appear here."
                 : "Questions about your business or messages you've sent to businesses will appear here."

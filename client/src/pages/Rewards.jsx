@@ -31,7 +31,7 @@ const EARNING_RULES = [
     color: "from-amber-500 to-orange-500",
     bg: "bg-amber-500/10",
     border: "border-amber-500/20",
-    text: "text-amber-400",
+    text: "text-amber-200",
   },
   {
     event: "List a Product",
