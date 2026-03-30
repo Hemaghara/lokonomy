@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion} from "framer-motion";
 import { useUser } from "../context/UserContext";
 import { subscriptionService, referralService } from "../services";
 import { toast } from "react-hot-toast";
