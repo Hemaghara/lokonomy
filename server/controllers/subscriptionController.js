@@ -74,7 +74,6 @@ exports.createOrder = async (req, res) => {
     }
 
     const validDurations = [3, 6, 12];
-    //string to int
     if (!validDurations.includes(parseInt(durationMonths))) {
       return res
         .status(400)
@@ -86,7 +85,6 @@ exports.createOrder = async (req, res) => {
     console.log(
       `Subscription Creating order for user ${req.user.id}, plan: ${plan}, dur: ${durationMonths}`,
     );
-    //starting index to --> ending index
     console.log(`Subscription Using Key ID: ${rzpKey.substring(0, 8)}...`);
 
     const amount = planDoc.prices[durationMonths.toString()];
@@ -101,7 +99,6 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    //last 8 digit of user id  and current time
     const receipt = `sub_${req.user.id.toString().slice(-8)}_${Date.now()}`;
     const options = {
       amount: Math.round(amount * 100),

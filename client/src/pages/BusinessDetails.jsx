@@ -187,7 +187,7 @@ const BusinessDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
+    <div className="min-h-screen bg-[#080e1a] pt-20 sm:pt-24 pb-10 sm:pb-20">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .bd * { font-family: 'DM Sans', sans-serif; }
@@ -251,7 +251,7 @@ const BusinessDetails = () => {
                 </span>
               </div>
 
-              <p className="text-slate-400 text-sm leading-relaxed mb-3 max-w-2xl line-clamp-2">
+              <p className="text-slate-400 text-sm leading-relaxed mb-3 max-w-2xl">
                 {business.description ||
                   "Professional service provider dedicated to excellence in our community."}
               </p>
@@ -272,10 +272,10 @@ const BusinessDetails = () => {
                 </span>
               </div>
             </div>
-            <div className="flex sm:flex-col gap-3 w-full sm:w-auto sm:shrink-0">
+            <div className="grid grid-cols-2 sm:flex sm:flex-col gap-3 w-full sm:w-auto sm:shrink-0">
               <a
                 href={`tel:${business.contactNumber}`}
-                className="flex-1 sm:w-44 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 active:scale-[.98] text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30"
+                className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 active:scale-[.98] text-white text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30 sm:w-44"
               >
                 <HiOutlinePhone className="text-sm" /> Call Now
               </a>
@@ -285,7 +285,7 @@ const BusinessDetails = () => {
                     if (!user) return navigate("/login");
                     setShowChat(true);
                   }}
-                  className="flex-1 sm:w-44 flex items-center justify-center gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-[.98] text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30"
+                  className="flex items-center justify-center gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-[.98] text-white text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30 sm:w-44"
                 >
                   <HiOutlineChatBubbleLeftRight className="text-sm" /> Message
                 </button>
@@ -295,16 +295,15 @@ const BusinessDetails = () => {
                   href={business.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex-1 sm:w-44 flex items-center justify-center gap-2 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 text-xs font-semibold px-4 py-3 rounded-xl transition-all"
+                  className="flex items-center justify-center gap-2 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all sm:w-44"
                 >
                   <HiOutlineGlobeAlt className="text-sm" /> Website
-                  <HiOutlineArrowTopRightOnSquare className="text-xs" />
                 </a>
               )}
               <WishlistButton
                 type="business"
                 id={business._id}
-                className="flex-1 sm:w-44 flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 sm:w-44"
               />
             </div>
           </div>
@@ -318,19 +317,19 @@ const BusinessDetails = () => {
           <Highlights ownerId={business.ownerId} />
         </motion.div>
 
-        <div className="flex items-center gap-1 bg-[#111827] border border-[#1f2a3d] rounded-2xl p-1 mb-5">
+        <div className="flex items-center gap-1 bg-[#111827] border border-[#1f2a3d] rounded-2xl p-1 mb-5 overflow-x-auto no-sb sticky top-20 z-10 backdrop-blur-md bg-opacity-80">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all
+              className={`flex-none sm:flex-1 flex items-center justify-center gap-2 py-2.5 px-4 sm:px-2 rounded-xl text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap
                 ${
                   activeTab === tab.id
                     ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
                     : "text-slate-500 hover:text-slate-300"
                 }`}
             >
-              <span className="text-sm">{tab.icon}</span>
+              <span className="text-base">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -351,7 +350,7 @@ const BusinessDetails = () => {
                       <HiOutlineInformationCircle className="text-violet-400 text-base" />{" "}
                       Business Information
                     </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {[
                         {
                           label: "Owner",
@@ -404,11 +403,11 @@ const BusinessDetails = () => {
                           className="group bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-3.5 hover:border-violet-500/30 hover:bg-[#0f1929] transition-all duration-300 relative overflow-hidden cursor-default"
                         >
                           <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
-                          <p className="flex items-center gap-1.5 text-[10px] text-slate-600 group-hover:text-violet-500/60 font-semibold uppercase tracking-widest mb-1.5 transition-colors duration-300">
+                          <p className="flex items-center gap-1.5 text-[10px] text-slate-600 group-hover:text-violet-500/60 font-semibold uppercase tracking-widest mb-1 shadow-xs transition-colors duration-300">
                             {item.icon}
                             {item.label}
                           </p>
-                          <p className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300 truncate">
+                          <p className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300 truncate" title={item.value}>
                             {item.value}
                           </p>
                         </div>
@@ -534,8 +533,8 @@ const BusinessDetails = () => {
                                   : "bg-[#0a0f1c] border-[#161f2e] opacity-40"
                               }`}
                           >
-                            <span className="text-slate-300 font-semibold text-sm w-24">
-                              {day}
+                            <span className="text-slate-300 font-semibold text-sm w-20 sm:w-24">
+                              {day.slice(0, 3)}<span className="hidden sm:inline">{day.slice(3)}</span>
                             </span>
                             {hours.isOpen ? (
                               <div className="flex items-center gap-2 text-xs font-semibold">
