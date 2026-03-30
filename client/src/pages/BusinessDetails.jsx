@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { businessService } from "../services";
 import recommendationService from "../services/recommendationService";
@@ -187,7 +187,7 @@ const BusinessDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080e1a] pt-20 sm:pt-24 pb-10 sm:pb-20">
+    <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-10 sm:pb-20">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .bd * { font-family: 'DM Sans', sans-serif; }
@@ -196,14 +196,18 @@ const BusinessDetails = () => {
       `}</style>
 
       <div className="bd max-w-6xl mx-auto px-4">
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors mb-6"
+        <Link
+          to="/explore"
+          className="inline-block"
         >
-          <HiOutlineArrowLeft className="text-sm" /> Back to Results
-        </motion.button>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors mb-6"
+          >
+            <HiOutlineArrowLeft className="text-sm" /> Back to Results
+          </motion.div>
+        </Link>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}

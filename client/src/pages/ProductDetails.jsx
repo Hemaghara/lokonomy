@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { marketService, chatService } from "../services";
 import { getSocket } from "../services/socket";
@@ -239,7 +239,7 @@ const ProductDetails = () => {
   const card = "bg-[#111827] border border-[#1f2a3d] rounded-2xl";
 
   return (
-    <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
+    <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .pd * { font-family: 'DM Sans', sans-serif; }
@@ -252,12 +252,12 @@ const ProductDetails = () => {
           transition={{ duration: 0.25 }}
           className="flex items-center justify-between mb-6"
         >
-          <button
-            onClick={() => navigate(-1)}
+          <Link
+            to="/market"
             className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
           >
             <HiOutlineArrowLeft className="text-sm" /> Back to Marketplace
-          </button>
+          </Link>
           <button
             onClick={handleShare}
             className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all
