@@ -43,7 +43,7 @@ const ExploreServices = () => {
               <h1 className="text-white font-bold text-2xl sm:text-3xl leading-tight">
                 Service Directory
               </h1>
-              <p className="text-slate-500 text-xs mt-1 flex items-center gap-1.5 flex-wrap">
+              <p className="text-slate-300 text-xs mt-1 flex items-center gap-1.5 flex-wrap">
                 <HiOutlineSquares2X2 className="text-violet-400 text-xs" />
                 {categories.length} categories available
                 <span className="text-slate-700">·</span>
@@ -55,7 +55,7 @@ const ExploreServices = () => {
             {categories.length > 6 && (
               <Link
                 to="/explore/all"
-                className="shrink-0 flex items-center gap-2 bg-[#0d1424] hover:bg-violet-500/10 border border-[#1f2a3d] hover:border-violet-500/30 text-slate-400 hover:text-violet-400 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all self-start sm:self-auto"
+                className="shrink-0 flex items-center gap-2 bg-[#0d1424] hover:bg-violet-500/10 border border-[#1f2a3d] hover:border-violet-500/30 text-slate-300 hover:text-violet-400 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all self-start sm:self-auto"
               >
                 View All Services
                 <HiOutlineArrowRight className="text-sm" />
@@ -86,7 +86,7 @@ const ExploreServices = () => {
                     <h2 className="text-slate-100 font-bold text-base group-hover:text-white transition-colors truncate">
                       {cat.name}
                     </h2>
-                    <p className="text-slate-500 text-xs mt-0.5">
+                    <p className="text-slate-300 text-xs mt-0.5">
                       {cat.subcategories.length} sub-categories
                     </p>
                   </div>
@@ -112,7 +112,7 @@ const ExploreServices = () => {
                     <span className="text-violet-400 text-xs font-semibold">
                       +{extraCount} more services
                     </span>
-                    <span className="flex items-center gap-1 text-slate-500 text-xs group-hover:text-violet-400 transition-colors font-medium">
+                    <span className="flex items-center gap-1 text-slate-300 text-xs group-hover:text-violet-400 transition-colors font-medium">
                       Explore All <HiOutlineChevronRight className="text-xs" />
                     </span>
                   </div>
@@ -130,7 +130,7 @@ const ExploreServices = () => {
           >
             <Link
               to="/explore/all"
-              className="flex items-center gap-2 bg-[#111827] hover:bg-violet-600 border border-[#1f2a3d] hover:border-violet-600 text-slate-400 hover:text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-lg hover:shadow-violet-900/30 group"
+              className="flex items-center gap-2 bg-[#111827] hover:bg-violet-600 border border-[#1f2a3d] hover:border-violet-600 text-slate-300 hover:text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-lg hover:shadow-violet-900/30 group"
             >
               Explore All {categories.length} Services
               <HiOutlineArrowRight className="text-sm group-hover:translate-x-0.5 transition-transform" />
