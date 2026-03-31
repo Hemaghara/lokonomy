@@ -208,8 +208,6 @@ const Home = () => {
         <meta name="description" content="Lokonomy is the all-in-one platform to discover, connect, and grow with the businesses and people right in your neighborhood." />
       </Helmet>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,800;0,9..40,900;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
-
         /* Grid background — multi-layer gradient, not doable in Tailwind */
         .lk-grid-bg {
           background-image:

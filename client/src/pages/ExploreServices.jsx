@@ -24,7 +24,6 @@ const ExploreServices = () => {
         <meta name="description" content="Browse hundreds of local services categorized for your convenience. Connect with local business owners GPS-based and get what you need instantly." />
       </Helmet>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .es * { font-family: 'DM Sans', sans-serif; }
       `}</style>
 

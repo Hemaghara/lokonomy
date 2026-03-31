@@ -207,9 +207,9 @@ const FeedDetails = () => {
         >
           <Link
             to="/feed"
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+            className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium transition-colors"
           >
-            <HiOutlineArrowLeft className="text-sm" /> Back to Feed
+            <HiOutlineArrowLeft className="text-base" /> Back to Feed
           </Link>
 
           <div className="flex items-center gap-2">
@@ -225,20 +225,20 @@ const FeedDetails = () => {
             )}
             <button
               onClick={handleShare}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all
+              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
                 ${
                   copied
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-[#111827] text-slate-500 border-[#1f2a3d] hover:text-slate-300"
+                    ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/30"
+                    : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
                 }`}
             >
               {copied ? (
                 <>
-                  <HiOutlineCheckCircle className="text-sm" /> Copied!
+                  <HiOutlineCheckCircle className="text-base" /> Copied!
                 </>
               ) : (
                 <>
-                  <HiOutlineShare className="text-sm" /> Share
+                  <HiOutlineShare className="text-base" /> Share
                 </>
               )}
             </button>
@@ -292,7 +292,7 @@ const FeedDetails = () => {
                 <div className="w-8 h-8 bg-rose-500/10 border border-rose-500/20 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:bg-rose-500/20 transition-all duration-300">
                   <HiOutlineMapPin className="text-rose-400 text-sm" />
                 </div>
-                <p className="text-[10px] text-slate-600 group-hover:text-rose-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
+                <p className="text-[10px] text-slate-300 group-hover:text-rose-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
                   Location
                 </p>
                 <p className="text-slate-200 font-semibold text-sm truncate group-hover:text-white transition-colors duration-300">
@@ -318,14 +318,14 @@ const FeedDetails = () => {
                   />
                 </div>
                 <p
-                  className={`text-[10px] text-slate-600 group-hover:text-${accent}-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300`}
+                  className={`text-[10px] text-slate-300 group-hover:text-${accent}-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300`}
                 >
                   Posted
                 </p>
                 <p className="text-slate-200 font-semibold text-xs leading-snug group-hover:text-white transition-colors duration-300">
                   {formattedDate}
                 </p>
-                <p className="text-slate-600 text-[10px] mt-0.5 flex items-center gap-1">
+                <p className="text-slate-300 text-[10px] mt-0.5 flex items-center gap-1">
                   <HiOutlineClock className="text-xs" /> {formattedTime}
                 </p>
               </div>
@@ -335,7 +335,7 @@ const FeedDetails = () => {
               className={`${card} p-4 group hover:border-emerald-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
             >
               <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-emerald-400 group-hover:w-full transition-all duration-500 rounded-full" />
-              <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest mb-3">
+              <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest mb-3">
                 Posted By
               </p>
               <div className="flex items-center gap-3">
@@ -346,7 +346,7 @@ const FeedDetails = () => {
                   <p className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300">
                     {feed.author}
                   </p>
-                  <p className="text-slate-600 text-[10px] flex items-center gap-1 mt-0.5">
+                  <p className="text-slate-300 text-[10px] flex items-center gap-1 mt-0.5">
                     <HiOutlineUser className="text-xs" /> Community Member
                   </p>
                 </div>
@@ -359,7 +359,7 @@ const FeedDetails = () => {
               <div
                 className={`absolute bottom-0 left-0 h-0.5 w-0 bg-${accent}-400 group-hover:w-full transition-all duration-500 rounded-full`}
               />
-              <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest mb-3">
+              <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest mb-3">
                 Category
               </p>
               <div className="flex items-center gap-3">
@@ -372,7 +372,7 @@ const FeedDetails = () => {
                   <p className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300">
                     {feed.type}
                   </p>
-                  <p className="text-slate-600 text-[10px] flex items-center gap-1 mt-0.5">
+                  <p className="text-slate-300 text-[10px] flex items-center gap-1 mt-0.5">
                     <HiOutlineBuildingStorefront className="text-xs" /> Feed
                     Category
                   </p>
@@ -395,7 +395,7 @@ const FeedDetails = () => {
                   <span className="text-sm">{getIconForType(feed.type)}</span>
                   {feed.type}
                 </span>
-                <span className="text-slate-600 text-xs font-medium">
+                <span className="text-slate-300 text-xs font-medium">
                   {timeAgo()}
                 </span>
               </div>
@@ -406,7 +406,7 @@ const FeedDetails = () => {
             </div>
 
             <div className={`${card} p-6 relative overflow-hidden`}>
-              <div className="absolute left-0 top-6 bottom-6 w-0.5 bg-linear-to-b from-emerald-500/60 via-emerald-500/20 to-transparent rounded-full" />
+              <div className="absolute left-0 top-6 bottom-6 w-0.5 bg-linear-to-b to-transparent rounded-full" />
               <p className="text-slate-400 text-sm md:text-base leading-[1.9] whitespace-pre-wrap pl-5">
                 {feed.content}
               </p>
@@ -414,7 +414,7 @@ const FeedDetails = () => {
 
             <div className={`${card} p-4`}>
               <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-slate-300">
                   <HiOutlineMapPin className="text-emerald-400 text-sm" />
                   <span>
                     {feed.locationAddress ||
@@ -425,14 +425,14 @@ const FeedDetails = () => {
                   </span>
                 </div>
                 <span className="w-1 h-1 bg-slate-700 rounded-full" />
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-slate-300">
                   <HiOutlineClock className="text-emerald-400 text-sm" />
                   <span>
                     {formattedDate} at {formattedTime}
                   </span>
                 </div>
                 <span className="w-1 h-1 bg-slate-700 rounded-full" />
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-slate-300">
                   <HiOutlineUser className="text-emerald-400 text-sm" />
                   <span>{feed.author}</span>
                 </div>

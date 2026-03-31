@@ -178,7 +178,6 @@ const StoryDetails = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .sd * { font-family: 'DM Sans', sans-serif; }
       `}</style>
 
@@ -191,27 +190,27 @@ const StoryDetails = () => {
         >
           <Link
             to="/stories"
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+            className="flex items-center gap-2 text-slate-300 hover:text-white text-xs font-medium transition-colors"
           >
             <HiOutlineArrowLeft className="text-sm" /> Back to Stories
           </Link>
 
           <button
             onClick={handleShare}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all
+            className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
               ${
                 copied
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                  : "bg-[#111827] text-slate-500 border-[#1f2a3d] hover:text-slate-300"
+                  ? "bg-emerald-600/10 text-emerald-300 border-emerald-500/20"
+                  : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
               }`}
           >
             {copied ? (
               <>
-                <HiOutlineCheckCircle className="text-sm" /> Copied!
+                <HiOutlineCheckCircle className="text-base" /> Copied!
               </>
             ) : (
               <>
-                <HiOutlineShare className="text-sm" /> Share
+                <HiOutlineShare className="text-base" /> Share
               </>
             )}
           </button>
@@ -265,7 +264,7 @@ const StoryDetails = () => {
                 <div className="w-8 h-8 bg-rose-500/10 border border-rose-500/20 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:bg-rose-500/20 transition-all duration-300">
                   <HiOutlineMapPin className="text-rose-400 text-sm" />
                 </div>
-                <p className="text-[10px] text-slate-600 group-hover:text-rose-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
+                <p className="text-[10px] text-slate-300 group-hover:text-rose-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
                   Location
                 </p>
                 <p className="text-slate-200 font-semibold text-sm truncate group-hover:text-white transition-colors duration-300">
@@ -295,7 +294,7 @@ const StoryDetails = () => {
                     }
                   />
                 </div>
-                <p className="text-[10px] text-slate-600 group-hover:text-violet-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
+                <p className="text-[10px] text-slate-300 group-hover:text-violet-500/60 font-semibold uppercase tracking-widest mb-1 transition-colors duration-300">
                   Validity
                 </p>
                 <p className="text-slate-200 font-semibold text-xs leading-snug group-hover:text-white transition-colors duration-300">
@@ -305,7 +304,7 @@ const StoryDetails = () => {
                     year: "numeric",
                   })}
                 </p>
-                <p className="text-slate-600 text-[10px] mt-0.5 flex items-center gap-1">
+                <p className="text-slate-300 text-[10px] mt-0.5 flex items-center gap-1">
                   Published:{" "}
                   {new Date(story.createdAt).toLocaleTimeString("en-GB", {
                     hour: "2-digit",
@@ -319,7 +318,7 @@ const StoryDetails = () => {
               className={`${card} p-4 group hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
             >
               <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
-              <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest mb-3">
+              <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest mb-3">
                 Reporter
               </p>
               <div className="flex items-center gap-3">
@@ -330,7 +329,7 @@ const StoryDetails = () => {
                   <p className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300">
                     {story.author}
                   </p>
-                  <p className="text-slate-600 text-[10px] flex items-center gap-1 mt-0.5">
+                  <p className="text-slate-300 text-[10px] flex items-center gap-1 mt-0.5">
                     <HiOutlineUser className="text-xs" /> Community Reporter
                   </p>
                 </div>
@@ -356,11 +355,7 @@ const StoryDetails = () => {
                 {story.title}
               </h1>
 
-              <div className="flex items-center gap-1.5 mb-5">
-                <div className="h-0.5 w-10 bg-violet-500 rounded-full" />
-                <div className="h-0.5 w-4  bg-violet-500/30 rounded-full" />
-                <div className="h-0.5 w-2  bg-violet-500/10 rounded-full" />
-              </div>
+             
             </div>
 
             <div className={`${card} p-6 relative overflow-hidden`}>

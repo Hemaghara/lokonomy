@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 import { useUser } from "../context/UserContext";
 import { subscriptionService, referralService } from "../services";
 import { toast } from "react-hot-toast";
@@ -345,16 +345,16 @@ const UpgradePlan = () => {
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-0.5">
+                  <p className="text-xs text-slate-300 uppercase tracking-widest font-bold mb-0.5">
                     Current Plan
                   </p>
-                  <h3 className="text-white font-bold text-lg capitalize">
+                  <h2 className="text-white font-bold text-lg capitalize">
                     {currentPlan}{" "}
                     {isActive && activeDuration
                       ? `(${activeDuration} Months)`
                       : ""}
                     {!isActive && currentPlan !== "free" && "(Expired)"}
-                  </h3>
+                  </h2>
                   {isActive && expiry && (
                     <p className="text-slate-500 text-xs flex items-center gap-1.5 mt-0.5">
                       <HiOutlineClock className="text-violet-400" />

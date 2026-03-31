@@ -251,7 +251,7 @@ const Navbar = () => {
                   >
                     <Search className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" />
                   </button>
-                  <NotificationBell />
+                  <NotificationBell aria-label="Notifications"/>
                 </div>
 
                 <Link

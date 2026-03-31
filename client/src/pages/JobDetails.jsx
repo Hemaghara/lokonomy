@@ -130,7 +130,6 @@ const JobDetails = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .jd * { font-family: 'DM Sans', sans-serif; }
       `}</style>
 
@@ -143,9 +142,9 @@ const JobDetails = () => {
         >
           <Link
             to="/jobs"
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+            className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium transition-colors"
           >
-            <HiOutlineArrowLeft className="text-sm" /> Back to Jobs
+            <HiOutlineArrowLeft className="text-base" /> Back to Jobs
           </Link>
           <div className="flex items-center gap-2">
             <WishlistButton type="job" id={id} />
@@ -159,20 +158,20 @@ const JobDetails = () => {
             )}
             <button
               onClick={handleShare}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all
+              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
                 ${
                   copied
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-[#111827] text-slate-500 border-[#1f2a3d] hover:text-slate-300"
+                    ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/30"
+                    : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
                 }`}
             >
               {copied ? (
                 <>
-                  <HiOutlineCheckCircle className="text-sm" /> Copied!
+                  <HiOutlineCheckCircle className="text-base" /> Copied!
                 </>
               ) : (
                 <>
-                  <HiOutlineShare className="text-sm" /> Share
+                  <HiOutlineShare className="text-base" /> Share
                 </>
               )}
             </button>
@@ -203,8 +202,8 @@ const JobDetails = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <HiOutlineMapPin className="text-rose-400 text-sm" />
+                    <span className="flex items-center gap-1 text-slate-300 text-sm">
+                      <HiOutlineMapPin className="text-rose-400 text-base" />
                       {job.location}, {job.district}
                     </span>
                     <span className="flex items-center gap-1 text-emerald-400 font-semibold">
@@ -268,10 +267,10 @@ const JobDetails = () => {
               transition={{ duration: 0.3, delay: 0.05 }}
               className={card + " p-5"}
             >
-              <h3 className="flex items-center gap-2 text-slate-200 font-semibold text-sm mb-4">
+              <h2 className="flex items-center gap-2 text-slate-200 font-semibold text-sm mb-4">
                 <HiOutlineWrenchScrewdriver className="text-violet-400" />{" "}
                 Required Skills
-              </h3>
+              </h2>
               <div className="flex flex-wrap gap-2">
                 {job.skills.split(",").map((skill, i) => (
                   <span
