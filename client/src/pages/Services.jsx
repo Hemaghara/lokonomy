@@ -50,7 +50,6 @@ const Services = () => {
   const { selectedIds, toggleSelection } = useComparison();
 
   useEffect(() => {
-    // Optional: Auto-fetch businesses when selection changes if needed
   }, [selectedIds]);
   useEffect(() => {
     const fetchBusinesses = async () => {

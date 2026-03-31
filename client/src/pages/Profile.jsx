@@ -316,7 +316,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
         .pr * { font-family: 'DM Sans', sans-serif; }
         .pr select option { background: #111827; color: #e2e8f0; }
         .no-sb::-webkit-scrollbar { display: none; }

@@ -128,7 +128,6 @@ const Jobs = () => {
         />
       </Helmet>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .jb * { font-family: 'DM Sans', sans-serif; }
         .jb select option { background: #111827; color: #e2e8f0; }
         .no-sb::-webkit-scrollbar { display: none; }

@@ -272,7 +272,6 @@ const UpgradePlan = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
         .up * { font-family: 'DM Sans', sans-serif; }
         .plan-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .plan-card:hover { transform: translateY(-4px); }

@@ -407,7 +407,6 @@ const Market = () => {
         <meta name="description" content="Buy, sell, or rent local items within your community. Discover products for sale or rent near you on the Lokonomy Marketplace." />
       </Helmet>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .mk * { font-family: 'DM Sans', sans-serif; }
         .no-sb::-webkit-scrollbar { display: none; }
         .mk select option { background: #111827; color: #e2e8f0; }

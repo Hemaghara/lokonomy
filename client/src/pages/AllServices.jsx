@@ -32,7 +32,6 @@ const AllServices = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
         .as * { font-family: 'DM Sans', sans-serif; }
       `}</style>
 
