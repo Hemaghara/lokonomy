@@ -1,98 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
 const auth = require("../middleware/authMiddleware");
+const {
+  subscribe,
+  unsubscribe,
+  toggleNotifications,
+  toggleReminders,
+} = require("../controllers/pushController");
 
-router.post("/subscribe", auth, async (req, res) => {
-  try {
-    const { subscription, deviceType } = req.body;
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const exists = user.pushSubscriptions.find(
-      (s) => s.endpoint === subscription.endpoint,
-    );
-
-    if (!exists) {
-      user.pushSubscriptions.push({
-        ...subscription,
-        deviceType: deviceType || "unknown",
-      });
-      await user.save();
-    }
-
-    res.status(201).json({ message: "Subscribed successfully" });
-  } catch (error) {
-    console.error("Error subscribing to push:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.post("/unsubscribe", auth, async (req, res) => {
-  try {
-    const { endpoint } = req.body;
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.pushSubscriptions = user.pushSubscriptions.filter(
-      (s) => s.endpoint !== endpoint,
-    );
-    await user.save();
-
-    res.json({ message: "Unsubscribed successfully" });
-  } catch (error) {
-    console.error("Error unsubscribing from push:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.put("/toggle", auth, async (req, res) => {
-  try {
-    const { notificationsEnabled } = req.body;
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.notificationsEnabled = notificationsEnabled;
-    await user.save();
-
-    res.json({
-      message: `Notifications ${notificationsEnabled ? "enabled" : "disabled"}`,
-    });
-  } catch (error) {
-    console.error("Error toggling notifications:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-router.put("/toggle-reminders", auth, async (req, res) => {
-  try {
-    const { enabled } = req.body;
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.appointmentRemindersEnabled = enabled;
-    await user.save();
-
-    res.json({
-      message: `Appointment reminders ${enabled ? "enabled" : "disabled"}`,
-      enabled: user.appointmentRemindersEnabled,
-    });
-  } catch (error) {
-    console.error("Error toggling reminders:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+router.post("/subscribe", auth, subscribe);
+router.post("/unsubscribe", auth, unsubscribe);
+router.put("/toggle", auth, toggleNotifications);
+router.put("/toggle-reminders", auth, toggleReminders);
 
 module.exports = router;
