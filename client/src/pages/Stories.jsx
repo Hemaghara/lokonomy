@@ -213,9 +213,12 @@ const Stories = () => {
           <div className="flex flex-wrap items-center gap-4">
             {user?.latitude && (
               <div className="flex items-center gap-2 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-3 py-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                <label
+                  htmlFor="radius"
+                  className="text-[10px] font-bold text-slate-500 uppercase tracking-tight"
+                >
                   Radius
-                </span>
+                </label>
                 <select
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
@@ -241,7 +244,7 @@ const Stories = () => {
                   ${
                     filter === cat
                       ? "bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-900/30"
-                      : "bg-[#0d1424] text-slate-500 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
+                      : "bg-[#0d1424] text-slate-300 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
                   }`}
               >
                 <span

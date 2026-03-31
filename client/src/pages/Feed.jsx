@@ -126,7 +126,7 @@ const Feed = () => {
             <h1 className="text-white font-bold text-3xl leading-tight">
               Community Feed
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-300 text-sm mt-1">
               What's happening in{" "}
               <span className="text-slate-300 font-medium">
                 {user?.locationName || taluka || district || "your area"}
@@ -156,10 +156,14 @@ const Feed = () => {
           <div className="flex flex-wrap items-center gap-4">
             {user?.latitude && (
               <div className="flex items-center gap-2 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-3 py-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                <label
+                  htmlFor="radius"
+                  className="text-[10px] font-bold text-slate-500 uppercase tracking-tight"
+                >
                   Radius
-                </span>
+                </label>
                 <select
+                  id="radius"
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
                   className="bg-transparent text-xs font-bold text-emerald-400 outline-none cursor-pointer"
@@ -184,7 +188,7 @@ const Feed = () => {
                   ${
                     filter === cat
                       ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-900/30"
-                      : "bg-[#0d1424] text-slate-500 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
+                      : "bg-[#0d1424] text-slate-300 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
                   }`}
               >
                 <span

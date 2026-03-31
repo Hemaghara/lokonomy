@@ -404,7 +404,10 @@ const Market = () => {
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <Helmet>
         <title>Local Marketplace - Buy and Sell | Lokonomy</title>
-        <meta name="description" content="Buy, sell, or rent local items within your community. Discover products for sale or rent near you on the Lokonomy Marketplace." />
+        <meta
+          name="description"
+          content="Buy, sell, or rent local items within your community. Discover products for sale or rent near you on the Lokonomy Marketplace."
+        />
       </Helmet>
       <style>{`
         .mk * { font-family: 'DM Sans', sans-serif; }
@@ -426,7 +429,7 @@ const Market = () => {
             <h1 className="text-white font-bold text-3xl leading-tight">
               Marketplace
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-300 text-sm mt-1">
               Browse listings in{" "}
               <span className="text-slate-300 font-medium">
                 {user?.locationName || taluka || district || "your area"}
@@ -465,10 +468,15 @@ const Market = () => {
           <div className="flex flex-wrap items-center gap-4">
             {user?.latitude && (
               <div className="flex items-center gap-2 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-3 py-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+        
+                <label
+                  htmlFor="radius"
+                  className="text-[10px] font-bold text-slate-500 uppercase tracking-tight"
+                >
                   Radius
-                </span>
+                </label>
                 <select
+                  aria-label="Select radius"
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
                   className="bg-transparent text-xs font-bold text-violet-400 outline-none cursor-pointer"
@@ -493,7 +501,7 @@ const Market = () => {
                     ${
                       filter.priceType === type.value
                         ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
-                        : "text-slate-500 hover:text-slate-300"
+                        : "text-slate-300 hover:text-slate-300"
                     }`}
                 >
                   {type.value === "sell" && (
@@ -521,11 +529,11 @@ const Market = () => {
                     ${
                       filter.category === cat
                         ? "bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-900/30"
-                        : "bg-[#0d1424] text-slate-500 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
+                        : "bg-[#0d1424] text-slate-300 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
                     }`}
                 >
                   <span
-                    className={`text-base leading-none ${filter.category === cat ? "text-white" : "text-slate-500"}`}
+                    className={`text-base leading-none ${filter.category === cat ? "text-white" : "text-slate-300"}`}
                   >
                     {getCategoryIcon(cat)}
                   </span>

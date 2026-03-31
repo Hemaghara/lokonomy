@@ -253,7 +253,7 @@ const ProductDetails = () => {
         >
           <Link
             to="/market"
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+            className="flex items-center gap-2 text-slate-300 hover:text-slate-300 text-sm font-medium transition-colors"
           >
             <HiOutlineArrowLeft className="text-sm" /> Back to Marketplace
           </Link>
@@ -367,7 +367,7 @@ const ProductDetails = () => {
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className={`${card} p-4`}>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest mb-1.5 flex items-center gap-1">
                   <HiOutlineTag className="text-violet-400" /> Listing Type
                 </p>
                 <p className="text-sm text-slate-200 font-semibold">
@@ -400,7 +400,7 @@ const ProductDetails = () => {
                     : product.price
                   ).toLocaleString()}
                 </div>
-                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide bg-[#111827] border border-[#1f2a3d] px-2.5 py-1 rounded-lg">
+                <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide bg-[#111827] border border-[#1f2a3d] px-2.5 py-1 rounded-lg">
                   {product.isAuction
                     ? "Current Bid"
                     : product.priceType === "sell"
@@ -491,7 +491,7 @@ const ProductDetails = () => {
               </div>
             )}
             <div className={`${card} p-5`}>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+              <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                 <HiOutlineClipboardDocument className="text-violet-400" />{" "}
                 Description
               </p>
@@ -502,7 +502,7 @@ const ProductDetails = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className={`${card} p-4`}>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest mb-2 flex items-center gap-1">
                   <HiOutlineMapPin className="text-rose-400" /> Location
                 </p>
                 <p className="text-slate-200 text-sm font-semibold leading-snug">
@@ -520,7 +520,7 @@ const ProductDetails = () => {
                 )}
               </div>
               <div className={`${card} p-4`}>
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest mb-2 flex items-center gap-1">
                   <HiOutlineUser className="text-violet-400" /> Seller
                 </p>
                 <p className="text-slate-200 text-sm font-semibold leading-snug">
@@ -642,6 +642,7 @@ const ProductDetails = () => {
                     </a>
                   </div>
                   <WishlistButton
+                   aria-label="Add to wishlist"
                     type="product"
                     id={product._id}
                     className="w-full flex items-center justify-center gap-2 py-3.5"
