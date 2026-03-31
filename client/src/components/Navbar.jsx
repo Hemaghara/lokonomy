@@ -245,7 +245,10 @@ const Navbar = () => {
                 <div className="hidden xl:block w-px h-6 bg-white/5 mx-1" />
 
                 <div className="hidden sm:flex items-center gap-2">
-                  <button className="p-2.5 bg-white/3 hover:bg-white/8 rounded-xl border border-white/5 transition-all group/tool">
+                  <button
+                    aria-label="Search"
+                    className="p-2.5 bg-white/3 hover:bg-white/8 rounded-xl border border-white/5 transition-all group/tool"
+                  >
                     <Search className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" />
                   </button>
                   <NotificationBell />
@@ -265,7 +268,7 @@ const Navbar = () => {
                     <span className="text-[12px] font-bold text-white whitespace-nowrap leading-none tracking-tight">
                       {user.name?.split(" ")[0]}
                     </span>
-                    <span className="text-[8px] font-black text-white/20 group-hover/profile:text-primary transition-colors uppercase tracking-widest leading-none">
+                    <span className="text-[8px] font-black text-white/70 group-hover/profile:text-primary transition-colors uppercase tracking-widest leading-none">
                       {user.subscription?.plan?.toUpperCase() || "MEMBER"}
                     </span>
                   </div>

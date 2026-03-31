@@ -95,7 +95,6 @@ const Jobs = () => {
     }
   };
 
-
   const filters = [
     { label: "All", value: "All" },
     { label: "Male", value: "Male" },
@@ -123,7 +122,10 @@ const Jobs = () => {
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <Helmet>
         <title>Find Local Jobs Near You | Lokonomy Careers</title>
-        <meta name="description" content="Explore local job opportunities in your area. Apply to positions posted by verified local businesses and expand your professional career on Lokonomy." />
+        <meta
+          name="description"
+          content="Explore local job opportunities in your area. Apply to positions posted by verified local businesses and expand your professional career on Lokonomy."
+        />
       </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
@@ -146,7 +148,7 @@ const Jobs = () => {
             <h1 className="text-white font-bold text-3xl leading-tight">
               Job Opportunities
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-300 text-sm mt-1">
               Find employment in{" "}
               <span className="text-slate-300 font-medium">
                 {selectedTaluka || selectedDistrict || "all areas"}
@@ -186,7 +188,11 @@ const Jobs = () => {
 
           <div className="flex flex-wrap gap-3 flex-1 w-full">
             <div className="relative flex-1 min-w-36">
+              <label htmlFor="district" className="sr-only">
+                Select District
+              </label>
               <select
+                id="district"
                 className={inputCls + " pr-9 cursor-pointer"}
                 value={selectedDistrict}
                 onChange={(e) => {
@@ -207,7 +213,11 @@ const Jobs = () => {
             <div
               className={`relative flex-1 min-w-36 transition-opacity ${!selectedDistrict ? "opacity-30 pointer-events-none" : ""}`}
             >
+              <label htmlFor="taluka" className="sr-only">
+                Select Taluka
+              </label>
               <select
+                id="taluka"
                 className={inputCls + " pr-9 cursor-pointer"}
                 value={selectedTaluka}
                 onChange={(e) => setSelectedTaluka(e.target.value)}
@@ -259,7 +269,11 @@ const Jobs = () => {
                         >
                           {job.gender === "Both" ? "Universal" : job.gender}
                         </span>
-                        <WishlistButton type="job" id={job._id} />
+                        <WishlistButton
+                          type="job"
+                          id={job._id}
+                          aria-label="Add to wishlist"
+                        />
                       </div>
 
                       <h3 className="text-slate-100 font-semibold text-base leading-snug mb-1 group-hover:text-violet-400 transition-colors line-clamp-1">
@@ -268,7 +282,7 @@ const Jobs = () => {
                       <div className="flex items-center gap-1 text-emerald-400 font-bold text-sm mb-4">
                         <HiOutlineCurrencyRupee className="text-base" />
                         {job.salary}
-                        <span className="text-slate-600 font-normal text-xs">
+                        <span className="text-slate-300 font-normal text-xs">
                           /month
                         </span>
                       </div>
@@ -338,11 +352,11 @@ const Jobs = () => {
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center justify-center gap-2 w-full bg-[#0d1424] border border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-500 py-2.5 rounded-xl text-xs font-medium transition-all"
+                        className="flex items-center justify-center gap-2 w-full bg-[#0d1424] border border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-300 py-2.5 rounded-xl text-xs font-medium transition-all"
                       >
-                        <HiOutlinePhone className="text-sm" />
-                        {job.posterContact}
-                        <FiExternalLink className="text-xs ml-auto" />
+                        <HiOutlinePhone className="text-sm text-slate-300 group-hover:text-emerald-400" />
+                        <span className="truncate">{job.posterContact}</span>
+                        <FiExternalLink className="text-xs ml-auto text-slate-400" />
                       </a>
                     </div>
                   </motion.div>
