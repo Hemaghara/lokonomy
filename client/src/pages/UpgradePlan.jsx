@@ -79,8 +79,8 @@ const PLANS_CONFIG = [
 
 const DURATION_OPTIONS = [
   { months: 3, label: "3 Months", discount: "" },
-  { months: 6, label: "6 Months", discount: "Save ~12%" },
-  { months: 12, label: "12 Months", discount: "Save ~25%" },
+  { months: 6, label: "6 Months", discount: "Save 12%" },
+  { months: 12, label: "12 Months", discount: "Save 25%" },
 ];
 
 const UpgradePlan = () => {

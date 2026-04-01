@@ -140,7 +140,6 @@ const Notifications = () => {
     setPage(1);
   }, [activeFilter]);
 
-  // Real-time
   useEffect(() => {
     if (!user) return;
     const socket = connectSocket(user.id);
@@ -188,7 +187,6 @@ const Notifications = () => {
   return (
     <div className="min-h-screen pt-28 pb-20 px-4">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-2">
             <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
@@ -211,9 +209,7 @@ const Notifications = () => {
           </div>
         </div>
 
-        {/* Actions Bar */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-          {/* Category Filter */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORIES.map((cat) => (
               <button
@@ -231,7 +227,6 @@ const Notifications = () => {
             ))}
           </div>
 
-          {/* Bulk Actions */}
           <div className="flex items-center gap-2 shrink-0">
             {unreadCount > 0 && (
               <button
@@ -254,7 +249,6 @@ const Notifications = () => {
           </div>
         </div>
 
-        {/* Notifications List */}
         <div className="space-y-2">
           {loading && notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -294,18 +288,16 @@ const Notifications = () => {
                     onClick={() => handleNotificationClick(notif)}
                     className={`relative flex items-start gap-4 p-5 rounded-2xl cursor-pointer border transition-all group ${
                       notif.read
-                        ? "bg-white/[0.02] border-white/5 hover:bg-white/[0.04]"
-                        : "bg-gradient-to-r " +
+                        ? "bg-white/2 border-white/5 hover:bg-white/4"
+                        : "bg-linear-to-r " +
                           meta.gradient +
                           " border-white/8 hover:border-white/12"
                     }`}
                   >
-                    {/* Unread indicator line */}
                     {!notif.read && (
-                      <div className="absolute left-0 top-4 bottom-4 w-[3px] bg-primary rounded-r-full" />
+                      <div className="absolute left-0 top-4 bottom-4 w-0.75 bg-primary rounded-r-full" />
                     )}
 
-                    {/* Icon */}
                     <div
                       className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${meta.bg} ${meta.color} ring-1 ${meta.ring}`}
                     >
