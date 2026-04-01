@@ -250,6 +250,8 @@ const UpgradePlan = () => {
 
   const currentPlan = subStatus?.subscription?.plan || "free";
   const isActive = subStatus?.subscription?.isActive;
+  const isExpired = subStatus?.subscription?.isExpired;
+  const originalPlan = subStatus?.subscription?.originalPlan;
   const expiry = subStatus?.subscription?.expiryDate;
   const activeDuration = subStatus?.subscription?.durationMonths;
   const limits = subStatus?.limits;
@@ -353,7 +355,9 @@ const UpgradePlan = () => {
                     {isActive && activeDuration
                       ? `(${activeDuration} Months)`
                       : ""}
-                    {!isActive && currentPlan !== "free" && "(Expired)"}
+                    {isExpired &&
+                      originalPlan !== "free" &&
+                      `(${originalPlan} Expired)`}
                   </h2>
                   {isActive && expiry && (
                     <p className="text-slate-500 text-xs flex items-center gap-1.5 mt-0.5">

@@ -241,19 +241,31 @@ exports.verifyPayment = async (req, res) => {
 exports.getStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    console.log(`User:${user}`);
     if (!user)
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
 
-    const effectivePlan = getActivePlan(user);
+    let effectivePlan = getActivePlan(user);
+    const subData = user.subscription?.toObject?.() || {};
+
+    if (
+      subData.status === "active" &&
+      subData.expiryDate &&
+      new Date(subData.expiryDate) < new Date()
+    ) {
+      await User.findByIdAndUpdate(req.user.id, {
+        "subscription.status": "expired",
+      });
+      subData.status = "expired";
+      effectivePlan = "free";
+    }
+
     const planDoc = await Plan.findOne({ slug: effectivePlan });
     const limits = planDoc?.limits || getPlanLimits(effectivePlan);
 
     const isActive = effectivePlan !== "free";
 
-    const subData = user.subscription?.toObject?.() || {};
     if (!subData.durationMonths && subData.startDate && subData.expiryDate) {
       const start = new Date(subData.startDate);
       const end = new Date(subData.expiryDate);
@@ -268,12 +280,15 @@ exports.getStatus = async (req, res) => {
       subscription: {
         ...subData,
         plan: effectivePlan,
+        originalPlan: subData.plan,
         isActive,
+        isExpired: subData.status === "expired",
       },
       usage: user.usage,
       limits,
     });
   } catch (err) {
+    console.error("Status Error:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
