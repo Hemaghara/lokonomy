@@ -28,6 +28,19 @@ exports.login = async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
+    if (user.status && user.status !== "active") {
+      const statusMsg = user.status === "banned" 
+        ? "Your account has been permanently banned by the administrator."
+        : "Your account is temporarily suspended. Please contact support.";
+      
+      console.log(`Blocked login for ${user.status} user: ${email}`);
+      return res.status(403).json({ 
+        success: false, 
+        message: statusMsg,
+        status: user.status 
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log("Password mismatch");
@@ -143,6 +156,14 @@ exports.verifyOtp = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    if (user.status && user.status !== "active") {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Your account is ${user.status}. Access denied.`,
+        status: user.status 
+      });
     }
 
     user.otp = undefined;

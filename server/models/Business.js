@@ -67,7 +67,7 @@ const businessSchema = new mongoose.Schema({
     },
   ],
   ownerName: { type: String, required: true },
-  ownerId: { type: String },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   rating: { type: Number, default: 0.0 },
   verified: { type: Boolean, default: false },
   dailyVisits: [

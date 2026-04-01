@@ -46,6 +46,14 @@ const Rewards = lazy(() => import("./pages/Rewards"));
 const EventsMap = lazy(() => import("./pages/EventsMap"));
 const CompareBusinesses = lazy(() => import("./pages/CompareBusinesses"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminRegister = lazy(() => import("./pages/admin/AdminRegister"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminBusinesses = lazy(() => import("./pages/admin/AdminBusinesses"));
+const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
+const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
+const ProtectedRouteAdmin = lazy(() => import("./components/ProtectedRouteAdmin"));
 
 function App() {
   useEffect(() => {
@@ -92,6 +100,17 @@ function App() {
                   <Route path="/" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                 </Route>
+
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/register" element={<AdminRegister />} />
+                <Route element={<ProtectedRouteAdmin />}>
+                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                   <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/user/:id" element={<AdminUserDetails />} />
+                    <Route path="/admin/businesses" element={<AdminBusinesses />} />
+                    <Route path="/admin/profile" element={<AdminProfile />} />
+                 </Route>
+                
                 <Route element={<MainLayout />}>
                   <Route path="/home" element={<Home />} />
                   <Route path="/explore" element={<ExploreServices />} />

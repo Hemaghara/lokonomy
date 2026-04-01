@@ -19,15 +19,15 @@ export const getSocket = () => {
   return socket;
 };
 
-export const connectSocket = (userId) => {
+export const connectSocket = (userData) => {
   const s = getSocket();
   if (!s.connected) {
     s.connect();
     s.on("connect", () => {
-      s.emit("registerUser", userId);
+      s.emit("registerUser", userData);
     });
   } else {
-    s.emit("registerUser", userId);
+    s.emit("registerUser", userData);
   }
   return s;
 };

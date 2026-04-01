@@ -73,7 +73,7 @@ const ChatBox = ({
   useEffect(() => {
     if (!user || !chatRoom) return;
 
-    const socket = connectSocket(user.id);
+    const socket = connectSocket({ userId: user.id || user._id, isAdmin: false });
     joinRoom(chatRoom);
 
     socket.on("receiveMessage", (message) => {

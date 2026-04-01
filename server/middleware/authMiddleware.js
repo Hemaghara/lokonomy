@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-module.exports = function (req, res, next) {
+module.exports = async function (req, res, next) {
   const authHeader = req.header("Authorization");
 
   if (!authHeader) {
@@ -14,6 +15,15 @@ module.exports = function (req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
     req.user = decoded.user;
+
+    const user = await User.findById(req.user.id).select("status");
+    if (user && user.status && user.status !== "active") {
+      return res.status(403).json({ 
+        message: "Your account is " + user.status + ". Access denied.",
+        status: user.status
+      });
+    }
+
     next();
   } catch (err) {
     res.status(401).json({ message: "Token is not valid" });
