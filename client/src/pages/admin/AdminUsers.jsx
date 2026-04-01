@@ -15,6 +15,8 @@ import {
   FiX,
   FiMapPin,
   FiCalendar,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 
 const AdminUsers = () => {
@@ -279,149 +281,163 @@ const AdminUsers = () => {
           </div>
         </div>
       ) : (
-        <div className="bg-card-bg/50 border border-slate-700/50 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl">
-          <div className="overflow-x-auto custom-scrollbar">
+        <>
+          {/* Mobile Card View (Data-Dense & Efficient) */}
+          <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+            {currentUsers.map((user) => (
+              <div key={user._id} className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 space-y-4 hover:border-indigo-500/30 transition-all">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold border border-white/5">
+                           {user.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                           <h4 className="font-bold text-white text-sm truncate">{user.name}</h4>
+                           <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                        </div>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                        user.status === "banned" ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : 
+                        user.status === "suspended" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : 
+                        "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                    }`}>
+                        {user.status || "Active"}
+                    </span>
+                 </div>
+
+                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium px-1">
+                    <div className="flex flex-col">
+                        <span className="text-slate-600 uppercase text-[8px] font-black tracking-widest">Plan</span>
+                        <span className="text-slate-200">{user.subscription?.plan || "Free"}</span>
+                    </div>
+                    <div className="flex flex-col text-right">
+                        <span className="text-slate-600 uppercase text-[8px] font-black tracking-widest">District</span>
+                        <span className="text-slate-200">{user.district || "N/A"}</span>
+                    </div>
+                 </div>
+
+                 <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    <p className="text-[9px] text-slate-500 font-bold">
+                        Joined {new Date(user.createdAt).toLocaleDateString()}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                        <button onClick={() => navigate(`/admin/user/${user._id}`)} className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg hover:bg-indigo-500/20">
+                           <FiEye size={16} />
+                        </button>
+                        {user.status !== "active" ? (
+                           <button onClick={() => handleUpdateStatus(user._id, "active")} className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20">
+                              <FiCheckCircle size={16} />
+                           </button>
+                        ) : (
+                           <>
+                              <button onClick={() => handleUpdateStatus(user._id, "suspended")} className="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20">
+                                 <FiSlash size={16} />
+                              </button>
+                              <button onClick={() => handleUpdateStatus(user._id, "banned")} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg hover:bg-rose-500/20">
+                                 <FiX size={16} />
+                              </button>
+                           </>
+                        )}
+                        <button onClick={() => handleDelete(user._id)} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg hover:bg-rose-500/20">
+                           <FiTrash2 size={16} />
+                        </button>
+                    </div>
+                 </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View (Efficient & Data-Dense) */}
+          <div className="hidden lg:block overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse min-w-275">
-              <thead className="bg-dark-bg/80 text-slate-400 text-xs uppercase tracking-wider">
+              <thead className="bg-slate-950/20 text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
                 <tr>
-                  <th className="px-8 py-5 font-semibold">User Info</th>
-                  <th className="px-8 py-5 font-semibold">Status</th>
-                  <th className="px-8 py-5 font-semibold">Subscription</th>
-                  <th className="px-8 py-5 font-semibold">Location</th>
-                  <th className="px-8 py-5 font-semibold">Registered</th>
-                  <th className="px-8 py-5 font-semibold text-right">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4">User</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Plan</th>
+                  <th className="px-6 py-4">Location</th>
+                  <th className="px-6 py-4 text-center">Joined</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/50">
+              <tbody className="divide-white/3">
                 {currentUsers.map((user) => (
                   <tr
                     key={user._id}
-                    className="hover:bg-slate-800/20 transition-all group"
+                    className="hover:bg-indigo-500/1 transition-colors group"
                   >
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-indigo-400 font-bold border border-white/5 group-hover:scale-110 transition-transform shadow-inner">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-400 font-bold border border-white/5">
                           {user.name?.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-200">
+                          <p className="font-bold text-slate-200 text-sm group-hover:text-indigo-400 transition-colors">
                             {user.name}
                           </p>
-                          <p className="text-xs text-slate-500">{user.email}</p>
+                          <p className="text-[10px] text-slate-500 group-hover:text-slate-400">{user.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-6 py-4">
                       <span
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-2 w-fit tracking-wider ${
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase flex items-center gap-1.5 w-fit border ${
                           user.status === "banned"
-                            ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                            ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
                             : user.status === "suspended"
-                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                              : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                              : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                         }`}
                       >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            user.status === "banned"
-                              ? "bg-rose-500"
-                              : user.status === "suspended"
-                                ? "bg-amber-500"
-                                : "bg-emerald-500"
-                          }`}
-                        ></span>
+                        <span className={`w-1 h-1 rounded-full ${user.status === "banned" ? "bg-rose-500" : user.status === "suspended" ? "bg-amber-500" : "bg-emerald-500"}`}></span>
                         {user.status || "active"}
                       </span>
                     </td>
-                    <td className="px-8 py-5">
-                      <div className="flex flex-col gap-1">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase w-fit tracking-wider ${
-                            user.subscription?.plan === "platinum"
-                              ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                              : user.subscription?.plan === "gold"
-                                ? "bg-yellow-500/20 text-yellow-500 border border-yellow-500/30"
-                                : user.subscription?.plan === "silver"
-                                  ? "bg-slate-500/20 text-slate-300 border border-slate-500/30"
-                                  : "bg-slate-800 text-slate-500 border border-slate-700/50"
-                          }`}
-                        >
-                          {user.subscription?.plan || "free"}
-                        </span>
-                        {user.subscription?.status === "active" && (
-                          <span className="text-[10px] text-emerald-400 font-medium">
-                            Premium Active
-                          </span>
-                        )}
-                      </div>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase w-fit border ${
+                          user.subscription?.plan === "platinum" ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" : 
+                          user.subscription?.plan === "gold" ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" : 
+                          "bg-slate-800 text-slate-500 border-slate-700/50"
+                        }`}
+                      >
+                        {user.subscription?.plan || "free"}
+                      </span>
                     </td>
-                    <td className="px-8 py-5">
-                      <p className="text-sm text-slate-300 flex items-center gap-1.5">
-                        <FiMapPin size={14} className="text-slate-500" />
+                    <td className="px-6 py-4">
+                      <p className="text-xs font-bold text-slate-300">
                         {user.district || "N/A"}
                       </p>
-                      <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-37.5">
-                        {user.locationName || "Location Unknown"}
+                      <p className="text-[10px] text-slate-500 opacity-60">
+                        {user.locationName || "No Location"}
                       </p>
                     </td>
-                    <td className="px-8 py-5">
-                      <p className="text-sm text-slate-400 flex items-center gap-1.5">
-                        <FiCalendar size={14} className="text-slate-500" />
-                        {new Date(user.createdAt).toLocaleDateString(
-                          undefined,
-                          { year: "numeric", month: "short", day: "numeric" },
-                        )}
+                    <td className="px-6 py-4 text-center">
+                      <p className="text-xs text-slate-400 font-bold">
+                        {new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </p>
                     </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => navigate(`/admin/user/${user._id}`)}
-                          className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all"
-                          title="View Profile"
-                        >
-                          <FiEye size={18} />
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
+                        <button onClick={() => navigate(`/admin/user/${user._id}`)} className="p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg">
+                          <FiEye size={17} />
                         </button>
                         {user.status !== "active" ? (
-                          <button
-                            onClick={() =>
-                              handleUpdateStatus(user._id, "active")
-                            }
-                            className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
-                            title="Activate User"
-                          >
-                            <FiCheckCircle size={18} />
+                          <button onClick={() => handleUpdateStatus(user._id, "active")} className="p-1.5 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg">
+                            <FiCheckCircle size={17} />
                           </button>
                         ) : (
                           <>
-                            <button
-                              onClick={() =>
-                                handleUpdateStatus(user._id, "suspended")
-                              }
-                              className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all"
-                              title="Suspend User"
-                            >
-                              <FiSlash size={18} />
+                            <button onClick={() => handleUpdateStatus(user._id, "suspended")} className="p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
+                              <FiSlash size={17} />
                             </button>
-                            <button
-                              onClick={() =>
-                                handleUpdateStatus(user._id, "banned")
-                              }
-                              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                              title="Ban User"
-                            >
-                              <FiX size={18} />
+                            <button onClick={() => handleUpdateStatus(user._id, "banned")} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg">
+                              <FiX size={17} />
                             </button>
                           </>
                         )}
-                        <button
-                          onClick={() => handleDelete(user._id)}
-                          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                          title="Delete Permanently"
-                        >
-                          <FiTrash2 size={18} />
+                        <button onClick={() => handleDelete(user._id)} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg">
+                          <FiTrash2 size={17} />
                         </button>
                       </div>
                     </td>
@@ -461,23 +477,25 @@ const AdminUsers = () => {
                 </span>{" "}
                 users
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                  className={`px-3 py-2 sm:px-4 rounded-xl text-sm font-bold transition-all border flex items-center gap-2 ${
                     currentPage === 1
                       ? "opacity-30 cursor-not-allowed border-slate-700 text-slate-600"
                       : "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
                   }`}
+                  aria-label="Previous Page"
                 >
-                  Previous
+                  <FiChevronLeft className="text-lg" />
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
 
                 <div className="flex items-center gap-1">
                   {[...Array(totalPages)].map((_, index) => {
                     const pageNum = index + 1;
-                    if (totalPages > 5) {
+                    if (totalPages > 3) { // Lower threshold for mobile
                       if (
                         pageNum !== 1 &&
                         pageNum !== totalPages &&
@@ -488,8 +506,8 @@ const AdminUsers = () => {
                           pageNum === currentPage + 2
                         )
                           return (
-                            <span key={pageNum} className="px-1 text-slate-600">
-                              ...
+                            <span key={pageNum} className="px-0.5 text-slate-600 text-[10px]">
+                              ..
                             </span>
                           );
                         return null;
@@ -499,7 +517,7 @@ const AdminUsers = () => {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`w-10 h-10 rounded-xl text-sm font-bold transition-all border ${
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-xs sm:text-sm font-bold transition-all border ${
                           currentPage === pageNum
                             ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20"
                             : "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -514,18 +532,20 @@ const AdminUsers = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                  className={`px-3 py-2 sm:px-4 rounded-xl text-sm font-bold transition-all border flex items-center gap-2 ${
                     currentPage === totalPages
                       ? "opacity-30 cursor-not-allowed border-slate-700 text-slate-600"
                       : "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
                   }`}
+                  aria-label="Next Page"
                 >
-                  Next
+                  <span className="hidden sm:inline">Next</span>
+                  <FiChevronRight className="text-lg" />
                 </button>
               </div>
             </div>
           )}
-        </div>
+        </>
       )}
     </AdminLayout>
   );
