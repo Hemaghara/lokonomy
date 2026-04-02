@@ -61,6 +61,10 @@ exports.getAllProducts = async (req, res) => {
     if (subCategory) query.subCategory = subCategory;
     if (priceType && priceType !== "All") query.priceType = priceType;
 
+    // EXCLUDE BANNED OR SUSPENDED FROM USER VIEW
+    query.isFlagged = { $ne: true };
+    query.isSuspended = { $ne: true };
+
     let products;
     if (lat && lng) {
       products = await Product.find(query).sort({ isFeatured: -1 });

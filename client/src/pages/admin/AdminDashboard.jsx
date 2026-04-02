@@ -11,7 +11,147 @@ import {
   FiActivity,
   FiDollarSign,
   FiTrendingUp,
+  FiArrowRight,
 } from "react-icons/fi";
+const STAT_COLORS = {
+  emerald: {
+    icon: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    glow: "hover:shadow-emerald-500/10",
+    ring: "hover:border-emerald-500/40",
+    badge: "bg-emerald-500/10 text-emerald-400",
+  },
+  indigo: {
+    icon: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+    glow: "hover:shadow-indigo-500/10",
+    ring: "hover:border-indigo-500/40",
+    badge: "bg-indigo-500/10 text-indigo-400",
+  },
+  rose: {
+    icon: "bg-rose-500/10 border-rose-500/20 text-rose-400",
+    glow: "hover:shadow-rose-500/10",
+    ring: "hover:border-rose-500/40",
+    badge: "bg-rose-500/10 text-rose-400",
+  },
+  sky: {
+    icon: "bg-sky-500/10 border-sky-500/20 text-sky-400",
+    glow: "hover:shadow-sky-500/10",
+    ring: "hover:border-sky-500/40",
+    badge: "bg-sky-500/10 text-sky-400",
+  },
+  orange: {
+    icon: "bg-orange-500/10 border-orange-500/20 text-orange-400",
+    glow: "hover:shadow-orange-500/10",
+    ring: "hover:border-orange-500/40",
+    badge: "bg-orange-500/10 text-orange-400",
+  },
+  purple: {
+    icon: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+    glow: "hover:shadow-purple-500/10",
+    ring: "hover:border-purple-500/40",
+    badge: "bg-purple-500/10 text-purple-400",
+  },
+};
+
+const StatCard = ({ item }) => {
+  const color = STAT_COLORS[item.color] || STAT_COLORS.indigo;
+
+  return (
+    <div
+      className={`group relative flex flex-col justify-between gap-3 bg-slate-900/50 border border-slate-800/80 ${color.ring} p-4 sm:p-5 rounded-2xl transition-all duration-300 shadow-lg ${color.glow} hover:shadow-xl backdrop-blur-sm overflow-hidden`}
+    >
+      <div className="absolute -bottom-8 -right-8 w-24 h-24 rounded-full bg-indigo-500/5 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 pointer-events-none" />
+
+      <div className="flex items-start justify-between">
+        <div
+          className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${color.icon}`}
+        >
+          <item.icon className="text-lg" />
+        </div>
+
+        {item.isLive ? (
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-rose-400">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+            Live
+          </span>
+        ) : (
+          <span
+            className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${color.badge}`}
+          >
+            <FiTrendingUp className="text-xs" />
+            {item.trend}
+          </span>
+        )}
+      </div>
+
+      <div>
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-500 mb-0.5">
+          {item.label}
+        </p>
+        <p className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none">
+          {item.value}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const REVENUE_PLAN_CONFIG = {
+  silver: {
+    dot: "bg-slate-400",
+    bar: "bg-gradient-to-r from-slate-500 to-slate-300",
+    label: "text-slate-300",
+  },
+  gold: {
+    dot: "bg-yellow-400",
+    bar: "bg-gradient-to-r from-yellow-600 to-yellow-400",
+    label: "text-yellow-300",
+  },
+  platinum: {
+    dot: "bg-indigo-400",
+    bar: "bg-gradient-to-r from-indigo-600 to-indigo-400",
+    label: "text-indigo-300",
+  },
+};
+
+const RevenueBar = ({ plan, value, total }) => {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  const config = REVENUE_PLAN_CONFIG[plan.toLowerCase()] || REVENUE_PLAN_CONFIG.silver;
+
+  return (
+    <div className="space-y-2.5 group">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${config.dot}`} />
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              {plan} Tier
+            </p>
+            <p
+              className={`text-lg sm:text-xl font-black tracking-tight ${config.label}`}
+            >
+              ₹{value || 0}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-black text-white">{pct}%</p>
+          <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-tight">
+            share
+          </p>
+        </div>
+      </div>
+      <div className="h-2 w-full bg-slate-800/60 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ease-out ${config.bar}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -22,15 +162,10 @@ const AdminDashboard = () => {
     fetchStats();
 
     const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
-    const adminId =
-      adminInfo.id ||
-      adminInfo._id ||
-      "admin_" + Math.random().toString(36).substr(2, 9);
+    const adminId = adminInfo.id || adminInfo._id || "admin_" + Math.random().toString(36).substr(2, 9);
 
     const socket = connectSocket({ userId: adminId, isAdmin: true });
-    socket.on("onlineUsersCount", (count) => {
-      setOnlineCount(count);
-    });
+    socket.on("onlineUsersCount", (count) => setOnlineCount(count));
 
     return () => {
       socket.off("onlineUsersCount");
@@ -41,7 +176,7 @@ const AdminDashboard = () => {
     try {
       const response = await adminService.getDashboardStats();
       setStats(response.data);
-    } catch (error) {
+    } catch {
       toast.error("Failed to fetch statistics");
     } finally {
       setLoading(false);
@@ -50,280 +185,182 @@ const AdminDashboard = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-indigo-400">
-        <div className="flex flex-col items-center gap-6">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-indigo-400/30 rounded-full animate-spin-slow"></div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative w-14 h-14">
+            <div className="absolute inset-0 rounded-full border-4 border-indigo-500/10 border-t-indigo-500 animate-spin" />
+            <div className="absolute inset-1 rounded-full border-4 border-transparent border-b-indigo-400/30 animate-spin [animation-duration:1.5s]" />
           </div>
-          <div className="flex flex-col items-center">
-            <p className="font-bold text-xl text-white tracking-tight animate-pulse mb-1">
+          <div className="text-center">
+            <p className="text-white font-extrabold text-lg tracking-tight animate-pulse">
               Lokonomy Admin
             </p>
-            <p className="text-slate-500 text-sm font-medium">
-              Preparing your workspace...
+            <p className="text-slate-500 text-sm mt-0.5">
+              Preparing workspace…
             </p>
           </div>
         </div>
       </div>
     );
 
+  const statItems = [
+    {
+      label: "Total Revenue",
+      value: `₹${stats?.stats.totalRevenue || 0}`,
+      icon: FiDollarSign,
+      color: "emerald",
+      trend: "+12%",
+    },
+    {
+      label: "Total Users",
+      value: stats?.stats.totalUsers,
+      icon: FiUsers,
+      color: "indigo",
+      trend: "+5%",
+    },
+    {
+      label: "Online Users",
+      value: onlineCount,
+      icon: FiActivity,
+      color: "rose",
+      isLive: true,
+    },
+    {
+      label: "Businesses",
+      value: stats?.stats.totalBusinesses,
+      icon: FiBriefcase,
+      color: "sky",
+      trend: "+8%",
+    },
+    {
+      label: "Products",
+      value: stats?.stats.totalProducts,
+      icon: FiPackage,
+      color: "orange",
+      trend: "+15%",
+    },
+    {
+      label: "Job Postings",
+      value: stats?.stats.totalJobs,
+      icon: FiClipboard,
+      color: "purple",
+      trend: "+2%",
+    },
+  ];
+
   return (
     <AdminLayout>
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
-        <div className="relative overflow-hidden group">
-          <h2 className="text-3xl sm:text-4xl font-extrabold mb-2 text-white tracking-tight">
+      <header className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 mb-8 sm:mb-10">
+        <div>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
             Dashboard <span className="text-indigo-500">Overview</span>
           </h2>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-            <p className="text-slate-400 text-sm sm:text-base font-medium">
+          <div className="flex items-center gap-2 mt-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">
               Real-time platform performance analytics
             </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="px-5 py-2.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 backdrop-blur-md hidden sm:flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20"></div>
-            <span className="text-sm font-bold text-slate-200">
-              System Secure
-            </span>
           </div>
         </div>
       </header>
 
       {stats && (
-        <div className="space-y-10">
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-3 sm:gap-6">
-            {[
-              {
-                label: "Total Revenue",
-                value: `\u20B9${stats.stats.totalRevenue || 0}`,
-                icon: FiDollarSign,
-                color: "emerald",
-                trend: "+12%",
-                bg: "from-emerald-500/10 to-transparent",
-              },
-              {
-                label: "Total Users",
-                value: stats.stats.totalUsers,
-                icon: FiUsers,
-                color: "indigo",
-                trend: "+5%",
-                bg: "from-indigo-500/10 to-transparent",
-              },
-              {
-                label: "Online Users",
-                value: onlineCount,
-                icon: FiActivity,
-                color: "rose",
-                trend: "Live",
-                isLive: true,
-                bg: "from-rose-500/10 to-transparent",
-              },
-              {
-                label: "Businesses",
-                value: stats.stats.totalBusinesses,
-                icon: FiBriefcase,
-                color: "sky",
-                trend: "+8%",
-                bg: "from-sky-500/10 to-transparent",
-              },
-              {
-                label: "Products",
-                value: stats.stats.totalProducts,
-                icon: FiPackage,
-                color: "orange",
-                trend: "+15%",
-                bg: "from-orange-500/10 to-transparent",
-              },
-              {
-                label: "Job Postings",
-                value: stats.stats.totalJobs,
-                icon: FiClipboard,
-                color: "purple",
-                trend: "+2%",
-                bg: "from-purple-500/10 to-transparent",
-              },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="group relative overflow-hidden bg-slate-900/40 border border-slate-800 hover:border-indigo-500/50 p-4 sm:p-6 rounded-4xl transition-all duration-300 shadow-2xl hover:shadow-indigo-500/10 backdrop-blur-xl"
-              >
-                <div
-                  className={`absolute -right-10 -bottom-10 w-32 h-32 bg-linear-to-br ${item.bg} blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                ></div>
-
-                {item.isLive && (
-                  <div className="absolute top-4 right-4">
-                    <span className="flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-rose-500/20"></span>
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex flex-col h-full justify-between gap-4">
-                  <div className="flex justify-between items-start">
-                    <div
-                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-${item.color}-500/10 border border-${item.color}-500/20 flex items-center justify-center group-hover:scale-110 transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(var(--${item.color}-rgb),0.2)]`}
-                    >
-                      <item.icon
-                        className={`text-xl sm:text-2xl text-${item.color}-500`}
-                      />
-                    </div>
-                    {!item.isLive && (
-                      <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full flex items-center gap-1 uppercase tracking-tighter sm:tracking-normal">
-                        <FiTrendingUp /> {item.trend}
-                      </span>
-                    )}
-                  </div>
-
-                  <div>
-                    <h3 className="text-slate-400 text-[11px] sm:text-sm font-bold uppercase tracking-widest mb-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                      {item.label}
-                    </h3>
-                    <p className="text-2xl sm:text-3xl font-black tracking-tight text-white group-hover:scale-[1.02] transition-transform origin-left">
-                      {item.value}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <div className="space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+            {statItems.map((item, i) => (
+              <StatCard key={i} item={item} />
             ))}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-10">
-            <div className="bg-slate-900/40 border border-slate-800 rounded-[2.5rem] p-6 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-              <div className="absolute -top-24 -left-24 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full"></div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
+            <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 sm:p-7 backdrop-blur-sm shadow-xl relative overflow-hidden">
+              <div className="absolute -top-20 -left-20 w-56 h-56 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
 
-              <h3 className="text-xl sm:text-2xl font-black mb-10 flex items-center gap-4 relative">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-lg">
-                  <FiActivity className="text-indigo-400 text-xl" />
+              <div className="flex items-center gap-3 mb-7 relative">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                  <FiActivity className="text-indigo-400 text-base" />
                 </div>
-                Premium <span className="text-indigo-500">Analytics</span>
-              </h3>
+                <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                  Premium <span className="text-indigo-500">Analytics</span>
+                </h3>
+              </div>
 
-              <div className="space-y-10 relative">
+              <div className="space-y-6 relative">
                 {["silver", "gold", "platinum"].map((plan) => (
-                  <div key={plan} className="space-y-4 group">
-                    <div className="flex justify-between items-end">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            plan === "silver"
-                              ? "bg-slate-400"
-                              : plan === "gold"
-                                ? "bg-yellow-400"
-                                : "bg-indigo-400"
-                          }`}
-                        ></div>
-                        <div>
-                          <span className="text-slate-500 uppercase text-[10px] font-black tracking-[0.2em] block mb-1">
-                            {plan} Tier
-                          </span>
-                          <span className="font-black text-white text-xl sm:text-2xl tracking-tight">
-                            \u20B9{stats.stats.revenueBreakdown?.[plan] || 0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-black text-indigo-400 block">
-                          {stats.stats.totalRevenue > 0
-                            ? Math.round(
-                                (stats.stats.revenueBreakdown?.[plan] /
-                                  stats.stats.totalRevenue) *
-                                  100,
-                              )
-                            : 0}
-                          %
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                          Contribution
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-4 w-full bg-slate-800/30 rounded-full overflow-hidden border border-slate-700/50 p-1 group-hover:border-indigo-500/30 transition-colors">
-                      <div
-                        className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(0,0,0,0.5)] ${
-                          plan === "silver"
-                            ? "bg-slate-400/80"
-                            : plan === "gold"
-                              ? "bg-linear-to-r from-yellow-600 to-yellow-400"
-                              : "bg-linear-to-r from-indigo-600 to-indigo-400"
-                        }`}
-                        style={{
-                          width: `${stats.stats.totalRevenue > 0 ? (stats.stats.revenueBreakdown?.[plan] / stats.stats.totalRevenue) * 100 : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
+                  <RevenueBar
+                    key={plan}
+                    plan={plan}
+                    value={stats.stats.revenueBreakdown?.[plan.toLowerCase()]}
+                    total={stats.stats.totalRevenue}
+                  />
                 ))}
               </div>
             </div>
 
-            <div className="flex flex-col gap-10">
-              <div className="bg-slate-900/40 border border-slate-800 rounded-[2.5rem] overflow-hidden backdrop-blur-xl shadow-2xl flex flex-col h-full">
-                <div className="p-8 border-b border-slate-800/50 bg-slate-800/20 flex items-center justify-between">
-                  <h3 className="font-black text-xl flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                      <FiUsers className="text-emerald-400" />
-                    </div>
+            <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-sm shadow-xl flex flex-col">
+              <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-slate-800/60 bg-slate-800/20 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                    <FiUsers className="text-emerald-400 text-sm" />
+                  </div>
+                  <h3 className="font-extrabold text-base sm:text-lg text-white tracking-tight">
                     Recent <span className="text-emerald-400">Joiners</span>
                   </h3>
-                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black rounded-full uppercase tracking-widest border border-emerald-500/20">
-                    Active Now
-                  </span>
                 </div>
-                <div className="flex-1 overflow-y-auto max-h-100 scrollbar-hide divide-y divide-slate-800/50">
-                  {stats.recentUsers?.length > 0 ? (
-                    stats.recentUsers.map((user) => (
-                      <div
-                        key={user._id}
-                        className="p-6 flex items-center justify-between hover:bg-indigo-500/5 transition-all duration-300 group"
-                      >
-                        <div className="flex items-center gap-5">
-                          <div className="w-12 h-12 rounded-[1.25rem] bg-slate-800 flex items-center justify-center text-indigo-400 font-black border border-slate-700 group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 shadow-inner overflow-hidden">
-                            {user.profileImage ? (
-                              <img
-                                src={user.profileImage}
-                                alt={user.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              user.name?.charAt(0).toUpperCase()
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-bold text-white group-hover:text-indigo-400 transition-colors text-lg">
-                              {user.name}
-                            </p>
-                            <p className="text-xs text-slate-500 font-medium">
-                              {user.email}
-                            </p>
-                          </div>
+                <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-widest border border-emerald-500/20">
+                  Active
+                </span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto max-h-72 sm:max-h-80 divide-y divide-slate-800/40 scrollbar-hide">
+                {stats.recentUsers?.length > 0 ? (
+                  stats.recentUsers.map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex items-center justify-between px-5 sm:px-7 py-3.5 hover:bg-indigo-500/5 transition-colors duration-200 group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-black text-sm shrink-0 overflow-hidden group-hover:bg-indigo-500 group-hover:text-white group-hover:border-indigo-500 transition-all duration-300">
+                          {user.profileImage ? (
+                            <img
+                              src={user.profileImage}
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            user.name?.charAt(0).toUpperCase()
+                          )}
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="text-[10px] bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-slate-400 font-bold group-hover:border-indigo-500/30 group-hover:text-indigo-300 transition-all">
-                            {new Date(user.createdAt).toLocaleDateString(
-                              "en-US",
-                              { month: "short", day: "numeric" },
-                            )}
-                          </span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-white text-sm truncate group-hover:text-indigo-400 transition-colors">
+                            {user.name}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="p-10 text-center text-slate-500 font-medium italic">
-                      No recent users found
+                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-800/80 border border-slate-700/60 px-2.5 py-1 rounded-lg shrink-0 ml-3 group-hover:border-indigo-500/30 group-hover:text-indigo-300 transition-all">
+                        {new Date(user.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
                     </div>
-                  )}
-                </div>
-                {stats.recentUsers?.length > 0 && (
-                  <button className="w-full py-4 text-center text-[10px] font-black text-slate-500 hover:text-indigo-400 uppercase tracking-[0.3em] transition-colors bg-slate-800/10 border-t border-slate-800/50">
-                    View All Users
-                  </button>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-slate-500 text-sm italic">
+                    No recent users found
+                  </div>
                 )}
               </div>
+
+              {stats.recentUsers?.length > 0 && (
+                <button className="flex items-center justify-center gap-2 w-full py-3.5 text-[11px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-widest transition-colors bg-slate-800/10 border-t border-slate-800/50 shrink-0 group">
+                  View All Users
+                  <FiArrowRight className="text-xs group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
             </div>
           </div>
         </div>

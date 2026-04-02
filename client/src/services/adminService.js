@@ -28,4 +28,13 @@ export const adminService = {
   updateUserStatus: (id, status) => adminApi.put(`/user/${id}/status`, { status }),
   verify: () => adminApi.get("/verify"),
   updateProfile: (profileData) => adminApi.put("/profile", profileData),
+  getMarketStats: () => adminApi.get("/marketplace/stats"),
+  getMarketProducts: (params) => adminApi.get("/marketplace/products", { params }),
+  getMarketOrders: (params) => adminApi.get("/marketplace/orders", { params }),
+  getMarketAuctions: (params) => adminApi.get("/marketplace/auctions", { params }),
+  toggleBanProduct: (id) => adminApi.patch(`/marketplace/products/${id}/ban`),
+  toggleSuspendProduct: (id) => adminApi.patch(`/marketplace/products/${id}/suspend`),
+  getMarketProductDetails: (id) => adminApi.get(`/marketplace/products/${id}`),
+  updateOrderStatus: (id, orderStatus) => adminApi.patch(`/marketplace/orders/${id}/status`, { orderStatus }),
+  getMarketOrderDetails: (id) => adminApi.get(`/marketplace/orders/${id}`),
 };

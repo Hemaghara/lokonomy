@@ -46,6 +46,8 @@ const productSchema = new mongoose.Schema({
   numReviews: { type: Number, default: 0 },
   isSold: { type: Boolean, default: false },
   isFeatured: { type: Boolean, default: false },
+  isFlagged: { type: Boolean, default: false },
+  isSuspended: { type: Boolean, default: false },
   isAuction: { type: Boolean, default: false },
   startingPrice: { type: Number },
   auctionEnd: { type: Date },

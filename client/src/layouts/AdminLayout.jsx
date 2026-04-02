@@ -10,6 +10,7 @@ import {
   FiMenu,
   FiX,
   FiUser,
+  FiPackage,
 } from "react-icons/fi";
 
 const AdminLayout = ({ children }) => {
@@ -29,6 +30,7 @@ const AdminLayout = ({ children }) => {
     { label: "Overview", path: "/admin/dashboard", icon: FiActivity },
     { label: "Manage Users", path: "/admin/users", icon: FiUsers },
     { label: "Businesses", path: "/admin/businesses", icon: FiBriefcase },
+    { label: "Marketplace", path: "/admin/marketplace", icon: FiPackage },
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 
@@ -39,13 +41,11 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-dark-bg text-slate-200 flex overflow-x-hidden">
-      {/* Mobile Backdrop */}
       <div
         onClick={() => setIsSidebarOpen(false)}
         className={`fixed inset-0 bg-slate-950/60 backdrop-blur-md z-40 lg:hidden transition-opacity duration-300 ${isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
 
-      {/* Sidebar Container */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-80 bg-slate-950/90 lg:bg-slate-900/40 border-r border-white/5 
@@ -64,7 +64,9 @@ const AdminLayout = ({ children }) => {
                 <span className="text-2xl font-black tracking-tight text-white leading-none mb-1">
                   Lokonomy
                 </span>
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 ml-0.5">Admin Central</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400 ml-0.5">
+                  Admin Central
+                </span>
               </div>
             </div>
             <button
@@ -83,20 +85,19 @@ const AdminLayout = ({ children }) => {
                 className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
                   location.pathname === item.path
                     ? "text-white bg-indigo-600 shadow-xl shadow-indigo-500/30"
-                    : "text-slate-500 hover:text-slate-200 hover:bg-slate-800/50"
+                    : "text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
               >
-                <item.icon className={`text-xl ${location.pathname === item.path ? "scale-110" : "group-hover:scale-110"} transition-transform`} /> 
+                <item.icon
+                  className={`text-xl ${location.pathname === item.path ? "scale-110" : "group-hover:scale-110"} transition-transform`}
+                />
                 <span className="text-sm tracking-wide">{item.label}</span>
-                {location.pathname === item.path && (
-                   <span className="absolute right-6 w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                )}
               </button>
             ))}
           </nav>
 
           <div className="mt-auto pt-6 border-t border-white/5">
-            <button 
+            <button
               onClick={() => navigate("/admin/profile")}
               className="w-full flex items-center gap-4 px-2 mb-8 hover:bg-white/5 p-3 rounded-2xl transition-all duration-300 group"
             >
@@ -116,16 +117,14 @@ const AdminLayout = ({ children }) => {
               onClick={logout}
               className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-400 hover:bg-rose-500/10 transition-all font-bold border border-transparent hover:border-rose-500/20 shadow-sm"
             >
-              <FiLogOut className="text-xl" /> 
+              <FiLogOut className="text-xl" />
               <span className="text-sm tracking-wide">Logout Account</span>
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Mobile Header Overlay */}
         <header className="lg:hidden flex items-center justify-between p-5 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 shadow-2xl">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -143,7 +142,6 @@ const AdminLayout = ({ children }) => {
           </button>
         </header>
 
-        {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-indigo-500/5 via-transparent to-transparent">
           <div className="p-4 sm:p-8 lg:p-12 xl:p-16 max-w-400 mx-auto">
             {children}

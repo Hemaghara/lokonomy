@@ -13,11 +13,93 @@ import {
   FiSlash,
   FiCheckCircle,
   FiX,
-  FiMapPin,
-  FiCalendar,
   FiChevronLeft,
   FiChevronRight,
+  FiUsers,
 } from "react-icons/fi";
+
+const statusConfig = {
+  active: {
+    label: "Active",
+    dot: "bg-emerald-400",
+    badge:
+      "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 ring-emerald-500/10",
+  },
+  suspended: {
+    label: "Suspended",
+    dot: "bg-amber-400",
+    badge:
+      "bg-amber-500/10   text-amber-400   border-amber-500/20   ring-amber-500/10",
+  },
+  banned: {
+    label: "Banned",
+    dot: "bg-rose-400",
+    badge:
+      "bg-rose-500/10    text-rose-400    border-rose-500/20    ring-rose-500/10",
+  },
+};
+
+const planConfig = {
+  platinum: "bg-violet-500/15 text-violet-300 border-violet-500/25",
+  gold: "bg-amber-500/15  text-amber-300  border-amber-500/25",
+  silver: "bg-slate-500/20  text-slate-300  border-slate-500/30",
+  free: "bg-slate-800/60  text-slate-500  border-slate-700/50",
+};
+
+const StatusBadge = ({ status }) => {
+  const cfg = statusConfig[status] || statusConfig.active;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border ${cfg.badge}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+};
+
+const PlanBadge = ({ plan }) => {
+  const p = plan || "free";
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border ${planConfig[p] || planConfig.free}`}
+    >
+      {p}
+    </span>
+  );
+};
+
+const Avatar = ({ name, size = "md" }) => {
+  const sizes = {
+    sm: "w-7 h-7 text-xs",
+    md: "w-9 h-9 text-sm",
+    lg: "w-11 h-11 text-base",
+  };
+  return (
+    <div
+      className={`${sizes[size]} rounded-xl bg-linear-to-br from-indigo-500/20 to-violet-500/20 border border-white/8 flex items-center justify-center text-indigo-300 font-black shrink-0`}
+    >
+      {name?.charAt(0)?.toUpperCase() ?? "?"}
+    </div>
+  );
+};
+
+const ActionBtn = ({ onClick, icon: Icon, color }) => {
+  const colors = {
+    indigo: "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10",
+    emerald: "text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10",
+    amber: "text-slate-500 hover:text-amber-400  hover:bg-amber-500/10",
+    rose: "text-slate-500 hover:text-rose-400   hover:bg-rose-500/10",
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`p-1.5 rounded-lg transition-all ${colors[color]}`}
+    >
+      <Icon size={15} />
+    </button>
+  );
+};
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -42,9 +124,7 @@ const AdminUsers = () => {
       setUsers(response.data);
     } catch (error) {
       toast.error("Failed to fetch users");
-      if (error.response?.status === 401) {
-        navigate("/admin/login");
-      }
+      if (error.response?.status === 401) navigate("/admin/login");
     } finally {
       setLoading(false);
     }
@@ -55,7 +135,7 @@ const AdminUsers = () => {
       await adminService.updateUserStatus(id, status);
       toast.success(`User status updated to ${status}`);
       fetchUsers();
-    } catch (error) {
+    } catch {
       toast.error("Status update failed");
     }
   };
@@ -65,12 +145,11 @@ const AdminUsers = () => {
       !window.confirm("Are you sure you want to delete this user permanently?")
     )
       return;
-
     try {
       await adminService.deleteContent("user", id);
       toast.success("User deleted successfully");
       fetchUsers();
-    } catch (error) {
+    } catch {
       toast.error("Deletion failed");
     }
   };
@@ -96,7 +175,6 @@ const AdminUsers = () => {
       u.status || "active",
       new Date(u.createdAt).toLocaleDateString(),
     ]);
-
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers, ...rows]
@@ -104,10 +182,8 @@ const AdminUsers = () => {
           row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(","),
         )
         .join("\n");
-
-    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", encodeURI(csvContent));
     link.setAttribute(
       "download",
       `users_export_${new Date().toISOString().split("T")[0]}.csv`,
@@ -124,23 +200,21 @@ const AdminUsers = () => {
   const plans = ["All", "free", "silver", "gold", "platinum"];
 
   const filteredUsers = users.filter((user) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.name?.toLowerCase().includes(q) ||
+      user.email?.toLowerCase().includes(q) ||
       user.phoneNumber?.includes(searchQuery) ||
       user._id?.includes(searchQuery);
-
     const matchesDistrict =
       selectedDistrict === "All" || user.district === selectedDistrict;
     const matchesPlan =
       selectedPlan === "All" || user.subscription?.plan === selectedPlan;
-
     let matchesDate = true;
     if (dateFilter) {
       const joinDate = new Date(user.createdAt).toISOString().split("T")[0];
       matchesDate = joinDate === dateFilter;
     }
-
     return matchesSearch && matchesDistrict && matchesPlan && matchesDate;
   });
 
@@ -149,8 +223,8 @@ const AdminUsers = () => {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -158,389 +232,406 @@ const AdminUsers = () => {
     setCurrentPage(1);
   }, [searchQuery, selectedDistrict, selectedPlan, dateFilter]);
 
+  const hasActiveFilters =
+    selectedDistrict !== "All" || selectedPlan !== "All" || dateFilter;
+
+  const renderActions = (user) => (
+    <div className="flex items-center gap-0.5">
+      <ActionBtn
+        onClick={() => navigate(`/admin/user/${user._id}`)}
+        icon={FiEye}
+        color="indigo"
+      />
+      {user.status !== "active" ? (
+        <ActionBtn
+          onClick={() => handleUpdateStatus(user._id, "active")}
+          icon={FiCheckCircle}
+          color="emerald"
+        />
+      ) : (
+        <>
+          <ActionBtn
+            onClick={() => handleUpdateStatus(user._id, "suspended")}
+            icon={FiSlash}
+            color="amber"
+          />
+          <ActionBtn
+            onClick={() => handleUpdateStatus(user._id, "banned")}
+            icon={FiX}
+            color="rose"
+          />
+        </>
+      )}
+      <ActionBtn
+        onClick={() => handleDelete(user._id)}
+        icon={FiTrash2}
+        color="rose"
+      />
+    </div>
+  );
+
   return (
     <AdminLayout>
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-white">
-            User Management
-          </h2>
-          <p className="text-slate-400 text-sm sm:text-base">
-            Monitor and manage registered users on the platform
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center">
+              <FiUsers className="text-indigo-400" size={15} />
+            </div>
+            <h2 className="text-2xl font-black text-white tracking-tight">
+              User Management
+            </h2>
+          </div>
+          <p className="text-slate-500 text-sm pl-10.5">
+            {loading
+              ? "Loading…"
+              : `${users.length} registered users on the platform`}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={exportToCSV}
-            className="flex-1 sm:flex-none justify-center bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 px-4 py-3 rounded-xl hover:bg-emerald-600/20 transition-all flex items-center gap-2 text-sm font-bold"
+            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+              bg-slate-800/60 border border-slate-700/50 text-slate-400
+              hover:bg-slate-700/60 hover:text-slate-200 hover:border-slate-600/60 transition-all"
           >
-            <FiDownload /> Export
+            <FiDownload size={14} /> Export CSV
           </button>
           <button
             onClick={() => navigate("/admin/register")}
-            className="flex-1 sm:flex-none justify-center bg-indigo-600 hover:bg-indigo-50 hover:bg-opacity-10 text-white px-5 py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 whitespace-nowrap text-sm font-bold"
+            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+              bg-indigo-600 text-white border border-indigo-500/50
+              hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
           >
-            <FiUserPlus /> Add Admin
+            <FiUserPlus size={14} /> Add Admin
           </button>
         </div>
       </header>
 
-      <div className="flex flex-col gap-4 mb-8">
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative flex-1 w-full">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+      <div className="flex flex-col gap-3 mb-6">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <FiSearch
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
+              size={14}
+            />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Search by name, email, phone or ID…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-card-bg/50 border border-slate-700/50 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600 text-slate-200"
+              className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl py-2.5 pl-10 pr-4
+                text-slate-200 text-sm placeholder:text-slate-600
+                focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`w-full sm:w-auto px-5 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 font-bold ${showFilters ? "bg-indigo-600 border-indigo-500 text-white" : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800"}`}
+            className={`relative px-4 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all shrink-0 ${
+              showFilters
+                ? "bg-indigo-600 border-indigo-500 text-white"
+                : "bg-slate-800/60 border-slate-700/50 text-slate-400 hover:bg-slate-700/60 hover:text-slate-200"
+            }`}
           >
-            <FiFilter /> Filters{" "}
-            {(selectedDistrict !== "All" ||
-              selectedPlan !== "All" ||
-              dateFilter) && (
-              <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+            <FiFilter size={14} />
+            <span className="hidden xs:inline">Filters</span>
+            {hasActiveFilters && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-400 rounded-full ring-2 ring-slate-900" />
             )}
           </button>
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                District
-              </label>
-              <select
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-300 outline-none focus:border-indigo-500"
-              >
-                {districts.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Member Plan
-              </label>
-              <select
-                value={selectedPlan}
-                onChange={(e) => setSelectedPlan(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-300 outline-none focus:border-indigo-500"
-              >
-                {plans.map((p) => (
-                  <option key={p} value={p}>
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-slate-900/40 border border-slate-700/40 rounded-2xl">
+            {[
+              {
+                label: "District",
+                value: selectedDistrict,
+                onChange: setSelectedDistrict,
+                options: districts,
+              },
+              {
+                label: "Plan",
+                value: selectedPlan,
+                onChange: setSelectedPlan,
+                options: plans,
+                cap: true,
+              },
+            ].map(({ label, value, onChange, options, cap }) => (
+              <div key={label}>
+                <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+                  {label}
+                </label>
+                <select
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-300
+                    outline-none focus:border-indigo-500/60 transition-all appearance-none cursor-pointer"
+                >
+                  {options.map((o) => (
+                    <option key={o} value={o}>
+                      {cap ? o.charAt(0).toUpperCase() + o.slice(1) : o}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+            <div>
+              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
                 Join Date
               </label>
               <input
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-300 outline-none focus:border-indigo-500 w-full"
+                className="w-full bg-slate-900 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-300
+                  outline-none focus:border-indigo-500/60 transition-all"
               />
             </div>
-            <div className="sm:col-span-2 lg:col-span-3 flex justify-end">
-              <button
-                onClick={() => {
-                  setSelectedDistrict("All");
-                  setSelectedPlan("All");
-                  setDateFilter("");
-                }}
-                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-medium bg-rose-500/5 px-3 py-1.5 rounded-lg border border-rose-500/10"
-              >
-                <FiX /> Reset All Filters
-              </button>
-            </div>
+            {hasActiveFilters && (
+              <div className="sm:col-span-3 flex justify-end">
+                <button
+                  onClick={() => {
+                    setSelectedDistrict("All");
+                    setSelectedPlan("All");
+                    setDateFilter("");
+                  }}
+                  className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 font-bold
+                    bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/10 transition-all"
+                >
+                  <FiX size={12} /> Reset Filters
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {loading ? (
-        <div className="min-h-100 flex items-center justify-center text-indigo-400">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-            <p className="font-medium animate-pulse text-lg">
-              Fetching users...
-            </p>
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <div className="w-10 h-10 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+          <p className="text-slate-500 text-sm font-medium animate-pulse">
+            Fetching users…
+          </p>
+        </div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-28 gap-3 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center mb-1">
+            <FiSearch size={22} className="text-slate-600" />
           </div>
+          <p className="text-slate-400 font-bold">No users found</p>
+          <p className="text-slate-600 text-sm">
+            Try adjusting your search or filters
+          </p>
         </div>
       ) : (
         <>
-          {/* Mobile Card View (Data-Dense & Efficient) */}
-          <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
             {currentUsers.map((user) => (
-              <div key={user._id} className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 space-y-4 hover:border-indigo-500/30 transition-all">
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold border border-white/5">
-                           {user.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                           <h4 className="font-bold text-white text-sm truncate">{user.name}</h4>
-                           <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
-                        </div>
+              <div
+                key={user._id}
+                className="group bg-slate-900/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/25 hover:bg-slate-800/40 transition-all"
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar name={user.name} />
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-100 text-sm truncate leading-tight">
+                        {user.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {user.email}
+                      </p>
+                      {user.phoneNumber && (
+                        <p className="text-[10px] text-slate-600 truncate">
+                          {user.phoneNumber}
+                        </p>
+                      )}
                     </div>
-                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                        user.status === "banned" ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : 
-                        user.status === "suspended" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : 
-                        "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                    }`}>
-                        {user.status || "Active"}
-                    </span>
-                 </div>
+                  </div>
+                  <StatusBadge status={user.status || "active"} />
+                </div>
 
-                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium px-1">
-                    <div className="flex flex-col">
-                        <span className="text-slate-600 uppercase text-[8px] font-black tracking-widest">Plan</span>
-                        <span className="text-slate-200">{user.subscription?.plan || "Free"}</span>
-                    </div>
-                    <div className="flex flex-col text-right">
-                        <span className="text-slate-600 uppercase text-[8px] font-black tracking-widest">District</span>
-                        <span className="text-slate-200">{user.district || "N/A"}</span>
-                    </div>
-                 </div>
+                <div className="flex items-center justify-between mb-3 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <PlanBadge plan={user.subscription?.plan} />
+                    {user.district && (
+                      <span className="text-slate-500 font-medium">
+                        {user.district}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-slate-600 font-medium">
+                    {new Date(user.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "2-digit",
+                    })}
+                  </span>
+                </div>
 
-                 <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                    <p className="text-[9px] text-slate-500 font-bold">
-                        Joined {new Date(user.createdAt).toLocaleDateString()}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                        <button onClick={() => navigate(`/admin/user/${user._id}`)} className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg hover:bg-indigo-500/20">
-                           <FiEye size={16} />
-                        </button>
-                        {user.status !== "active" ? (
-                           <button onClick={() => handleUpdateStatus(user._id, "active")} className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20">
-                              <FiCheckCircle size={16} />
-                           </button>
-                        ) : (
-                           <>
-                              <button onClick={() => handleUpdateStatus(user._id, "suspended")} className="p-2 bg-amber-500/10 text-amber-400 rounded-lg hover:bg-amber-500/20">
-                                 <FiSlash size={16} />
-                              </button>
-                              <button onClick={() => handleUpdateStatus(user._id, "banned")} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg hover:bg-rose-500/20">
-                                 <FiX size={16} />
-                              </button>
-                           </>
-                        )}
-                        <button onClick={() => handleDelete(user._id)} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg hover:bg-rose-500/20">
-                           <FiTrash2 size={16} />
-                        </button>
-                    </div>
-                 </div>
+                <div className="flex items-center justify-end pt-3 border-t border-white/4">
+                  {renderActions(user)}
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Desktop Table View (Efficient & Data-Dense) */}
-          <div className="hidden lg:block overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse min-w-275">
-              <thead className="bg-slate-950/20 text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
-                <tr>
-                  <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Plan</th>
-                  <th className="px-6 py-4">Location</th>
-                  <th className="px-6 py-4 text-center">Joined</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+          <div className="hidden lg:block rounded-2xl border border-slate-700/40 overflow-hidden bg-slate-900/30">
+            <table className="w-full text-left min-w-180">
+              <thead>
+                <tr className="border-b border-slate-700/40 bg-slate-950/30">
+                  {[
+                    "User",
+                    "Status",
+                    "Plan",
+                    "Location",
+                    "Joined",
+                    "Actions",
+                  ].map((h, i) => (
+                    <th
+                      key={h}
+                      className={`px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600 ${
+                        i === 5 ? "text-right" : i === 4 ? "text-center" : ""
+                      }`}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-white/3">
-                {currentUsers.map((user) => (
+              <tbody>
+                {currentUsers.map((user, idx) => (
                   <tr
                     key={user._id}
-                    className="hover:bg-indigo-500/1 transition-colors group"
+                    className={`group border-b border-white/3 hover:bg-indigo-500/3 transition-colors ${
+                      idx === currentUsers.length - 1 ? "border-b-0" : ""
+                    }`}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-400 font-bold border border-white/5">
-                          {user.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-200 text-sm group-hover:text-indigo-400 transition-colors">
+                        <Avatar name={user.name} />
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-200 text-sm truncate group-hover:text-indigo-300 transition-colors">
                             {user.name}
                           </p>
-                          <p className="text-[10px] text-slate-500 group-hover:text-slate-400">{user.email}</p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase flex items-center gap-1.5 w-fit border ${
-                          user.status === "banned"
-                            ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
-                            : user.status === "suspended"
-                              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                              : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                        }`}
-                      >
-                        <span className={`w-1 h-1 rounded-full ${user.status === "banned" ? "bg-rose-500" : user.status === "suspended" ? "bg-amber-500" : "bg-emerald-500"}`}></span>
-                        {user.status || "active"}
-                      </span>
+
+                    <td className="px-5 py-3.5">
+                      <StatusBadge status={user.status || "active"} />
                     </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase w-fit border ${
-                          user.subscription?.plan === "platinum" ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" : 
-                          user.subscription?.plan === "gold" ? "bg-yellow-500/20 text-yellow-500 border-yellow-500/30" : 
-                          "bg-slate-800 text-slate-500 border-slate-700/50"
-                        }`}
-                      >
-                        {user.subscription?.plan || "free"}
-                      </span>
+
+                    <td className="px-5 py-3.5">
+                      <PlanBadge plan={user.subscription?.plan} />
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-xs font-bold text-slate-300">
-                        {user.district || "N/A"}
+
+                    <td className="px-5 py-3.5">
+                      <p className="text-sm font-semibold text-slate-300">
+                        {user.district || "—"}
                       </p>
-                      <p className="text-[10px] text-slate-500 opacity-60">
-                        {user.locationName || "No Location"}
+                      {user.locationName && (
+                        <p className="text-[11px] text-slate-600 mt-0.5 truncate max-w-32.5">
+                          {user.locationName}
+                        </p>
+                      )}
+                    </td>
+
+                    <td className="px-5 py-3.5 text-center">
+                      <p className="text-xs font-bold text-slate-400">
+                        {new Date(user.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                      <p className="text-[10px] text-slate-600">
+                        {new Date(user.createdAt).getFullYear()}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <p className="text-xs text-slate-400 font-bold">
-                        {new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
-                        <button onClick={() => navigate(`/admin/user/${user._id}`)} className="p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg">
-                          <FiEye size={17} />
-                        </button>
-                        {user.status !== "active" ? (
-                          <button onClick={() => handleUpdateStatus(user._id, "active")} className="p-1.5 text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg">
-                            <FiCheckCircle size={17} />
-                          </button>
-                        ) : (
-                          <>
-                            <button onClick={() => handleUpdateStatus(user._id, "suspended")} className="p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
-                              <FiSlash size={17} />
-                            </button>
-                            <button onClick={() => handleUpdateStatus(user._id, "banned")} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg">
-                              <FiX size={17} />
-                            </button>
-                          </>
-                        )}
-                        <button onClick={() => handleDelete(user._id)} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg">
-                          <FiTrash2 size={17} />
-                        </button>
+
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        {renderActions(user)}
                       </div>
                     </td>
                   </tr>
                 ))}
-                {filteredUsers.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="px-8 py-20 text-center text-slate-500 italic"
-                    >
-                      <div className="flex flex-col items-center gap-3">
-                        <FiSearch size={40} className="text-slate-700" />
-                        <p>No users found matching your filters.</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
 
           {filteredUsers.length > itemsPerPage && (
-            <div className="px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-700/50 bg-slate-900/20">
-              <p className="text-sm text-slate-500">
+            <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-700/40">
+              <p className="text-xs text-slate-600 order-2 sm:order-1">
                 Showing{" "}
-                <span className="font-bold text-slate-300">
+                <span className="text-slate-300 font-bold">
                   {indexOfFirstUser + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-bold text-slate-300">
+                </span>
+                –
+                <span className="text-slate-300 font-bold">
                   {Math.min(indexOfLastUser, filteredUsers.length)}
                 </span>{" "}
                 of{" "}
-                <span className="font-bold text-slate-300">
+                <span className="text-slate-300 font-bold">
                   {filteredUsers.length}
                 </span>{" "}
                 users
               </p>
-              <div className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
+
+              <div className="flex items-center gap-1.5 order-1 sm:order-2">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-2 sm:px-4 rounded-xl text-sm font-bold transition-all border flex items-center gap-2 ${
-                    currentPage === 1
-                      ? "opacity-30 cursor-not-allowed border-slate-700 text-slate-600"
-                      : "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
-                  }`}
-                  aria-label="Previous Page"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-700/50
+                    text-slate-500 hover:text-white hover:bg-slate-800 hover:border-slate-600
+                    disabled:opacity-25 disabled:cursor-not-allowed transition-all"
                 >
-                  <FiChevronLeft className="text-lg" />
-                  <span className="hidden sm:inline">Previous</span>
+                  <FiChevronLeft size={15} />
                 </button>
 
-                <div className="flex items-center gap-1">
-                  {[...Array(totalPages)].map((_, index) => {
-                    const pageNum = index + 1;
-                    if (totalPages > 3) { // Lower threshold for mobile
-                      if (
-                        pageNum !== 1 &&
-                        pageNum !== totalPages &&
-                        (pageNum < currentPage - 1 || pageNum > currentPage + 1)
-                      ) {
-                        if (
-                          pageNum === currentPage - 2 ||
-                          pageNum === currentPage + 2
-                        )
-                          return (
-                            <span key={pageNum} className="px-0.5 text-slate-600 text-[10px]">
-                              ..
-                            </span>
-                          );
-                        return null;
-                      }
-                    }
+                {[...Array(totalPages)].map((_, i) => {
+                  const p = i + 1;
+                  const near =
+                    Math.abs(p - currentPage) <= 1 ||
+                    p === 1 ||
+                    p === totalPages;
+                  const isDot =
+                    !near && (p === currentPage - 2 || p === currentPage + 2);
+                  if (!near && !isDot) return null;
+                  if (isDot)
                     return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-xs sm:text-sm font-bold transition-all border ${
-                          currentPage === pageNum
-                            ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20"
-                            : "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
+                      <span key={p} className="text-slate-700 text-xs px-0.5">
+                        ···
+                      </span>
                     );
-                  })}
-                </div>
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => handlePageChange(p)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold border transition-all ${
+                        currentPage === p
+                          ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/25"
+                          : "border-slate-700/50 text-slate-500 hover:bg-slate-800 hover:text-white hover:border-slate-600"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-2 sm:px-4 rounded-xl text-sm font-bold transition-all border flex items-center gap-2 ${
-                    currentPage === totalPages
-                      ? "opacity-30 cursor-not-allowed border-slate-700 text-slate-600"
-                      : "border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
-                  }`}
-                  aria-label="Next Page"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-700/50
+                    text-slate-500 hover:text-white hover:bg-slate-800 hover:border-slate-600
+                    disabled:opacity-25 disabled:cursor-not-allowed transition-all"
                 >
-                  <span className="hidden sm:inline">Next</span>
-                  <FiChevronRight className="text-lg" />
+                  <FiChevronRight size={15} />
                 </button>
               </div>
             </div>
