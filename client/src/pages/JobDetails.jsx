@@ -138,14 +138,26 @@ const JobDetails = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="flex items-center justify-between mb-6"
+          className="flex flex-col gap-4 mb-6"
         >
-          <Link
-            to="/jobs"
-            className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium transition-colors"
-          >
-            <HiOutlineArrowLeft className="text-base" /> Back to Jobs
-          </Link>
+          {job.isSuspended && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <HiOutlineClock className="text-amber-400 text-xl" />
+              </div>
+              <div>
+                <p className="text-amber-400 font-bold text-sm">Applications Paused</p>
+                <p className="text-slate-400 text-xs">This job listing has been temporarily suspended by an administrator.</p>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <Link
+              to="/jobs"
+              className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            >
+              <HiOutlineArrowLeft className="text-base" /> Back to Jobs
+            </Link>
           <div className="flex items-center gap-2">
             <WishlistButton type="job" id={id} />
             {isOwner && (
@@ -175,6 +187,7 @@ const JobDetails = () => {
                 </>
               )}
             </button>
+            </div>
           </div>
         </motion.div>
 
@@ -349,6 +362,13 @@ const JobDetails = () => {
                   <HiOutlineCheckCircle className="text-sm" /> Applied
                   Successfully
                 </button>
+              ) : job.isSuspended ? (
+                <button
+                  disabled
+                  className="w-full flex items-center justify-center gap-2 bg-slate-800/50 text-slate-500 border border-slate-700/50 text-xs font-semibold py-3 rounded-xl mb-3 cursor-not-allowed"
+                >
+                  Applications Suspended
+                </button>
               ) : (
                 <button
                   onClick={handleApplyClick}
@@ -359,12 +379,17 @@ const JobDetails = () => {
               )}
 
               <a
-                href={`https://wa.me/${job.posterContact}`}
-                target="_blank"
+                href={job.isSuspended ? "#" : `https://wa.me/${job.posterContact}`}
+                target={job.isSuspended ? "_self" : "_blank"}
                 rel="noreferrer"
-                className="w-full flex items-center justify-center gap-2 bg-[#0d1424] border border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-500 text-xs font-medium py-3 rounded-xl transition-all"
+                onClick={(e) => job.isSuspended && e.preventDefault()}
+                className={`w-full flex items-center justify-center gap-2 border text-xs font-medium py-3 rounded-xl transition-all ${
+                  job.isSuspended
+                    ? "bg-slate-800/30 border-slate-700/50 text-slate-600 cursor-not-allowed"
+                    : "bg-[#0d1424] border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-500"
+                }`}
               >
-                <HiOutlineChatBubbleLeftRight className="text-sm" /> Contact on
+                <HiOutlineChatBubbleLeftRight className={`text-sm ${job.isSuspended ? "text-slate-700 font-bold" : ""}`} /> Contact on
                 WhatsApp
               </a>
             </div>

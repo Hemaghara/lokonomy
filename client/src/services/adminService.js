@@ -38,4 +38,10 @@ export const adminService = {
   getMarketProductDetails: (id) => adminApi.get(`/marketplace/products/${id}`),
   updateOrderStatus: (id, orderStatus) => adminApi.patch(`/marketplace/orders/${id}/status`, { orderStatus }),
   getMarketOrderDetails: (id) => adminApi.get(`/marketplace/orders/${id}`),
+  getJobStats: () => adminApi.get("/jobs/stats"),
+  getJobs: (params) => adminApi.get("/jobs", { params }),
+  getJobDetails: (id) => adminApi.get(`/jobs/${id}`),
+  toggleBanJob: (id) => adminApi.patch(`/jobs/${id}/ban`),
+  toggleSuspendJob: (id) => adminApi.patch(`/jobs/${id}/suspend`),
+  getJobPosterUsage: (userId) => adminApi.get(`/jobs/user/${userId}/usage`),
 };

@@ -57,6 +57,14 @@ const jobSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: ["Open", "Closed"],

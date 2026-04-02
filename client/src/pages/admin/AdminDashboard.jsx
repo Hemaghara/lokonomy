@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import { connectSocket } from "../../services/socket";
@@ -53,11 +54,13 @@ const STAT_COLORS = {
 };
 
 const StatCard = ({ item }) => {
+  const navigate = useNavigate();
   const color = STAT_COLORS[item.color] || STAT_COLORS.indigo;
 
   return (
     <div
-      className={`group relative flex flex-col justify-between gap-3 bg-slate-900/50 border border-slate-800/80 ${color.ring} p-4 sm:p-5 rounded-2xl transition-all duration-300 shadow-lg ${color.glow} hover:shadow-xl backdrop-blur-sm overflow-hidden`}
+      onClick={() => item.path && navigate(item.path)}
+      className={`group relative flex flex-col justify-between gap-3 bg-slate-900/50 border border-slate-800/80 ${color.ring} p-4 sm:p-5 rounded-2xl transition-all duration-300 shadow-lg ${color.glow} hover:shadow-xl backdrop-blur-sm overflow-hidden ${item.path ? "cursor-pointer active:scale-95" : ""}`}
     >
       <div className="absolute -bottom-8 -right-8 w-24 h-24 rounded-full bg-indigo-500/5 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 pointer-events-none" />
 
@@ -154,6 +157,7 @@ const RevenueBar = ({ plan, value, total }) => {
 };
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [onlineCount, setOnlineCount] = useState(0);
@@ -217,6 +221,7 @@ const AdminDashboard = () => {
       icon: FiUsers,
       color: "indigo",
       trend: "+5%",
+      path: "/admin/users",
     },
     {
       label: "Online Users",
@@ -224,6 +229,7 @@ const AdminDashboard = () => {
       icon: FiActivity,
       color: "rose",
       isLive: true,
+      path: "/admin/users",
     },
     {
       label: "Businesses",
@@ -231,6 +237,7 @@ const AdminDashboard = () => {
       icon: FiBriefcase,
       color: "sky",
       trend: "+8%",
+      path: "/admin/businesses",
     },
     {
       label: "Products",
@@ -238,6 +245,7 @@ const AdminDashboard = () => {
       icon: FiPackage,
       color: "orange",
       trend: "+15%",
+      path: "/admin/marketplace",
     },
     {
       label: "Job Postings",
@@ -245,6 +253,7 @@ const AdminDashboard = () => {
       icon: FiClipboard,
       color: "purple",
       trend: "+2%",
+      path: "/admin/jobs",
     },
   ];
 
@@ -356,7 +365,10 @@ const AdminDashboard = () => {
               </div>
 
               {stats.recentUsers?.length > 0 && (
-                <button className="flex items-center justify-center gap-2 w-full py-3.5 text-[11px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-widest transition-colors bg-slate-800/10 border-t border-slate-800/50 shrink-0 group">
+                <button 
+                  onClick={() => navigate("/admin/users")}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 text-[11px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-widest transition-colors bg-slate-800/10 border-t border-slate-800/50 shrink-0 group"
+                >
                   View All Users
                   <FiArrowRight className="text-xs group-hover:translate-x-0.5 transition-transform" />
                 </button>

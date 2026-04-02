@@ -9,7 +9,6 @@ import AuthLayout from "./layouts/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
 
-// Code Splitting - Lazy Loading Pages for Performance Boost
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -57,6 +56,8 @@ const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const AdminProductDetails = lazy(() => import("./pages/admin/AdminProductDetails"));
 const AdminBusinessDetails = lazy(() => import("./pages/admin/AdminBusinessDetails"));
+const AdminJobs = lazy(() => import("./pages/admin/AdminJobs"));
+const AdminJobDetails = lazy(() => import("./pages/admin/AdminJobDetails"));
 const ProtectedRouteAdmin = lazy(() => import("./components/ProtectedRouteAdmin"));
 
 function App() {
@@ -116,6 +117,8 @@ function App() {
                     <Route path="/admin/marketplace" element={<AdminMarketplace />} />
                     <Route path="/admin/marketplace/product/:id" element={<AdminProductDetails />} />
                     <Route path="/admin/marketplace/order/:id" element={<AdminOrderDetails />} />
+                    <Route path="/admin/jobs" element={<AdminJobs />} />
+                    <Route path="/admin/jobs/:id" element={<AdminJobDetails />} />
                     <Route path="/admin/profile" element={<AdminProfile />} />
                  </Route>
                 

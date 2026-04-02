@@ -1,5 +1,6 @@
 const Job = require("../models/Job");
 const User = require("../models/User");
+const Plan = require("../models/Plan");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { createNotification } = require("./notificationController");
 
@@ -11,8 +12,9 @@ exports.getAllJobs = async (req, res) => {
     console.log(`Gender: ${gender}`);
     console.log(`Search: ${search}`);
     let query = {};
-
     query.$or = [{ status: "Open" }, { status: { $exists: false } }];
+    query.isFlagged = { $ne: true };
+    query.isSuspended = { $ne: true };
 
     if (district) {
       query.district = district;
@@ -43,8 +45,20 @@ exports.getAllJobs = async (req, res) => {
 
 exports.createJob = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+    const planSlug = user.subscription?.plan || "free";
+    const plan = await Plan.findOne({ slug: planSlug });
+    const jobsLimit = plan?.limits?.jobsPost || 0;
+    const currentPosted = user.usage?.jobsPosted || 0;
+
+    if (currentPosted >= jobsLimit) {
+      return res.status(403).json({
+        success: false,
+        message: `Job posting limit reached for ${planSlug} plan (${jobsLimit} jobs max). Please upgrade your plan.`,
+      });
+    }
+
     const jobData = { ...req.body, posterId: req.user.id };
-    console.log(`Job Data: ${jobData}`);
     const newJob = new Job(jobData);
     await newJob.save();
 
@@ -66,8 +80,10 @@ exports.getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
 
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
+    if (!job || job.isFlagged) {
+      return res
+        .status(404)
+        .json({ message: "Job not found or has been removed." });
     }
     res.json(job);
   } catch (err) {
@@ -312,6 +328,7 @@ exports.getAppliedJobs = async (req, res) => {
     });
     res.json(applications);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json
+    ({ message: err.message });
   }
 };

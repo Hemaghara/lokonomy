@@ -11,6 +11,7 @@ import {
   FiX,
   FiUser,
   FiPackage,
+  FiFileText,
 } from "react-icons/fi";
 
 const AdminLayout = ({ children }) => {
@@ -31,6 +32,7 @@ const AdminLayout = ({ children }) => {
     { label: "Manage Users", path: "/admin/users", icon: FiUsers },
     { label: "Businesses", path: "/admin/businesses", icon: FiBriefcase },
     { label: "Marketplace", path: "/admin/marketplace", icon: FiPackage },
+    { label: "Jobs", path: "/admin/jobs", icon: FiFileText },
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 
@@ -83,13 +85,13 @@ const AdminLayout = ({ children }) => {
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
                 className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
-                  location.pathname === item.path
+                  location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/"))
                     ? "text-white bg-indigo-600 shadow-xl shadow-indigo-500/30"
                     : "text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
               >
                 <item.icon
-                  className={`text-xl ${location.pathname === item.path ? "scale-110" : "group-hover:scale-110"} transition-transform`}
+                  className={`text-xl ${location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/")) ? "scale-110" : "group-hover:scale-110"} transition-transform`}
                 />
                 <span className="text-sm tracking-wide">{item.label}</span>
               </button>
