@@ -14,6 +14,28 @@ exports.getAllBusinesses = async (req, res) => {
   }
 };
 
+exports.getBusinessDetails = async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id)
+      .populate("ownerId", "name email phone district taluka profilePic")
+      .lean();
+    
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    // Fetch products belonging to this business/owner if any
+    const products = await Product.find({ sellerId: business.ownerId }).limit(10);
+    
+    res.json({
+      ...business,
+      products
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.deleteContent = async (req, res) => {
   try {
     const { type, id } = req.params;

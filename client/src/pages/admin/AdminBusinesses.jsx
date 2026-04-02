@@ -122,7 +122,7 @@ const AdminBusinesses = () => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2">
-                   <button onClick={() => navigate(`/business/${biz._id}`)} className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                   <button onClick={() => navigate(`/admin/business/${biz._id}`)} className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
                       <FiExternalLink size={16} />
                    </button>
                    <button onClick={() => handleDelete(biz._id)} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg">
@@ -175,7 +175,7 @@ const AdminBusinesses = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
-                        <button onClick={() => navigate(`/business/${biz._id}`)} className="p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 rounded-lg">
+                        <button onClick={() => navigate(`/admin/business/${biz._id}`)} className="p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 rounded-lg">
                           <FiExternalLink size={17} />
                         </button>
                         <button onClick={() => handleDelete(biz._id)} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg">

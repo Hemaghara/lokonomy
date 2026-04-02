@@ -315,7 +315,7 @@ const AdminUserDetails = () => {
                           </p>
                         </div>
                         <button
-                          onClick={() => navigate(`/business/${b._id}`)}
+                          onClick={() => navigate(`/admin/business/${b._id}`)}
                           className="shrink-0 p-2 text-slate-500 hover:text-white hover:bg-indigo-600 rounded-lg transition-all"
                         >
                           <FiEye size={14} />

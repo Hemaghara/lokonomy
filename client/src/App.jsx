@@ -56,6 +56,7 @@ const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
 const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const AdminProductDetails = lazy(() => import("./pages/admin/AdminProductDetails"));
+const AdminBusinessDetails = lazy(() => import("./pages/admin/AdminBusinessDetails"));
 const ProtectedRouteAdmin = lazy(() => import("./components/ProtectedRouteAdmin"));
 
 function App() {
@@ -111,6 +112,7 @@ function App() {
                    <Route path="/admin/users" element={<AdminUsers />} />
                     <Route path="/admin/user/:id" element={<AdminUserDetails />} />
                     <Route path="/admin/businesses" element={<AdminBusinesses />} />
+                    <Route path="/admin/business/:id" element={<AdminBusinessDetails />} />
                     <Route path="/admin/marketplace" element={<AdminMarketplace />} />
                     <Route path="/admin/marketplace/product/:id" element={<AdminProductDetails />} />
                     <Route path="/admin/marketplace/order/:id" element={<AdminOrderDetails />} />

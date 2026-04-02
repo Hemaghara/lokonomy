@@ -420,19 +420,22 @@ const AdminProductDetails = () => {
                       <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest mb-0.5">
                         Name
                       </p>
-                      <p className="text-sm font-black text-white truncate">
-                        {seller.name || "—"}
-                      </p>
+                      <button 
+                        onClick={() => navigate(`/admin/user/${product.sellerId?._id}`)}
+                        className="text-sm font-black text-white hover:text-indigo-400 transition-colors truncate block text-left"
+                      >
+                        {seller.name || product.sellerId?.name || "—"}
+                      </button>
                     </div>
                     <div>
                       <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest mb-0.5">
                         Phone
                       </p>
                       <a
-                        href={`tel:${seller.contactNumber}`}
+                        href={`tel:${seller.contactNumber || product.sellerId?.phone}`}
                         className="text-sm font-bold text-indigo-400 hover:underline flex items-center gap-1.5 truncate"
                       >
-                        <FiPhone size={12} /> {seller.contactNumber || "—"}
+                        <FiPhone size={12} /> {seller.contactNumber || product.sellerId?.phone || "—"}
                       </a>
                     </div>
                     <div>

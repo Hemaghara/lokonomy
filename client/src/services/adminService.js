@@ -23,6 +23,7 @@ export const adminService = {
   getDashboardStats: () => adminApi.get("/dashboard-stats"),
   getUsers: () => adminApi.get("/users"),
   getBusinesses: () => adminApi.get("/businesses"),
+  getBusinessDetails: (id) => adminApi.get(`/business/${id}`),
   deleteContent: (type, id) => adminApi.delete(`/delete/${type}/${id}`),
   getUserDetails: (id) => adminApi.get(`/user/${id}`),
   updateUserStatus: (id, status) => adminApi.put(`/user/${id}/status`, { status }),
