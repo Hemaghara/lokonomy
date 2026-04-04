@@ -44,4 +44,11 @@ export const adminService = {
   toggleBanJob: (id) => adminApi.patch(`/jobs/${id}/ban`),
   toggleSuspendJob: (id) => adminApi.patch(`/jobs/${id}/suspend`),
   getJobPosterUsage: (userId) => adminApi.get(`/jobs/user/${userId}/usage`),
+  getStoriesFeedStats: () => adminApi.get("/stories-feed/stats"),
+  getStories: (params) => adminApi.get("/stories-feed/stories", { params }),
+  getFeeds: (params) => adminApi.get("/stories-feed/feeds", { params }),
+  deleteStory: (id) => adminApi.delete(`/stories-feed/story/${id}`),
+  deleteFeed: (id) => adminApi.delete(`/stories-feed/feed/${id}`),
+  getStoryDetails: (id) => adminApi.get(`/stories-feed/story/${id}`),
+  getFeedDetails: (id) => adminApi.get(`/stories-feed/feed/${id}`),
 };

@@ -58,6 +58,9 @@ const AdminProductDetails = lazy(() => import("./pages/admin/AdminProductDetails
 const AdminBusinessDetails = lazy(() => import("./pages/admin/AdminBusinessDetails"));
 const AdminJobs = lazy(() => import("./pages/admin/AdminJobs"));
 const AdminJobDetails = lazy(() => import("./pages/admin/AdminJobDetails"));
+const AdminStoriesFeed = lazy(() => import("./pages/admin/AdminStoriesFeed"));
+const AdminStoryDetails = lazy(() => import("./pages/admin/AdminStoryDetails"));
+const AdminFeedDetails = lazy(() => import("./pages/admin/AdminFeedDetails"));
 const ProtectedRouteAdmin = lazy(() => import("./components/ProtectedRouteAdmin"));
 
 function App() {
@@ -119,6 +122,9 @@ function App() {
                     <Route path="/admin/marketplace/order/:id" element={<AdminOrderDetails />} />
                     <Route path="/admin/jobs" element={<AdminJobs />} />
                     <Route path="/admin/jobs/:id" element={<AdminJobDetails />} />
+                    <Route path="/admin/stories-feed" element={<AdminStoriesFeed />} />
+                    <Route path="/admin/stories-feed/story/:id" element={<AdminStoryDetails />} />
+                    <Route path="/admin/stories-feed/feed/:id" element={<AdminFeedDetails />} />
                     <Route path="/admin/profile" element={<AdminProfile />} />
                  </Route>
                 

@@ -12,6 +12,7 @@ import {
   FiUser,
   FiPackage,
   FiFileText,
+  FiBookOpen,
 } from "react-icons/fi";
 
 const AdminLayout = ({ children }) => {
@@ -33,6 +34,7 @@ const AdminLayout = ({ children }) => {
     { label: "Businesses", path: "/admin/businesses", icon: FiBriefcase },
     { label: "Marketplace", path: "/admin/marketplace", icon: FiPackage },
     { label: "Jobs", path: "/admin/jobs", icon: FiFileText },
+    { label: "Stories & Feed", path: "/admin/stories-feed", icon: FiBookOpen },
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 
