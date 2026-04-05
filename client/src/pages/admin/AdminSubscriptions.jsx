@@ -420,7 +420,7 @@ const AdminSubscriptions = () => {
 
           {activeTab === "revenue" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-slate-900/50 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-md">
+              <div className="bg-slate-900/50 p-6 md:p-10 rounded-4xl md:rounded-[3rem] border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-md">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                   <h3 className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center text-indigo-400">
@@ -589,7 +589,7 @@ const AdminSubscriptions = () => {
 
           {activeTab === "failed" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-slate-950/40 rounded-[2rem] border border-white/5 overflow-hidden backdrop-blur-xl shadow-2xl">
+              <div className="bg-slate-950/40 rounded-4xl border border-white/5 overflow-hidden backdrop-blur-xl shadow-2xl">
                 <div className="p-6 md:p-8 bg-slate-900/50 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <h3 className="text-xl font-black text-white">
                     Payment <span className="text-rose-400">Failures</span>
