@@ -8,6 +8,7 @@ const adminContentRoutes = require("./admin/adminContent");
 const adminMarketplaceRoutes = require("./admin/adminMarketplace");
 const adminJobRoutes = require("./admin/adminJobs");
 const adminStoriesFeedRoutes = require("./admin/adminStoriesFeed");
+const adminSubscriptionRoutes = require("./admin/adminSubscriptions");
 
 router.use("/", adminAuthRoutes);
 router.use("/", adminUserRoutes);
@@ -16,5 +17,6 @@ router.use("/", adminContentRoutes);
 router.use("/", adminMarketplaceRoutes);
 router.use("/", adminJobRoutes);
 router.use("/", adminStoriesFeedRoutes);
+router.use("/", adminSubscriptionRoutes);
 
 module.exports = router;

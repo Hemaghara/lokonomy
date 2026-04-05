@@ -231,6 +231,12 @@ const UpgradePlan = () => {
           ondismiss: () => {
             setLoading(false);
             setSelectedPlan(null);
+            subscriptionService.logFailedPayment({
+              razorpay_order_id: orderId,
+              plan: planKey,
+              durationMonths: selectedDuration,
+              failureReason: "Payment window closed by user",
+            });
           },
         },
       };
@@ -238,6 +244,12 @@ const UpgradePlan = () => {
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (response) => {
         toast.error("Payment failed: " + response.error.description);
+        subscriptionService.logFailedPayment({
+          razorpay_order_id: orderId,
+          plan: planKey,
+          durationMonths: selectedDuration,
+          failureReason: response.error.description || "Payment failed",
+        });
       });
       rzp.open();
     } catch (err) {

@@ -61,6 +61,7 @@ const AdminJobDetails = lazy(() => import("./pages/admin/AdminJobDetails"));
 const AdminStoriesFeed = lazy(() => import("./pages/admin/AdminStoriesFeed"));
 const AdminStoryDetails = lazy(() => import("./pages/admin/AdminStoryDetails"));
 const AdminFeedDetails = lazy(() => import("./pages/admin/AdminFeedDetails"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
 const ProtectedRouteAdmin = lazy(() => import("./components/ProtectedRouteAdmin"));
 
 function App() {
@@ -125,6 +126,7 @@ function App() {
                     <Route path="/admin/stories-feed" element={<AdminStoriesFeed />} />
                     <Route path="/admin/stories-feed/story/:id" element={<AdminStoryDetails />} />
                     <Route path="/admin/stories-feed/feed/:id" element={<AdminFeedDetails />} />
+                    <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
                     <Route path="/admin/profile" element={<AdminProfile />} />
                  </Route>
                 

@@ -5,5 +5,6 @@ export const subscriptionService = {
   createOrder: (plan, durationMonths) =>
     api.post("/subscription/create-order", { plan, durationMonths }),
   verifyPayment: (data) => api.post("/subscription/verify-payment", data),
+  logFailedPayment: (data) => api.post("/subscription/log-failed-payment", data),
   getStatus: () => api.get("/subscription/status"),
 };

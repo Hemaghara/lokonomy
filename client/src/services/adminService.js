@@ -51,4 +51,8 @@ export const adminService = {
   deleteFeed: (id) => adminApi.delete(`/stories-feed/feed/${id}`),
   getStoryDetails: (id) => adminApi.get(`/stories-feed/story/${id}`),
   getFeedDetails: (id) => adminApi.get(`/stories-feed/feed/${id}`),
+  getSubscriptionTransactions: (params) => adminApi.get("/subscriptions/transactions", { params }),
+  getRevenueData: (period) => adminApi.get("/subscriptions/revenue", { params: { period } }),
+  getFailedPayments: (params) => adminApi.get("/subscriptions/failed-payments", { params }),
+  getFinancialReport: (period) => adminApi.get("/subscriptions/financial-report", { params: { period } }),
 };

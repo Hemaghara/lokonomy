@@ -2,6 +2,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const User = require("../models/User");
 const Plan = require("../models/Plan");
+const SubscriptionTransaction = require("../models/SubscriptionTransaction");
 const { getPlanLimits } = require("../config/plans");
 const { getActivePlan } = require("../middleware/subscriptionMiddleware");
 
@@ -119,6 +120,16 @@ exports.createOrder = async (req, res) => {
         "subscription.razorpayOrderId": order.id,
       });
 
+      // Log pending transaction
+      await SubscriptionTransaction.create({
+        user: req.user.id,
+        plan,
+        durationMonths: parseInt(durationMonths),
+        amount: amount,
+        razorpayOrderId: order.id,
+        status: "pending",
+      });
+
       res.json({
         success: true,
         orderId: order.id,
@@ -195,6 +206,15 @@ exports.verifyPayment = async (req, res) => {
         },
       },
       { new: true },
+    );
+
+    // Update transaction record to success
+    await SubscriptionTransaction.findOneAndUpdate(
+      { razorpayOrderId: razorpay_order_id },
+      {
+        status: "success",
+        razorpayPaymentId: razorpay_payment_id,
+      },
     );
 
     if (updatedUser.referredBy) {
@@ -301,6 +321,43 @@ exports.cancelSubscription = async (req, res) => {
         "Subscription cancellation is not allowed. Please contact support for assistance.",
     });
   } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Log failed payment
+exports.logFailedPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, plan, durationMonths, failureReason } = req.body;
+
+    const planDoc = await Plan.findOne({ slug: plan });
+    const amount = planDoc?.prices?.[durationMonths?.toString()] || 0;
+
+    // Update existing pending transaction or create new
+    const existing = await SubscriptionTransaction.findOneAndUpdate(
+      { razorpayOrderId: razorpay_order_id },
+      {
+        status: "failed",
+        failureReason: failureReason || "Payment failed or cancelled by user",
+      },
+      { new: true },
+    );
+
+    if (!existing) {
+      await SubscriptionTransaction.create({
+        user: req.user.id,
+        plan: plan || "silver",
+        durationMonths: parseInt(durationMonths) || 3,
+        amount,
+        razorpayOrderId: razorpay_order_id,
+        status: "failed",
+        failureReason: failureReason || "Payment failed or cancelled by user",
+      });
+    }
+
+    res.json({ success: true, message: "Failed payment logged" });
+  } catch (err) {
+    console.error("logFailedPayment error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
