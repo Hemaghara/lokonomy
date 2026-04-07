@@ -15,6 +15,7 @@ import {
   FiBookOpen,
   FiZap,
   FiDollarSign,
+  FiMessageSquare,
 } from "react-icons/fi";
 
 const AdminLayout = ({ children }) => {
@@ -37,8 +38,13 @@ const AdminLayout = ({ children }) => {
     { label: "Marketplace", path: "/admin/marketplace", icon: FiPackage },
     { label: "Jobs", path: "/admin/jobs", icon: FiFileText },
     { label: "Stories & Feed", path: "/admin/stories-feed", icon: FiBookOpen },
+    { label: "Reviews", path: "/admin/reviews", icon: FiMessageSquare },
     { label: "Push Manager", path: "/admin/notifications", icon: FiZap },
-    { label: "Revenue & Subs", path: "/admin/subscriptions", icon: FiDollarSign },
+    {
+      label: "Revenue & Subs",
+      path: "/admin/subscriptions",
+      icon: FiDollarSign,
+    },
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 
@@ -91,7 +97,9 @@ const AdminLayout = ({ children }) => {
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
                 className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
-                  location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/"))
+                  location.pathname === item.path ||
+                  (item.path !== "/admin/dashboard" &&
+                    location.pathname.startsWith(item.path + "/"))
                     ? "text-white bg-indigo-600 shadow-xl shadow-indigo-500/30"
                     : "text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}

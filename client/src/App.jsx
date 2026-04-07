@@ -54,22 +54,37 @@ const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
 const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
 const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
-const AdminProductDetails = lazy(() => import("./pages/admin/AdminProductDetails"));
-const AdminBusinessDetails = lazy(() => import("./pages/admin/AdminBusinessDetails"));
+const AdminProductDetails = lazy(
+  () => import("./pages/admin/AdminProductDetails"),
+);
+const AdminBusinessDetails = lazy(
+  () => import("./pages/admin/AdminBusinessDetails"),
+);
 const AdminJobs = lazy(() => import("./pages/admin/AdminJobs"));
 const AdminJobDetails = lazy(() => import("./pages/admin/AdminJobDetails"));
 const AdminStoriesFeed = lazy(() => import("./pages/admin/AdminStoriesFeed"));
 const AdminStoryDetails = lazy(() => import("./pages/admin/AdminStoryDetails"));
 const AdminFeedDetails = lazy(() => import("./pages/admin/AdminFeedDetails"));
-const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
-const AdminPushNotifications = lazy(() => import("./pages/admin/AdminPushNotifications"));
-const ProtectedRouteAdmin = lazy(() => import("./components/ProtectedRouteAdmin"));
+const AdminSubscriptions = lazy(
+  () => import("./pages/admin/AdminSubscriptions"),
+);
+const AdminPushNotifications = lazy(
+  () => import("./pages/admin/AdminPushNotifications"),
+);
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminReviewAnalytics = lazy(
+  () => import("./pages/admin/AdminReviewAnalytics"),
+);
+const ProtectedRouteAdmin = lazy(
+  () => import("./components/ProtectedRouteAdmin"),
+);
 
 function App() {
   useEffect(() => {
-    const wakeupURL = import.meta.env.MODE === "development" 
-      ? "http://localhost:5000/" 
-      : "https://lokonomy.onrender.com/";
+    const wakeupURL =
+      import.meta.env.MODE === "development"
+        ? "http://localhost:5000/"
+        : "https://lokonomy.onrender.com/";
     fetch(wakeupURL)
       .then(() => console.log("Backend awake"))
       .catch(() => console.log("Backend not awake"));
@@ -104,7 +119,13 @@ function App() {
             }}
           />
           <Router>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-dark-bg text-gray-300">Loading Lokonomy...</div>}>
+            <Suspense
+              fallback={
+                <div className="min-h-screen flex items-center justify-center bg-dark-bg text-gray-300">
+                  Loading Lokonomy...
+                </div>
+              }
+            >
               <Routes>
                 <Route element={<AuthLayout />}>
                   <Route path="/" element={<Login />} />
@@ -114,24 +135,62 @@ function App() {
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/register" element={<AdminRegister />} />
                 <Route element={<ProtectedRouteAdmin />}>
-                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                   <Route path="/admin/users" element={<AdminUsers />} />
-                    <Route path="/admin/user/:id" element={<AdminUserDetails />} />
-                    <Route path="/admin/businesses" element={<AdminBusinesses />} />
-                    <Route path="/admin/business/:id" element={<AdminBusinessDetails />} />
-                    <Route path="/admin/marketplace" element={<AdminMarketplace />} />
-                    <Route path="/admin/marketplace/product/:id" element={<AdminProductDetails />} />
-                    <Route path="/admin/marketplace/order/:id" element={<AdminOrderDetails />} />
-                    <Route path="/admin/jobs" element={<AdminJobs />} />
-                    <Route path="/admin/jobs/:id" element={<AdminJobDetails />} />
-                    <Route path="/admin/stories-feed" element={<AdminStoriesFeed />} />
-                    <Route path="/admin/stories-feed/story/:id" element={<AdminStoryDetails />} />
-                    <Route path="/admin/stories-feed/feed/:id" element={<AdminFeedDetails />} />
-                    <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-                    <Route path="/admin/notifications" element={<AdminPushNotifications />} />
-                    <Route path="/admin/profile" element={<AdminProfile />} />
-                 </Route>
-                
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route
+                    path="/admin/user/:id"
+                    element={<AdminUserDetails />}
+                  />
+                  <Route
+                    path="/admin/businesses"
+                    element={<AdminBusinesses />}
+                  />
+                  <Route
+                    path="/admin/business/:id"
+                    element={<AdminBusinessDetails />}
+                  />
+                  <Route
+                    path="/admin/marketplace"
+                    element={<AdminMarketplace />}
+                  />
+                  <Route
+                    path="/admin/marketplace/product/:id"
+                    element={<AdminProductDetails />}
+                  />
+                  <Route
+                    path="/admin/marketplace/order/:id"
+                    element={<AdminOrderDetails />}
+                  />
+                  <Route path="/admin/jobs" element={<AdminJobs />} />
+                  <Route path="/admin/jobs/:id" element={<AdminJobDetails />} />
+                  <Route
+                    path="/admin/stories-feed"
+                    element={<AdminStoriesFeed />}
+                  />
+                  <Route
+                    path="/admin/stories-feed/story/:id"
+                    element={<AdminStoryDetails />}
+                  />
+                  <Route
+                    path="/admin/stories-feed/feed/:id"
+                    element={<AdminFeedDetails />}
+                  />
+                  <Route
+                    path="/admin/subscriptions"
+                    element={<AdminSubscriptions />}
+                  />
+                  <Route
+                    path="/admin/notifications"
+                    element={<AdminPushNotifications />}
+                  />
+                  <Route path="/admin/reviews" element={<AdminReviews />} />
+                  <Route
+                    path="/admin/reviews/analytics/:businessId"
+                    element={<AdminReviewAnalytics />}
+                  />
+                  <Route path="/admin/profile" element={<AdminProfile />} />
+                </Route>
+
                 <Route element={<MainLayout />}>
                   <Route path="/home" element={<Home />} />
                   <Route path="/explore" element={<ExploreServices />} />
@@ -141,7 +200,10 @@ function App() {
                     element={<SubCategories />}
                   />
                   <Route path="/market" element={<Market />} />
-                  <Route path="/market/product/:id" element={<ProductDetails />} />
+                  <Route
+                    path="/market/product/:id"
+                    element={<ProductDetails />}
+                  />
                   <Route
                     path="/services/:category/:subcategory"
                     element={<Services />}
@@ -160,7 +222,10 @@ function App() {
                     <Route path="/job-dashboard" element={<JobDashboard />} />
                     <Route path="/edit-job/:id" element={<EditJob />} />
                     <Route path="/add-business" element={<AddBusiness />} />
-                    <Route path="/edit-business/:id" element={<EditBusiness />} />
+                    <Route
+                      path="/edit-business/:id"
+                      element={<EditBusiness />}
+                    />
                     <Route path="/market/sell" element={<SellProduct />} />
                     <Route
                       path="/market/product/:id/checkout"
@@ -171,7 +236,10 @@ function App() {
                     <Route path="/stories/post" element={<PostStory />} />
                     <Route path="/feed/post" element={<PostFeed />} />
                     <Route path="/my-orders" element={<MyOrders />} />
-                    <Route path="/sales-management" element={<SellerOrders />} />
+                    <Route
+                      path="/sales-management"
+                      element={<SellerOrders />}
+                    />
                     <Route path="/my-chats" element={<MyChats />} />
                     <Route path="/upgrade-plan" element={<UpgradePlan />} />
                     <Route path="/wishlist" element={<Wishlist />} />

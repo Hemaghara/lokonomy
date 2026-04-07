@@ -58,4 +58,9 @@ export const adminService = {
   sendGlobalNotification: (data) => adminApi.post("/notifications/send-all", data),
   sendPlanNotification: (data) => adminApi.post("/notifications/send-by-plan", data),
   getNotificationHistory: () => adminApi.get("/notifications/history"),
+  getBusinessReviews: (params) => adminApi.get("/reviews/business", { params }),
+  getProductReviews: (params) => adminApi.get("/reviews/product", { params }),
+  deleteBusinessReview: (businessId, reviewId) => adminApi.delete(`/reviews/business/${businessId}/${reviewId}`),
+  deleteProductReview: (productId, reviewId) => adminApi.delete(`/reviews/product/${productId}/${reviewId}`),
+  getBusinessReviewAnalytics: (businessId) => adminApi.get(`/reviews/analytics/${businessId}`),
 };
