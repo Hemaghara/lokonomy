@@ -55,4 +55,7 @@ export const adminService = {
   getRevenueData: (period) => adminApi.get("/subscriptions/revenue", { params: { period } }),
   getFailedPayments: (params) => adminApi.get("/subscriptions/failed-payments", { params }),
   getFinancialReport: (period) => adminApi.get("/subscriptions/financial-report", { params: { period } }),
+  sendGlobalNotification: (data) => adminApi.post("/notifications/send-all", data),
+  sendPlanNotification: (data) => adminApi.post("/notifications/send-by-plan", data),
+  getNotificationHistory: () => adminApi.get("/notifications/history"),
 };
