@@ -359,7 +359,7 @@ const StoryDetails = () => {
             </div>
 
             <div className={`${card} p-6 relative overflow-hidden`}>
-              <div className="absolute left-0 top-6 bottom-6 w-0.5 bg-linear-to-b from-violet-500/60 via-violet-500/20 to-transparent rounded-full" />
+              <div className="absolute left-0 top-6 bottom-6 w-0.5  to-transparent rounded-full" />
               <p className="text-slate-400 text-sm md:text-base leading-[1.9] whitespace-pre-wrap pl-5">
                 {story.content}
               </p>

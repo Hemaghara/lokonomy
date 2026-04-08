@@ -329,7 +329,7 @@ const BusinessDetails = () => {
                 ${
                   activeTab === tab.id
                     ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
-                    : "text-slate-500 hover:text-slate-300"
+                    : "text-slate-300 hover:text-slate-300"
                 }`}
             >
               <span className="text-base">{tab.icon}</span>
@@ -422,7 +422,7 @@ const BusinessDetails = () => {
                       business.youtubeLink ||
                       business.twitterLink) && (
                       <div className="mt-5 pt-5 border-t border-[#1f2a3d]">
-                        <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest mb-3">
+                        <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest mb-3">
                           Follow Us
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -473,7 +473,7 @@ const BusinessDetails = () => {
                     {business.photos?.length > 0 && (
                       <div className="mt-5 pt-5 border-t border-[#1f2a3d]">
                         <div className="flex items-center justify-between mb-3">
-                          <p className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest">
+                          <p className="text-[10px] text-slate-00 font-semibold uppercase tracking-widest">
                             Gallery Preview
                           </p>
                           <button
@@ -568,7 +568,7 @@ const BusinessDetails = () => {
                     </h4>
                     <div className="space-y-2 text-sm mb-5">
                       {(business.locationAddress || business.address) && (
-                        <p className="text-slate-400 leading-relaxed font-medium">
+                        <p className="text-slate-300 leading-relaxed font-medium">
                           {business.locationAddress || business.address}
                         </p>
                       )}
@@ -607,7 +607,7 @@ const BusinessDetails = () => {
                         </p>
                       )}
 
-                      <p className="text-slate-500 mt-3 pt-3 border-t border-[#1f2a3d]/50">
+                      <p className="text-slate-300 mt-3 pt-3 border-t border-[#1f2a3d]/50">
                         {business.state}
                         {business.pincode ? ` – ${business.pincode}` : ""}
                       </p>
