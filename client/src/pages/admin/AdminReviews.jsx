@@ -20,7 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const AdminReviews = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("business"); // 'business' or 'product'
+  const [activeTab, setActiveTab] = useState("business"); 
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

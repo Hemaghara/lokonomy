@@ -67,4 +67,7 @@ export const adminService = {
   getLoyaltyBalances: (params) => adminApi.get("/rewards/loyalty-balances", { params }),
   updateLoyaltyPoints: (userId, data) => adminApi.put(`/rewards/loyalty-balances/${userId}`, data),
   getRedemptionHistory: (params) => adminApi.get("/rewards/redemption-history", { params }),
+  getAllReferrals: (params) => adminApi.get("/referrals/all", { params }),
+  getTopReferrers: () => adminApi.get("/referrals/top"),
+  getReferralLeaderboard: (params) => adminApi.get("/referrals/leaderboard", { params }),
 };

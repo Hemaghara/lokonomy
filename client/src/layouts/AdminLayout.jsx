@@ -41,6 +41,7 @@ const AdminLayout = ({ children }) => {
     { label: "Stories & Feed", path: "/admin/stories-feed", icon: FiBookOpen },
     { label: "Reviews", path: "/admin/reviews", icon: FiMessageSquare },
     { label: "Rewards & Loyalty", path: "/admin/rewards", icon: FiGift },
+    { label: "Referral Management", path: "/admin/referrals", icon: FiUsers },
     { label: "Push Manager", path: "/admin/notifications", icon: FiZap },
     {
       label: "Revenue & Subs",
