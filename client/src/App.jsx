@@ -75,6 +75,7 @@ const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminReviewAnalytics = lazy(
   () => import("./pages/admin/AdminReviewAnalytics"),
 );
+const AdminRewards = lazy(() => import("./pages/admin/AdminRewards"));
 const ProtectedRouteAdmin = lazy(
   () => import("./components/ProtectedRouteAdmin"),
 );
@@ -188,6 +189,7 @@ function App() {
                     path="/admin/reviews/analytics/:businessId"
                     element={<AdminReviewAnalytics />}
                   />
+                  <Route path="/admin/rewards" element={<AdminRewards />} />
                   <Route path="/admin/profile" element={<AdminProfile />} />
                 </Route>
 

@@ -63,4 +63,8 @@ export const adminService = {
   deleteBusinessReview: (businessId, reviewId) => adminApi.delete(`/reviews/business/${businessId}/${reviewId}`),
   deleteProductReview: (productId, reviewId) => adminApi.delete(`/reviews/product/${productId}/${reviewId}`),
   getBusinessReviewAnalytics: (businessId) => adminApi.get(`/reviews/analytics/${businessId}`),
+  getRewardsStats: () => adminApi.get("/rewards/stats"),
+  getLoyaltyBalances: (params) => adminApi.get("/rewards/loyalty-balances", { params }),
+  updateLoyaltyPoints: (userId, data) => adminApi.put(`/rewards/loyalty-balances/${userId}`, data),
+  getRedemptionHistory: (params) => adminApi.get("/rewards/redemption-history", { params }),
 };

@@ -16,6 +16,7 @@ import {
   FiZap,
   FiDollarSign,
   FiMessageSquare,
+  FiGift,
 } from "react-icons/fi";
 
 const AdminLayout = ({ children }) => {
@@ -39,6 +40,7 @@ const AdminLayout = ({ children }) => {
     { label: "Jobs", path: "/admin/jobs", icon: FiFileText },
     { label: "Stories & Feed", path: "/admin/stories-feed", icon: FiBookOpen },
     { label: "Reviews", path: "/admin/reviews", icon: FiMessageSquare },
+    { label: "Rewards & Loyalty", path: "/admin/rewards", icon: FiGift },
     { label: "Push Manager", path: "/admin/notifications", icon: FiZap },
     {
       label: "Revenue & Subs",

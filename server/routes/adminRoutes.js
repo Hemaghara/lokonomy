@@ -12,6 +12,7 @@ const adminSubscriptionRoutes = require("./admin/adminSubscriptions");
 const adminNotificationRoutes = require("./admin/adminNotifications");
 
 const adminReviewRoutes = require("./admin/adminReviews");
+const adminRewardsRoutes = require("./admin/adminRewards");
 
 router.use("/", adminAuthRoutes);
 router.use("/", adminUserRoutes);
@@ -22,6 +23,7 @@ router.use("/", adminJobRoutes);
 router.use("/", adminStoriesFeedRoutes);
 router.use("/", adminSubscriptionRoutes);
 router.use("/", adminReviewRoutes);
+router.use("/rewards", adminRewardsRoutes);
 router.use("/notifications", adminNotificationRoutes);
 
 module.exports = router;
