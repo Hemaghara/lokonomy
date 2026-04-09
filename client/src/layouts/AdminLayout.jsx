@@ -17,6 +17,7 @@ import {
   FiDollarSign,
   FiMessageSquare,
   FiGift,
+  FiPieChart,
 } from "react-icons/fi";
 
 const AdminLayout = ({ children }) => {
@@ -48,6 +49,7 @@ const AdminLayout = ({ children }) => {
       path: "/admin/subscriptions",
       icon: FiDollarSign,
     },
+    { label: "Analytics & Reports", path: "/admin/analytics", icon: FiPieChart },
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 

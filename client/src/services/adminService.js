@@ -70,4 +70,9 @@ export const adminService = {
   getAllReferrals: (params) => adminApi.get("/referrals/all", { params }),
   getTopReferrers: () => adminApi.get("/referrals/top"),
   getReferralLeaderboard: (params) => adminApi.get("/referrals/leaderboard", { params }),
+  getAnalyticsOverview: () => adminApi.get("/analytics/overview"),
+  getUserGrowth: (period) => adminApi.get("/analytics/users", { params: { period } }),
+  getBusinessGrowth: (period) => adminApi.get("/analytics/businesses", { params: { period } }),
+  getJobTrends: (period) => adminApi.get("/analytics/jobs", { params: { period } }),
+  getRevenueTrends: (period) => adminApi.get("/analytics/revenue", { params: { period } }),
 };
