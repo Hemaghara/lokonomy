@@ -18,42 +18,48 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const getRankStyle = (i) => {
   if (i === 0)
-    return "bg-gradient-to-br from-yellow-400 to-amber-600 text-white shadow-lg shadow-yellow-500/20 scale-110 rotate-3";
+    return "bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg shadow-yellow-500/30";
   if (i === 1)
-    return "bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900 shadow-lg shadow-slate-100/10 scale-105";
+    return "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900 shadow-lg";
   if (i === 2)
-    return "bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-lg shadow-amber-900/10";
-  return "bg-slate-800/80 text-slate-400 border border-white/5";
+    return "bg-gradient-to-br from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-700/20";
+  return "bg-slate-800 text-slate-400 border border-white/5";
 };
 
 const getRankBadge = (i) => {
-  if (i === 0) return "bg-yellow-500 text-black";
+  if (i === 0) return "bg-yellow-400 text-black";
   if (i === 1) return "bg-slate-300 text-black";
   if (i === 2) return "bg-amber-600 text-white";
-  return "bg-slate-800 text-slate-500";
+  return "bg-slate-800 text-slate-400";
 };
 
 const STAT_CONFIG = [
   {
     label: "Active Referral Codes",
     icon: FiCode,
-    glow: "bg-indigo-500/5 group-hover:bg-indigo-500/10",
-    labelCls: "text-indigo-400/70",
-    iconWrap: "bg-indigo-500/10 border-indigo-500/10 text-indigo-400",
+    accent: "indigo",
+    gradient: "from-indigo-500/20 to-indigo-600/5",
+    border: "border-indigo-500/20",
+    iconBg: "bg-indigo-500/15 text-indigo-400",
+    valueCls: "text-indigo-300",
   },
   {
-    label: "Growth Impact (Referrals)",
+    label: "Growth Impact",
     icon: FiActivity,
-    glow: "bg-emerald-500/5 group-hover:bg-emerald-500/10",
-    labelCls: "text-emerald-400/70",
-    iconWrap: "bg-emerald-500/10 border-emerald-500/10 text-emerald-400",
+    accent: "emerald",
+    gradient: "from-emerald-500/20 to-emerald-600/5",
+    border: "border-emerald-500/20",
+    iconBg: "bg-emerald-500/15 text-emerald-400",
+    valueCls: "text-emerald-300",
   },
   {
     label: "Platform Conversion",
     icon: FiCpu,
-    glow: "bg-amber-500/5 group-hover:bg-amber-500/10",
-    labelCls: "text-amber-400/70",
-    iconWrap: "bg-amber-500/10 border-amber-500/10 text-amber-400",
+    accent: "violet",
+    gradient: "from-violet-500/20 to-violet-600/5",
+    border: "border-violet-500/20",
+    iconBg: "bg-violet-500/15 text-violet-400",
+    valueCls: "text-violet-300",
   },
 ];
 
@@ -62,6 +68,16 @@ const TABS = [
   { id: "top", icon: FiTrendingUp, label: "Top Referrers" },
   { id: "leaderboard", icon: FiAward, label: "Leaderboard" },
 ];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.32, delay: i * 0.06, ease: "easeOut" },
+  }),
+};
+
 const AdminReferrals = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [data, setData] = useState([]);
@@ -116,128 +132,124 @@ const AdminReferrals = () => {
     `${Math.round((totalReferralsMade / (totalCount || 1)) * 100)}%`,
   ];
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-  };
-  const itemVariants = {
-    hidden: { y: 16, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.35 } },
-  };
-
   const absIdx = (localIdx) =>
     (page - 1) * (activeTab === "leaderboard" ? 6 : 10) + localIdx;
 
   return (
     <AdminLayout>
-      <div className="space-y-6 md:space-y-8 xl:space-y-10">
-        <header className="flex flex-col gap-4 md:gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="space-y-2 min-w-0">
-            <h1 className="flex flex-wrap items-center gap-3 text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
-              <span className="inline-flex shrink-0 items-center justify-center p-3 sm:p-3.5 bg-indigo-600/10 rounded-2xl border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
-                <FiUsers className="text-indigo-500 text-base sm:text-lg" />
-              </span>
-              Referral&nbsp;
-              <span className="text-indigo-500">Analytics</span>
-            </h1>
-            <p className="flex flex-wrap items-center gap-2 text-slate-400 text-xs sm:text-sm font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              Real-time community growth tracking &amp; leaderboard management
+      <div className="min-h-screen px-3 py-4 sm:px-5 sm:py-6 lg:px-8 lg:py-8 space-y-5 sm:space-y-6 lg:space-y-8">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeUp}
+          className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-1.5">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600/15 border border-indigo-500/25 flex items-center justify-center shrink-0">
+                <FiUsers className="text-indigo-400 text-base sm:text-lg" />
+              </div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-none">
+                Referral <span className="text-indigo-400">Analytics</span>
+              </h1>
+            </div>
+            <p className="flex items-center gap-2 text-slate-400 text-xs sm:text-sm ml-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              Real-time community growth tracking
             </p>
           </div>
 
-          <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-white/5 backdrop-blur-xl shadow-xl w-full xl:w-auto shrink-0">
+          <div className="flex bg-slate-900 border border-white/8 rounded-xl p-1 gap-1 w-full sm:w-auto">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={[
-                  "flex-1 xl:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5",
-                  "rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest",
-                  "transition-all duration-300 whitespace-nowrap",
+                  "flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg",
+                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-200",
                   activeTab === tab.id
-                    ? "bg-indigo-600 text-white shadow-[0_0_18px_rgba(79,70,229,0.4)] scale-[1.03]"
-                    : "text-slate-500 hover:text-slate-200 hover:bg-white/5 active:scale-95",
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/5",
                 ].join(" ")}
               >
-                <tab.icon size={13} className="shrink-0" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <tab.icon size={12} className="shrink-0" />
+                <span className="hidden xs:inline sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
-        </header>
+        </motion.div>
 
         {activeTab === "all" && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5"
-          >
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {STAT_CONFIG.map((cfg, i) => (
               <motion.div
                 key={i}
-                variants={itemVariants}
-                className="relative overflow-hidden group bg-slate-900/40 border border-white/5 p-5 sm:p-6 xl:p-8 rounded-3xl backdrop-blur-3xl hover:border-white/10 transition-all duration-500 shadow-2xl"
+                custom={i}
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                className={[
+                  "relative overflow-hidden rounded-2xl p-3.5 sm:p-5 lg:p-6",
+                  "bg-linear-to-br border",
+                  cfg.gradient,
+                  cfg.border,
+                  "backdrop-blur-xl",
+                ].join(" ")}
               >
                 <div
-                  className={[
-                    "absolute top-0 right-0 w-28 h-28 blur-[70px] transition-all duration-500 rounded-full",
-                    cfg.glow,
-                  ].join(" ")}
-                />
-                <div className="relative z-10 flex items-start justify-between gap-4">
-                  <div className="space-y-2 min-w-0">
-                    <p
-                      className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] truncate ${cfg.labelCls}`}
-                    >
-                      {cfg.label}
-                    </p>
-                    <p className="text-3xl sm:text-4xl font-black text-white tracking-tighter">
-                      {statValues[i]}
-                    </p>
-                  </div>
-                  <div
-                    className={[
-                      "shrink-0 p-3 sm:p-3.5 rounded-2xl border shadow-inner",
-                      "group-hover:scale-110 group-hover:rotate-12 transition-all duration-500",
-                      cfg.iconWrap,
-                    ].join(" ")}
-                  >
-                    <cfg.icon size={20} />
-                  </div>
+                  className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center mb-2.5 sm:mb-3 ${cfg.iconBg}`}
+                >
+                  <cfg.icon size={14} className="sm:w-4 sm:h-4" />
                 </div>
+                <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 leading-tight line-clamp-2">
+                  {cfg.label}
+                </p>
+                <p
+                  className={`text-xl sm:text-2xl lg:text-3xl font-black tracking-tight ${cfg.valueCls}`}
+                >
+                  {statValues[i]}
+                </p>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         )}
 
-        <div className="bg-slate-900/40 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-3xl shadow-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+          className="bg-slate-900/60 border border-white/8 rounded-2xl overflow-hidden backdrop-blur-xl"
+        >
           {loading && (
-            <div className="flex flex-col items-center justify-center gap-5 py-24 sm:py-32">
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-                <div className="absolute inset-0 border-[5px] sm:border-[6px] border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin" />
-
-                <div className="absolute inset-[18%] border-4 border-indigo-400/20 border-b-indigo-400 rounded-full animate-spin-slow" />
+            <div className="flex flex-col items-center justify-center gap-4 py-24 sm:py-32">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16">
+                <div className="absolute inset-0 border-[3px] sm:border-4 border-indigo-500/15 border-t-indigo-500 rounded-full animate-spin" />
+                <div
+                  className="absolute inset-[20%] border-2 border-indigo-400/20 border-b-indigo-400 rounded-full animate-spin"
+                  style={{
+                    animationDuration: "0.8s",
+                    animationDirection: "reverse",
+                  }}
+                />
               </div>
-              <p className="text-slate-500 text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] animate-pulse">
-                Synchronizing data…
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] animate-pulse">
+                Syncing data…
               </p>
             </div>
           )}
 
           {!loading && data.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-6 sm:gap-8 py-20 sm:py-32 px-6 text-center">
-              <div className="flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 bg-slate-800/20 rounded-3xl border border-white/5 shadow-inner text-slate-700 animate-bounce">
-                <FiUsers size={44} />
+            <div className="flex flex-col items-center justify-center gap-5 py-20 sm:py-28 px-6 text-center">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-800/60 rounded-2xl border border-white/6 flex items-center justify-center text-slate-600">
+                <FiUsers size={32} />
               </div>
-              <div className="space-y-3 max-w-sm">
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                  System is Idle
+              <div className="space-y-2 max-w-xs">
+                <h3 className="text-lg sm:text-xl font-bold text-white">
+                  No Data Yet
                 </h3>
-                <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                  None of your users have initiated the referral program yet.
-                  Insights will appear here once growth triggers.
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  No users have initiated the referral program. Insights appear
+                  once growth triggers.
                 </p>
               </div>
             </div>
@@ -246,27 +258,22 @@ const AdminReferrals = () => {
           {!loading && data.length > 0 && (
             <>
               <div className="hidden lg:block overflow-x-auto">
-                <table
-                  className="w-full text-left border-collapse"
-                  style={{ minWidth: "640px" }}
-                >
+                <table className="w-full text-left" style={{ minWidth: 620 }}>
                   <thead>
-                    <tr className="border-b border-white/5 bg-white/1.5">
-                      {["Identity", "Referral Logic", "Growth Performance"].map(
-                        (h, i) => (
-                          <th
-                            key={h}
-                            className={[
-                              "px-7 xl:px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500",
-                              i === 1 ? "text-center" : "",
-                            ].join(" ")}
-                          >
-                            {h}
-                          </th>
-                        ),
-                      )}
+                    <tr className="border-b border-white/6">
+                      {["User", "Referral Code", "Performance"].map((h, i) => (
+                        <th
+                          key={h}
+                          className={[
+                            "px-6 xl:px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500",
+                            i === 1 ? "text-center" : "",
+                          ].join(" ")}
+                        >
+                          {h}
+                        </th>
+                      ))}
                       {activeTab === "leaderboard" && (
-                        <th className="px-7 xl:px-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">
+                        <th className="px-6 xl:px-8 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">
                           Rank
                         </th>
                       )}
@@ -277,29 +284,30 @@ const AdminReferrals = () => {
                       {data.map((item, idx) => (
                         <motion.tr
                           key={item._id}
-                          variants={itemVariants}
+                          custom={idx}
+                          variants={fadeUp}
                           initial="hidden"
                           animate="visible"
-                          className="group hover:bg-white/2.5 transition-colors duration-200"
+                          className="group hover:bg-white/2.5 transition-colors duration-150"
                         >
-                          <td className="px-7 xl:px-10 py-6 xl:py-8">
-                            <div className="flex items-center gap-4">
+                          <td className="px-6 xl:px-8 py-5">
+                            <div className="flex items-center gap-3.5">
                               <div className="relative shrink-0">
-                                <div className="w-11 h-11 xl:w-13 xl:h-13 bg-linear-to-br from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-lg xl:text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="w-10 h-10 xl:w-11 xl:h-11 bg-linear-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-base xl:text-lg shadow-md group-hover:scale-105 transition-transform duration-200">
                                   {item.name.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="absolute -bottom-1 -right-1 w-4 h-4 xl:w-4.5 xl:h-4.5 bg-emerald-500 border-4 border-slate-900 rounded-full" />
+                                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
                               </div>
-                              <div className="min-w-0 space-y-1">
-                                <p className="text-white font-black text-sm xl:text-base truncate max-w-40 xl:max-w-50">
+                              <div className="min-w-0">
+                                <p className="text-white font-bold text-sm truncate max-w-44">
                                   {item.name}
                                 </p>
-                                <div className="flex items-center gap-1.5 text-slate-500 text-[10px] xl:text-[11px] font-semibold">
+                                <div className="flex items-center gap-1 mt-0.5">
                                   <FiMail
-                                    size={10}
+                                    size={9}
                                     className="text-indigo-400 shrink-0"
                                   />
-                                  <span className="truncate max-w-32.5 xl:max-w-38.75">
+                                  <span className="text-slate-500 text-[10px] truncate max-w-36">
                                     {item.email}
                                   </span>
                                 </div>
@@ -307,44 +315,44 @@ const AdminReferrals = () => {
                             </div>
                           </td>
 
-                          <td className="px-7 xl:px-10 py-6 xl:py-8 text-center">
-                            <span className="inline-block px-4 py-2 bg-slate-950 border border-white/5 text-indigo-400 font-mono text-xs font-black rounded-xl group-hover:border-indigo-500/40 transition-all duration-300 shadow-inner">
+                          <td className="px-6 xl:px-8 py-5 text-center">
+                            <span className="inline-block px-3.5 py-1.5 bg-slate-950 border border-white/6 text-indigo-400 font-mono text-xs font-bold rounded-lg group-hover:border-indigo-500/30 transition-colors duration-200">
                               {item.referralCode}
                             </span>
                           </td>
 
-                          <td className="px-7 xl:px-10 py-6 xl:py-8">
-                            <div className="flex items-center gap-6 xl:gap-9">
-                              <div className="space-y-1.5">
-                                <span className="block text-[9px] xl:text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                  Impact
-                                </span>
-                                <span className="flex items-baseline gap-1 text-white font-black text-xl xl:text-2xl leading-none">
+                          <td className="px-6 xl:px-8 py-5">
+                            <div className="flex items-center gap-5 xl:gap-7">
+                              <div>
+                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">
+                                  Referrals
+                                </p>
+                                <p className="text-white font-black text-xl leading-none">
                                   {item.referralRewards?.totalReferrals ?? 0}
-                                  <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tight">
-                                    Nodes
+                                  <span className="text-[10px] text-slate-600 font-semibold ml-1">
+                                    users
                                   </span>
-                                </span>
+                                </p>
                               </div>
-                              <div className="w-px h-10 xl:h-12 bg-white/6" />
-                              <div className="space-y-1.5">
-                                <span className="block text-[9px] xl:text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                              <div className="w-px h-8 bg-white/8" />
+                              <div>
+                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">
                                   Applied
-                                </span>
-                                <span className="flex items-baseline gap-0.5 text-emerald-400 font-black text-base xl:text-lg leading-none">
+                                </p>
+                                <p className="text-emerald-400 font-black text-lg leading-none">
                                   {item.referralRewards?.appliedDays ?? 0}
                                   <span className="text-[10px] opacity-60">
                                     d
                                   </span>
-                                </span>
+                                </p>
                               </div>
                             </div>
                           </td>
 
                           {activeTab === "leaderboard" && (
-                            <td className="px-7 xl:px-10 py-6 xl:py-8 text-right">
+                            <td className="px-6 xl:px-8 py-5 text-right">
                               <div
-                                className={`inline-flex items-center justify-center w-11 h-11 xl:w-12 xl:h-12 rounded-2xl font-black text-sm transition-all duration-300 ${getRankStyle(absIdx(idx))}`}
+                                className={`inline-flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm ${getRankStyle(absIdx(idx))}`}
                               >
                                 {absIdx(idx) + 1}
                               </div>
@@ -357,62 +365,63 @@ const AdminReferrals = () => {
                 </table>
               </div>
 
-              <div className="hidden sm:grid lg:hidden grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-5">
+              <div className="hidden sm:grid lg:hidden grid-cols-2 gap-3 p-4">
                 <AnimatePresence mode="popLayout">
                   {data.map((item, idx) => (
                     <motion.div
                       key={item._id}
-                      variants={itemVariants}
+                      custom={idx}
+                      variants={fadeUp}
                       initial="hidden"
                       animate="visible"
-                      className="bg-slate-900/60 border border-white/5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl space-y-4 overflow-hidden"
+                      className="bg-slate-800/40 border border-white/6 rounded-xl p-4 space-y-3.5"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 sm:w-11 sm:h-11 bg-linear-to-br from-indigo-600 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0 shadow-md">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-10 h-10 shrink-0 bg-linear-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md">
                             {item.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="min-w-0 space-y-0.5">
-                            <p className="text-white font-black text-sm truncate">
+                          <div className="min-w-0">
+                            <p className="text-white font-bold text-sm truncate">
                               {item.name}
                             </p>
-                            <p className="text-slate-500 text-[10px] font-semibold truncate">
+                            <p className="text-slate-500 text-[10px] truncate">
                               {item.email}
                             </p>
                           </div>
                         </div>
                         {activeTab === "leaderboard" && (
                           <div
-                            className={`shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-xs ${getRankBadge(absIdx(idx))}`}
+                            className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs ${getRankBadge(absIdx(idx))}`}
                           >
                             {absIdx(idx) + 1}
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between py-3 border-y border-white/6">
-                        <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                      <div className="flex items-center justify-between py-2.5 border-y border-white/6">
+                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
                           Code
                         </span>
-                        <span className="text-indigo-400 font-mono font-black text-xs bg-slate-950 border border-white/5 px-3 py-1 rounded-lg">
+                        <span className="text-indigo-400 font-mono font-bold text-xs bg-slate-950 border border-white/6 px-2.5 py-1 rounded-lg">
                           {item.referralCode}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                        <div className="bg-white/3ded-xl sm:rounded-2xl p-3 space-y-1 border border-white/4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-white/4 rounded-lg p-2.5 space-y-1">
                           <p className="text-slate-600 text-[9px] font-black uppercase tracking-widest">
                             Referrals
                           </p>
-                          <p className="text-white font-black text-xl leading-none">
+                          <p className="text-white font-black text-lg leading-none">
                             {item.referralRewards?.totalReferrals ?? 0}
                           </p>
                         </div>
-                        <div className="bg-white/3 rounded-xl sm:rounded-2xl p-3 space-y-1 border border-white/4">
+                        <div className="bg-white/4 rounded-lg p-2.5 space-y-1">
                           <p className="text-slate-600 text-[9px] font-black uppercase tracking-widest">
                             Applied
                           </p>
-                          <p className="text-emerald-400 font-black text-xl leading-none">
+                          <p className="text-emerald-400 font-black text-lg leading-none">
                             {item.referralRewards?.appliedDays ?? 0}
                             <span className="text-[10px] opacity-60">d</span>
                           </p>
@@ -423,67 +432,77 @@ const AdminReferrals = () => {
                 </AnimatePresence>
               </div>
 
-              <div className="sm:hidden p-3 space-y-2.5">
+              <div className="sm:hidden divide-y divide-white/5">
                 <AnimatePresence mode="popLayout">
                   {data.map((item, idx) => (
                     <motion.div
                       key={item._id}
-                      variants={itemVariants}
+                      custom={idx}
+                      variants={fadeUp}
                       initial="hidden"
                       animate="visible"
-                      className="bg-slate-900/60 border border-white/5 p-4 rounded-2xl space-y-3"
+                      className="p-4 space-y-3"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 bg-linear-to-br from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-base shrink-0 shadow-md">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-9 h-9 shrink-0 bg-linear-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md">
                             {item.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-white font-black text-sm truncate">
+                            <p className="text-white font-bold text-sm leading-tight truncate">
                               {item.name}
                             </p>
-                            <p className="text-slate-500 text-[10px] font-semibold truncate">
+                            <p className="text-slate-500 text-[10px] truncate">
                               {item.email}
                             </p>
                           </div>
                         </div>
                         {activeTab === "leaderboard" && (
                           <div
-                            className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs ${getRankBadge(absIdx(idx))}`}
+                            className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs ${getRankBadge(absIdx(idx))}`}
                           >
                             {absIdx(idx) + 1}
                           </div>
                         )}
                       </div>
 
-                      <div className="space-y-2 py-3 border-y border-white/6">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-slate-800/60 rounded-lg py-2 px-1">
+                          <p className="text-slate-600 text-[8px] font-black uppercase tracking-widest mb-0.5">
                             Code
-                          </span>
-                          <span className="text-indigo-400 font-mono font-black text-[11px] bg-slate-950 border border-white/5 px-2.5 py-1 rounded-lg">
+                          </p>
+                          <p className="text-indigo-400 font-mono font-bold text-[11px] truncate">
                             {item.referralCode}
-                          </span>
+                          </p>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                            Total Usage
-                          </span>
-                          <span className="text-white font-black text-sm">
-                            {item.referralRewards?.totalReferrals ?? 0} Users
-                          </span>
+                        <div className="bg-slate-800/60 rounded-lg py-2 px-1">
+                          <p className="text-slate-600 text-[8px] font-black uppercase tracking-widest mb-0.5">
+                            Users
+                          </p>
+                          <p className="text-white font-black text-base leading-none">
+                            {item.referralRewards?.totalReferrals ?? 0}
+                          </p>
+                        </div>
+                        <div className="bg-slate-800/60 rounded-lg py-2 px-1">
+                          <p className="text-slate-600 text-[8px] font-black uppercase tracking-widest mb-0.5">
+                            Applied
+                          </p>
+                          <p className="text-emerald-400 font-black text-base leading-none">
+                            {item.referralRewards?.appliedDays ?? 0}
+                            <span className="text-[9px] opacity-60">d</span>
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                          <FiCalendar size={10} className="text-indigo-500" />
+                      <div className="flex items-center gap-1.5 text-slate-600 text-[10px]">
+                        <FiCalendar
+                          size={9}
+                          className="text-indigo-500 shrink-0"
+                        />
+                        <span>
                           {new Date(
                             item.createdAt || Date.now(),
                           ).toLocaleDateString()}
-                        </div>
-                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/10 text-emerald-400 text-[10px] font-black rounded-lg">
-                          {item.referralRewards?.appliedDays ?? 0}d Applied
                         </span>
                       </div>
                     </motion.div>
@@ -494,58 +513,51 @@ const AdminReferrals = () => {
           )}
 
           {!loading && totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-7 lg:px-10 py-5 sm:py-6 lg:py-7 border-t border-white/6 bg-white/[0.008]">
-              <div className="flex items-center gap-2.5">
-                <span className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-[0.28em]">
-                  Trajectory
-                </span>
-                <span className="px-3 py-1 bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 rounded-full text-[9px] sm:text-[10px] font-black whitespace-nowrap">
-                  {page} / {totalPages}
-                </span>
-              </div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-white/6 bg-white/1">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                Page <span className="text-indigo-400">{page}</span> of{" "}
+                <span className="text-slate-400">{totalPages}</span>
+              </p>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="p-2.5 sm:p-3 bg-slate-950 border border-white/5 text-slate-400 hover:text-white hover:border-indigo-500/40 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl transition-all duration-300 active:scale-90"
+                  className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-slate-900 border border-white/8 text-slate-400 hover:text-white hover:border-indigo-500/30 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-all duration-200 active:scale-90"
                 >
-                  <FiChevronLeft size={17} />
+                  <FiChevronLeft size={15} />
                 </button>
 
-                <div className="flex gap-1.5">
-                  {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
-                    const num =
-                      totalPages > 3 && page > 2 ? page - 1 + i : i + 1;
-                    if (num > totalPages) return null;
-                    return (
-                      <button
-                        key={num}
-                        onClick={() => setPage(num)}
-                        className={[
-                          "w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-xs font-black transition-all duration-300",
-                          page === num
-                            ? "bg-indigo-600 text-white shadow-[0_0_16px_rgba(79,70,229,0.35)] scale-110"
-                            : "bg-slate-950 text-slate-500 hover:text-white border border-white/5 hover:border-white/10",
-                        ].join(" ")}
-                      >
-                        {num}
-                      </button>
-                    );
-                  })}
-                </div>
+                {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                  const num = totalPages > 3 && page > 2 ? page - 1 + i : i + 1;
+                  if (num > totalPages) return null;
+                  return (
+                    <button
+                      key={num}
+                      onClick={() => setPage(num)}
+                      className={[
+                        "w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg text-xs font-black transition-all duration-200",
+                        page === num
+                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25"
+                          : "bg-slate-900 text-slate-500 hover:text-white border border-white/8 hover:border-white/12",
+                      ].join(" ")}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
 
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="p-2.5 sm:p-3 bg-slate-950 border border-white/5 text-slate-400 hover:text-white hover:border-indigo-500/40 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl transition-all duration-300 active:scale-90"
+                  className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-slate-900 border border-white/8 text-slate-400 hover:text-white hover:border-indigo-500/30 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-all duration-200 active:scale-90"
                 >
-                  <FiChevronRight size={17} />
+                  <FiChevronRight size={15} />
                 </button>
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </AdminLayout>
   );

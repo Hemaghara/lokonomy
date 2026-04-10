@@ -70,10 +70,11 @@ exports.getDashboardStats = async (req, res) => {
       };
     }
 
-    const recentUsersLimit = startDate && endDate ? 50 : 5;
-    const recentUsers = await User.find(userQuery)
-      .sort({ createdAt: -1 })
-      .limit(recentUsersLimit);
+    const recentLimit = startDate && endDate ? 50 : 5;
+    const [recentUsers, recentBusinesses] = await Promise.all([
+      User.find(userQuery).sort({ createdAt: -1 }).limit(recentLimit),
+      Business.find(userQuery).sort({ createdAt: -1 }).limit(recentLimit),
+    ]);
 
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);

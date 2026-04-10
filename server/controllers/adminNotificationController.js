@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const ScheduledNotification = require("../models/ScheduledNotification");
 const { sendPushNotification } = require("../utils/pushService");
 
 exports.sendToAllUsers = async (req, res) => {
@@ -124,6 +125,61 @@ exports.getNotificationHistory = async (req, res) => {
     );
   } catch (error) {
     console.error("Error fetching history:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.scheduleNotification = async (req, res) => {
+  try {
+    const { title, message, actionUrl, target, targetPlan, scheduledFor } = req.body;
+
+    if (!title || !message || !target || !scheduledFor) {
+      return res.status(400).json({ message: "Required fields missing" });
+    }
+
+    const newSchedule = new ScheduledNotification({
+      title,
+      message,
+      actionUrl,
+      target,
+      targetPlan: target === "plan" ? targetPlan : null,
+      scheduledFor: new Date(scheduledFor),
+    });
+
+    await newSchedule.save();
+
+    res.json({
+      message: "Notification scheduled successfully",
+      schedule: newSchedule,
+    });
+  } catch (error) {
+    console.error("Error scheduling notification:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getScheduledNotifications = async (req, res) => {
+  try {
+    const scheduled = await ScheduledNotification.find({ status: "pending" }).sort({
+      scheduledFor: 1,
+    });
+    res.json(scheduled);
+  } catch (error) {
+    console.error("Error fetching scheduled notifications:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.cancelScheduledNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await ScheduledNotification.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Scheduled notification not found" });
+    }
+    res.json({ message: "Scheduled notification cancelled successfully" });
+  } catch (error) {
+    console.error("Error cancelling scheduled notification:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

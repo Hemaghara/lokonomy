@@ -8,6 +8,7 @@ const globalErrorHandler = require("./middleware/globalErrorHandler");
 const initSocket = require("./socket");
 const { startSubscriptionCron } = require("./cron/subscriptionExpiry");
 const { startBookingRemindersCron } = require("./cron/bookingReminders");
+const { startScheduledNotificationsCron } = require("./cron/scheduledNotifications");
 
 const app = express();
 const server = http.createServer(app);
@@ -80,6 +81,7 @@ mongoose
     console.log("MongoDB Connected");
     startSubscriptionCron();
     startBookingRemindersCron();
+    startScheduledNotificationsCron();
   })
   .catch((err) => {
     console.error("MongoDB Connection Error:");

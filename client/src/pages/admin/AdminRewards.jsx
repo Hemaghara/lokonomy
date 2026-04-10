@@ -410,7 +410,7 @@ const AdminRewards = () => {
                         >
                           <td className="pl-8 pr-6 py-5">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-linear-to-brrom-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-500 font-black text-sm shadow-lg group-hover:scale-110 transition-transform duration-500">
+                              <div className="w-10 h-10 bg-linear-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-500 font-black text-sm shadow-lg group-hover:scale-110 transition-transform duration-500">
                                 {user.name?.charAt(0).toUpperCase()}
                               </div>
                               <div className="flex flex-col min-w-0">
