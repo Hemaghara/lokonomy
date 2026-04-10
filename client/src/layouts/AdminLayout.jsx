@@ -49,6 +49,11 @@ const AdminLayout = ({ children }) => {
       path: "/admin/subscriptions",
       icon: FiDollarSign,
     },
+    {
+      label: "Sub-Admin",
+      path: "/admin/sub-admins",
+      icon: FiShield,
+    },
     { label: "Analytics & Reports", path: "/admin/analytics", icon: FiPieChart },
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];

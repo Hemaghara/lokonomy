@@ -78,6 +78,8 @@ const AdminReviewAnalytics = lazy(
 const AdminRewards = lazy(() => import("./pages/admin/AdminRewards"));
 const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminSubAdmins = lazy(() => import("./pages/admin/AdminSubAdmins"));
+const CreateSubAdmin = lazy(() => import("./pages/admin/CreateSubAdmin"));
 const ProtectedRouteAdmin = lazy(
   () => import("./components/ProtectedRouteAdmin"),
 );
@@ -194,6 +196,18 @@ function App() {
                   <Route path="/admin/rewards" element={<AdminRewards />} />
                   <Route path="/admin/referrals" element={<AdminReferrals />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route
+                    path="/admin/sub-admins"
+                    element={<AdminSubAdmins />}
+                  />
+                  <Route
+                    path="/admin/sub-admins/create"
+                    element={<CreateSubAdmin />}
+                  />
+                  <Route
+                    path="/admin/sub-admins/edit/:id"
+                    element={<CreateSubAdmin />}
+                  />
                   <Route path="/admin/profile" element={<AdminProfile />} />
                 </Route>
 

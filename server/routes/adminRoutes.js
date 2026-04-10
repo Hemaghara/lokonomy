@@ -14,6 +14,7 @@ const adminReviewRoutes = require("./admin/adminReviews");
 const adminRewardsRoutes = require("./admin/adminRewards");
 const adminReferralRoutes = require("./admin/adminReferrals");
 const adminAnalyticsRoutes = require("./admin/adminAnalytics");
+const adminSubAdminRoutes = require("./admin/adminSubAdmin");
 
 router.use("/", adminAuthRoutes);
 router.use("/", adminUserRoutes);
@@ -28,5 +29,6 @@ router.use("/rewards", adminRewardsRoutes);
 router.use("/", adminReferralRoutes);
 router.use("/analytics", adminAnalyticsRoutes);
 router.use("/notifications", adminNotificationRoutes);
+router.use("/", adminSubAdminRoutes);
 
 module.exports = router;

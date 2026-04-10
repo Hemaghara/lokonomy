@@ -75,4 +75,11 @@ export const adminService = {
   getBusinessGrowth: (period) => adminApi.get("/analytics/businesses", { params: { period } }),
   getJobTrends: (period) => adminApi.get("/analytics/jobs", { params: { period } }),
   getRevenueTrends: (period) => adminApi.get("/analytics/revenue", { params: { period } }),
+  getSubAdmins: (params) => adminApi.get("/sub-admins", { params }),
+  getSubAdminById: (id) => adminApi.get(`/sub-admins/${id}`),
+  createSubAdmin: (data) => adminApi.post("/sub-admins", data),
+  updateSubAdmin: (id, data) => adminApi.put(`/sub-admins/${id}`, data),
+  deleteSubAdmin: (id) => adminApi.delete(`/sub-admins/${id}`),
+  getAdminActivityLogs: () => adminApi.get("/sub-admins/logs"),
+  resetSubAdminPassword: (id, password) => adminApi.put(`/sub-admins/${id}/reset-password`, { password }),
 };
