@@ -164,6 +164,7 @@ const AdminUsers = () => {
       "Plan",
       "Status",
       "Joined Date",
+      "Last Login",
     ];
     const rows = filteredUsers.map((u) => [
       u._id,
@@ -174,6 +175,7 @@ const AdminUsers = () => {
       u.subscription?.plan || "free",
       u.status || "active",
       new Date(u.createdAt).toLocaleDateString(),
+      u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleString() : "Never",
     ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -471,6 +473,16 @@ const AdminUsers = () => {
                   </span>
                 </div>
 
+                <div className="flex items-center justify-between mb-3 text-[10px] text-slate-600">
+                  <span className="flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-slate-700" />
+                    Last Login:{" "}
+                    {user.lastLoginDate
+                      ? new Date(user.lastLoginDate).toLocaleDateString()
+                      : "Never"}
+                  </span>
+                </div>
+
                 <div className="flex items-center justify-end pt-3 border-t border-white/4">
                   {renderActions(user)}
                 </div>
@@ -488,12 +500,17 @@ const AdminUsers = () => {
                     "Plan",
                     "Location",
                     "Joined",
+                    "Last Login",
                     "Actions",
                   ].map((h, i) => (
                     <th
                       key={h}
                       className={`px-5 py-3.5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600 ${
-                        i === 5 ? "text-right" : i === 4 ? "text-center" : ""
+                        i === 6
+                          ? "text-right"
+                          : i === 4 || i === 5
+                            ? "text-center"
+                            : ""
                       }`}
                     >
                       {h}
@@ -554,6 +571,32 @@ const AdminUsers = () => {
                       </p>
                     </td>
 
+                    <td className="px-5 py-3.5 text-center">
+                      <p className="text-xs font-bold text-slate-400">
+                        {user.lastLoginDate
+                          ? new Date(user.lastLoginDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
+                          : "—"}
+                      </p>
+                      {user.lastLoginDate && (
+                        <p className="text-[10px] text-slate-600">
+                          {new Date(user.lastLoginDate).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            },
+                          )}
+                        </p>
+                      )}
+                    </td>
+
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-all duration-200">
                         {renderActions(user)}
@@ -594,35 +637,34 @@ const AdminUsers = () => {
                   <FiChevronLeft size={15} />
                 </button>
 
-                {[...Array(totalPages)].map((_, i) => {
-                  const p = i + 1;
-                  const near =
-                    Math.abs(p - currentPage) <= 1 ||
-                    p === 1 ||
-                    p === totalPages;
-                  const isDot =
-                    !near && (p === currentPage - 2 || p === currentPage + 2);
-                  if (!near && !isDot) return null;
-                  if (isDot)
+                <div className="flex gap-1.5">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let num;
+                    if (totalPages <= 5) {
+                      num = i + 1;
+                    } else if (currentPage <= 3) {
+                      num = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      num = totalPages - 4 + i;
+                    } else {
+                      num = currentPage - 2 + i;
+                    }
+                    
                     return (
-                      <span key={p} className="text-slate-700 text-xs px-0.5">
-                        ···
-                      </span>
+                      <button
+                        key={num}
+                        onClick={() => handlePageChange(num)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold border transition-all ${
+                          currentPage === num
+                            ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/25"
+                            : "border-slate-700/50 text-slate-500 hover:bg-slate-800 hover:text-white hover:border-slate-600"
+                        }`}
+                      >
+                        {num}
+                      </button>
                     );
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => handlePageChange(p)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold border transition-all ${
-                        currentPage === p
-                          ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/25"
-                          : "border-slate-700/50 text-slate-500 hover:bg-slate-800 hover:text-white hover:border-slate-600"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  );
-                })}
+                  })}
+                </div>
 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}

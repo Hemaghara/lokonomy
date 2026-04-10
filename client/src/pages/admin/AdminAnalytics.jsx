@@ -321,6 +321,69 @@ const AdminAnalytics = () => {
     fetchRevenue(revPeriod);
   }, [revPeriod, fetchRevenue]);
 
+  const handleDownloadFullReport = () => {
+    const hasData =
+      userData.length > 0 ||
+      bizData.length > 0 ||
+      jobData.length > 0 ||
+      revData.length > 0;
+
+    if (!hasData) {
+      return toast.error("No data available to export");
+    }
+
+    let csvContent = "LOKONOMY ADMIN ANALYTICS REPORT\n";
+    csvContent += `Generated at: ${new Date().toLocaleString()}\n\n`;
+
+    if (overview) {
+      csvContent += "OVERVIEW STATS\n";
+      csvContent += "Metric,Value,Monthly Growth\n";
+      csvContent += `Total Users,${overview.totalUsers},${overview.newUsersThisMonth}\n`;
+      csvContent += `Total Businesses,${overview.totalBusinesses},${overview.newBusinessesThisMonth}\n`;
+      csvContent += `Total Job Posts,${overview.totalJobs},${overview.newJobsThisMonth}\n`;
+      csvContent += `Total Applications,${overview.totalApplications},-\n`;
+      csvContent += `Total Revenue,${overview.totalRevenue},${overview.revenueThisMonth}\n\n`;
+    }
+
+    csvContent += `USER GROWTH (${userPeriod.toUpperCase()})\n`;
+    csvContent += "Date,New Users\n";
+    userData.forEach((row) => {
+      csvContent += `"${row.label}","${row.count}"\n`;
+    });
+    csvContent += "\n";
+
+    csvContent += `BUSINESS GROWTH (${bizPeriod.toUpperCase()})\n`;
+    csvContent += "Date,New Businesses\n";
+    bizData.forEach((row) => {
+      csvContent += `"${row.label}","${row.count}"\n`;
+    });
+    csvContent += "\n";
+
+    csvContent += `JOB TRENDS (${jobPeriod.toUpperCase()})\n`;
+    csvContent += "Date,Job Postings,Applications\n";
+    jobData.forEach((row) => {
+      csvContent += `"${row.label}","${row.jobs}","${row.applications}"\n`;
+    });
+    csvContent += "\n";
+
+    csvContent += `REVENUE TRENDS (${revPeriod.toUpperCase()})\n`;
+    csvContent += "Date,Silver (₹),Gold (₹),Platinum (₹)\n";
+    revData.forEach((row) => {
+      csvContent += `"${row.label}","${row.silver}","${row.gold}","${row.platinum}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Lokonomy_Full_Report_${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Full report downloaded!");
+  };
+
   const kpiCards = overview
     ? [
         {
@@ -404,6 +467,13 @@ const AdminAnalytics = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadFullReport}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-500/25"
+          >
+            <FiDownload className="text-sm" />
+            Download Report
+          </button>
           <button
             onClick={() => {
               fetchOverview();

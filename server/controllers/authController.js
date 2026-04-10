@@ -148,7 +148,7 @@ exports.login = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log(` Verify OTP Attempt: ${email}`);
+    console.log(`Verify OTP Attempt: ${email}`);
     const user = await User.findOne({ email });
     console.log(`User found: ${user.name}`);
 
@@ -168,6 +168,7 @@ exports.verifyOtp = async (req, res) => {
 
     user.otp = undefined;
     user.otpExpires = undefined;
+    user.lastLoginDate = new Date();
     await user.save();
 
     const token = jwt.sign(
@@ -281,7 +282,7 @@ exports.register = async (req, res) => {
       userData.longitude = parseFloat(longitude);
       userData.locationName = locationName || null;
       console.log(
-        `📍 Location saved during registration for ${name}: [${latitude}, ${longitude}]`,
+        `Location saved during registration for ${name}: [${latitude}, ${longitude}]`,
       );
     }
 

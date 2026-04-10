@@ -304,15 +304,30 @@ const AdminReviews = () => {
                 >
                   <FiChevronLeft />
                 </button>
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i + 1)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${page === i + 1 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-slate-800 text-slate-500 hover:text-white border border-slate-700 hover:border-slate-600"}`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <div className="flex gap-1.5">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let num;
+                    if (totalPages <= 5) {
+                      num = i + 1;
+                    } else if (page <= 3) {
+                      num = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      num = totalPages - 4 + i;
+                    } else {
+                      num = page - 2 + i;
+                    }
+                    if (num > totalPages) return null;
+                    return (
+                      <button
+                        key={num}
+                        onClick={() => setPage(num)}
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${page === num ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-slate-800 text-slate-500 hover:text-white border border-slate-700 hover:border-slate-600"}`}
+                      >
+                        {num}
+                      </button>
+                    );
+                  })}
+                </div>
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage((p) => p + 1)}

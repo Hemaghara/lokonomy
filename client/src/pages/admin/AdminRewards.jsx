@@ -78,22 +78,19 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
           <FiChevronLeft size={16} />
         </button>
         <div className="flex items-center gap-1.5 px-1">
-          {[...Array(totalPages)].map((_, i) => {
-            const pg = i + 1;
-            const isVisible =
-              totalPages <= 5 ||
-              pg === 1 ||
-              pg === totalPages ||
-              Math.abs(pg - page) <= 1;
-            if (!isVisible) {
-              if (pg === 2 || pg === totalPages - 1)
-                return (
-                  <span key={pg} className="text-slate-700 font-black">
-                    ·
-                  </span>
-                );
-              return null;
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pg;
+            if (totalPages <= 5) {
+              pg = i + 1;
+            } else if (page <= 3) {
+              pg = i + 1;
+            } else if (page >= totalPages - 2) {
+              pg = totalPages - 4 + i;
+            } else {
+              pg = page - 2 + i;
             }
+            if (pg > totalPages) return null;
+
             return (
               <button
                 key={pg}
