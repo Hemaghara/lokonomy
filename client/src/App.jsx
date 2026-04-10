@@ -78,6 +78,7 @@ const AdminReviewAnalytics = lazy(
 const AdminRewards = lazy(() => import("./pages/admin/AdminRewards"));
 const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminAuctionDetails = lazy(() => import("./pages/admin/AdminAuctionDetails"));
 const AdminSubAdmins = lazy(() => import("./pages/admin/AdminSubAdmins"));
 const CreateSubAdmin = lazy(() => import("./pages/admin/CreateSubAdmin"));
 const ProtectedRouteAdmin = lazy(
@@ -165,6 +166,10 @@ function App() {
                   <Route
                     path="/admin/marketplace/order/:id"
                     element={<AdminOrderDetails />}
+                  />
+                  <Route
+                    path="/admin/marketplace/auction/:id"
+                    element={<AdminAuctionDetails />}
                   />
                   <Route path="/admin/jobs" element={<AdminJobs />} />
                   <Route path="/admin/jobs/:id" element={<AdminJobDetails />} />

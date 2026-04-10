@@ -335,11 +335,14 @@ const AdminMarketplace = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [orderStatus, setOrderStatus] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     fetchStats();
     fetchData();
-  }, [activeTab, filter, search, page]);
+  }, [activeTab, filter, search, page, orderStatus, startDate, endDate]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -354,7 +357,14 @@ const AdminMarketplace = () => {
         setProducts(r.data.products);
         setTotalPages(r.data.totalPages);
       } else if (activeTab === "orders") {
-        const r = await adminService.getMarketOrders({ page, limit: 6 });
+        const r = await adminService.getMarketOrders({
+          page,
+          limit: 6,
+          status: orderStatus !== "all" ? orderStatus : undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          search,
+        });
         setOrders(r.data.orders);
         setTotalPages(r.data.totalPages);
       } else if (activeTab === "auctions") {
@@ -409,6 +419,14 @@ const AdminMarketplace = () => {
   };
 
   const handleViewOrder = (id) => navigate(`/admin/marketplace/order/${id}`);
+
+  const handleViewAuction = (auctionOrId) => {
+    const id =
+      typeof auctionOrId === "object"
+        ? auctionOrId._id || auctionOrId.id
+        : auctionOrId;
+    if (id) navigate(`/admin/marketplace/auction/${id}`);
+  };
 
   const handleTabChange = (id) => {
     setActiveTab(id);
@@ -508,6 +526,64 @@ const AdminMarketplace = () => {
                   {f}
                 </button>
               ))}
+            </div>
+          )}
+
+          {activeTab === "orders" && (
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <FiFilter size={14} className="text-slate-600 shrink-0" />
+                <select
+                  value={orderStatus}
+                  onChange={(e) => {
+                    setOrderStatus(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <FiCalendar size={14} className="text-slate-600 shrink-0" />
+                <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 px-2">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setPage(1);
+                    }}
+                    className="bg-transparent border-none text-[11px] text-white focus:outline-none accent-indigo-500 w-28"
+                  />
+                  <span className="text-slate-600 text-[10px]">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setPage(1);
+                    }}
+                    className="bg-transparent border-none text-[11px] text-white focus:outline-none accent-indigo-500 w-28"
+                  />
+                  {(startDate || endDate) && (
+                    <button
+                      onClick={() => {
+                        setStartDate("");
+                        setEndDate("");
+                        setPage(1);
+                      }}
+                      className="ml-1 text-[10px] text-indigo-400 hover:text-indigo-300 font-bold"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -656,7 +732,7 @@ const AdminMarketplace = () => {
                         <AuctionCard
                           key={a._id}
                           auction={a}
-                          onView={handleViewProduct}
+                          onView={handleViewAuction}
                         />
                       ))}
                       {auctions.length === 0 && (

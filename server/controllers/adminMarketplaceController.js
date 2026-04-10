@@ -41,15 +41,27 @@ exports.getAllProducts = async (req, res) => {
 
 exports.getAllOrders = async (req, res) => {
   try {
-    const { page = 1, limit = 6 } = req.query;
+    const { status, startDate, endDate, page = 1, limit = 6 } = req.query;
+    let query = {};
+
+    if (status && status !== "all") {
+      query.orderStatus = status;
+    }
+
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
+    }
+
     const currentPage = parseInt(page);
     const pageLimit = parseInt(limit);
     const skip = (currentPage - 1) * pageLimit;
 
-    const totalOrders = await Order.countDocuments();
+    const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / pageLimit);
 
-    const orders = await Order.find()
+    const orders = await Order.find(query)
       .populate(
         "product",
         "productName price productImages subCategory mainCategory",
