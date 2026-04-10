@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const Message = require("./models/Message");
+const OnlineStatus = require("./models/OnlineStatus");
 const { createNotification } = require("./controllers/notificationController");
 
 const initSocket = (server) => {
@@ -180,6 +181,24 @@ const initSocket = (server) => {
       console.log(`Socket disconnected: ${socket.id}`);
     });
   });
+
+  const recordOnlineStats = async () => {
+    try {
+      const regularUsers = Array.from(onlineUsers.entries())
+        .filter(([_, u]) => !u.isAdmin && u.socketIds.size > 0);
+      const count = regularUsers.length;
+      
+      await OnlineStatus.create({ count });
+      
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+      await OnlineStatus.deleteMany({ timestamp: { $lt: fortyEightHoursAgo } });
+    } catch (err) {
+      console.error("[Socket] Error recording online stats:", err);
+    }
+  };
+
+  setInterval(recordOnlineStats, 15 * 60 * 1000);
+  setTimeout(recordOnlineStats, 5000);
 
   return io;
 };

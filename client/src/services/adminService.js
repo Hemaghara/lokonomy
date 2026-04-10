@@ -20,7 +20,8 @@ adminApi.interceptors.request.use(
 export const adminService = {
   login: (credentials) => adminApi.post("/login", credentials),
   register: (adminData) => adminApi.post("/register", adminData),
-  getDashboardStats: () => adminApi.get("/dashboard-stats"),
+  getDashboardStats: (params) => adminApi.get("/dashboard-stats", { params }),
+  getOnlineTrend: () => adminApi.get("/online-trend"),
   getUsers: () => adminApi.get("/users"),
   getBusinesses: () => adminApi.get("/businesses"),
   getBusinessDetails: (id) => adminApi.get(`/business/${id}`),

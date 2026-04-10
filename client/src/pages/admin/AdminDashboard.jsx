@@ -13,6 +13,8 @@ import {
   FiDollarSign,
   FiTrendingUp,
   FiArrowRight,
+  FiCalendar,
+  FiX,
 } from "react-icons/fi";
 const STAT_COLORS = {
   emerald: {
@@ -53,6 +55,36 @@ const STAT_COLORS = {
   },
 };
 
+const Sparkline = ({ data = [], color = "currentColor" }) => {
+  if (data.length < 2) return <div className="w-16 h-4 bg-slate-800/50 rounded-full animate-pulse" />;
+  
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const height = 30;
+  const width = 80;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg viewBox={`0 -2 ${width} ${height + 4}`} className="w-16 h-6 overflow-visible">
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+        className="drop-shadow-[0_0_3px_rgba(244,63,94,0.4)]"
+      />
+    </svg>
+  );
+};
+
 const StatCard = ({ item }) => {
   const navigate = useNavigate();
   const color = STAT_COLORS[item.color] || STAT_COLORS.indigo;
@@ -90,9 +122,14 @@ const StatCard = ({ item }) => {
       </div>
 
       <div>
-        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-500 mb-0.5">
-          {item.label}
-        </p>
+        <div className="flex items-center justify-between mb-0.5">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-500">
+            {item.label}
+          </p>
+          {item.trendData && (
+            <Sparkline data={item.trendData} color={item.label === "Online Users" ? "#f43f5e" : "#6366f1"} />
+          )}
+        </div>
         <p className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none">
           {item.value}
         </p>
@@ -161,9 +198,15 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineTrend, setOnlineTrend] = useState([]);
+  const [dateRange, setDateRange] = useState({
+    startDate: "",
+    endDate: "",
+  });
 
   useEffect(() => {
-    fetchStats();
+    fetchStats(dateRange);
+    fetchOnlineTrend();
 
     const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
     const adminId = adminInfo.id || adminInfo._id || "admin_" + Math.random().toString(36).substr(2, 9);
@@ -176,14 +219,43 @@ const AdminDashboard = () => {
     };
   }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = async (range = {}) => {
     try {
-      const response = await adminService.getDashboardStats();
+      const { startDate, endDate } = range;
+      const params = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const response = await adminService.getDashboardStats(params);
       setStats(response.data);
     } catch {
       toast.error("Failed to fetch statistics");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    const newRange = { ...dateRange, [name]: value };
+    setDateRange(newRange);
+    if (newRange.startDate && newRange.endDate) {
+      fetchStats(newRange);
+    }
+  };
+
+  const clearDateRange = () => {
+    const cleared = { startDate: "", endDate: "" };
+    setDateRange(cleared);
+    fetchStats(cleared);
+  };
+
+  const fetchOnlineTrend = async () => {
+    try {
+      const response = await adminService.getOnlineTrend();
+      setOnlineTrend(response.data.map((d) => d.count));
+    } catch (err) {
+      console.error("Failed to fetch online trend:", err);
     }
   };
 
@@ -213,14 +285,14 @@ const AdminDashboard = () => {
       value: `₹${stats?.stats.totalRevenue || 0}`,
       icon: FiDollarSign,
       color: "emerald",
-      trend: "+12%",
+      trend: stats?.stats.trends?.revenue || "+0%",
     },
     {
       label: "Total Users",
       value: stats?.stats.totalUsers,
       icon: FiUsers,
       color: "indigo",
-      trend: "+5%",
+      trend: stats?.stats.trends?.users || "+0%",
       path: "/admin/users",
     },
     {
@@ -230,13 +302,14 @@ const AdminDashboard = () => {
       color: "rose",
       isLive: true,
       path: "/admin/users",
+      trendData: onlineTrend.length > 0 ? onlineTrend : [onlineCount * 0.8, onlineCount * 0.9, onlineCount], 
     },
     {
       label: "Businesses",
       value: stats?.stats.totalBusinesses,
       icon: FiBriefcase,
       color: "sky",
-      trend: "+8%",
+      trend: stats?.stats.trends?.businesses || "+0%",
       path: "/admin/businesses",
     },
     {
@@ -244,7 +317,7 @@ const AdminDashboard = () => {
       value: stats?.stats.totalProducts,
       icon: FiPackage,
       color: "orange",
-      trend: "+15%",
+      trend: stats?.stats.trends?.products || "+0%",
       path: "/admin/marketplace",
     },
     {
@@ -252,7 +325,7 @@ const AdminDashboard = () => {
       value: stats?.stats.totalJobs,
       icon: FiClipboard,
       color: "purple",
-      trend: "+2%",
+      trend: stats?.stats.trends?.jobs || "+0%",
       path: "/admin/jobs",
     },
   ];
@@ -316,9 +389,66 @@ const AdminDashboard = () => {
                     Recent <span className="text-emerald-400">Joiners</span>
                   </h3>
                 </div>
-                <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-widest border border-emerald-500/20">
-                  Active
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="hidden md:flex items-center gap-2 bg-slate-900/80 border border-slate-700/50 rounded-lg px-2 py-1">
+                    <FiCalendar className="text-slate-500 text-xs" />
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={dateRange.startDate}
+                      onChange={handleDateChange}
+                      className="bg-transparent text-[10px] text-slate-300 outline-none border-none focus:ring-0 w-24 scheme-dark"
+                    />
+                    <span className="text-slate-600 text-[10px]">to</span>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={dateRange.endDate}
+                      onChange={handleDateChange}
+                      className="bg-transparent text-[10px] text-slate-300 outline-none border-none focus:ring-0 w-24 scheme-dark"
+                    />
+                    {(dateRange.startDate || dateRange.endDate) && (
+                      <button
+                        onClick={clearDateRange}
+                        className="p-1 hover:bg-slate-800 rounded-md transition-colors"
+                      >
+                        <FiX className="text-rose-400 text-xs" />
+                      </button>
+                    )}
+                  </div>
+                  <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-widest border border-emerald-500/20">
+                    Active
+                  </span>
+                </div>
+              </div>
+
+              <div className="md:hidden flex flex-wrap items-center gap-2 px-5 py-3 border-b border-slate-800/40 bg-slate-800/10">
+                <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-700/50 rounded-lg px-2 py-1.5 flex-1">
+                  <FiCalendar className="text-slate-500 text-xs" />
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={dateRange.startDate}
+                    onChange={handleDateChange}
+                    className="bg-transparent text-[10px] text-slate-300 outline-none border-none focus:ring-0 flex-1 scheme-dark"
+                  />
+                  <span className="text-slate-600 text-[10px]">to</span>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={dateRange.endDate}
+                    onChange={handleDateChange}
+                    className="bg-transparent text-[10px] text-slate-300 outline-none border-none focus:ring-0 flex-1 scheme-dark"
+                  />
+                  {(dateRange.startDate || dateRange.endDate) && (
+                    <button
+                      onClick={clearDateRange}
+                      className="p-1 hover:bg-slate-800 rounded-md transition-colors"
+                    >
+                      <FiX className="text-rose-400 text-xs" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto max-h-72 sm:max-h-80 divide-y divide-slate-800/40 scrollbar-hide">
