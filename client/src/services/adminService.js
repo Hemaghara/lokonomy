@@ -86,4 +86,5 @@ export const adminService = {
   deleteSubAdmin: (id) => adminApi.delete(`/sub-admins/${id}`),
   getAdminActivityLogs: () => adminApi.get("/sub-admins/logs"),
   resetSubAdminPassword: (id, password) => adminApi.put(`/sub-admins/${id}/reset-password`, { password }),
+  globalSearch: (query) => adminApi.get("/search", { params: { query } }),
 };
