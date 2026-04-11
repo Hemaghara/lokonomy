@@ -28,6 +28,14 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+
+/* ─── Design tokens ────────────────────────────────────────────
+   Page bg  : #0d1117  (deep navy-black — not flat #000000)
+   Card bg  : #161c27  (slate-900-ish with blue undertone)
+   Elevated : #1e2535  (inner elements, hover states)
+   Border   : rgba(255,255,255,0.07)
+   ─────────────────────────────────────────────────────────── */
+
 const AdminSubscriptions = () => {
   const [activeTab, setActiveTab] = useState("transactions");
   const [loading, setLoading] = useState(true);
@@ -204,9 +212,8 @@ const AdminSubscriptions = () => {
       ),
     })[status] || null;
 
-
   const card = "rounded-2xl border border-[rgba(255,255,255,0.07)]";
-  const cardBg = "bg-[#0f172a]";
+  const cardBg = "bg-[#161c27]";
   const innerBg = "bg-[#1e2535]";
 
   return (
@@ -215,11 +222,10 @@ const AdminSubscriptions = () => {
         className="min-h-screen px-3 py-4 sm:px-5 sm:py-6 lg:px-8 lg:py-8 space-y-5 sm:space-y-6"
         style={{ background: "#020617" }}
       >
-        
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-none">
-              Subscription {" "}
+              Subscription &{" "}
               <span className="bg-linear-to-rrom-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 Revenue
               </span>
@@ -252,7 +258,6 @@ const AdminSubscriptions = () => {
           </div>
         </div>
 
-     
         <div
           className={`flex gap-1 p-1 ${cardBg} ${card} overflow-x-auto no-scrollbar`}
         >
@@ -576,7 +581,6 @@ const AdminSubscriptions = () => {
               </div>
             </div>
 
-           
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 {
@@ -731,7 +735,6 @@ const AdminSubscriptions = () => {
           </div>
         )}
 
-
         {activeTab === "reports" && financialReport && (
           <div className="space-y-4 sm:space-y-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -799,7 +802,6 @@ const AdminSubscriptions = () => {
               ))}
             </div>
 
-      
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
               <div className={`xl:col-span-2 ${cardBg} ${card} p-4 sm:p-6`}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">

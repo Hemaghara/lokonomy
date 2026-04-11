@@ -150,29 +150,40 @@ const AdminLayout = ({ children }) => {
           </div>
 
           <nav className="flex-1 space-y-3">
-            {navItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => handleNavClick(item.path)}
-                title={isCollapsed ? item.label : ""}
-                className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-6"} py-4 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
-                  location.pathname === item.path ||
-                  (item.path !== "/admin/dashboard" &&
-                    location.pathname.startsWith(item.path + "/"))
-                    ? "text-white bg-indigo-600 shadow-xl shadow-indigo-500/30"
-                    : "text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
-              >
-                <item.icon
-                  className={`text-xl ${location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/")) ? "scale-110" : "group-hover:scale-110"} transition-transform`}
-                />
-                {!isCollapsed && (
-                  <span className="text-sm tracking-wide truncate">
-                    {item.label}
-                  </span>
-                )}
-              </button>
-            ))}
+            {navItems
+              .filter((item) => {
+                if (
+                  (item.path === "/admin/sub-admins" ||
+                    item.path === "/admin/analytics") &&
+                  adminInfo.role !== "superadmin"
+                ) {
+                  return false;
+                }
+                return true;
+              })
+              .map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => handleNavClick(item.path)}
+                  title={isCollapsed ? item.label : ""}
+                  className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-6"} py-4 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
+                    location.pathname === item.path ||
+                    (item.path !== "/admin/dashboard" &&
+                      location.pathname.startsWith(item.path + "/"))
+                      ? "text-white bg-indigo-600 shadow-xl shadow-indigo-500/30"
+                      : "text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
+                  }`}
+                >
+                  <item.icon
+                    className={`text-xl ${location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/")) ? "scale-110" : "group-hover:scale-110"} transition-transform`}
+                  />
+                  {!isCollapsed && (
+                    <span className="text-sm tracking-wide truncate">
+                      {item.label}
+                    </span>
+                  )}
+                </button>
+              ))}
           </nav>
 
           <div className="mt-auto pt-6 border-t border-white/5">
@@ -191,7 +202,7 @@ const AdminLayout = ({ children }) => {
                     {adminInfo.name || "Administrator"}
                   </p>
                   <p className="text-[10px] text-slate-500 truncate uppercase tracking-widest font-black opacity-60">
-                    {adminInfo.role || "Super Admin"}
+                    {adminInfo.role || "Admin"}
                   </p>
                 </div>
               )}
@@ -242,7 +253,7 @@ const AdminLayout = ({ children }) => {
                   {adminInfo.name || "Admin"}
                 </span>
                 <span className="text-[9px] text-indigo-400 font-black uppercase tracking-widest opacity-70">
-                  {adminInfo.role || "Super Admin"}
+                  {adminInfo.role || "Admin"}
                 </span>
               </div>
               <button

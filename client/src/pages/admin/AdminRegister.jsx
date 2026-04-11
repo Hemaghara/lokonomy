@@ -129,6 +129,7 @@ const AdminRegister = () => {
               onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-slate-200 transition-all text-sm appearance-none"
             >
+              <option value="superadmin">Super Admin</option>
               <option value="admin">Admin</option>
               <option value="moderator">Moderator</option>
             </select>

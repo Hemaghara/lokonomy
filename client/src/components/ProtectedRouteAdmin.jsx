@@ -137,6 +137,12 @@ const ProtectedRouteAdmin = ({ requiredRole }) => {
     }
   };
 
+  useEffect(() => {
+    if (isVerified && requiredRole && adminInfo.role !== requiredRole) {
+      toast.error(`Forbidden: ${requiredRole} access required`);
+    }
+  }, [isVerified, requiredRole, adminInfo.role]);
+
   if (isVerified === null) {
     return (
       <div className="min-h-screen bg-[#0a0c12] flex items-center justify-center">
@@ -155,7 +161,6 @@ const ProtectedRouteAdmin = ({ requiredRole }) => {
   }
 
   if (requiredRole && adminInfo.role !== requiredRole) {
-    toast.error(`Forbidden: ${requiredRole} access required`);
     return <Navigate to="/admin/dashboard" replace />;
   }
 

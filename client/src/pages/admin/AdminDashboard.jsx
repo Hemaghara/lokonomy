@@ -56,22 +56,30 @@ const STAT_COLORS = {
 };
 
 const Sparkline = ({ data = [], color = "currentColor" }) => {
-  if (data.length < 2) return <div className="w-16 h-4 bg-slate-800/50 rounded-full animate-pulse" />;
-  
+  if (data.length < 2)
+    return (
+      <div className="w-16 h-4 bg-slate-800/50 rounded-full animate-pulse" />
+    );
+
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
   const height = 30;
   const width = 80;
-  
-  const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((val - min) / range) * height;
-    return `${x},${y}`;
-  }).join(" ");
+
+  const points = data
+    .map((val, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - ((val - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
 
   return (
-    <svg viewBox={`0 -2 ${width} ${height + 4}`} className="w-16 h-6 overflow-visible">
+    <svg
+      viewBox={`0 -2 ${width} ${height + 4}`}
+      className="w-16 h-6 overflow-visible"
+    >
       <polyline
         fill="none"
         stroke={color}
@@ -127,7 +135,10 @@ const StatCard = ({ item }) => {
             {item.label}
           </p>
           {item.trendData && (
-            <Sparkline data={item.trendData} color={item.label === "Online Users" ? "#f43f5e" : "#6366f1"} />
+            <Sparkline
+              data={item.trendData}
+              color={item.label === "Online Users" ? "#f43f5e" : "#6366f1"}
+            />
           )}
         </div>
         <p className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-none">
@@ -158,7 +169,8 @@ const REVENUE_PLAN_CONFIG = {
 
 const RevenueBar = ({ plan, value, total }) => {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-  const config = REVENUE_PLAN_CONFIG[plan.toLowerCase()] || REVENUE_PLAN_CONFIG.silver;
+  const config =
+    REVENUE_PLAN_CONFIG[plan.toLowerCase()] || REVENUE_PLAN_CONFIG.silver;
 
   return (
     <div className="space-y-2.5 group">
@@ -209,7 +221,10 @@ const AdminDashboard = () => {
     fetchOnlineTrend();
 
     const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
-    const adminId = adminInfo.id || adminInfo._id || "admin_" + Math.random().toString(36).substr(2, 9);
+    const adminId =
+      adminInfo.id ||
+      adminInfo._id ||
+      "admin_" + Math.random().toString(36).substr(2, 9);
 
     const socket = connectSocket({ userId: adminId, isAdmin: true });
     socket.on("onlineUsersCount", (count) => setOnlineCount(count));
@@ -302,7 +317,10 @@ const AdminDashboard = () => {
       color: "rose",
       isLive: true,
       path: "/admin/users",
-      trendData: onlineTrend.length > 0 ? onlineTrend : [onlineCount * 0.8, onlineCount * 0.9, onlineCount], 
+      trendData:
+        onlineTrend.length > 0
+          ? onlineTrend
+          : [onlineCount * 0.8, onlineCount * 0.9, onlineCount],
     },
     {
       label: "Businesses",
@@ -495,7 +513,7 @@ const AdminDashboard = () => {
               </div>
 
               {stats.recentUsers?.length > 0 && (
-                <button 
+                <button
                   onClick={() => navigate("/admin/users")}
                   className="flex items-center justify-center gap-2 w-full py-3.5 text-[11px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-widest transition-colors bg-slate-800/10 border-t border-slate-800/50 shrink-0 group"
                 >
