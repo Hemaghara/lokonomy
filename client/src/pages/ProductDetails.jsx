@@ -24,6 +24,8 @@ import {
   HiStar,
 } from "react-icons/hi2";
 import WishlistButton from "../components/WishlistButton";
+import ReportModal from "../components/ReportModal";
+import { FiFlag } from "react-icons/fi";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -48,6 +50,7 @@ const ProductDetails = () => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [bidAmount, setBidAmount] = useState("");
   const [submittingBid, setSubmittingBid] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const isSeller =
     user &&
@@ -257,25 +260,33 @@ const ProductDetails = () => {
           >
             <HiOutlineArrowLeft className="text-sm" /> Back to Marketplace
           </Link>
-          <button
-            onClick={handleShare}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all
-              ${
-                copied
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                  : "bg-[#111827] text-slate-500 border-[#1f2a3d] hover:text-slate-300"
-              }`}
-          >
-            {copied ? (
-              <>
-                <HiOutlineCheckCircle className="text-sm" /> Copied!
-              </>
-            ) : (
-              <>
-                <HiOutlineShare className="text-sm" /> Share
-              </>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleShare}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all
+                ${
+                  copied
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    : "bg-[#111827] text-slate-500 border-[#1f2a3d] hover:text-slate-300"
+                }`}
+            >
+              {copied ? (
+                <>
+                  <HiOutlineCheckCircle className="text-sm" /> Copied!
+                </>
+              ) : (
+                <>
+                  <HiOutlineShare className="text-sm" /> Share
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setShowReport(true)}
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3.5 py-2 rounded-xl border border-[#1f2a3d] text-slate-500 hover:text-rose-400 hover:border-rose-900/40 hover:bg-rose-950/20 transition-all"
+            >
+              <FiFlag className="text-xs" /> Report
+            </button>
+          </div>
         </motion.div>
         <div className="grid lg:grid-cols-2 gap-6 items-start">
           <motion.div
@@ -1035,6 +1046,13 @@ const ProductDetails = () => {
         </div>
       </div>
 
+      <ReportModal 
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        targetType="product"
+        targetId={product._id}
+      />
+      
       <AnimatePresence>
         {showChat && product && user && (
           <ChatBox

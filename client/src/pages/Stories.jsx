@@ -19,6 +19,8 @@ import {
   HiOutlineClock,
   HiOutlineUser,
 } from "react-icons/hi2";
+import ReportModal from "../components/ReportModal";
+import { FiFlag } from "react-icons/fi";
 
 const getTimeRemaining = (expiresAt) => {
   const now = Date.now();
@@ -81,6 +83,10 @@ const Stories = () => {
   const [radius, setRadius] = useState(5000);
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [reportConfig, setReportConfig] = useState({
+    isOpen: false,
+    targetId: null,
+  });
 
   const storyCategories = [
     "All",
@@ -307,6 +313,19 @@ const Stories = () => {
                           {story.type}
                         </span>
                       </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReportConfig({
+                            isOpen: true,
+                            targetId: story._id,
+                          });
+                        }}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-900/60 backdrop-blur-md border border-white/10 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 hover:bg-slate-900 transition-all flex items-center justify-center z-10"
+                      >
+                        <FiFlag size={14} />
+                      </button>
                     </div>
 
                     <div className="p-4 flex-1 flex flex-col">
@@ -384,6 +403,12 @@ const Stories = () => {
           )}
         </div>
       </div>
+      <ReportModal
+        isOpen={reportConfig.isOpen}
+        onClose={() => setReportConfig({ isOpen: false, targetId: null })}
+        targetType="story"
+        targetId={reportConfig.targetId}
+      />
     </div>
   );
 };

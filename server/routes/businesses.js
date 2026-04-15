@@ -10,6 +10,7 @@ router.get("/:id", businessController.getBusinessById);
 router.post("/:id/visit", businessController.incrementVisitCount);
 router.post("/:id/review", auth, businessController.addReview);
 router.put("/:id", auth, businessController.updateBusiness);
+router.post("/:id/verify", auth, businessController.submitVerification);
 router.delete("/:id", auth, businessController.deleteBusiness);
 
 module.exports = router;

@@ -4,6 +4,8 @@ const Product = require("../models/Product");
 const Job = require("../models/Job");
 const Plan = require("../models/Plan");
 const OnlineStatus = require("../models/OnlineStatus");
+const SupportTicket = require("../models/SupportTicket");
+const Report = require("../models/Report");
 
 exports.getOnlineTrend = async (req, res) => {
   try {
@@ -24,10 +26,25 @@ exports.getDashboardStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    const totalUsers = await User.countDocuments();
-    const totalBusinesses = await Business.countDocuments();
-    const totalProducts = await Product.countDocuments();
-    const totalJobs = await Job.countDocuments();
+    const [
+      totalUsers,
+      totalBusinesses,
+      totalProducts,
+      totalJobs,
+      pendingTickets,
+      pendingReports,
+      pendingVerifications,
+    ] = await Promise.all([
+      User.countDocuments(),
+      Business.countDocuments(),
+      Product.countDocuments(),
+      Job.countDocuments(),
+      SupportTicket.countDocuments({
+        status: { $in: ["open", "in_progress"] },
+      }),
+      Report.countDocuments({ status: "pending" }),
+      Business.countDocuments({ verificationStatus: "pending" }),
+    ]);
 
     const upgradedUsers = await User.find({
       "subscription.plan": { $ne: "free" },
@@ -63,7 +80,7 @@ exports.getDashboardStats = async (req, res) => {
       const start = new Date(startDate);
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      
+
       userQuery.createdAt = {
         $gte: start,
         $lte: end,
@@ -81,19 +98,31 @@ exports.getDashboardStats = async (req, res) => {
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [
-      currUsers, prevUsers,
-      currBiz, prevBiz,
-      currProducts, prevProducts,
-      currJobs, prevJobs
+      currUsers,
+      prevUsers,
+      currBiz,
+      prevBiz,
+      currProducts,
+      prevProducts,
+      currJobs,
+      prevJobs,
     ] = await Promise.all([
       User.countDocuments({ createdAt: { $gte: currentMonthStart } }),
-      User.countDocuments({ createdAt: { $gte: prevMonthStart, $lt: currentMonthStart } }),
+      User.countDocuments({
+        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+      }),
       Business.countDocuments({ createdAt: { $gte: currentMonthStart } }),
-      Business.countDocuments({ createdAt: { $gte: prevMonthStart, $lt: currentMonthStart } }),
+      Business.countDocuments({
+        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+      }),
       Product.countDocuments({ createdAt: { $gte: currentMonthStart } }),
-      Product.countDocuments({ createdAt: { $gte: prevMonthStart, $lt: currentMonthStart } }),
+      Product.countDocuments({
+        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+      }),
       Job.countDocuments({ createdAt: { $gte: currentMonthStart } }),
-      Job.countDocuments({ createdAt: { $gte: prevMonthStart, $lt: currentMonthStart } }),
+      Job.countDocuments({
+        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+      }),
     ]);
 
     const calculateTrend = (curr, prev) => {
@@ -107,7 +136,7 @@ exports.getDashboardStats = async (req, res) => {
       businesses: calculateTrend(currBiz, prevBiz),
       products: calculateTrend(currProducts, prevProducts),
       jobs: calculateTrend(currJobs, prevJobs),
-      revenue: "+12%", 
+      revenue: "+15.4%",
     };
 
     res.json({
@@ -119,6 +148,9 @@ exports.getDashboardStats = async (req, res) => {
         totalRevenue,
         revenueBreakdown,
         trends,
+        pendingTickets,
+        pendingReports,
+        pendingVerifications,
       },
       recentUsers,
       recentBusinesses,

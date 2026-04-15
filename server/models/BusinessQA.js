@@ -18,6 +18,7 @@ const businessQASchema = new mongoose.Schema(
     askedByName: { type: String, required: true },
     upvotes: [{ type: String }],
     answers: [answerSchema],
+    isPinned: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

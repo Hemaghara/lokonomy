@@ -23,8 +23,9 @@ import {
   HiOutlineChevronDown,
   HiOutlineClock,
 } from "react-icons/hi2";
-import { FiExternalLink } from "react-icons/fi";
+import { FiExternalLink, FiFlag } from "react-icons/fi";
 import WishlistButton from "../components/WishlistButton";
+import ReportModal from "../components/ReportModal";
 
 const Jobs = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [reportConfig, setReportConfig] = useState({ isOpen: false, targetId: null });
 
   const [selectedDistrict, setSelectedDistrict] = useState(userDistrict || "");
   const [selectedTaluka, setSelectedTaluka] = useState(userTaluka || "");
@@ -268,11 +270,23 @@ const Jobs = () => {
                         >
                           {job.gender === "Both" ? "Universal" : job.gender}
                         </span>
-                        <WishlistButton
-                          type="job"
-                          id={job._id}
-                          aria-label="Add to wishlist"
-                        />
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReportConfig({ isOpen: true, targetId: job._id });
+                            }}
+                            className="w-11 h-11 rounded-xl bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center text-slate-500 hover:text-rose-400 hover:border-rose-500/30 transition-all"
+                            title="Report Listing"
+                          >
+                            <FiFlag size={16} />
+                          </button>
+                          <WishlistButton
+                            type="job"
+                            id={job._id}
+                            aria-label="Add to wishlist"
+                          />
+                        </div>
                       </div>
 
                       <h3 className="text-slate-100 font-semibold text-base leading-snug mb-1 group-hover:text-violet-400 transition-colors line-clamp-1">
@@ -380,6 +394,12 @@ const Jobs = () => {
           )}
         </div>
       </div>
+      <ReportModal 
+        isOpen={reportConfig.isOpen}
+        onClose={() => setReportConfig({ isOpen: false, targetId: null })}
+        targetType="job"
+        targetId={reportConfig.targetId}
+      />
     </div>
   );
 };

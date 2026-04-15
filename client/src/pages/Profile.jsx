@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { authService, businessService, jobService, referralService } from "../services";
+import {
+  authService,
+  businessService,
+  jobService,
+  referralService,
+} from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { subscribeToPush, unsubscribeFromPush, toggleNotifications, toggleAppointmentReminders } from "../services/pushService";
+import {
+  subscribeToPush,
+  unsubscribeFromPush,
+  toggleNotifications,
+  toggleAppointmentReminders,
+} from "../services/pushService";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 
 import {
@@ -49,8 +59,12 @@ const Profile = () => {
     accountNumber: user?.accountNumber || "",
   });
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? true);
-  const [remindersEnabled, setRemindersEnabled] = useState(user?.appointmentRemindersEnabled ?? true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.notificationsEnabled ?? true,
+  );
+  const [remindersEnabled, setRemindersEnabled] = useState(
+    user?.appointmentRemindersEnabled ?? true,
+  );
 
   useEffect(() => {
     if (user) {
@@ -134,7 +148,6 @@ const Profile = () => {
       console.error("Error fetching applied jobs:", err);
     }
   };
-
 
   const handleDeleteBusiness = async (id) => {
     if (
@@ -240,7 +253,7 @@ const Profile = () => {
     try {
       setLoading(true);
       await toggleNotifications(newState);
-      
+
       if (newState) {
         if (Notification.permission === "default") {
           const permission = await Notification.requestPermission();
@@ -255,7 +268,7 @@ const Profile = () => {
         await unsubscribeFromPush();
         toast.success("Push notifications disabled");
       }
-      
+
       setNotificationsEnabled(newState);
       login({ ...user, notificationsEnabled: newState });
     } catch (err) {
@@ -272,7 +285,9 @@ const Profile = () => {
       await toggleAppointmentReminders(newState);
       setRemindersEnabled(newState);
       login({ ...user, appointmentRemindersEnabled: newState });
-      toast.success(`Appointment reminders ${newState ? "enabled" : "disabled"}`);
+      toast.success(
+        `Appointment reminders ${newState ? "enabled" : "disabled"}`,
+      );
     } catch (err) {
       toast.error("Failed to update reminder settings");
     } finally {
@@ -288,6 +303,11 @@ const Profile = () => {
       id: "businesses",
       label: "Businesses",
       icon: <HiOutlineBuildingOffice2 />,
+    },
+    {
+      id: "verification",
+      label: "Verification",
+      icon: <HiOutlineShieldCheck />,
     },
     { id: "jobs", label: "Jobs", icon: <FiBriefcase /> },
     {
@@ -481,7 +501,6 @@ const Profile = () => {
                     <HiOutlineClock className={loading ? "animate-spin" : ""} />
                     {loading ? "Updating GPS…" : "Update to Current Location"}
                   </button>
-                 
                 </div>
               </div>
             </motion.div>
@@ -754,6 +773,33 @@ const Profile = () => {
             </motion.div>
           )}
 
+          {activeTab === "verification" && (
+            <motion.div
+              key="verification"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`${card} p-8 text-center`}
+            >
+              <div className="w-16 h-16 bg-violet-600/10 border border-violet-500/20 rounded-2xl flex items-center justify-center text-violet-400 mx-auto mb-4">
+                <HiOutlineShieldCheck size={32} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">
+                Identity & Trust
+              </h3>
+              <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">
+                Verify your business identity to unlock trusted badges and
+                premium marketplace features.
+              </p>
+              <button
+                onClick={() => navigate("/business/verification")}
+                className={btnPrimary}
+              >
+                Go to Verification Center <HiOutlineArrowUpRight />
+              </button>
+            </motion.div>
+          )}
+
           {activeTab === "jobs" && (
             <motion.div
               key="jobs"
@@ -788,7 +834,6 @@ const Profile = () => {
             >
               <div className={`${card} p-6`}>
                 <div className="flex items-center gap-4 mb-6">
-                  
                   <div>
                     <h2 className="text-white font-bold text-lg">
                       My Applications
@@ -807,7 +852,6 @@ const Profile = () => {
                         className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-violet-500/20 transition-all"
                       >
                         <div className="flex items-center gap-4">
-                       
                           <div>
                             <h4 className="text-white font-semibold text-sm">
                               {app.position}
@@ -909,7 +953,6 @@ const Profile = () => {
               </button>
             </motion.div>
           )}
-
 
           {activeTab === "membership" && (
             <motion.div
@@ -1096,8 +1139,12 @@ const Profile = () => {
                     <HiOutlineGift className="text-xl" />
                   </div>
                   <div>
-                    <h2 className="text-white font-bold text-base">Referral Program</h2>
-                    <p className="text-slate-500 text-xs">Share your code. Earn free days. Win-win.</p>
+                    <h2 className="text-white font-bold text-base">
+                      Referral Program
+                    </h2>
+                    <p className="text-slate-500 text-xs">
+                      Share your code. Earn free days. Win-win.
+                    </p>
                   </div>
                 </div>
 
@@ -1108,14 +1155,18 @@ const Profile = () => {
                 ) : (
                   <div className="space-y-5">
                     <div>
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2">Your Unique Code</p>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-2">
+                        Your Unique Code
+                      </p>
                       <motion.div
                         animate={codeCopied ? { scale: [1, 1.06, 1] } : {}}
                         transition={{ duration: 0.3 }}
                         className="flex items-center gap-3 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-3 group"
                       >
                         <span className="flex-1 font-mono text-xl font-bold tracking-[0.2em] text-violet-300 select-all">
-                          {referralData?.referralCode || user?.referralCode || "—"}
+                          {referralData?.referralCode ||
+                            user?.referralCode ||
+                            "—"}
                         </span>
                         <button
                           id="copy-referral-code-btn"
@@ -1130,17 +1181,27 @@ const Profile = () => {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 text-center">
-                        <p className="text-white font-bold text-2xl">{referralData?.stats?.totalReferrals || 0}</p>
-                        <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">Friends Joined</p>
+                        <p className="text-white font-bold text-2xl">
+                          {referralData?.stats?.totalReferrals || 0}
+                        </p>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">
+                          Friends Joined
+                        </p>
                       </div>
                       <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 text-center">
-                        <p className="text-white font-bold text-2xl">{referralData?.stats?.appliedDays || 0}</p>
-                        <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">Free Days Earned</p>
+                        <p className="text-white font-bold text-2xl">
+                          {referralData?.stats?.appliedDays || 0}
+                        </p>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-1">
+                          Free Days Earned
+                        </p>
                       </div>
                     </div>
 
                     <div className="bg-violet-500/5 border border-violet-500/10 rounded-xl p-4">
-                      <p className="text-violet-400 text-[10px] font-black uppercase tracking-widest mb-2">How it works</p>
+                      <p className="text-violet-400 text-[10px] font-black uppercase tracking-widest mb-2">
+                        How it works
+                      </p>
                       <ul className="space-y-1.5">
                         {[
                           "Share your code with friends",
@@ -1148,8 +1209,13 @@ const Profile = () => {
                           "Friend upgrades to any paid plan — gets 15% off",
                           "You earn 15 free days added to your subscription!",
                         ].map((step, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-slate-400">
-                            <span className="w-4 h-4 rounded-full bg-violet-600/30 text-violet-400 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-xs text-slate-400"
+                          >
+                            <span className="w-4 h-4 rounded-full bg-violet-600/30 text-violet-400 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                              {i + 1}
+                            </span>
                             {step}
                           </li>
                         ))}
@@ -1172,7 +1238,9 @@ const Profile = () => {
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 text-xs font-bold py-3 rounded-xl transition-all"
                       >
-                        <span><HiOutlineChatBubbleLeftRight/></span>
+                        <span>
+                          <HiOutlineChatBubbleLeftRight />
+                        </span>
                         Share on WhatsApp
                       </a>
                     </div>
@@ -1199,8 +1267,12 @@ const Profile = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl">
                   <div>
-                    <h4 className="text-slate-200 font-semibold text-sm">Push Notifications</h4>
-                    <p className="text-slate-500 text-[11px] mt-0.5">Receive updates about orders, bookings, and messages</p>
+                    <h4 className="text-slate-200 font-semibold text-sm">
+                      Push Notifications
+                    </h4>
+                    <p className="text-slate-500 text-[11px] mt-0.5">
+                      Receive updates about orders, bookings, and messages
+                    </p>
                   </div>
                   <button
                     onClick={handleToggleNotifications}
@@ -1218,8 +1290,13 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between p-4 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl">
                   <div>
-                    <h4 className="text-slate-200 font-semibold text-sm">Appointment Reminders</h4>
-                    <p className="text-slate-500 text-[11px] mt-0.5">Get push notifications for upcoming bookings (1h & 24h before)</p>
+                    <h4 className="text-slate-200 font-semibold text-sm">
+                      Appointment Reminders
+                    </h4>
+                    <p className="text-slate-500 text-[11px] mt-0.5">
+                      Get push notifications for upcoming bookings (1h & 24h
+                      before)
+                    </p>
                   </div>
                   <button
                     onClick={handleToggleReminders}

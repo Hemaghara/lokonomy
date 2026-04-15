@@ -33,6 +33,44 @@ const Checkout = () => {
     transactionId: "",
   });
 
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    try {
+      setIsValidating(true);
+      const res = await axios.post(
+        "/api/admin/coupons/validate",
+        {
+          code: couponCode,
+          planType: user?.plan || "free",
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
+      setAppliedCoupon(res.data.coupon);
+      toast.success("Coupon applied!");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid coupon");
+      setAppliedCoupon(null);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const calculateDiscountedPrice = () => {
+    if (!appliedCoupon) return product.price;
+    if (appliedCoupon.discountType === "percentage") {
+      return (
+        product.price - (product.price * appliedCoupon.discountValue) / 100
+      );
+    }
+    return Math.max(0, product.price - appliedCoupon.discountValue);
+  };
+
   useEffect(() => {
     if (user) {
       setOrderForm((prev) => ({
@@ -86,6 +124,8 @@ const Checkout = () => {
     try {
       await orderService.createOrder({
         productId: product._id,
+        appliedCoupon: appliedCoupon?._id,
+        finalAmount: calculateDiscountedPrice(),
         ...orderForm,
       });
       toast.success("Order placed successfully!");
@@ -435,28 +475,63 @@ const Checkout = () => {
               <HiOutlineShoppingBag className="text-emerald-400 text-base" />
               Order Summary
             </h2>
+            <div className="space-y-3 p-4 bg-slate-950/30 rounded-2xl border border-white/5 mb-5">
+              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest block mb-1">
+                Promo Code
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter code..."
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-700/50 rounded-xl px-4 py-2 text-xs text-white outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={isValidating || !couponCode}
+                  className="px-4 py-2 bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-700 transition-all disabled:opacity-50"
+                >
+                  Apply
+                </button>
+              </div>
+              {appliedCoupon && (
+                <div className="flex justify-between items-center text-[10px] text-emerald-400 font-bold uppercase tracking-tight pt-1">
+                  <span>Discount Applied!</span>
+                  <button
+                    onClick={() => setAppliedCoupon(null)}
+                    className="text-slate-500 hover:text-rose-400"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2 text-sm text-slate-400 mb-5">
               <div className="flex justify-between">
-                <span>Product</span>
-                <span className="text-slate-200 font-medium line-clamp-1 max-w-[60%] text-right">
-                  {product.productName}
+                <span>Product Price</span>
+                <span className="text-slate-200 font-medium">
+                  ₹{product.price.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span>Qty</span>
-                <span className="text-slate-200 font-medium">1</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Payment</span>
-                <span className="text-slate-200 font-medium capitalize">
-                  {orderForm.paymentMethod.replace("_", " ")}
-                </span>
-              </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-emerald-400">
+                  <span>Discount</span>
+                  <span>
+                    -₹
+                    {(
+                      product.price - calculateDiscountedPrice()
+                    ).toLocaleString()}
+                  </span>
+                </div>
+              )}
               <div className="border-t border-[#1f2a3d] pt-2 mt-2 flex justify-between text-base font-bold">
-                <span className="text-slate-200">Total</span>
+                <span className="text-slate-200">Total Payable</span>
                 <span className="text-emerald-400 flex items-center gap-0.5">
                   <HiOutlineCurrencyRupee />
-                  {product.price.toLocaleString()}
+                  {calculateDiscountedPrice().toLocaleString()}
                 </span>
               </div>
             </div>
@@ -474,7 +549,7 @@ const Checkout = () => {
               ) : (
                 <>
                   <HiOutlineCheckCircle className="text-lg" />
-                  Confirm Order (₹{product.price.toLocaleString()})
+                  Confirm Order (₹{calculateDiscountedPrice().toLocaleString()})
                 </>
               )}
             </button>

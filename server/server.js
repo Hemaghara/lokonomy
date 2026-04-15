@@ -69,6 +69,7 @@ app.use("/api/referral", require("./routes/referralRoutes"));
 app.use("/api/recommendations", require("./routes/recommendations"));
 app.use("/api/rewards", require("./routes/rewards"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/reports", require("./routes/report"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");

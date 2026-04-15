@@ -44,6 +44,8 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Rewards = lazy(() => import("./pages/Rewards"));
 const EventsMap = lazy(() => import("./pages/EventsMap"));
 const CompareBusinesses = lazy(() => import("./pages/CompareBusinesses"));
+const UserSupport = lazy(() => import("./pages/UserSupport"));
+const BusinessVerification = lazy(() => import("./pages/BusinessVerification"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminRegister = lazy(() => import("./pages/admin/AdminRegister"));
@@ -53,6 +55,7 @@ const AdminBusinesses = lazy(() => import("./pages/admin/AdminBusinesses"));
 const AdminUserDetails = lazy(() => import("./pages/admin/AdminUserDetails"));
 const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
 const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetails = lazy(() => import("./pages/admin/AdminOrderDetails"));
 const AdminProductDetails = lazy(
   () => import("./pages/admin/AdminProductDetails"),
@@ -81,6 +84,18 @@ const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminAuctionDetails = lazy(
   () => import("./pages/admin/AdminAuctionDetails"),
 );
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
+const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
+const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
+const AdminBusinessVerification = lazy(
+  () => import("./pages/admin/AdminBusinessVerification"),
+);
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminAuditLogs = lazy(() => import("./pages/admin/AdminAuditLogs"));
+const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
+const AdminModeration = lazy(() => import("./pages/admin/AdminModeration"));
+const AdminChats = lazy(() => import("./pages/admin/AdminChats"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminSubAdmins = lazy(() => import("./pages/admin/AdminSubAdmins"));
 const CreateSubAdmin = lazy(() => import("./pages/admin/CreateSubAdmin"));
 const ProtectedRouteAdmin = lazy(
@@ -162,6 +177,10 @@ function App() {
                     element={<AdminMarketplace />}
                   />
                   <Route
+                    path="/admin/marketplace/orders"
+                    element={<AdminOrders />}
+                  />
+                  <Route
                     path="/admin/marketplace/product/:id"
                     element={<AdminProductDetails />}
                   />
@@ -173,6 +192,25 @@ function App() {
                     path="/admin/marketplace/auction/:id"
                     element={<AdminAuctionDetails />}
                   />
+                  <Route path="/admin/coupons" element={<AdminCoupons />} />
+                  <Route path="/admin/support" element={<AdminSupport />} />
+                  <Route path="/admin/bookings" element={<AdminBookings />} />
+                  <Route
+                    path="/admin/verification"
+                    element={<AdminBusinessVerification />}
+                  />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  <Route
+                    path="/admin/audit-logs"
+                    element={<AdminAuditLogs />}
+                  />
+                  <Route path="/admin/qa" element={<AdminQA />} />
+                  <Route
+                    path="/admin/moderation"
+                    element={<AdminModeration />}
+                  />
+                  <Route path="/admin/chats" element={<AdminChats />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
                   <Route path="/admin/jobs" element={<AdminJobs />} />
                   <Route path="/admin/jobs/:id" element={<AdminJobDetails />} />
                   <Route
@@ -279,6 +317,11 @@ function App() {
                     <Route path="/upgrade-plan" element={<UpgradePlan />} />
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/rewards" element={<Rewards />} />
+                    <Route path="/support" element={<UserSupport />} />
+                    <Route
+                      path="/business/verification"
+                      element={<BusinessVerification />}
+                    />
                     <Route path="/notifications" element={<Notifications />} />
                   </Route>
                 </Route>

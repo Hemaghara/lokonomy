@@ -35,6 +35,8 @@ import { FaChartBar, FaCheck, FaPlus } from "react-icons/fa";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import WishlistButton from "../components/WishlistButton";
+import ReportModal from "../components/ReportModal";
+import { FiFlag } from "react-icons/fi";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Highlights from "../components/Highlights";
@@ -59,6 +61,7 @@ const BusinessDetails = () => {
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const { selectedIds, toggleSelection } = useComparison();
   const [showChat, setShowChat] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -195,17 +198,21 @@ const BusinessDetails = () => {
       `}</style>
 
       <div className="bd max-w-6xl mx-auto px-4">
-        <Link
-          to="/explore"
-          className="inline-block"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors mb-6"
-          >
-            <HiOutlineArrowLeft className="text-sm" /> Back to Results
-          </motion.div>
+        <Link to="/explore" className="inline-block">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors">
+              <HiOutlineArrowLeft className="text-sm" /> Back to Results
+            </div>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setShowReport(true);
+              }}
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-[#1f2a3d] text-slate-500 hover:text-rose-400 hover:border-rose-900/40 hover:bg-rose-950/20 transition-all"
+            >
+              <FiFlag className="text-xs" /> Report Business
+            </button>
+          </div>
         </Link>
 
         <motion.div
@@ -410,7 +417,10 @@ const BusinessDetails = () => {
                             {item.icon}
                             {item.label}
                           </p>
-                          <p className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300 truncate" title={item.value}>
+                          <p
+                            className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300 truncate"
+                            title={item.value}
+                          >
                             {item.value}
                           </p>
                         </div>
@@ -537,7 +547,10 @@ const BusinessDetails = () => {
                               }`}
                           >
                             <span className="text-slate-300 font-semibold text-sm w-20 sm:w-24">
-                              {day.slice(0, 3)}<span className="hidden sm:inline">{day.slice(3)}</span>
+                              {day.slice(0, 3)}
+                              <span className="hidden sm:inline">
+                                {day.slice(3)}
+                              </span>
                             </span>
                             {hours.isOpen ? (
                               <div className="flex items-center gap-2 text-xs font-semibold">
@@ -870,6 +883,13 @@ const BusinessDetails = () => {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <ReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        targetType="business"
+        targetId={business._id}
+      />
 
       <AnimatePresence>
         {showChat && (

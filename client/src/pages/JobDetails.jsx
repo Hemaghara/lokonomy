@@ -26,6 +26,8 @@ import {
   HiOutlineArrowRight,
 } from "react-icons/hi2";
 import WishlistButton from "../components/WishlistButton";
+import ReportModal from "../components/ReportModal";
+import { FiFlag } from "react-icons/fi";
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -34,6 +36,7 @@ const JobDetails = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const isOwner = user && job && user._id === job.posterId;
   const hasApplied =
@@ -146,8 +149,13 @@ const JobDetails = () => {
                 <HiOutlineClock className="text-amber-400 text-xl" />
               </div>
               <div>
-                <p className="text-amber-400 font-bold text-sm">Applications Paused</p>
-                <p className="text-slate-400 text-xs">This job listing has been temporarily suspended by an administrator.</p>
+                <p className="text-amber-400 font-bold text-sm">
+                  Applications Paused
+                </p>
+                <p className="text-slate-400 text-xs">
+                  This job listing has been temporarily suspended by an
+                  administrator.
+                </p>
               </div>
             </div>
           )}
@@ -158,35 +166,43 @@ const JobDetails = () => {
             >
               <HiOutlineArrowLeft className="text-base" /> Back to Jobs
             </Link>
-          <div className="flex items-center gap-2">
-            <WishlistButton type="job" id={id} />
-            {isOwner && (
+            <div className="flex items-center gap-2">
+              <WishlistButton type="job" id={id} />
+              {isOwner && (
+                <button
+                  onClick={handleDeleteJob}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
+                >
+                  <HiOutlineTrash className="text-sm" /> Delete
+                </button>
+              )}
               <button
-                onClick={handleDeleteJob}
-                className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
-              >
-                <HiOutlineTrash className="text-sm" /> Delete
-              </button>
-            )}
-            <button
-              onClick={handleShare}
-              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
+                onClick={handleShare}
+                className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
                 ${
                   copied
                     ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/30"
                     : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
                 }`}
-            >
-              {copied ? (
-                <>
-                  <HiOutlineCheckCircle className="text-base" /> Copied!
-                </>
-              ) : (
-                <>
-                  <HiOutlineShare className="text-base" /> Share
-                </>
+              >
+                {copied ? (
+                  <>
+                    <HiOutlineCheckCircle className="text-base" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <HiOutlineShare className="text-base" /> Share
+                  </>
+                )}
+              </button>
+              {!isOwner && (
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3.5 py-2 rounded-xl border border-[#1f2a3d] text-slate-500 hover:text-rose-400 hover:border-rose-900/40 hover:bg-rose-950/20 transition-all"
+                >
+                  <FiFlag className="text-xs" /> Report
+                </button>
               )}
-            </button>
             </div>
           </div>
         </motion.div>
@@ -379,7 +395,9 @@ const JobDetails = () => {
               )}
 
               <a
-                href={job.isSuspended ? "#" : `https://wa.me/${job.posterContact}`}
+                href={
+                  job.isSuspended ? "#" : `https://wa.me/${job.posterContact}`
+                }
                 target={job.isSuspended ? "_self" : "_blank"}
                 rel="noreferrer"
                 onClick={(e) => job.isSuspended && e.preventDefault()}
@@ -389,8 +407,10 @@ const JobDetails = () => {
                     : "bg-[#0d1424] border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-500"
                 }`}
               >
-                <HiOutlineChatBubbleLeftRight className={`text-sm ${job.isSuspended ? "text-slate-700 font-bold" : ""}`} /> Contact on
-                WhatsApp
+                <HiOutlineChatBubbleLeftRight
+                  className={`text-sm ${job.isSuspended ? "text-slate-700 font-bold" : ""}`}
+                />{" "}
+                Contact on WhatsApp
               </a>
             </div>
             <div className={card + " p-5"}>
@@ -427,6 +447,13 @@ const JobDetails = () => {
           </motion.div>
         </div>
       </div>
+
+      <ReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        targetType="job"
+        targetId={job._id}
+      />
     </div>
   );
 };

@@ -350,3 +350,28 @@ exports.deleteBusiness = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+exports.submitVerification = async (req, res) => {
+  try {
+    const { documentType, documentNumber, documentFile } = req.body;
+    const business = await Business.findById(req.params.id);
+
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    if (business.ownerId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    business.verificationStatus = "pending";
+    business.kycDocuments = business.kycDocuments || [];
+    business.kycDocuments.push(documentFile);
+    // You could also save documentType/Number if needed
+    await business.save();
+
+    res.json({ success: true, message: "Verification submitted", business });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -70,6 +70,15 @@ const businessSchema = new mongoose.Schema({
   ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   rating: { type: Number, default: 0.0 },
   verified: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false },
+  verificationStatus: {
+    type: String,
+    enum: ["none", "pending", "under_review", "verified", "rejected"],
+    default: "none",
+  },
+  verifiedAt: { type: Date },
+  rejectionReason: { type: String },
+  kycDocuments: [{ type: String }],
   dailyVisits: [
     {
       date: { type: String, required: true },

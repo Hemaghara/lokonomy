@@ -15,6 +15,8 @@ import {
   FiArrowRight,
   FiCalendar,
   FiX,
+  FiShield,
+  FiMessageSquare,
 } from "react-icons/fi";
 const STAT_COLORS = {
   emerald: {
@@ -345,6 +347,30 @@ const AdminDashboard = () => {
       color: "purple",
       trend: stats?.stats.trends?.jobs || "+0%",
       path: "/admin/jobs",
+    },
+    {
+      label: "Pending Verification",
+      value: stats?.stats.pendingVerifications,
+      icon: FiShield,
+      color: "amber",
+      trend: "Action Required",
+      path: "/admin/verification",
+    },
+    {
+      label: "New Reports",
+      value: stats?.stats.pendingReports,
+      icon: FiActivity,
+      color: "rose",
+      trend: "Review Needed",
+      path: "/admin/moderation",
+    },
+    {
+      label: "Open Tickets",
+      value: stats?.stats.pendingTickets,
+      icon: FiMessageSquare,
+      color: "indigo",
+      trend: "Support Active",
+      path: "/admin/support",
     },
   ];
 
