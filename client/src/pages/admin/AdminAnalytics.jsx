@@ -522,7 +522,7 @@ const AdminAnalytics = () => {
                 accent="Funnel"
                 icon={FiFilter}
               />
-              <div className="h-[300px] flex flex-col justify-center space-y-4">
+              <div className="h-75 flex flex-col justify-center space-y-4">
                 {[
                   {
                     label: "Total Visitors",

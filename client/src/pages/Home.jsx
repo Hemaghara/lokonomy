@@ -453,7 +453,7 @@ const Home = () => {
                           recommendationService.trackInteraction("click", trackType, item._id);
                           navigate(getNav(item));
                         }}
-                        className="group bg-[#0d1120] border border-white/[0.07] rounded-[24px] hover:border-primary/40 transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm shadow-xl flex flex-col"
+                        className="group bg-[#0d1120] border border-white/[0.07] rounded-3xl hover:border-primary/40 transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm shadow-xl flex flex-col"
                       >
                         <div className={`h-1.5 bg-linear-to-r ${bar} group-hover:h-2 transition-all`} />
                         <div className="p-6 pb-8 flex flex-col h-full">
@@ -477,7 +477,7 @@ const Home = () => {
                             <span className="text-[0.8rem] font-bold text-white/30 flex items-center gap-1.5">
                               <MapPin size={13} className="text-primary/50" /> {getSub(item)}
                             </span>
-                            <span className={`text-[11px] font-black tracking-[0.1em] uppercase flex items-center gap-1.5 ${accentText}`}>
+                            <span className={`text-[11px] font-black tracking-widest uppercase flex items-center gap-1.5 ${accentText}`}>
                               Details <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                             </span>
                           </div>

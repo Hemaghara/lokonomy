@@ -406,7 +406,7 @@ const AdminDashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            <div className="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-[32px] p-7 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <div className="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-4xl p-7 backdrop-blur-md shadow-2xl relative overflow-hidden">
               <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full pointer-events-none" />
 
               <div className="flex items-center gap-4 mb-10 relative">
@@ -430,8 +430,8 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <div className="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-[32px] overflow-hidden backdrop-blur-md shadow-2xl flex flex-col">
-              <div className="flex items-center justify-between px-7 py-5 border-b border-white/5 bg-white/[0.02]">
+            <div className="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-4xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col">
+              <div className="flex items-center justify-between px-7 py-5 border-b border-white/5 bg-white/2">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                     <FiUsers className="text-emerald-400 text-lg" />
@@ -452,7 +452,7 @@ const AdminDashboard = () => {
                   stats.recentUsers.map((user) => (
                     <div
                       key={user._id}
-                      className="flex items-center justify-between px-7 py-4 hover:bg-white/[0.03] transition-all duration-300 group cursor-default"
+                      className="flex items-center justify-between px-7 py-4 hover:bg-white/3 transition-all duration-300 group cursor-default"
                     >
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-black text-base shrink-0 overflow-hidden group-hover:border-indigo-500 transition-all duration-300">
@@ -492,15 +492,15 @@ const AdminDashboard = () => {
 
               <button
                 onClick={() => navigate("/admin/users")}
-                className="flex items-center justify-center gap-3 w-full py-4 text-[10px] font-black text-slate-500 hover:text-indigo-400 uppercase tracking-[0.2em] transition-all bg-white/[0.02] border-t border-white/5 group"
+                className="flex items-center justify-center gap-3 w-full py-4 text-[10px] font-black text-slate-500 hover:text-indigo-400 uppercase tracking-[0.2em] transition-all bg-white/2 border-t border-white/5 group"
               >
                 Expansion Details
                 <FiArrowRight className="text-sm group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
 
-            <div className="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-[32px] overflow-hidden backdrop-blur-md shadow-2xl flex flex-col">
-              <div className="flex items-center justify-between px-7 py-5 border-b border-white/5 bg-white/[0.02]">
+            <div className="xl:col-span-1 bg-slate-900/60 border border-slate-800/80 rounded-4xl overflow-hidden backdrop-blur-md shadow-2xl flex flex-col">
+              <div className="flex items-center justify-between px-7 py-5 border-b border-white/5 bg-white/2">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
                     <FiActivity className="text-rose-400 text-lg" />
@@ -522,7 +522,7 @@ const AdminDashboard = () => {
                   activities.map((act) => (
                     <div
                       key={act.id}
-                      className="px-7 py-4 hover:bg-white/[0.03] transition-all group"
+                      className="px-7 py-4 hover:bg-white/3 transition-all group"
                     >
                       <div className="flex gap-4">
                         <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 group-hover:bg-slate-700 transition-colors">
@@ -558,7 +558,7 @@ const AdminDashboard = () => {
                 )}
               </div>
 
-              <div className="p-4 bg-white/[0.02] border-t border-white/5 text-center">
+              <div className="p-4 bg-white/2 border-t border-white/5 text-center">
                 <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.25em]">
                   End of feed
                 </p>

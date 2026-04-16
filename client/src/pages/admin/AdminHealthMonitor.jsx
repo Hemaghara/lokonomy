@@ -252,7 +252,7 @@ const AdminHealthMonitor = () => {
 };
 
 const ChartCard = ({ title, children }) => (
-  <div className="bg-slate-900/60 border border-slate-800 p-7 rounded-[32px] backdrop-blur-md shadow-2xl">
+  <div className="bg-slate-900/60 border border-slate-800 p-7 rounded-4xl backdrop-blur-md shadow-2xl">
     <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] mb-7">
       {title}
     </h3>
