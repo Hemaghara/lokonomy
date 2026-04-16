@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import axios from "axios";
+import api from "../services/api";
 import {
   FiLifeBuoy,
   FiSend,
@@ -28,10 +28,7 @@ const UserSupport = () => {
 
   const fetchMyTickets = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("/api/support/my-tickets", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/support/my-tickets");
       setTickets(res.data.tickets);
     } catch (error) {
       console.error("Error fetching tickets");
@@ -42,10 +39,7 @@ const UserSupport = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      await axios.post("/api/support/create", newTicket, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post("/support/create", newTicket);
       toast.success("Ticket raised successfully!");
       setNewTicket({
         subject: "",

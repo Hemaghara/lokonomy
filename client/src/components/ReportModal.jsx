@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import axios from "axios";
+import api from "../services/api";
 import { FiFlag, FiX, FiAlertTriangle } from "react-icons/fi";
 
 const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
@@ -24,19 +24,12 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/reports",
-        {
-          targetType,
-          targetId,
-          reason,
-          description,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await api.post("/reports", {
+        targetType,
+        targetId,
+        reason,
+        description,
+      });
 
       toast.success("Thank you for your report. Our team will review it.");
       onClose();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiShield,
@@ -33,10 +33,7 @@ const BusinessVerification = () => {
   const fetchBusinessStatus = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.get("/api/businesses/my", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/businesses/my");
       if (Array.isArray(res.data)) {
         setBusiness(res.data[0]);
       } else if (res.data.businesses && res.data.businesses.length > 0) {
@@ -72,13 +69,9 @@ const BusinessVerification = () => {
       return toast.error("Please upload a document");
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `/api/businesses/${business._id}/verify`,
-        verificationData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+      await api.post(
+        `/businesses/${business._id}/verify`,
+        verificationData
       );
       toast.success("Verification request submitted!");
       fetchBusinessStatus();

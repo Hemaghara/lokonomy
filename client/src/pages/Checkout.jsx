@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { marketService, orderService } from "../services";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
+import api from "../services/api";
 import {
   HiOutlineArrowLeft,
   HiOutlineShoppingBag,
@@ -41,16 +42,10 @@ const Checkout = () => {
     if (!couponCode.trim()) return;
     try {
       setIsValidating(true);
-      const res = await axios.post(
-        "/api/admin/coupons/validate",
-        {
-          code: couponCode,
-          planType: user?.plan || "free",
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
+      const res = await api.post("/admin/coupons/validate", {
+        code: couponCode,
+        planType: user?.plan || "free",
+      });
       setAppliedCoupon(res.data.coupon);
       toast.success("Coupon applied!");
     } catch (error) {
