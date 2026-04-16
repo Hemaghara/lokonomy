@@ -148,7 +148,7 @@ const AIGuide = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] font-inter">
+    <div className="fixed bottom-6 right-6 z-9999 font-inter">
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -279,7 +279,7 @@ const AIGuide = () => {
                                           : `/business/${id}`,
                                       );
                                     }}
-                                    className={`mx-1 my-1 px-2.5 py-1.5 border rounded-lg font-bold flex items-center gap-2 transition-all active:scale-95 inline-flex ${
+                                    className={`mx-1 my-1 px-2.5 py-1.5 border rounded-lg font-bold items-center gap-2 transition-all active:scale-95 inline-flex ${
                                       isStory
                                         ? "bg-secondary/20 hover:bg-secondary/30 border-secondary/30 text-secondary"
                                         : "bg-primary/20 hover:bg-primary/30 border-primary/30 text-primary"
