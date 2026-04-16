@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
@@ -84,7 +84,8 @@ const Avatar = ({ name, size = "md" }) => {
   );
 };
 
-const ActionBtn = ({ onClick, icon: Icon, color }) => {
+const ActionBtn = ({ onClick, icon: _Icon, color }) => {
+  const Icon = _Icon;
   const colors = {
     indigo: "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10",
     emerald: "text-slate-500 hover:text-emerald-400 hover:bg-emerald-500/10",
@@ -114,11 +115,7 @@ const AdminUsers = () => {
   const itemsPerPage = 6;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await adminService.getUsers();
       setUsers(response.data);
@@ -128,7 +125,11 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleUpdateStatus = async (id, status) => {
     try {

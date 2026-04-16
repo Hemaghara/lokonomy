@@ -4,6 +4,7 @@ import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
 import { ComparisonProvider } from "./context/ComparisonContext";
 import ComparisonDock from "./components/ComparisonDock";
+import AIGuide from "./components/AIGuide";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -328,6 +329,7 @@ function App() {
               </Routes>
             </Suspense>
             <ComparisonDock />
+            <AIGuide />
           </Router>
         </ComparisonProvider>
       </UserProvider>

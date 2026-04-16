@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
@@ -218,6 +218,22 @@ const AdminDashboard = () => {
     endDate: "",
   });
 
+  const fetchStats = useCallback(async (range = {}) => {
+    try {
+      const { startDate, endDate } = range;
+      const params = {};
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const response = await adminService.getDashboardStats(params);
+      setStats(response.data);
+    } catch {
+      toast.error("Failed to fetch statistics");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchStats(dateRange);
     fetchOnlineTrend();
@@ -234,23 +250,7 @@ const AdminDashboard = () => {
     return () => {
       socket.off("onlineUsersCount");
     };
-  }, []);
-
-  const fetchStats = async (range = {}) => {
-    try {
-      const { startDate, endDate } = range;
-      const params = {};
-      if (startDate) params.startDate = startDate;
-      if (endDate) params.endDate = endDate;
-
-      const response = await adminService.getDashboardStats(params);
-      setStats(response.data);
-    } catch {
-      toast.error("Failed to fetch statistics");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [dateRange, fetchStats]);
 
   const handleDateChange = (e) => {
     const { name, value } = e.target;

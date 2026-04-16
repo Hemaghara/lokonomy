@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
@@ -173,11 +173,7 @@ const AdminStoryDetails = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  useEffect(() => {
-    fetchDetails();
-  }, [id]);
-
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       const res = await adminService.getStoryDetails(id);
       setStory(res.data);
@@ -186,7 +182,11 @@ const AdminStoryDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchDetails();
+  }, [fetchDetails]);
 
   const handleDelete = async () => {
     setDeleteLoading(true);

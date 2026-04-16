@@ -58,6 +58,7 @@ import {
   MdOutlineMedicalServices,
 } from "react-icons/md";
 import WishlistButton from "../components/WishlistButton";
+import { MarketSkeleton } from "../components/Skeleton";
 import {
   TbCar,
   TbBike,
@@ -558,14 +559,7 @@ const Market = () => {
 
         <div className="min-h-64">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-[#111827] h-72 rounded-2xl animate-pulse opacity-40"
-                />
-              ))}
-            </div>
+            <MarketSkeleton />
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

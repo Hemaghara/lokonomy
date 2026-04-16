@@ -26,6 +26,7 @@ import {
 import WishlistButton from "../components/WishlistButton";
 import ReportModal from "../components/ReportModal";
 import { FiFlag } from "react-icons/fi";
+import { ProductDetailsSkeleton } from "../components/Skeleton";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -204,17 +205,7 @@ const ProductDetails = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-[#080e1a] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-9 h-9 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
-          <span className="text-slate-500 text-xs font-medium uppercase tracking-widest">
-            Loading…
-          </span>
-        </div>
-      </div>
-    );
+  if (loading) return <ProductDetailsSkeleton />;
 
   if (!product)
     return (

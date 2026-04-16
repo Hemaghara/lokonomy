@@ -40,6 +40,7 @@ import { FiFlag } from "react-icons/fi";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Highlights from "../components/Highlights";
+import { BusinessDetailsSkeleton } from "../components/Skeleton";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -125,15 +126,7 @@ const BusinessDetails = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-[#080e1a] flex flex-col items-center justify-center gap-3">
-        <div className="w-9 h-9 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
-        <p className="text-slate-500 text-xs font-medium uppercase tracking-widest">
-          Loading…
-        </p>
-      </div>
-    );
+  if (loading) return <BusinessDetailsSkeleton />;
   if (!business)
     return (
       <div className="min-h-screen bg-[#080e1a] flex flex-col items-center justify-center text-center px-6">

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { categories } from "../data/categories";
 import SmartSearch from "../components/SmartSearch";
+import { ProductSkeleton } from "../components/Skeleton";
 import recommendationService from "../services/recommendationService";
 import { feedService } from "../services/feedService";
 import {
@@ -155,7 +156,7 @@ const Home = () => {
       tagWrap:
         "bg-[rgba(79,110,247,0.09)] border-[rgba(79,110,247,0.15)] text-[#4f6ef7]",
       bar: "from-[#4f6ef7] to-[rgba(79,110,247,0.53)]",
-      Icon: Store,
+      icon: Store,
       getTitle: (x) => x.businessName,
       getSub: (x) => x.district || "Local Area",
       getDesc: (x) =>
@@ -173,7 +174,7 @@ const Home = () => {
       tagWrap:
         "bg-[rgba(244,114,182,0.09)] border-[rgba(244,114,182,0.15)] text-[#f472b6]",
       bar: "from-[#f472b6] to-[rgba(244,114,182,0.53)]",
-      Icon: ShoppingBag,
+      icon: ShoppingBag,
       getTitle: (x) => x.productName,
       getSub: (x) => `₹${x.price.toLocaleString()}`,
       getDesc: (x) =>
@@ -190,7 +191,7 @@ const Home = () => {
       tagWrap:
         "bg-[rgba(16,185,129,0.09)] border-[rgba(16,185,129,0.15)] text-[#10b981]",
       bar: "from-[#10b981] to-[rgba(16,185,129,0.53)]",
-      Icon: Briefcase,
+      icon: Briefcase,
       getTitle: (x) => x.position,
       getSub: (x) => x.district,
       getDesc: (x) => x.salary,
@@ -411,48 +412,34 @@ const Home = () => {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {recCards.map(
-                ({
-                  items,
-                  label,
-                  accentText,
-                  iconWrap,
-                  tagWrap,
-                  bar,
-                  Icon,
-                  getTitle,
-                  getSub,
-                  getDesc,
-                  getNav,
-                  trackType,
-                }) =>
-                  items.map((item) => (
-                    <motion.div
-                      key={item._id}
-                      whileHover={{ y: -6 }}
-                      onClick={() => {
-                        recommendationService.trackInteraction(
-                          "click",
-                          trackType,
-                          item._id,
-                        );
-                        navigate(getNav(item));
-                      }}
-                      className="bg-[#0d1120] border border-white/[0.07] rounded-[20px] hover:border-[rgba(79,110,247,0.35)] hover:shadow-[0_0_32px_rgba(79,110,247,0.12)] transition-all duration-200 cursor-pointer overflow-hidden"
-                    >
-                      <div className={`h-1.5 bg-linear-to-r ${bar}`} />
-
-                      <div className="p-6 pb-7">
-                        <div className="flex items-center gap-3.5 mb-4">
-                          <div
-                            className={`w-11 h-11 rounded-[14px] border flex items-center justify-center shrink-0 ${iconWrap}`}
-                          >
-                            <Icon size={20} />
+              {isRecLoading ? (
+                <>
+                  <ProductSkeleton />
+                  <ProductSkeleton />
+                  <ProductSkeleton />
+                </>
+              ) : (
+                recCards.map(({ items, label, accentText, iconWrap, tagWrap, bar, icon: _Icon, getTitle, getSub, getDesc, getNav, trackType }) =>
+                  items.map((item) => {
+                    const Icon = _Icon;
+                    return (
+                      <motion.div
+                        key={item._id}
+                        whileHover={{ y: -6 }}
+                        onClick={() => {
+                          recommendationService.trackInteraction("click", trackType, item._id);
+                          navigate(getNav(item));
+                        }}
+                        className="bg-[#0d1120] border border-white/[0.07] rounded-[20px] hover:border-[rgba(79,110,247,0.35)] hover:shadow-[0_0_32px_rgba(79,110,247,0.12)] transition-all duration-200 cursor-pointer overflow-hidden"
+                      >
+                        <div className={`h-1.5 bg-linear-to-r ${bar}`} />
+                        <div className="p-6 pb-7">
+                          <div className="flex items-center gap-3.5 mb-4">
+                            <div className={`w-11 h-11 rounded-[14px] border flex items-center justify-center shrink-0 ${iconWrap}`}>
+                              <Icon size={20} />
                           </div>
                           <div className="min-w-0">
-                            <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold tracking-[0.12em] uppercase border mb-1 ${tagWrap}`}
-                            >
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold tracking-[0.12em] uppercase border mb-1 ${tagWrap}`}>
                               {label}
                             </span>
                             <h3 className="font-extrabold text-[0.95rem] text-white overflow-hidden text-ellipsis whitespace-nowrap">
@@ -460,24 +447,22 @@ const Home = () => {
                             </h3>
                           </div>
                         </div>
-
                         <p className="text-[0.8rem] text-white/45 leading-[1.6] mb-4 line-clamp-2">
                           {getDesc(item)}
                         </p>
-
                         <div className="flex items-center justify-between">
                           <span className="text-[0.78rem] font-semibold text-white/40 flex items-center gap-1">
                             <MapPin size={11} /> {getSub(item)}
                           </span>
-                          <span
-                            className={`text-[11px] font-extrabold tracking-[0.08em] uppercase flex items-center gap-1 ${accentText}`}
-                          >
+                          <span className={`text-[11px] font-extrabold tracking-[0.08em] uppercase flex items-center gap-1 ${accentText}`}>
                             View <ChevronRight size={12} />
                           </span>
                         </div>
                       </div>
-                    </motion.div>
-                  )),
+                      </motion.div>
+                    );
+                  })
+                )
               )}
             </div>
           </section>
