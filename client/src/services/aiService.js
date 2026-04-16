@@ -70,31 +70,43 @@ const simulateAIGeneration = async (name, cat, sub, loc) => {
   return mocks[Math.floor(Math.random() * mocks.length)];
 };
 
-export const askLocalGuide = async (query, context = {}) => {
+export const askLocalGuide = async (query, context = {}, history = []) => {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
   if (!apiKey || apiKey === "your_groq_key_here") {
     return "I'm your Lokonomy Local Guide! (Please add a Groq API key for real-time guidance). I can help you find products, businesses, or jobs in your neighborhood.";
   }
 
-  const systemPrompt = `You are the "Lokonomy Local Guide," a hyper-fast AI assistant for a local economy platform in India.
-Your goal is to help users find businesses, services, products, or job opportunities.
+  const systemPrompt = `You are the "Lokonomy Local Guide," a world-class AI assistant comparable to ChatGPT, specialized for the Lokonomy local economy platform in India.
+Your goal is to provide the MOST efficient, accurate, and helpful answers to ANY question.
 
-CONTEXT:
-User Location: ${context.location || "India"}
-Available Businesses: ${JSON.stringify(context.businesses || [])}
-Available Stories/Events: ${JSON.stringify(context.stories || [])}
-Available Categories: ${context.categories || "Retail, Services, Food, Health, Jobs, Real Estate, Events"}
+CORE CAPABILITIES:
+1. PLATFORM MASTER: You know everything about Lokonomy (Marketplace, Jobs, Stories, Subscriptions).
+2. LOCAL SEARCH EXPERT: Use the provided lists to suggest REAL content using [[business:ID|Name]] or [[story:ID|Title]].
+3. VERSATILE ASSISTANT: You can answer general questions (business tips, marketing, local history) while maintaining your identity as a local guide.
+4. CONVERSATIONAL MEMORY: You remember the history of this chat. Engage in natural dialogue and handle follow-up questions.
 
 INSTRUCTIONS:
-1. RECOMMEND REAL CONTENT: Use the "Businesses" and "Stories" lists to suggest real content. 
-2. EXHAUSTIVE LISTING: Mention up to 6 matches if found.
-3. DIRECT LINKS: 
-   - Business: [[business:ID|Name]]
-   - Story/Event: [[story:ID|Title]]
-4. CRITICAL: Do NOT omit the "business:" or "story:" prefix.
-5. Keep answers helpful and community-focused (max 5 sentences).
-6. Suggest using Lokonomy's Explore, Stories, or Marketplace pages.`;
+- STRICT FORMATTING: Always use [[business:ID|Name]] for business links.
+- RADIAL PRECISION: Mention proximity if coordinates are available.
+- EXHAUSTIVE BUT CONCISE: Provide detailed but readable information.
+
+WEBSITE KNOWLEDGE:
+- Marketplace (Products), Directory (Businesses), Job Board, Community Feed.
+
+USER CONTEXT:
+User: ${context.userName || "Guest"}
+Location: ${context.location || "India"}
+Coords: ${JSON.stringify(context.coords || "Not detected")}
+Businesses: ${JSON.stringify(context.businesses || [])}
+Stories: ${JSON.stringify(context.stories || [])}`;
+
+  const chatHistory = history
+    .map((msg) => ({
+      role: msg.role === "assistant" ? "assistant" : "user",
+      content: msg.content,
+    }))
+    .slice(-10);
 
   try {
     const response = await fetch(GROQ_API_URL, {
@@ -107,10 +119,11 @@ INSTRUCTIONS:
         model: MODEL,
         messages: [
           { role: "system", content: systemPrompt },
+          ...chatHistory,
           { role: "user", content: query },
         ],
-        temperature: 0.6,
-        max_tokens: 200,
+        temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 

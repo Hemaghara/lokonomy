@@ -60,9 +60,10 @@ const AIGuide = () => {
     {
       role: "assistant",
       content:
-        "Hi! I'm your Lokonomy Local Guide. How can I help you support your local community today?",
+        "Hi! I'm your Lokonomy Local Guide. I can help you find shops within 3km, latest stories, or specific services. How can I help you today?",
     },
   ]);
+  const [coords, setCoords] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const { state, setState, district, setDistrict, taluka, setTaluka } =
@@ -78,6 +79,7 @@ const AIGuide = () => {
       async (pos) => {
         try {
           const { latitude: lat, longitude: lng } = pos.coords;
+          setCoords({ lat, lng });
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`,
           );
@@ -127,20 +129,31 @@ const AIGuide = () => {
     setIsLoading(true);
 
     try {
+      const searchTerm = finalQuery
+        .toLowerCase()
+        .replace(/\b(find|near|by|me|show|is|a|of|the|in|search|for|any|type|shop|give|suggestion|how|do|i|can|you|tell|about|what|where|website|platform|lokonomy|please|recommend|looking)\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
       let bizRes = await businessService.getBusinesses({
-        district: district || undefined,
-        limit: 50,
+        search: searchTerm || undefined,
+        lat: coords?.lat,
+        lng: coords?.lng,
+        radius: 3000, 
+        district: !coords ? district : undefined,
+        limit: 20
       });
-      if (!bizRes.data.success || !bizRes.data.businesses?.length) {
-        bizRes = await businessService.getBusinesses({ limit: 50 });
+
+      let businesses = Array.isArray(bizRes.data) ? bizRes.data : bizRes.data.businesses || [];
+      if (businesses.length === 0) {
+        bizRes = await businessService.getBusinesses({
+          district: district || undefined,
+          limit: 20
+        });
+        businesses = Array.isArray(bizRes.data) ? bizRes.data : bizRes.data.businesses || [];
       }
 
-      const rawData = bizRes.data;
-      const businesses = Array.isArray(rawData)
-        ? rawData
-        : rawData.businesses || [];
-
-      const nearbyBiz = businesses.map((b) => ({
+      const contextBusinesses = businesses.map((b) => ({
         id: b._id,
         name: b.businessName,
         cat: b.mainCategory || b.category,
@@ -148,24 +161,23 @@ const AIGuide = () => {
         loc: b.taluka || b.district,
         desc: b.description,
       }));
-      const storyRes = await storyService.getStories({ limit: 10 });
-      const nearbyStories =
-        storyRes.data.success || Array.isArray(storyRes.data)
-          ? (Array.isArray(storyRes.data)
-              ? storyRes.data
-              : storyRes.data.stories
-            ).map((s) => ({ id: s._id, title: s.title }))
-          : [];
+      const storyRes = await storyService.getStories({
+        search: searchTerm || undefined,
+        district: district || undefined,
+        limit: 10
+      });
+      
+      const storyData = storyRes.data?.data || storyRes.data?.stories || (Array.isArray(storyRes.data) ? storyRes.data : []);
+      const contextStories = storyData.map((s) => ({ id: s._id, title: s.title }));
 
       const context = {
+        userName: user?.name,
         location: locationString,
         currentPath: routeLocation.pathname,
-        pageData: {
-          id: routeLocation.pathname.split("/").pop(),
-          type: routeLocation.pathname.split("/")[1],
-        },
-        businesses: nearbyBiz,
-        stories: nearbyStories,
+        coords: coords,
+        businesses: contextBusinesses,
+        stories: contextStories,
+        isRadiusSearch: !!coords
       };
 
       const response = await askLocalGuide(finalQuery, context);
@@ -174,12 +186,12 @@ const AIGuide = () => {
         { role: "assistant", content: response },
       ]);
     } catch (error) {
+      console.error("AI Guide Error:", error);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "I'm sorry, I'm having trouble connecting. Please try again later.",
+          content: "I'm sorry, I'm having trouble connecting to live data right now. Please check your internet or try again later.",
         },
       ]);
     } finally {
@@ -307,14 +319,16 @@ const AIGuide = () => {
                         >
                           {msg.content
                             .split(
-                              /(\[\[(?:business:|story:)?([^|\]]+)\|([^\]]+)\]\])/g,
+                              /(\[\[(?:business:|story:)?(?:[^|\]]+)\|(?:[^\]]+)\]\])/g,
                             )
                             .map((part, index) => {
                               const match = part.match(
-                                /\[\[(business|story):([^|\]]+)\|([^\]]+)\]\]/,
+                                /\[\[(?:(business|story):)?([^|\]]+)\|([^\]]+)\]\]/,
                               );
                               if (match) {
-                                const [_, type, id, title] = match;
+                                const type = match[1] ? match[1] : "business";
+                                const id = match[2];
+                                const title = match[3];
                                 const isStory = type === "story";
                                 return (
                                   <button
