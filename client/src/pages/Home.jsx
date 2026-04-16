@@ -389,8 +389,13 @@ const Home = () => {
         </section>
         {hasRecommendations && (
           <section className="px-4 py-20 max-w-6xl mx-auto">
+
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
-              <div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+              >
                 <Pill>
                   <Sparkles size={11} /> Personalised
                 </Pill>
@@ -403,15 +408,26 @@ const Home = () => {
                 <p className="text-white/40 text-sm mt-1">
                   Smart suggestions based on your interests and location.
                 </p>
-              </div>
-              <button
+              </motion.div>
+              <motion.button
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
                 onClick={() => navigate("/explore")}
-                className="text-[#4f6ef7] font-bold text-[13px] flex items-center gap-1.5 bg-transparent border-none cursor-pointer whitespace-nowrap hover:text-[#7c9fff] transition-colors duration-200"
+                className="text-primary font-bold text-[13px] flex items-center gap-1.5 bg-white/5 px-4 py-2 rounded-xl hover:bg-white/10 transition-all active:scale-95"
               >
                 See all <ArrowRight size={15} />
-              </button>
+              </motion.button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.1 } }
+              }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            >
               {isRecLoading ? (
                 <>
                   <ProductSkeleton />
@@ -425,47 +441,55 @@ const Home = () => {
                     return (
                       <motion.div
                         key={item._id}
-                        whileHover={{ y: -6 }}
+                        variants={{
+                          hidden: { opacity: 0, y: 20 },
+                          visible: { opacity: 1, y: 0 }
+                        }}
+                        whileHover={{ 
+                          y: -10,
+                          boxShadow: "0 20px 40px rgba(79, 110, 247, 0.15)"
+                        }}
                         onClick={() => {
                           recommendationService.trackInteraction("click", trackType, item._id);
                           navigate(getNav(item));
                         }}
-                        className="bg-[#0d1120] border border-white/[0.07] rounded-[20px] hover:border-[rgba(79,110,247,0.35)] hover:shadow-[0_0_32px_rgba(79,110,247,0.12)] transition-all duration-200 cursor-pointer overflow-hidden"
+                        className="group bg-[#0d1120] border border-white/[0.07] rounded-[24px] hover:border-primary/40 transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm shadow-xl flex flex-col"
                       >
-                        <div className={`h-1.5 bg-linear-to-r ${bar}`} />
-                        <div className="p-6 pb-7">
-                          <div className="flex items-center gap-3.5 mb-4">
-                            <div className={`w-11 h-11 rounded-[14px] border flex items-center justify-center shrink-0 ${iconWrap}`}>
-                              <Icon size={20} />
+                        <div className={`h-1.5 bg-linear-to-r ${bar} group-hover:h-2 transition-all`} />
+                        <div className="p-6 pb-8 flex flex-col h-full">
+                          <div className="flex items-center gap-4 mb-5">
+                            <div className={`w-12 h-12 rounded-[18px] border flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${iconWrap}`}>
+                              <Icon size={22} />
+                            </div>
+                            <div className="min-w-0">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black tracking-[0.14em] uppercase border mb-1.5 ${tagWrap}`}>
+                                {label}
+                              </span>
+                              <h3 className="font-extrabold text-[1rem] text-white overflow-hidden text-ellipsis whitespace-nowrap group-hover:text-primary transition-colors">
+                                {getTitle(item)}
+                              </h3>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold tracking-[0.12em] uppercase border mb-1 ${tagWrap}`}>
-                              {label}
+                          <p className="text-[0.85rem] text-white/45 leading-relaxed mb-6 line-clamp-3">
+                            {getDesc(item)}
+                          </p>
+                          <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
+                            <span className="text-[0.8rem] font-bold text-white/30 flex items-center gap-1.5">
+                              <MapPin size={13} className="text-primary/50" /> {getSub(item)}
                             </span>
-                            <h3 className="font-extrabold text-[0.95rem] text-white overflow-hidden text-ellipsis whitespace-nowrap">
-                              {getTitle(item)}
-                            </h3>
+                            <span className={`text-[11px] font-black tracking-[0.1em] uppercase flex items-center gap-1.5 ${accentText}`}>
+                              Details <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                            </span>
                           </div>
                         </div>
-                        <p className="text-[0.8rem] text-white/45 leading-[1.6] mb-4 line-clamp-2">
-                          {getDesc(item)}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[0.78rem] font-semibold text-white/40 flex items-center gap-1">
-                            <MapPin size={11} /> {getSub(item)}
-                          </span>
-                          <span className={`text-[11px] font-extrabold tracking-[0.08em] uppercase flex items-center gap-1 ${accentText}`}>
-                            View <ChevronRight size={12} />
-                          </span>
-                        </div>
-                      </div>
                       </motion.div>
                     );
                   })
                 )
               )}
-            </div>
+            </motion.div>
           </section>
+
         )}
 
         <section className="px-4 py-20 max-w-6xl mx-auto">

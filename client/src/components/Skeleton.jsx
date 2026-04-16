@@ -80,7 +80,7 @@ export const ProductDetailsSkeleton = () => (
             ))}
           </div>
           <div className="grid grid-cols-2 gap-3">
-             <Skeleton className="h-20 w-full rounded-2xl" />
+            <Skeleton className="h-20 w-full rounded-2xl" />
           </div>
         </div>
         <div className="space-y-6">

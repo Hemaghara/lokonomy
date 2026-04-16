@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useLocation as useRouteLocation,
+} from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -12,6 +16,10 @@ import {
   Maximize2,
   ShoppingBag,
   Newspaper,
+  MapPin,
+  Search,
+  PlusCircle,
+  MessageCircle,
 } from "lucide-react";
 import { askLocalGuide } from "../services/aiService";
 import { businessService } from "../services/businessService";
@@ -19,6 +27,30 @@ import { storyService } from "../services/storyService";
 import { useUser } from "../context/UserContext";
 import { useLocation } from "../context/LocationContext";
 import { FaBullseye } from "react-icons/fa";
+
+const QUICK_ACTIONS = [
+  {
+    label: "Nearby Plumbers",
+    icon: <Search size={12} />,
+    query: "Find me some reliable plumbers nearby",
+  },
+  {
+    label: "Sell Product",
+    icon: <PlusCircle size={12} />,
+    query: "How do I sell a product on Lokonomy?",
+    action: "/market/sell",
+  },
+  {
+    label: "Local Jobs",
+    icon: <ShoppingBag size={12} />,
+    query: "Show me available job opportunities in my area",
+  },
+  {
+    label: "Latest Stories",
+    icon: <Newspaper size={12} />,
+    query: "What's happening in my community? Show me recent stories.",
+  },
+];
 
 const AIGuide = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,11 +64,11 @@ const AIGuide = () => {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const [useGps, setUseGps] = useState(false);
   const { user } = useUser();
   const { state, setState, district, setDistrict, taluka, setTaluka } =
     useLocation();
   const navigate = useNavigate();
+  const routeLocation = useRouteLocation();
   const scrollRef = useRef(null);
 
   const handleAutoLocate = () => {
@@ -85,10 +117,11 @@ const AIGuide = () => {
   const locationString =
     [taluka, district, state].filter(Boolean).join(", ") || "India";
 
-  const handleSend = async () => {
-    if (!query.trim() || isLoading) return;
+  const handleSend = async (customQuery) => {
+    const finalQuery = customQuery || query;
+    if (!finalQuery.trim() || isLoading) return;
 
-    const userMessage = { role: "user", content: query };
+    const userMessage = { role: "user", content: finalQuery };
     setMessages((prev) => [...prev, userMessage]);
     setQuery("");
     setIsLoading(true);
@@ -124,11 +157,18 @@ const AIGuide = () => {
             ).map((s) => ({ id: s._id, title: s.title }))
           : [];
 
-      const response = await askLocalGuide(query, {
+      const context = {
         location: locationString,
+        currentPath: routeLocation.pathname,
+        pageData: {
+          id: routeLocation.pathname.split("/").pop(),
+          type: routeLocation.pathname.split("/")[1],
+        },
         businesses: nearbyBiz,
         stories: nearbyStories,
-      });
+      };
+
+      const response = await askLocalGuide(finalQuery, context);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: response },
@@ -144,6 +184,15 @@ const AIGuide = () => {
       ]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleQuickAction = (action) => {
+    if (action.action) {
+      setIsOpen(false);
+      navigate(action.action);
+    } else {
+      handleSend(action.query);
     }
   };
 
@@ -172,13 +221,12 @@ const AIGuide = () => {
               y: 0,
               opacity: 1,
               scale: 1,
-              height: isMinimized ? "64px" : "500px",
-              width: "360px",
+              height: isMinimized ? "64px" : "550px",
+              width: "380px",
             }}
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
             className="bg-card-bg border border-border rounded-3xl shadow-2xl overflow-hidden glass flex flex-col"
           >
-            {/* Header */}
             <div className="p-4 bg-white/5 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
@@ -254,7 +302,7 @@ const AIGuide = () => {
                           className={`p-3 rounded-2xl text-xs leading-relaxed ${
                             msg.role === "user"
                               ? "bg-primary text-white rounded-tr-none"
-                              : "bg-white/5 text-text-main border border-border rounded-tl-none"
+                              : "bg-white/5 text-text-main border border-border rounded-tl-none shadow-lg"
                           }`}
                         >
                           {msg.content
@@ -316,6 +364,21 @@ const AIGuide = () => {
                     </div>
                   )}
                 </div>
+                <div className="px-4 pb-2">
+                  <div className="flex flex-wrap gap-2">
+                    {QUICK_ACTIONS.map((action, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleQuickAction(action)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-border rounded-full text-[10px] font-bold text-text-dim hover:border-primary hover:text-primary transition-all active:scale-95"
+                      >
+                        {action.icon}
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="p-4 border-t border-border bg-white/5">
                   <div className="relative">
                     <input
@@ -324,19 +387,20 @@ const AIGuide = () => {
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleSend()}
                       placeholder="Ask about businesses, jobs..."
-                      className="w-full bg-dark-bg border border-border rounded-xl pl-4 pr-12 py-3 text-xs text-text-main focus:border-primary outline-none transition-all"
+                      className="w-full bg-dark-bg border border-border rounded-xl pl-4 pr-12 py-3 text-xs text-text-main focus:border-primary outline-none transition-all placeholder:text-text-dim/50"
                     />
                     <button
-                      onClick={handleSend}
+                      onClick={() => handleSend()}
                       disabled={!query.trim() || isLoading}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary-dark disabled:opacity-50 transition-all"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:bg-primary-dark disabled:opacity-50 transition-all shadow-md"
                     >
                       <Send size={14} />
                     </button>
                   </div>
-                  <p className="text-[10px] text-text-dim text-center mt-3">
+                  <div className="flex items-center justify-center gap-2 mt-3 text-[10px] text-text-dim">
+                    <Sparkles size={10} className="text-secondary" />
                     Powered by Lokonomy Intelligence
-                  </p>
+                  </div>
                 </div>
               </>
             )}

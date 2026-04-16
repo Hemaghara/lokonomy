@@ -99,9 +99,13 @@ const AdminChats = lazy(() => import("./pages/admin/AdminChats"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminSubAdmins = lazy(() => import("./pages/admin/AdminSubAdmins"));
 const CreateSubAdmin = lazy(() => import("./pages/admin/CreateSubAdmin"));
+const AdminHealthMonitor = lazy(
+  () => import("./pages/admin/AdminHealthMonitor"),
+);
 const ProtectedRouteAdmin = lazy(
   () => import("./components/ProtectedRouteAdmin"),
 );
+
 
 function App() {
   useEffect(() => {
@@ -250,6 +254,11 @@ function App() {
                       path="/admin/analytics"
                       element={<AdminAnalytics />}
                     />
+                    <Route
+                      path="/admin/health"
+                      element={<AdminHealthMonitor />}
+                    />
+
                     <Route
                       path="/admin/sub-admins"
                       element={<AdminSubAdmins />}

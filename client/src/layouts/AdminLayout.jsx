@@ -102,10 +102,16 @@ const AdminLayout = ({ children }) => {
       icon: FiActivity,
     },
     {
+      label: "System Health",
+      path: "/admin/health",
+      icon: FiActivity,
+    },
+    {
       label: "Settings",
       path: "/admin/settings",
       icon: FiActivity,
     },
+
     { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 
@@ -176,8 +182,10 @@ const AdminLayout = ({ children }) => {
               .filter((item) => {
                 if (
                   (item.path === "/admin/sub-admins" ||
-                    item.path === "/admin/analytics") &&
+                    item.path === "/admin/analytics" ||
+                    item.path === "/admin/health") &&
                   adminInfo.role !== "superadmin"
+
                 ) {
                   return false;
                 }
