@@ -25,14 +25,34 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
   if (fileBase64.startsWith("http")) return fileBase64;
 
   const storage = getStorageProvider();
-
   const fileBuffer = parseBase64ToBuffer(fileBase64);
   const customId = generateUniqueId();
+  const prefix = `lokonomy/${folder}`;
 
-  const realWidth = options.realWidth || undefined;
-  const thumbWidth = options.thumbWidth || 300;
+  // Check if it's an image
+  const isImage = fileBase64.startsWith("data:image/");
 
   try {
+    if (!isImage) {
+      // For non-images (like PDFs), upload directly without processing
+      const hasExtension = fileBase64.includes("application/pdf")
+        ? "pdf"
+        : "bin";
+      const result = await storage.upload(
+        fileBuffer,
+        `${prefix}/${customId}.${hasExtension}`,
+      );
+      return {
+        mediaId: customId,
+        secure_url: result,
+        realUrl: result,
+        thumbUrl: result,
+      };
+    }
+
+    const realWidth = options.realWidth || undefined;
+    const thumbWidth = options.thumbWidth || 300;
+
     const realBuffer = await sharp(fileBuffer)
       .resize({ width: realWidth, withoutEnlargement: true })
       .webp({ quality: 85 })
@@ -42,8 +62,6 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
       .resize({ width: thumbWidth, height: thumbWidth, fit: "cover" })
       .webp({ quality: 70 })
       .toBuffer();
-
-    const prefix = `lokonomy/${folder}`;
 
     const [realResult, thumbResult] = await Promise.all([
       storage.upload(realBuffer, `${prefix}/${customId}-real.webp`),

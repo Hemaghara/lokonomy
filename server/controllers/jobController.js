@@ -118,13 +118,16 @@ exports.applyForJob = async (req, res) => {
     console.log(`Candidate Biodata:${biodataUrl}`);
 
     if (candidateBiodata && candidateBiodata.includes("base64")) {
-      const res = await uploadMedia(candidateBiodata, "jobs/biodatas");
-      biodataUrl = res.secure_url;
+      const uploadResult = await uploadMedia(candidateBiodata, "jobs/biodatas");
+      biodataUrl = uploadResult.secure_url;
     }
     let certificateUrl = candidateCertificate;
     if (candidateCertificate && candidateCertificate.includes("base64")) {
-      const res = await uploadMedia(candidateCertificate, "jobs/certificates");
-      certificateUrl = res.secure_url;
+      const uploadResult = await uploadMedia(
+        candidateCertificate,
+        "jobs/certificates",
+      );
+      certificateUrl = uploadResult.secure_url;
     }
 
     job.applications.push({
