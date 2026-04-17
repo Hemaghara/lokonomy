@@ -63,7 +63,11 @@ exports.getAllStories = async (req, res, next) => {
 
 exports.getStoryById = async (req, res, next) => {
   try {
-    const story = await Story.findById(req.params.id);
+    const story = await Story.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
     console.log(`Story:${story}`);
 
     if (!story) {
@@ -72,7 +76,7 @@ exports.getStoryById = async (req, res, next) => {
         .json({ success: false, message: "Story not found" });
     }
 
-    if (story.expiresAt && story.expiresAt < new Date()) {
+    if (!story.isHighlighted && story.expiresAt && story.expiresAt < new Date()) {
       return res.status(404).json({
         success: false,
         message: "This story has expired and is no longer available",
@@ -219,6 +223,53 @@ exports.deleteStory = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Story deleted",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.toggleLike = async (req, res, next) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) {
+      return res.status(404).json({ success: false, message: "Story not found" });
+    }
+
+    const isLiked = story.likes.includes(req.user.id);
+    const update = isLiked
+      ? { $pull: { likes: req.user.id } }
+      : { $addToSet: { likes: req.user.id } };
+
+    const updatedStory = await Story.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: updatedStory,
+      isLiked: !isLiked,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.incrementShare = async (req, res, next) => {
+  try {
+    const updatedStory = await Story.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { shares: 1 } },
+      { new: true }
+    );
+
+    if (!updatedStory) {
+      return res.status(404).json({ success: false, message: "Story not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedStory,
     });
   } catch (error) {
     next(error);

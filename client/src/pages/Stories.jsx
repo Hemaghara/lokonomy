@@ -18,9 +18,14 @@ import {
   HiOutlinePlus,
   HiOutlineClock,
   HiOutlineUser,
+  HiOutlineHandThumbUp,
+  HiOutlineEye,
+  HiOutlineShare,
+  HiOutlineCheckBadge,
 } from "react-icons/hi2";
 import ReportModal from "../components/ReportModal";
 import { FiFlag } from "react-icons/fi";
+import { toast } from "react-hot-toast";
 
 const getTimeRemaining = (expiresAt) => {
   const now = Date.now();
@@ -143,6 +148,48 @@ const Stories = () => {
         return <HiOutlineLightBulb className="text-yellow-400" />;
       default:
         return <HiOutlineSparkles className="text-slate-400" />;
+    }
+  };
+
+  const handleLike = async (e, storyId) => {
+    e.stopPropagation();
+    if (!user) {
+      toast.error("Please login to like updates");
+      return;
+    }
+    try {
+      const response = await storyService.likeStory(storyId);
+      setStories(
+        stories.map((s) => (s._id === storyId ? response.data.data : s)),
+      );
+    } catch (err) {
+      console.error("Like error:", err);
+    }
+  };
+
+  const handleShare = async (e, story) => {
+    e.stopPropagation();
+    const shareData = {
+      title: story.title,
+      text: story.content,
+      url: `${window.location.origin}/stories/${story._id}`,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        await storyService.shareStory(story._id);
+        setStories(
+          stories.map((s) =>
+            s._id === story._id ? { ...s, shares: (s.shares || 0) + 1 } : s,
+          ),
+        );
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast.success("Link copied to clipboard!");
+      }
+    } catch (err) {
+      console.error("Share error:", err);
     }
   };
 
@@ -326,9 +373,24 @@ const Stories = () => {
                       >
                         <FiFlag size={14} />
                       </button>
+
+                      {story.isVerified && (
+                        <div className="absolute top-3 right-12">
+                          <span className="flex items-center gap-1 bg-sky-500/20 text-sky-400 border border-sky-500/30 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                            <HiOutlineCheckBadge className="text-sm" /> Verified
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="p-4 flex-1 flex flex-col">
+                    <div
+                      className={`p-4 flex-1 flex flex-col transition-all duration-300 ${
+                        !story.isHighlighted &&
+                        getTimeRemaining(story.expiresAt).urgent
+                          ? "ring-1 ring-inset ring-orange-500/20 bg-orange-500/2"
+                          : ""
+                      }`}
+                    >
                       <div className="flex items-center gap-2 mb-3">
                         <span className="flex items-center gap-1 text-[11px] text-violet-400 font-medium line-clamp-1">
                           <HiOutlineMapPin className="text-xs shrink-0" />
@@ -342,19 +404,27 @@ const Stories = () => {
                             <HiOutlineSparkles className="text-xs" /> Highlight
                           </span>
                         ) : (
-                          <ExpiryBadge
-                            expiresAt={
-                              story.expiresAt ||
-                              new Date(
-                                new Date(story.createdAt).getTime() +
-                                  24 * 60 * 60 * 1000,
-                              )
+                          <div
+                            className={
+                              getTimeRemaining(story.expiresAt).urgent
+                                ? "animate-pulse"
+                                : ""
                             }
-                          />
+                          >
+                            <ExpiryBadge
+                              expiresAt={
+                                story.expiresAt ||
+                                new Date(
+                                  new Date(story.createdAt).getTime() +
+                                    24 * 60 * 60 * 1000,
+                                )
+                              }
+                            />
+                          </div>
                         )}
                       </div>
 
-                      <h3 className="text-slate-100 font-semibold text-base leading-snug mb-2 group-hover:text-violet-400 transition-colors line-clamp-2 flex-1">
+                      <h3 className="text-slate-100 font-semibold text-base leading-snug mb-2 group-hover:text-violet-400 transition-colors line-clamp-2">
                         {story.title}
                       </h3>
 
@@ -362,20 +432,32 @@ const Stories = () => {
                         {story.content}
                       </p>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-[#1f2a3d]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold">
-                            {story.author?.[0]?.toUpperCase()}
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#1f2a3d]">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={(e) => handleLike(e, story._id)}
+                            className={`flex items-center gap-1.5 text-[11px] font-semibold transition-colors ${
+                              story.likes?.includes(user?.id)
+                                ? "text-violet-400"
+                                : "text-slate-500 hover:text-slate-300"
+                            }`}
+                          >
+                            <HiOutlineHandThumbUp className="text-sm" />
+                            {story.likes?.length || 0}
+                          </button>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">
+                            <HiOutlineEye className="text-sm" />
+                            {story.views || 0}
                           </div>
-                          <div>
-                            <p className="text-slate-300 text-xs font-medium leading-none">
-                              {story.author}
-                            </p>
-                            <p className="text-slate-600 text-[10px] mt-0.5 flex items-center gap-1">
-                              <HiOutlineUser className="text-xs" /> Reporter
-                            </p>
-                          </div>
+                          <button
+                            onClick={(e) => handleShare(e, story)}
+                            className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-slate-300 font-semibold transition-colors"
+                          >
+                            <HiOutlineShare className="text-sm" />
+                            {story.shares || 0}
+                          </button>
                         </div>
+
                         <div className="w-7 h-7 rounded-lg bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center text-slate-600 group-hover:text-violet-400 group-hover:border-violet-500/30 transition-colors">
                           <HiOutlineArrowRight className="text-sm" />
                         </div>
@@ -409,8 +491,22 @@ const Stories = () => {
         targetType="story"
         targetId={reportConfig.targetId}
       />
+      <FloatingActionButton onClick={() => navigate("/stories/post")} />
     </div>
   );
 };
+
+const FloatingActionButton = ({ onClick }) => (
+  <motion.button
+    initial={{ scale: 0, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.9 }}
+    onClick={onClick}
+    className="fixed bottom-24 right-6 z-50 sm:hidden w-14 h-14 bg-violet-600 text-white rounded-full shadow-2xl shadow-violet-900/50 flex items-center justify-center border border-violet-500/50 backdrop-blur-md"
+  >
+    <HiOutlinePlus className="text-2xl" />
+  </motion.button>
+);
 
 export default Stories;

@@ -49,6 +49,24 @@ const storySchema = new mongoose.Schema({
     enum: ["Offers", "Gallery", "Events", "Announcements", "Other"],
     default: "Other",
   },
+  likes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  views: {
+    type: Number,
+    default: 0,
+  },
+  shares: {
+    type: Number,
+    default: 0,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
