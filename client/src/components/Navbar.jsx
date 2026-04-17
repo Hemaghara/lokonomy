@@ -47,7 +47,10 @@ const Navbar = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socket = connectSocket(user.id);
+    const socket = connectSocket({
+      userId: user.id || user._id,
+      isAdmin: false,
+    });
 
     socket.on("newMessageNotification", () => {
       setUnreadCount((c) => c + 1);
@@ -251,7 +254,7 @@ const Navbar = () => {
                   >
                     <Search className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors" />
                   </button>
-                  <NotificationBell aria-label="Notifications"/>
+                  <NotificationBell aria-label="Notifications" />
                 </div>
 
                 <Link

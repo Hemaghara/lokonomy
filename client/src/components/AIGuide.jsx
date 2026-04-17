@@ -20,10 +20,12 @@ import {
   Search,
   PlusCircle,
   MessageCircle,
+  Briefcase,
 } from "lucide-react";
 import { askLocalGuide } from "../services/aiService";
 import { businessService } from "../services/businessService";
 import { storyService } from "../services/storyService";
+import { jobService } from "../services/jobService";
 import { useUser } from "../context/UserContext";
 import { useLocation } from "../context/LocationContext";
 import { FaBullseye } from "react-icons/fa";
@@ -131,7 +133,10 @@ const AIGuide = () => {
     try {
       const searchTerm = finalQuery
         .toLowerCase()
-        .replace(/\b(find|near|by|me|show|is|a|of|the|in|search|for|any|type|shop|give|suggestion|how|do|i|can|you|tell|about|what|where|website|platform|lokonomy|please|recommend|looking)\b/g, "")
+        .replace(
+          /\b(find|near|by|me|show|is|a|of|the|in|search|for|any|type|shop|give|suggestion|how|do|i|can|you|tell|about|what|where|website|platform|lokonomy|please|recommend|looking)\b/g,
+          "",
+        )
         .replace(/\s+/g, " ")
         .trim();
 
@@ -139,18 +144,22 @@ const AIGuide = () => {
         search: searchTerm || undefined,
         lat: coords?.lat,
         lng: coords?.lng,
-        radius: 3000, 
+        radius: 3000,
         district: !coords ? district : undefined,
-        limit: 20
+        limit: 20,
       });
 
-      let businesses = Array.isArray(bizRes.data) ? bizRes.data : bizRes.data.businesses || [];
+      let businesses = Array.isArray(bizRes.data)
+        ? bizRes.data
+        : bizRes.data.businesses || [];
       if (businesses.length === 0) {
         bizRes = await businessService.getBusinesses({
           district: district || undefined,
-          limit: 20
+          limit: 20,
         });
-        businesses = Array.isArray(bizRes.data) ? bizRes.data : bizRes.data.businesses || [];
+        businesses = Array.isArray(bizRes.data)
+          ? bizRes.data
+          : bizRes.data.businesses || [];
       }
 
       const contextBusinesses = businesses.map((b) => ({
@@ -164,11 +173,33 @@ const AIGuide = () => {
       const storyRes = await storyService.getStories({
         search: searchTerm || undefined,
         district: district || undefined,
-        limit: 10
+        limit: 10,
       });
-      
-      const storyData = storyRes.data?.data || storyRes.data?.stories || (Array.isArray(storyRes.data) ? storyRes.data : []);
-      const contextStories = storyData.map((s) => ({ id: s._id, title: s.title }));
+
+      const storyData =
+        storyRes.data?.data ||
+        storyRes.data?.stories ||
+        (Array.isArray(storyRes.data) ? storyRes.data : []);
+      const contextStories = storyData.map((s) => ({
+        id: s._id,
+        title: s.title,
+        loc: s.taluka || s.district,
+      }));
+
+      const jobRes = await jobService.getJobs({
+        search: searchTerm || undefined,
+        district: district || undefined,
+        limit: 10,
+      });
+      const jobData = Array.isArray(jobRes.data)
+        ? jobRes.data
+        : jobRes.data.jobs || [];
+      const contextJobs = jobData.map((j) => ({
+        id: j._id,
+        title: j.position,
+        loc: j.location || j.district,
+        salary: j.salary,
+      }));
 
       const context = {
         userName: user?.name,
@@ -177,10 +208,11 @@ const AIGuide = () => {
         coords: coords,
         businesses: contextBusinesses,
         stories: contextStories,
-        isRadiusSearch: !!coords
+        jobs: contextJobs,
+        isRadiusSearch: !!coords,
       };
 
-      const response = await askLocalGuide(finalQuery, context);
+      const response = await askLocalGuide(finalQuery, context, messages);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: response },
@@ -191,7 +223,8 @@ const AIGuide = () => {
         ...prev,
         {
           role: "assistant",
-          content: "I'm sorry, I'm having trouble connecting to live data right now. Please check your internet or try again later.",
+          content:
+            "I'm sorry, I'm having trouble connecting to live data right now. Please check your internet or try again later.",
         },
       ]);
     } finally {
@@ -319,36 +352,43 @@ const AIGuide = () => {
                         >
                           {msg.content
                             .split(
-                              /(\[\[(?:business:|story:)?(?:[^|\]]+)\|(?:[^\]]+)\]\])/g,
+                              /(\[\[(?:business:|story:|job:)?(?:[^|\]]+)\|(?:[^\]]+)\]\])/g,
                             )
                             .map((part, index) => {
                               const match = part.match(
-                                /\[\[(?:(business|story):)?([^|\]]+)\|([^\]]+)\]\]/,
+                                /\[\[(?:(business|story|job):)?([^|\]]+)\|([^\]]+)\]\]/,
                               );
                               if (match) {
                                 const type = match[1] ? match[1] : "business";
                                 const id = match[2];
                                 const title = match[3];
                                 const isStory = type === "story";
+                                const isJob = type === "job";
+
                                 return (
                                   <button
                                     key={index}
                                     onClick={() => {
                                       setIsOpen(false);
-                                      navigate(
-                                        isStory
-                                          ? `/story/${id}`
-                                          : `/business/${id}`,
-                                      );
+                                      if (isStory) navigate(`/stories/${id}`);
+                                      else if (isJob) navigate(`/jobs/${id}`);
+                                      else navigate(`/business/${id}`);
                                     }}
                                     className={`mx-1 my-1 px-2.5 py-1.5 border rounded-lg font-bold items-center gap-2 transition-all active:scale-95 inline-flex ${
                                       isStory
                                         ? "bg-secondary/20 hover:bg-secondary/30 border-secondary/30 text-secondary"
-                                        : "bg-primary/20 hover:bg-primary/30 border-primary/30 text-primary"
+                                        : isJob
+                                          ? "bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/30 text-emerald-400"
+                                          : "bg-primary/20 hover:bg-primary/30 border-primary/30 text-primary"
                                     }`}
                                   >
                                     {isStory ? (
                                       <Newspaper size={12} />
+                                    ) : isJob ? (
+                                      <Briefcase
+                                        size={12}
+                                        className="text-emerald-400"
+                                      />
                                     ) : (
                                       <ShoppingBag size={12} />
                                     )}

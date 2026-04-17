@@ -6,37 +6,29 @@ const { createNotification } = require("./notificationController");
 
 exports.getAllJobs = async (req, res) => {
   try {
-    const { district, taluka, gender, search } = req.query;
-    console.log(`District: ${district}`);
-    console.log(`Taluka: ${taluka}`);
-    console.log(`Gender: ${gender}`);
-    console.log(`Search: ${search}`);
+    const { district, taluka, gender, search, jobType } = req.query;
     let query = {};
     query.$or = [{ status: "Open" }, { status: { $exists: false } }];
     query.isFlagged = { $ne: true };
     query.isSuspended = { $ne: true };
 
-    if (district) {
-      query.district = district;
-    }
-    if (taluka) {
-      query.location = taluka;
-    }
-    if (gender && gender !== "All") {
-      query.gender = gender;
-    }
+    if (district) query.district = district;
+    if (taluka) query.location = taluka;
+    if (gender && gender !== "All") query.gender = gender;
+    if (jobType && jobType !== "All") query.jobType = jobType;
+
     if (search) {
       query.$and = [
         {
           $or: [
             { position: { $regex: search, $options: "i" } },
             { location: { $regex: search, $options: "i" } },
+            { skills: { $regex: search, $options: "i" } },
           ],
         },
       ];
     }
     const jobs = await Job.find(query).sort({ createdAt: -1 });
-    console.log(`Jobs: ${jobs}`);
     res.json(jobs);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -78,7 +70,11 @@ exports.createJob = async (req, res) => {
 
 exports.getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id);
+    const job = await Job.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true },
+    );
 
     if (!job || job.isFlagged) {
       return res
@@ -225,6 +221,11 @@ exports.updateJob = async (req, res) => {
       "posterEmail",
       "posterContact",
       "status",
+      "description",
+      "jobType",
+      "deadline",
+      "salaryMin",
+      "salaryMax",
     ];
 
     allowedFields.forEach((field) => {
@@ -311,24 +312,26 @@ exports.updateApplicationStatus = async (req, res) => {
 exports.getAppliedJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ "applications.candidateId": req.user.id });
-    console.log(`Jobs: ${jobs}`);
     const applications = jobs.map((job) => {
       const myApp = job.applications.find(
         (app) => app.candidateId?.toString() === req.user.id,
       );
-      console.log(`My App: ${myApp}`);
       return {
         jobId: job._id,
         position: job.position,
         location: job.location,
+        district: job.district,
+        salary: job.salary,
+        jobType: job.jobType || "Full-time",
         status: myApp?.applicationStatus || "Applied",
         appliedAt: myApp?.appliedAt,
+        applicationId: myApp?._id,
         jobStatus: job.status || "Open",
+        posterName: job.posterName,
       };
     });
     res.json(applications);
   } catch (err) {
-    res.status(500).json
-    ({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };

@@ -24,6 +24,8 @@ import {
   HiOutlineWrenchScrewdriver,
   HiOutlineClipboardDocument,
   HiOutlineArrowRight,
+  HiOutlinePencilSquare,
+  HiOutlineEye,
 } from "react-icons/hi2";
 import WishlistButton from "../components/WishlistButton";
 import ReportModal from "../components/ReportModal";
@@ -169,12 +171,20 @@ const JobDetails = () => {
             <div className="flex items-center gap-2">
               <WishlistButton type="job" id={id} />
               {isOwner && (
-                <button
-                  onClick={handleDeleteJob}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <HiOutlineTrash className="text-sm" /> Delete
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(`/edit-job/${id}`)}
+                    className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-white transition-all"
+                  >
+                    <HiOutlinePencilSquare className="text-sm" /> Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteJob}
+                    className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
+                  >
+                    <HiOutlineTrash className="text-sm" /> Delete
+                  </button>
+                </div>
               )}
               <button
                 onClick={handleShare}
@@ -243,6 +253,17 @@ const JobDetails = () => {
                       className={`px-2.5 py-0.5 rounded-lg border text-[10px] font-semibold ${genderColor}`}
                     >
                       {job.gender === "Both" ? "Universal" : job.gender}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg text-[10px] font-semibold uppercase tracking-wide">
+                      {job.jobType || "Full-time"}
+                    </span>
+                    {job.deadline && (
+                      <span className="px-2.5 py-0.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg text-[10px] font-semibold">
+                        Deadline: {new Date(job.deadline).toLocaleDateString()}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1 text-[10px] text-slate-500 ml-auto">
+                      <HiOutlineEye size={12} /> {job.views || 0} views
                     </span>
                   </div>
                 </div>
@@ -321,26 +342,9 @@ const JobDetails = () => {
                 <HiOutlineClipboardDocument className="text-violet-400" /> Job
                 Description
               </h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                This position requires a dedicated professional to join our team
-                in{" "}
-                <span className="text-slate-300 font-medium">
-                  {job.location}
-                </span>
-                . As a{" "}
-                <span className="text-slate-300 font-medium">
-                  {job.position}
-                </span>
-                , you will operate in a results-driven environment where{" "}
-                <span className="text-slate-300 font-medium">
-                  {job.experience}
-                </span>{" "}
-                experience is essential. We are looking for candidates who have
-                completed{" "}
-                <span className="text-slate-300 font-medium">
-                  {job.education}
-                </span>{" "}
-                and demonstrate strong proficiency across the listed skillset.
+              <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
+                {job.description ||
+                  `This position requires a dedicated professional to join our team in ${job.location}. As a ${job.position}, you will operate in a results-driven environment where ${job.experience} experience is essential. We are looking for candidates who have completed ${job.education} and demonstrate strong proficiency across the listed skillset.`}
               </p>
             </motion.div>
           </div>

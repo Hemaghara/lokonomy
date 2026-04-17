@@ -167,6 +167,9 @@ const EditJob = () => {
     posterEmail: "",
     posterContact: "",
     status: "Open",
+    description: "",
+    jobType: "Full-time",
+    deadline: "",
   });
 
   useEffect(() => {
@@ -189,6 +192,11 @@ const EditJob = () => {
           posterEmail: job.posterEmail || "",
           posterContact: job.posterContact || "",
           status: job.status || "Open",
+          description: job.description || "",
+          jobType: job.jobType || "Full-time",
+          deadline: job.deadline
+            ? new Date(job.deadline).toISOString().split("T")[0]
+            : "",
         });
       } catch (err) {
         console.error("Error fetching job:", err);
@@ -237,6 +245,13 @@ const EditJob = () => {
     { value: "Both", label: "Both / Any" },
     { value: "Male", label: "Male Only" },
     { value: "Female", label: "Female Only" },
+  ];
+
+  const jobTypeOptions = [
+    { value: "Full-time", label: "Full-time" },
+    { value: "Part-time", label: "Part-time" },
+    { value: "Freelance", label: "Freelance" },
+    { value: "Contract", label: "Contract" },
   ];
 
   const statusOptions = [
@@ -358,6 +373,27 @@ const EditJob = () => {
                   placeholder="Select District"
                 />
               </Field>
+
+              <Field label="Job Type" required>
+                <CustomDropdown
+                  name="jobType"
+                  value={formData.jobType}
+                  onChange={handleChange}
+                  options={jobTypeOptions}
+                  placeholder="Select Job Type"
+                />
+              </Field>
+
+              <Field label="Application Deadline">
+                <input
+                  type="date"
+                  name="deadline"
+                  className={inputCls}
+                  value={formData.deadline}
+                  onChange={handleChange}
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </Field>
             </Section>
 
             <div className="h-px bg-linear-to-r from-transparent via-white/8 to-transparent" />
@@ -415,6 +451,17 @@ const EditJob = () => {
                   className={inputCls}
                   required
                   value={formData.skills}
+                  onChange={handleChange}
+                />
+              </Field>
+
+              <Field label="Job Description" required span2>
+                <textarea
+                  name="description"
+                  placeholder="Detailed description of the role, responsibilities, and benefits..."
+                  className={inputCls + " min-h-30 resize-none"}
+                  required
+                  value={formData.description}
                   onChange={handleChange}
                 />
               </Field>

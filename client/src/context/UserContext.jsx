@@ -17,8 +17,11 @@ export const UserProvider = ({ children }) => {
     if (user && (user.id || user._id)) {
       connectSocket({ userId: user.id || user._id, isAdmin: false });
     }
-    
+
     return () => {
+      if (!user) {
+        disconnectSocket();
+      }
     };
   }, [user]);
 
@@ -45,7 +48,7 @@ export const UserProvider = ({ children }) => {
 
     if (userData.district) setDistrict(userData.district);
     if (userData.taluka) setTaluka(userData.taluka);
-    
+
     if (userData.id || userData._id) {
       connectSocket({ userId: userData.id || userData._id, isAdmin: false });
     }

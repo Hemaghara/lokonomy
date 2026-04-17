@@ -349,6 +349,12 @@ const AdminJobDetails = () => {
             value={`${applications.length} received`}
             accent="cyan"
           />
+          <StatTile
+            icon={FiEye}
+            label="Total Views"
+            value={job.views || 0}
+            accent="rose"
+          />
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -360,6 +366,7 @@ const AdminJobDetails = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {[
                     { label: "Position", value: job.position },
+                    { label: "Job Type", value: job.jobType },
                     { label: "Location", value: job.location },
                     { label: "District", value: job.district },
                     { label: "Experience", value: job.experience },
@@ -367,6 +374,13 @@ const AdminJobDetails = () => {
                     { label: "Gender", value: job.gender },
                     { label: "Salary", value: job.salary },
                     { label: "Education", value: job.education },
+                    {
+                      label: "Deadline",
+                      value: job.deadline
+                        ? new Date(job.deadline).toLocaleDateString()
+                        : "No deadline",
+                    },
+                    { label: "Views", value: job.views || 0 },
                     { label: "Status", value: job.status },
                   ].map(({ label, value }) => (
                     <div
@@ -383,7 +397,7 @@ const AdminJobDetails = () => {
                   ))}
                 </div>
 
-                <div className="flex gap-3 mt-4 text-[10px] text-slate-600 font-semibold">
+                <div className="flex gap-3 mt-4 text-[10px] text-slate-600 font-semibold mb-6">
                   <span className="flex items-center gap-1">
                     <FiClock size={10} />
                     Created:{" "}
@@ -403,6 +417,17 @@ const AdminJobDetails = () => {
                     })}
                   </span>
                 </div>
+
+                {job.description && (
+                  <div className="mt-8 pt-8 border-t border-slate-800/60">
+                    <SectionHead icon={FiFileText} label="Job Description" />
+                    <div className="bg-slate-800/30 rounded-2xl p-5 border border-slate-800/50">
+                      <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                        {job.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </Card>
             </motion.div>
 

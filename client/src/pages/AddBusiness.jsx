@@ -302,7 +302,8 @@ const AddBusiness = () => {
 
     setGeneratingAI(true);
     try {
-      const locationStr = formData.address || formData.district || "Ahmedabad, Gujarat";
+      const locationStr =
+        formData.address || formData.district || "Ahmedabad, Gujarat";
       const description = await generateBusinessDescription(
         formData.businessName,
         formData.mainCategory,

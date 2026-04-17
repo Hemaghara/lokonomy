@@ -122,6 +122,33 @@ const JobDashboard = () => {
     }
   };
 
+  const handleBulkUpdateStatus = async (jobId, newStatus) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to mark ALL applicants as ${newStatus}?`,
+      )
+    )
+      return;
+
+    const job = myJobs.find((j) => j._id === jobId);
+    if (!job) return;
+
+    try {
+      const updatePromises = job.applications.map((app) =>
+        jobService.updateApplicationStatus(jobId, app._id, newStatus),
+      );
+
+      await Promise.all(updatePromises);
+      toast.success(
+        `Successfully updated ${job.applications.length} applicants`,
+      );
+      fetchMyJobs(); // Refresh to get all updates
+    } catch {
+      toast.error("Bulk update failed for some applicants");
+      fetchMyJobs();
+    }
+  };
+
   const totalApplicants = myJobs.reduce(
     (s, j) => s + (j.applications?.length || 0),
     0,
@@ -389,6 +416,10 @@ const JobDashboard = () => {
                                   {job.salary}
                                 </span>
                                 <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                                  <HiOutlineEye className="text-violet-400 text-xs shrink-0" />
+                                  {job.views || 0} views
+                                </span>
+                                <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
                                   <HiOutlineClock className="text-sky-400 text-xs shrink-0" />
                                   Posted {timeAgo(job.createdAt)}
                                 </span>
@@ -490,9 +521,38 @@ const JobDashboard = () => {
                                 Applicant
                                 {job.applications?.length !== 1 ? "s" : ""}
                               </p>
-                              <p className="text-slate-700 text-[10px]">
+                              <p className="text-slate-700 text-[10px] hidden sm:block">
                                 Click a candidate to expand
                               </p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  Bulk:
+                                </span>
+                                <select
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      handleBulkUpdateStatus(
+                                        job._id,
+                                        e.target.value,
+                                      );
+                                      e.target.value = "";
+                                    }
+                                  }}
+                                  className="bg-[#0c1526] border border-white/7 text-[10px] text-slate-300 rounded-lg px-2 py-1 outline-none focus:border-indigo-500/50 cursor-pointer transition-colors"
+                                >
+                                  <option value="">Status...</option>
+                                  {[
+                                    "Under Review",
+                                    "Interview",
+                                    "Selected",
+                                    "Rejected",
+                                  ].map((s) => (
+                                    <option key={s} value={s}>
+                                      {s} All
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
 
                             <div className="p-4 space-y-2">

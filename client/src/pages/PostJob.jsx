@@ -159,6 +159,9 @@ const PostJob = () => {
     posterName: "",
     posterEmail: "",
     posterContact: "",
+    description: "",
+    jobType: "Full-time",
+    deadline: "",
   });
 
   const handleChange = (e) =>
@@ -242,6 +245,13 @@ const PostJob = () => {
     { value: "Female", label: "Female Only" },
   ];
 
+  const jobTypeOptions = [
+    { value: "Full-time", label: "Full-time" },
+    { value: "Part-time", label: "Part-time" },
+    { value: "Freelance", label: "Freelance" },
+    { value: "Contract", label: "Contract" },
+  ];
+
   return (
     <div className="min-h-screen bg-dark-bg pt-28 pb-24 px-4 relative overflow-hidden">
       <div className="fixed top-0 right-0 w-125 h-125 bg-primary/6 blur-[130px] rounded-full pointer-events-none" />
@@ -323,6 +333,27 @@ const PostJob = () => {
                   placeholder="Select District"
                 />
               </Field>
+
+              <Field label="Job Type" required>
+                <CustomDropdown
+                  name="jobType"
+                  value={formData.jobType}
+                  onChange={handleChange}
+                  options={jobTypeOptions}
+                  placeholder="Select Job Type"
+                />
+              </Field>
+
+              <Field label="Application Deadline">
+                <input
+                  type="date"
+                  name="deadline"
+                  className={inputCls}
+                  value={formData.deadline}
+                  onChange={handleChange}
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </Field>
             </Section>
 
             <div className="h-px bg-linear-to-r from-transparent via-white/8 to-transparent" />
@@ -380,6 +411,17 @@ const PostJob = () => {
                   className={inputCls}
                   required
                   value={formData.skills}
+                  onChange={handleChange}
+                />
+              </Field>
+
+              <Field label="Job Description" required span2>
+                <textarea
+                  name="description"
+                  placeholder="Detailed description of the role, responsibilities, and benefits..."
+                  className={inputCls + " min-h-30 resize-none"}
+                  required
+                  value={formData.description}
                   onChange={handleChange}
                 />
               </Field>
