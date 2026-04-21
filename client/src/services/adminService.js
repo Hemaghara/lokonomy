@@ -136,4 +136,5 @@ export const adminService = {
   getReportedChats: () => adminApi.get("/chats/reported"),
   getConversation: (chatRoom) => adminApi.get(`/chats/conversation/${chatRoom}`),
   exportExcel: (type) => adminApi.get(`/reports/export/${type}`, { responseType: 'blob' }),
+  getHealthStatus: () => adminApi.get("/health"),
 };

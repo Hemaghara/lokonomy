@@ -1,8 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+import useAdminFetch from "../../hooks/useAdminFetch";
+import { useConfirm } from "../../context/ConfirmContext";
+import { useUrlState } from "../../hooks/useUrlState";
+import { TableSkeleton } from "../../components/admin/Skeleton";
+import useAdminPermission from "../../hooks/useAdminPermission";
 import {
   FiTrash2,
   FiSearch,
@@ -102,45 +107,70 @@ const ActionBtn = ({ onClick, icon: _Icon, color }) => {
   );
 };
 
+const districts = [
+  "All",
+  "Ahmedabad",
+  "Surat",
+  "Vadodara",
+  "Rajkot",
+  "Bhavnagar",
+  "Jamnagar",
+  "Junagadh",
+  "Gandhinagar",
+  "Anand",
+  "Bharuch",
+  "Navsari",
+  "Valsad",
+  "Morbi",
+  "Mehsana",
+  "Patan",
+  "Amreli",
+  "Porbandar",
+];
+const plans = ["All", "free", "silver", "gold", "platinum"];
+
 const AdminUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("All");
-  const [selectedPlan, setSelectedPlan] = useState("All");
-  const [dateFilter, setDateFilter] = useState("");
+  const navigate = useNavigate();
+  const confirm = useConfirm();
+  const { canManageUsers } = useAdminPermission();
   const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+
+  const { getParam, setParam, setParams } = useUrlState({
+    page: "1",
+    search: "",
+    district: "All",
+    plan: "All",
+    date: "",
+  });
+
+  const currentPage = parseInt(getParam("page", "1"));
+  const searchQuery = getParam("search", "");
+  const selectedDistrict = getParam("district", "All");
+  const selectedPlan = getParam("plan", "All");
+  const dateFilter = getParam("date", "");
 
   const itemsPerPage = 10;
-  const navigate = useNavigate();
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await adminService.getUsers({
+  const {
+    data,
+    loading,
+    refetch: fetchUsers,
+  } = useAdminFetch(
+    () =>
+      adminService.getUsers({
         page: currentPage,
         limit: itemsPerPage,
         search: searchQuery || undefined,
         district: selectedDistrict !== "All" ? selectedDistrict : undefined,
         plan: selectedPlan !== "All" ? selectedPlan : undefined,
-      });
-      setUsers(response.data.users);
-      setTotalUsers(response.data.total);
-      setTotalPages(response.data.totalPages);
-    } catch (error) {
-      toast.error("Failed to fetch users");
-      if (error.response?.status === 401) navigate("/admin/login");
-    } finally {
-      setLoading(false);
-    }
-  }, [navigate, currentPage, searchQuery, selectedDistrict, selectedPlan]);
+        date: dateFilter || undefined,
+      }),
+    [currentPage, searchQuery, selectedDistrict, selectedPlan, dateFilter]
+  );
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const users = data?.users || [];
+  const totalUsers = data?.total || 0;
+  const totalPages = data?.totalPages || 0;
 
   const handleUpdateStatus = async (id, status) => {
     try {
@@ -153,10 +183,15 @@ const AdminUsers = () => {
   };
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm("Are you sure you want to delete this user permanently?")
-    )
-      return;
+    const isConfirmed = await confirm({
+      title: "Delete User",
+      description: "Are you sure you want to delete this user permanently? This action cannot be undone.",
+      confirmLabel: "Delete Permanently",
+      isDanger: true,
+    });
+
+    if (!isConfirmed) return;
+
     try {
       await adminService.deleteContent("user", id);
       toast.success("User deleted successfully");
@@ -193,50 +228,28 @@ const AdminUsers = () => {
       "data:text/csv;charset=utf-8," +
       [headers, ...rows]
         .map((row) =>
-          row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(","),
+          row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(",")
         )
         .join("\n");
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
     link.setAttribute(
       "download",
-      `users_export_${new Date().toISOString().split("T")[0]}.csv`,
+      `users_export_${new Date().toISOString().split("T")[0]}.csv`
     );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const districts = [
-    "All",
-    "Ahmedabad",
-    "Surat",
-    "Vadodara",
-    "Rajkot",
-    "Bhavnagar",
-    "Jamnagar",
-    "Junagadh",
-    "Gandhinagar",
-    "Anand",
-    "Bharuch",
-    "Navsari",
-    "Valsad",
-    "Morbi",
-    "Mehsana",
-    "Patan",
-    "Amreli",
-    "Porbandar",
-  ];
-  const plans = ["All", "free", "silver", "gold", "platinum"];
-
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    setParam("page", page.toString());
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedDistrict, selectedPlan, dateFilter]);
+  const handleSearchChange = (val) => {
+    setParams({ search: val, page: "1" });
+  };
 
   const hasActiveFilters =
     selectedDistrict !== "All" || selectedPlan !== "All" || dateFilter;
@@ -268,11 +281,13 @@ const AdminUsers = () => {
           />
         </>
       )}
-      <ActionBtn
-        onClick={() => handleDelete(user._id)}
-        icon={FiTrash2}
-        color="rose"
-      />
+      {canManageUsers && (
+        <ActionBtn
+          onClick={() => handleDelete(user._id)}
+          icon={FiTrash2}
+          color="rose"
+        />
+      )}
     </div>
   );
 
@@ -290,8 +305,8 @@ const AdminUsers = () => {
           </div>
           <p className="text-slate-500 text-sm pl-10.5">
             {loading
-              ? "Loading…"
-              : `${users.length} registered users on the platform`}
+              ? "Loading..."
+              : `${totalUsers} registered users on the platform`}
           </p>
         </div>
 
@@ -304,14 +319,16 @@ const AdminUsers = () => {
           >
             <FiDownload size={14} /> Export CSV
           </button>
-          <button
-            onClick={() => navigate("/admin/register")}
-            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
-              bg-indigo-600 text-white border border-indigo-500/50
-              hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
-          >
-            <FiUserPlus size={14} /> Add Admin
-          </button>
+          {canManageUsers && (
+            <button
+              onClick={() => navigate("/admin/register")}
+              className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+                bg-indigo-600 text-white border border-indigo-500/50
+                hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
+            >
+              <FiUserPlus size={14} /> Add Admin
+            </button>
+          )}
         </div>
       </header>
 
@@ -324,9 +341,9 @@ const AdminUsers = () => {
             />
             <input
               type="text"
-              placeholder="Search by name, email, phone or ID…"
+              placeholder="Search by name, email, phone or ID..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full bg-slate-900/60 border border-slate-700/50 rounded-xl py-2.5 pl-10 pr-4
                 text-slate-200 text-sm placeholder:text-slate-600
                 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all"
@@ -354,13 +371,13 @@ const AdminUsers = () => {
               {
                 label: "District",
                 value: selectedDistrict,
-                onChange: setSelectedDistrict,
+                onChange: (val) => setParams({ district: val, page: "1" }),
                 options: districts,
               },
               {
                 label: "Plan",
                 value: selectedPlan,
-                onChange: setSelectedPlan,
+                onChange: (val) => setParams({ plan: val, page: "1" }),
                 options: plans,
                 cap: true,
               },
@@ -390,7 +407,7 @@ const AdminUsers = () => {
               <input
                 type="date"
                 value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                onChange={(e) => setParams({ date: e.target.value, page: "1" })}
                 className="w-full bg-slate-900 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-300
                   outline-none focus:border-indigo-500/60 transition-all"
               />
@@ -399,9 +416,7 @@ const AdminUsers = () => {
               <div className="sm:col-span-3 flex justify-end">
                 <button
                   onClick={() => {
-                    setSelectedDistrict("All");
-                    setSelectedPlan("All");
-                    setDateFilter("");
+                    setParams({ district: "All", plan: "All", date: "", page: "1" });
                   }}
                   className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 font-bold
                     bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/10 transition-all"
@@ -415,12 +430,7 @@ const AdminUsers = () => {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-4">
-          <div className="w-10 h-10 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-          <p className="text-slate-500 text-sm font-medium animate-pulse">
-            Fetching users…
-          </p>
-        </div>
+        <TableSkeleton rows={10} cols={7} />
       ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-28 gap-3 text-center">
           <div className="w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center mb-1">
@@ -583,7 +593,7 @@ const AdminUsers = () => {
                               {
                                 month: "short",
                                 day: "numeric",
-                              },
+                              }
                             )
                           : "—"}
                       </p>
@@ -595,7 +605,7 @@ const AdminUsers = () => {
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: true,
-                            },
+                            }
                           )}
                         </p>
                       )}

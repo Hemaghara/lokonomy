@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { adminService } from "../../services/adminService";
 
 const AdminHealthMonitor = () => {
   const [status, setStatus] = useState({
@@ -29,34 +30,36 @@ const AdminHealthMonitor = () => {
   const fetchHealth = async () => {
     setIsRefreshing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await adminService.getHealthStatus();
+      const data = response.data;
 
       setStatus({
-        api: "healthy",
-        database: "healthy",
-        redis: "healthy",
-        cpu: Math.floor(Math.random() * 30) + 10,
-        memory: Math.floor(Math.random() * 40) + 20,
-        uptime: "12d 4h 32m",
+        api: data.api,
+        database: data.database,
+        redis: data.redis,
+        cpu: data.cpu,
+        memory: data.memory,
+        uptime: data.uptime,
       });
+
+      // Keep sample errors or fetch them if they existed on backend
       setErrors([
         {
           id: 1,
           type: "Warning",
-          message: "High latency in region ap-south-1",
-          time: "2 mins ago",
-        },
-        {
-          id: 2,
-          type: "Error",
-          message: "Failed to process image upload for user #991",
-          time: "15 mins ago",
+          message: `Primary DB Latency: ${data.dbPing}ms`,
+          time: "Just now",
         },
       ]);
 
       toast.success("Health status updated");
     } catch (err) {
       toast.error("Failed to check system health");
+      setStatus((prev) => ({
+        ...prev,
+        api: "down",
+        database: "down",
+      }));
     } finally {
       setIsRefreshing(false);
     }
@@ -64,7 +67,7 @@ const AdminHealthMonitor = () => {
 
   useEffect(() => {
     fetchHealth();
-    const interval = setInterval(fetchHealth, 60000);
+    const interval = setInterval(fetchHealth, 30000);
     return () => clearInterval(interval);
   }, []);
 

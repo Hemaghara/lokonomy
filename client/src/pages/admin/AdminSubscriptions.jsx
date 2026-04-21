@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+import useAdminFetch from "../../hooks/useAdminFetch";
+import { useUrlState } from "../../hooks/useUrlState";
+import { TableSkeleton, StatsSkeleton } from "../../components/admin/Skeleton";
+import useAdminPermission from "../../hooks/useAdminPermission";
 import {
   FiDollarSign,
   FiTrendingUp,
@@ -29,7 +33,7 @@ import {
   Legend,
 } from "recharts";
 
-/* ─── Design tokens ────────────────────────────────────────────
+/* ─── Design tokens ──────────────────────────────────────────── 
    Page bg  : #0d1117  (deep navy-black — not flat #000000)
    Card bg  : #161c27  (slate-900-ish with blue undertone)
    Elevated : #1e2535  (inner elements, hover states)
@@ -37,75 +41,61 @@ import {
    ─────────────────────────────────────────────────────────── */
 
 const AdminSubscriptions = () => {
-  const [activeTab, setActiveTab] = useState("transactions");
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [failedPayments, setFailedPayments] = useState([]);
-  const [revenueData, setRevenueData] = useState(null);
-  const [financialReport, setFinancialReport] = useState(null);
-  const [filter, setFilter] = useState({
+  const { canViewAnalytics } = useAdminPermission();
+  const { getParam, setParam, setParams } = useUrlState({
+    tab: "transactions",
     plan: "all",
     status: "all",
     search: "",
+    period: "month",
+    report_period: "month",
+    page: "1",
   });
-  const [revenuePeriod, setRevenuePeriod] = useState("month");
-  const [reportPeriod, setReportPeriod] = useState("month");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchInitialData();
-  }, [
-    activeTab,
-    filter.plan,
-    filter.status,
-    revenuePeriod,
-    reportPeriod,
-    page,
-  ]);
-
-  const fetchInitialData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === "transactions") {
-        const r = await adminService.getSubscriptionTransactions({
-          ...filter,
-          page,
-          limit: 15,
-        });
-        setTransactions(r.data.transactions);
-        setTotalPages(r.data.totalPages);
-        setStats({ plans: r.data.planStats, failed: r.data.failedCount });
-      } else if (activeTab === "revenue") {
-        const r = await adminService.getRevenueData(revenuePeriod);
-        setRevenueData(r.data);
-      } else if (activeTab === "failed") {
-        const r = await adminService.getFailedPayments({
-          search: filter.search,
-          page,
-        });
-        setFailedPayments(r.data.payments);
-        setTotalPages(r.data.totalPages);
-      } else if (activeTab === "reports") {
-        const r = await adminService.getFinancialReport(reportPeriod);
-        setFinancialReport(r.data.report);
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to fetch subscription data");
-    } finally {
-      setLoading(false);
-    }
+  const activeTab = getParam("tab", "transactions");
+  const currentPage = parseInt(getParam("page", "1"));
+  
+  const filter = {
+    plan: getParam("plan", "all"),
+    status: getParam("status", "all"),
+    search: getParam("search", ""),
   };
+  
+  const revenuePeriod = getParam("period", "month");
+  const reportPeriod = getParam("report_period", "month");
 
-  const exportToCSV = (data, filename) => {
-    if (!data?.length) return;
-    const header = Object.keys(data[0]).join(",");
-    const rows = data.map((o) =>
+  const [stats, setStats] = useState(null);
+
+  const fetchFn = useCallback(() => {
+    const params = { ...filter, page: currentPage, limit: 15 };
+    if (activeTab === "transactions") return adminService.getSubscriptionTransactions(params);
+    if (activeTab === "revenue") return adminService.getRevenueData(revenuePeriod);
+    if (activeTab === "failed") return adminService.getFailedPayments({ search: filter.search, page: currentPage });
+    if (activeTab === "reports") return adminService.getFinancialReport(reportPeriod);
+    return Promise.resolve({ data: {} });
+  }, [activeTab, filter, currentPage, revenuePeriod, reportPeriod]);
+
+  const { data, loading, refetch } = useAdminFetch(fetchFn, [activeTab, filter.plan, filter.status, filter.search, currentPage, revenuePeriod, reportPeriod], {
+    onSuccess: (result) => {
+      if (activeTab === "transactions") {
+        setStats({ plans: result.planStats, failed: result.failedCount });
+      }
+    }
+  });
+
+  const transactions = activeTab === "transactions" ? data?.transactions || [] : [];
+  const revenueData = activeTab === "revenue" ? data : null;
+  const failedPayments = activeTab === "failed" ? data?.payments || [] : [];
+  const financialReport = activeTab === "reports" ? data?.report : null;
+  const totalPages = data?.totalPages || 1;
+
+  const exportToCSV = (dataList, filename) => {
+    if (!dataList?.length) return;
+    const header = Object.keys(dataList[0]).join(",");
+    const rows = dataList.map((o) =>
       Object.values(o)
         .map((v) => `"${v}"`)
-        .join(","),
+        .join(",")
     );
     const blob = new Blob([[header, ...rows].join("\n")], {
       type: "text/csv;charset=utf-8;",
@@ -140,7 +130,7 @@ const AdminSubscriptions = () => {
           Value: `${financialReport.transactions.successRate}%`,
         },
       ],
-      `financial_report_${reportPeriod}`,
+      `financial_report_${reportPeriod}`
     );
     toast.success("Report exported successfully");
   };
@@ -236,7 +226,7 @@ const AdminSubscriptions = () => {
           </div>
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
             <button
-              onClick={fetchInitialData}
+              onClick={() => refetch()}
               title="Refresh"
               className={`w-10 h-10 flex items-center justify-center rounded-xl ${innerBg} border border-[rgba(255,255,255,0.07)] text-slate-400 hover:text-white transition-all active:scale-95`}
             >
@@ -247,8 +237,7 @@ const AdminSubscriptions = () => {
             </button>
             <button
               onClick={() => {
-                setActiveTab("reports");
-                setPage(1);
+                setParams({ tab: "reports", page: "1" });
               }}
               className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-lg"
               style={{ boxShadow: "0 4px 24px rgba(99,102,241,0.25)" }}
@@ -265,8 +254,7 @@ const AdminSubscriptions = () => {
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id);
-                setPage(1);
+                setParams({ tab: tab.id, page: "1" });
               }}
               className={`flex items-center gap-1.5 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap flex-1 justify-center sm:flex-none transition-all duration-200
                 ${
@@ -293,7 +281,7 @@ const AdminSubscriptions = () => {
                 <select
                   value={filter.plan}
                   onChange={(e) =>
-                    setFilter({ ...filter, plan: e.target.value })
+                    setParams({ plan: e.target.value, page: "1" })
                   }
                   className={`w-full pl-8 pr-3 py-2.5 ${innerBg} border border-[rgba(255,255,255,0.07)] rounded-xl text-white text-xs font-semibold appearance-none focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all`}
                 >
@@ -311,7 +299,7 @@ const AdminSubscriptions = () => {
                 <select
                   value={filter.status}
                   onChange={(e) =>
-                    setFilter({ ...filter, status: e.target.value })
+                    setParams({ status: e.target.value, page: "1" })
                   }
                   className={`w-full pl-8 pr-3 py-2.5 ${innerBg} border border-[rgba(255,255,255,0.07)] rounded-xl text-white text-xs font-semibold appearance-none focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all`}
                 >
@@ -331,7 +319,7 @@ const AdminSubscriptions = () => {
                   placeholder="Search transactions..."
                   value={filter.search}
                   onChange={(e) =>
-                    setFilter({ ...filter, search: e.target.value })
+                    setParams({ search: e.target.value, page: "1" })
                   }
                   className={`w-full pl-8 pr-4 py-2.5 ${innerBg} border border-[rgba(255,255,255,0.07)] rounded-xl text-white text-xs font-semibold placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all`}
                 />
@@ -353,18 +341,15 @@ const AdminSubscriptions = () => {
                           >
                             {h}
                           </th>
-                        ),
+                        )
                       )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
                     {loading ? (
                       <tr>
-                        <td
-                          colSpan="5"
-                          className="py-16 text-center text-slate-600 text-xs font-semibold animate-pulse"
-                        >
-                          Loading transactions…
+                        <td colSpan="5" className="p-0">
+                          <TableSkeleton rows={10} cols={5} />
                         </td>
                       </tr>
                     ) : transactions.length === 0 ? (
@@ -447,19 +432,19 @@ const AdminSubscriptions = () => {
                 className={`flex items-center justify-between px-4 py-3 border-t border-[rgba(255,255,255,0.06)] ${innerBg}`}
               >
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">
-                  Page {page} / {totalPages}
+                  Page {currentPage} / {totalPages}
                 </p>
                 <div className="flex gap-2">
                   <button
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
+                    disabled={currentPage === 1}
+                    onClick={() => setParam("page", (currentPage - 1).toString())}
                     className={`px-3 py-1.5 text-xs font-bold ${cardBg} disabled:opacity-25 text-slate-300 rounded-lg border border-[rgba(255,255,255,0.07)] hover:bg-[#1e2535] transition-all`}
                   >
                     Prev
                   </button>
                   <button
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
+                    disabled={currentPage === totalPages}
+                    onClick={() => setParam("page", (currentPage + 1).toString())}
                     className="px-3 py-1.5 text-xs font-bold bg-indigo-600 disabled:opacity-25 text-white rounded-lg hover:bg-indigo-500 transition-all"
                   >
                     Next
@@ -483,7 +468,7 @@ const AdminSubscriptions = () => {
                 </div>
                 <PeriodPicker
                   value={revenuePeriod}
-                  onChange={setRevenuePeriod}
+                  onChange={(p) => setParam("period", p)}
                 />
               </div>
               <div className="h-56 sm:h-72 lg:h-80">
@@ -816,7 +801,7 @@ const AdminSubscriptions = () => {
                   </div>
                   <PeriodPicker
                     value={reportPeriod}
-                    onChange={setReportPeriod}
+                    onChange={(p) => setParam("report_period", p)}
                   />
                 </div>
 

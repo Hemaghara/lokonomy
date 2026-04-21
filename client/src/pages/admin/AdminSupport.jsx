@@ -48,7 +48,7 @@ const AdminSupport = () => {
   const fetchSubAdmins = async () => {
     try {
       const response = await adminService.getSubAdmins();
-      setSubAdmins(response.data.subAdmins || []);
+      setSubAdmins(response.data.data || []);
     } catch (error) {}
   };
 

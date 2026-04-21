@@ -1,42 +1,38 @@
-import { useState, useEffect } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
 import { FiTrash2, FiSearch, FiExternalLink, FiStar } from "react-icons/fi";
+import useAdminFetch from "../../hooks/useAdminFetch";
+import { useConfirm } from "../../context/ConfirmContext";
+import { TableSkeleton } from "../../components/admin/Skeleton";
+import { useUrlState } from "../../hooks/useUrlState";
 
 const AdminBusinesses = () => {
-  const [businesses, setBusinesses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { getParam, setParam } = useUrlState({ search: "" });
+  const searchQuery = getParam("search", "");
   const navigate = useNavigate();
+  const { confirm } = useConfirm();
 
-  useEffect(() => {
-    fetchBusinesses();
-  }, []);
-
-  const fetchBusinesses = async () => {
-    try {
-      const response = await adminService.getBusinesses();
-      setBusinesses(response.data);
-    } catch (error) {
-      toast.error("Failed to fetch businesses");
-      if (error.response?.status === 401) {
-        navigate("/admin/login");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchFn = useCallback(() => adminService.getBusinesses(), []);
+  const { data, loading, refetch } = useAdminFetch(fetchFn);
+  const businesses = data || [];
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this business?"))
-      return;
+    const isConfirmed = await confirm({
+      title: "Delete Business",
+      message: "Are you sure you want to delete this business? This action cannot be undone.",
+      confirmText: "Delete",
+      type: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       await adminService.deleteContent("business", id);
       toast.success("Business deleted successfully");
-      fetchBusinesses();
+      refetch();
     } catch (error) {
       toast.error("Deletion failed");
     }
@@ -66,8 +62,8 @@ const AdminBusinesses = () => {
             <input
               type="text"
               placeholder="Search businesses..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              defaultValue={searchQuery}
+              onChange={(e) => setParam("search", e.target.value, { debounce: 500 })}
               className="w-full bg-card-bg/50 border border-slate-700/50 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600 text-slate-200"
             />
           </div>
@@ -75,13 +71,8 @@ const AdminBusinesses = () => {
       </header>
 
       {loading ? (
-        <div className="min-h-100 flex items-center justify-center text-indigo-400">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-            <p className="font-medium animate-pulse text-lg">
-              Scanning platform businesses...
-            </p>
-          </div>
+        <div className="space-y-4">
+           <TableSkeleton rows={10} cols={5} />
         </div>
       ) : (
         <>

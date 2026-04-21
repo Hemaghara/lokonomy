@@ -420,6 +420,9 @@ const AdminStoriesFeed = () => {
   };
 
   const handleDelete = async (item) => {
+    if (!window.confirm(`Are you sure you want to delete this ${isStories ? "story" : "feed post"}? This action cannot be undone.`)) {
+      return;
+    }
     try {
       if (isStories) {
         await adminService.deleteStory(item._id);
