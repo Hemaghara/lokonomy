@@ -1,4 +1,4 @@
-const CACHE_NAME = "lokonomy-v1";
+const CACHE_NAME = "lokonomy-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
@@ -13,25 +13,71 @@ self.addEventListener("install", (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     }),
   );
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log("[Service Worker] Deleting old cache:", cache);
+            return caches.delete(cache);
+          }
+        }),
+      );
+    }),
+  );
+  return self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  // Skip potentially problematic requests
+  const url = new URL(event.request.url);
+  if (!url.protocol.startsWith("http")) return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return (
-        response ||
-        fetch(event.request).catch((error) => {
-          console.error("[Service Worker] Fetch failed:", error);
+    (async () => {
+      try {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        try {
+          const networkResponse = await fetch(event.request);
+          
+          // Optionally cache successful responses for specific assets
+          // if (networkResponse.ok && url.pathname.startsWith('/assets/')) {
+          //   const cache = await caches.open(CACHE_NAME);
+          //   cache.put(event.request, networkResponse.clone());
+          // }
+
+          return networkResponse;
+        } catch (fetchError) {
+          console.error("[Service Worker] Network fetch failed:", fetchError);
 
           if (event.request.mode === "navigate") {
-            return caches.match("/");
+            const fallback = await caches.match("/");
+            if (fallback) return fallback;
           }
-          return new Response("Network error", { status: 408 });
-        })
-      );
-    }),
+
+          // Return a structured error response instead of letting it fail or returning undefined
+          return new Response("Offline or Network Error", { 
+            status: 503, 
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain" }
+          });
+        }
+      } catch (e) {
+        console.error("[Service Worker] Serious error in fetch handler:", e);
+        // Fallback to network directly if SW logic fails
+        return fetch(event.request);
+      }
+    })(),
   );
 });
 
