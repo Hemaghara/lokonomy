@@ -27,6 +27,9 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchMe = async () => {
+      // Don't fetch user session if we're on an admin route
+      if (window.location.pathname.startsWith("/admin")) return;
+
       if (user && user.token) {
         try {
           const res = await authService.getMe();

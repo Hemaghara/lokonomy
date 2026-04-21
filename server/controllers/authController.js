@@ -191,7 +191,7 @@ exports.verifyOtp = async (req, res) => {
 
     const token = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET || "secret",
+      process.env.JWT_SECRET || "lokonomy_secret_key_123",
       { expiresIn: 360000 },
     );
 
@@ -288,7 +288,7 @@ exports.register = async (req, res) => {
 
     const token = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET || "secret",
+      process.env.JWT_SECRET || "lokonomy_secret_key_123",
       { expiresIn: 360000 },
     );
 

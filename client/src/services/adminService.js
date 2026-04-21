@@ -17,6 +17,20 @@ adminApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+adminApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminInfo");
+      if (window.location.pathname !== "/admin/login") {
+        window.location.href = "/admin/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const adminService = {
   login: (credentials) => adminApi.post("/login", credentials),
   register: (adminData) => adminApi.post("/register", adminData),

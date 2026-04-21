@@ -13,8 +13,16 @@ module.exports = async function (req, res, next) {
     return res.status(401).json({ message: "No token, authorization denied" });
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
-    req.user = decoded.user;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "lokonomy_secret_key_123");
+    
+    // Support both user payload { user: { id } } and admin payload { id }
+    if (decoded.user) {
+      req.user = decoded.user;
+    } else if (decoded.id) {
+      req.user = { id: decoded.id };
+    } else {
+      return res.status(401).json({ message: "Invalid token structure" });
+    }
 
     const user = await User.findById(req.user.id).select("status");
     if (user && user.status && user.status !== "active") {
