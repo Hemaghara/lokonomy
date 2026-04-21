@@ -1,4 +1,5 @@
 const Notification = require("../models/Notification");
+const logger = require("../utils/logger");
 
 exports.getNotifications = async (req, res) => {
   try {
@@ -21,7 +22,7 @@ exports.getNotifications = async (req, res) => {
       pages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error("Get notifications error:", err);
+    logger.error({ err, userId: req.user.id }, "Error in getNotifications");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -34,7 +35,7 @@ exports.getUnreadCount = async (req, res) => {
     });
     res.json({ success: true, count });
   } catch (err) {
-    console.error("Unread count error:", err);
+    logger.error({ err, userId: req.user.id }, "Error in getUnreadCount");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -53,7 +54,7 @@ exports.markAsRead = async (req, res) => {
     }
     res.json({ success: true, notification });
   } catch (err) {
-    console.error("Mark read error:", err);
+    logger.error({ err, notificationId: req.params.id, userId: req.user.id }, "Error in markAsRead");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -66,7 +67,7 @@ exports.markAllAsRead = async (req, res) => {
     );
     res.json({ success: true, message: "All notifications marked as read" });
   } catch (err) {
-    console.error("Mark all read error:", err);
+    logger.error({ err, userId: req.user.id }, "Error in markAllAsRead");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -76,7 +77,7 @@ exports.clearAll = async (req, res) => {
     await Notification.deleteMany({ recipient: req.user.id });
     res.json({ success: true, message: "All notifications cleared" });
   } catch (err) {
-    console.error("Clear all error:", err);
+    logger.error({ err, userId: req.user.id }, "Error in clearAll notifications");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -104,9 +105,10 @@ exports.createNotification = async ({
       io.to(`user_${recipientId}`).emit("newNotification", notification);
     }
 
+    logger.info({ recipientId, type, title }, "Internal notification created");
     return notification;
   } catch (err) {
-    console.error("Create notification error:", err);
+    logger.error({ err, recipientId, type }, "Error in createNotification helper");
     return null;
   }
 };

@@ -11,7 +11,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    })
+    }),
   );
 });
 
@@ -20,15 +20,30 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+      return (
+        response ||
+        fetch(event.request).catch((error) => {
+          console.error("[Service Worker] Fetch failed:", error);
+
+          if (event.request.mode === "navigate") {
+            return caches.match("/");
+          }
+          return new Response("Network error", { status: 408 });
+        })
+      );
+    }),
   );
 });
 
 self.addEventListener("push", (event) => {
   let data = {};
   if (event.data) {
-    data = event.data.json();
+    try {
+      data = event.data.json();
+    } catch (e) {
+      console.error("[Service Worker] Error parsing push data:", e);
+      data = { body: event.data.text() };
+    }
   }
 
   const title = data.title || "Lokonomy Notification";
@@ -47,17 +62,18 @@ self.addEventListener("notificationclick", (event) => {
   const urlToOpen = event.notification.data.url || "/";
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
-        if (client.url === urlToOpen && "focus" in client) {
-          return client.focus();
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((windowClients) => {
+        for (let i = 0; i < windowClients.length; i++) {
+          const client = windowClients[i];
+          if (client.url === urlToOpen && "focus" in client) {
+            return client.focus();
+          }
         }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
-    })
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      }),
   );
 });
-

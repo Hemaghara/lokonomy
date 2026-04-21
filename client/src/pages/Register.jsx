@@ -271,6 +271,7 @@ const Register = () => {
                 Full Name
               </label>
               <input
+                id="username"
                 type="text"
                 name="username"
                 className="w-full bg-dark-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"
@@ -285,6 +286,7 @@ const Register = () => {
                 Email Address
               </label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 className="w-full bg-dark-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"
@@ -302,6 +304,7 @@ const Register = () => {
                 Create Password
               </label>
               <input
+                id="password"
                 type="password"
                 name="password"
                 className="w-full bg-dark-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"
@@ -316,6 +319,7 @@ const Register = () => {
                 Confirm Password
               </label>
               <input
+                id="confirmPassword"
                 type="password"
                 name="confirmPassword"
                 className="w-full bg-dark-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"

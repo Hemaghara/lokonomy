@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
 const { uploadMedia } = require("../utils/uploadMedia");
+const { serializeUser } = require("../utils/userSerializer");
+const logger = require("../utils/logger");
 
 exports.login = async (req, res) => {
   const {
@@ -13,37 +15,44 @@ exports.login = async (req, res) => {
     locationName,
     locationPermission,
   } = req.body;
-  console.log(`Login Attempt: ${email}`);
-  
-  if(!email || !password){
-    return res.status(400).json({success:false,message:"Please provide email and password"})
+
+  logger.info({ email }, "Login Attempt");
+
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please provide email and password" });
   }
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("User not found");
+      logger.warn({ email }, "Login failed: User not found");
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
 
     if (user.status && user.status !== "active") {
-      const statusMsg = user.status === "banned" 
-        ? "Your account has been permanently banned by the administrator."
-        : "Your account is temporarily suspended. Please contact support.";
-      
-      console.log(`Blocked login for ${user.status} user: ${email}`);
-      return res.status(403).json({ 
-        success: false, 
+      const statusMsg =
+        user.status === "banned"
+          ? "Your account has been permanently banned by the administrator."
+          : "Your account is temporarily suspended. Please contact support.";
+
+      logger.warn(
+        { email, status: user.status },
+        "Blocked login attempt for inactive user",
+      );
+      return res.status(403).json({
+        success: false,
         message: statusMsg,
-        status: user.status 
+        status: user.status,
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Password mismatch");
+      logger.warn({ email }, "Login failed: Password mismatch");
       return res
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
@@ -53,21 +62,23 @@ exports.login = async (req, res) => {
       user.longitude = parseFloat(longitude);
       user.locationName = locationName || null;
       user.locationPermission = "granted";
-      console.log(
-        `Location updated for ${user.name}: [${latitude}, ${longitude}]`,
+      logger.debug(
+        { userId: user._id, latitude, longitude },
+        "Location updated for user",
       );
     } else if (locationPermission === "denied") {
       user.locationPermission = "denied";
-      console.log(`Location permission denied for ${user.name}`);
+      logger.debug({ userId: user._id }, "Location permission denied for user");
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 60000);
 
-    user.otp = otp;
-    user.otpExpires = otpExpires;
-    await user.save();
-    console.log(`OTP generated for ${user.name}: ${otp}`);
+    await User.findByIdAndUpdate(user._id, {
+      $set: { otp, otpExpires },
+    });
+    // Log intent, not the OTP itself in production
+    logger.debug({ userId: user._id }, "OTP generated for user");
 
     const isConfigMissing = !process.env.EMAIL_USER || !process.env.EMAIL_PASS;
 
@@ -75,12 +86,13 @@ exports.login = async (req, res) => {
       process.env.EMAIL_USER && process.env.EMAIL_USER.includes("your-email");
 
     if (isConfigMissing || isPlaceholder) {
-      console.log("configmissing");
-      
+      logger.warn(
+        "Email configuration missing or placeholder found. Using Debug OTP.",
+      );
+
       return res.json({
         success: true,
-        message:
-          "give the orignal email and password",
+        message: "give the orignal email and password",
         step: "otp",
         devOtp: otp,
       });
@@ -92,7 +104,7 @@ exports.login = async (req, res) => {
         host: "smtp.gmail.com",
         port: 465,
         secure: true,
-        connectionTimeout: 10000, 
+        connectionTimeout: 10000,
         greetingTimeout: 5000,
         socketTimeout: 15000,
         auth: {
@@ -117,15 +129,15 @@ exports.login = async (req, res) => {
           </div>
         `,
       });
-      console.log("Email dispatched successfully");
+      logger.info({ email }, "Email dispatched successfully");
       return res.json({
         success: true,
         message: "Verification code sent to your email.",
         step: "otp",
       });
     } catch (mailErr) {
-      console.error("SMTP ERROR:", mailErr);
-      
+      logger.error({ err: mailErr }, "SMTP ERROR");
+
       return res.json({
         success: true,
         message: "OTP Service currently unavailable. Using Debug OTP.",
@@ -134,35 +146,41 @@ exports.login = async (req, res) => {
       });
     }
   } catch (err) {
-    console.error("SERVER ERROR FULL:", err);
+    logger.error({ err }, "Login server error");
     let msg = "A server error occurred.";
     if (err.message.includes("ENOTFOUND")) {
       msg = "Database Connection Error: Please check your internet connection.";
     } else if (err.message.includes("timeout")) {
       msg = "Database request timed out. Please check your Atlas IP Whitelist.";
     }
-    res.status(500).json({ success: false, message: msg, details: err.message });
+    res
+      .status(500)
+      .json({ success: false, message: msg, details: err.message });
   }
 };
 
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log(`Verify OTP Attempt: ${email}`);
+    logger.info({ email }, "Verify OTP Attempt");
     const user = await User.findOne({ email });
-    console.log(`User found: ${user.name}`);
 
     if (!user || user.otp !== otp || new Date() > user.otpExpires) {
+      logger.warn({ email }, "OTP verification failed: Invalid or expired OTP");
       return res
         .status(400)
         .json({ success: false, message: "Invalid or expired OTP" });
     }
 
     if (user.status && user.status !== "active") {
-      return res.status(403).json({ 
-        success: false, 
+      logger.warn(
+        { email, status: user.status },
+        "Access denied for inactive user during OTP verification",
+      );
+      return res.status(403).json({
+        success: false,
         message: `Your account is ${user.status}. Access denied.`,
-        status: user.status 
+        status: user.status,
       });
     }
 
@@ -180,33 +198,10 @@ exports.verifyOtp = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        district: user.district,
-        taluka: user.taluka,
-        latitude: user.latitude,
-        longitude: user.longitude,
-        locationName: user.locationName,
-        locationPermission: user.locationPermission,
-        upiId: user.upiId,
-        paymentQrCode: user.paymentQrCode,
-        bankName: user.bankName,
-        ifscCode: user.ifscCode,
-        branch: user.branch,
-        accountNumber: user.accountNumber,
-        phoneNumber: user.phoneNumber,
-        subscription: user.subscription,
-        usage: user.usage,
-        referralCode: user.referralCode,
-        referredBy: user.referredBy,
-        referralRewards: user.referralRewards,
-        loyaltyPoints: user.loyaltyPoints || 0,
-        lastLoginDate: user.lastLoginDate,
-      },
+      user: serializeUser(user),
     });
   } catch (err) {
+    logger.error({ err }, "OTP verification error");
     res.status(500).json({ success: false, message: "Verification failed" });
   }
 };
@@ -214,41 +209,18 @@ exports.verifyOtp = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    console.log(`User found: ${user.name}`);
     if (!user) {
+      logger.warn({ userId: req.user.id }, "getMe: User not found");
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        district: user.district,
-        taluka: user.taluka,
-        latitude: user.latitude,
-        longitude: user.longitude,
-        locationName: user.locationName,
-        locationPermission: user.locationPermission,
-        upiId: user.upiId,
-        paymentQrCode: user.paymentQrCode,
-        bankName: user.bankName,
-        ifscCode: user.ifscCode,
-        branch: user.branch,
-        accountNumber: user.accountNumber,
-        phoneNumber: user.phoneNumber,
-        subscription: user.subscription,
-        usage: user.usage,
-        referralCode: user.referralCode,
-        referredBy: user.referredBy,
-        referralRewards: user.referralRewards,
-        loyaltyPoints: user.loyaltyPoints || 0,
-        lastLoginDate: user.lastLoginDate,
-      },
+      user: serializeUser(user),
     });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "getMe error");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -265,8 +237,12 @@ exports.register = async (req, res) => {
       locationPermission,
       referralCode: incomingReferralCode,
     } = req.body;
+
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "User already exists" });
+    if (user) {
+      logger.warn({ email }, "Registration failed: User already exists");
+      return res.status(400).json({ message: "User already exists" });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -281,8 +257,9 @@ exports.register = async (req, res) => {
       userData.latitude = parseFloat(latitude);
       userData.longitude = parseFloat(longitude);
       userData.locationName = locationName || null;
-      console.log(
-        `Location saved during registration for ${name}: [${latitude}, ${longitude}]`,
+      logger.debug(
+        { name, latitude, longitude },
+        "Location saved during registration",
       );
     }
 
@@ -315,38 +292,16 @@ exports.register = async (req, res) => {
       { expiresIn: 360000 },
     );
 
+    logger.info({ userId: user._id, email }, "User registered successfully");
+
     res.status(201).json({
       success: true,
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        district: user.district,
-        taluka: user.taluka,
-        latitude: user.latitude,
-        longitude: user.longitude,
-        locationName: user.locationName,
-        locationPermission: user.locationPermission,
-        upiId: user.upiId,
-        paymentQrCode: user.paymentQrCode,
-        bankName: user.bankName,
-        ifscCode: user.ifscCode,
-        branch: user.branch,
-        accountNumber: user.accountNumber,
-        phoneNumber: user.phoneNumber,
-        subscription: user.subscription,
-        usage: user.usage,
-        referralCode: user.referralCode,
-        referredBy: user.referredBy,
-        referralRewards: user.referralRewards,
-        loyaltyPoints: user.loyaltyPoints || 0,
-        lastLoginDate: user.lastLoginDate,
-      },
+      user: serializeUser(user),
       message: "User registered successfully",
     });
   } catch (err) {
-    console.error("Register Error:", err.message);
+    logger.error({ err }, "Registration error");
     res.status(501).json({ success: false, message: "Registration failed" });
   }
 };
@@ -372,6 +327,7 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findById(req.user.id);
 
     if (!user) {
+      logger.warn({ userId: req.user.id }, "updateProfile: User not found");
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
@@ -403,38 +359,15 @@ exports.updateProfile = async (req, res) => {
     }
 
     await user.save();
+    logger.info({ userId: user._id }, "User profile updated");
 
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        latitude: user.latitude,
-        longitude: user.longitude,
-        locationName: user.locationName,
-        locationPermission: user.locationPermission,
-        district: user.district,
-        taluka: user.taluka,
-        upiId: user.upiId,
-        paymentQrCode: user.paymentQrCode,
-        bankName: user.bankName,
-        ifscCode: user.ifscCode,
-        branch: user.branch,
-        accountNumber: user.accountNumber,
-        phoneNumber: user.phoneNumber,
-        subscription: user.subscription,
-        usage: user.usage,
-        referralCode: user.referralCode,
-        referredBy: user.referredBy,
-        referralRewards: user.referralRewards,
-        loyaltyPoints: user.loyaltyPoints || 0,
-        lastLoginDate: user.lastLoginDate,
-      },
+      user: serializeUser(user),
       message: "Profile updated successfully",
     });
   } catch (err) {
-    console.error("Update Profile Error:", err.message);
+    logger.error({ err, userId: req.user.id }, "Profile update error");
     res
       .status(500)
       .json({ success: false, message: "Failed to update profile" });

@@ -2,21 +2,8 @@ const Business = require("../models/Business");
 const User = require("../models/User");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { createNotification } = require("./notificationController");
-
-const buildLocationGeoJSON = (body) => {
-  const { latitude, longitude, locationAddress } = body;
-  console.log(`Location data: ${latitude}, ${longitude}`);
-  if (latitude && longitude) {
-    return {
-      location: {
-        type: "Point",
-        coordinates: [parseFloat(longitude), parseFloat(latitude)],
-      },
-      locationAddress: locationAddress || null,
-    };
-  }
-  return {};
-};
+const { buildLocationGeoJSON } = require("../utils/geoHelpers");
+const logger = require("../utils/logger");
 
 exports.getAllBusinesses = async (req, res) => {
   try {
@@ -60,7 +47,7 @@ exports.getAllBusinesses = async (req, res) => {
     const businesses = await Business.find(query).sort(sortOpts);
     res.json(businesses);
   } catch (err) {
-    console.error("Error fetching businesses:", err.message);
+    logger.error({ err }, "Error fetching businesses");
     res.status(500).json({ message: err.message });
   }
 };
@@ -88,8 +75,9 @@ exports.addBusiness = async (req, res) => {
     if (geoData.location) {
       businessData.location = geoData.location;
       businessData.locationAddress = geoData.locationAddress;
-      console.log(
-        `📍 Business location saved: [${businessData.latitude}, ${businessData.longitude}]`,
+      logger.debug(
+        { userId: req.user.id, businessName: businessData.businessName },
+        "Business location saved",
       );
     }
 
@@ -120,7 +108,7 @@ exports.addBusiness = async (req, res) => {
       business: newBusiness,
     });
   } catch (err) {
-    console.error("Error saving business:", err);
+    logger.error({ err }, "Error saving business");
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -128,7 +116,6 @@ exports.addBusiness = async (req, res) => {
 exports.getBusinessById = async (req, res) => {
   try {
     const business = await Business.findById(req.params.id);
-    console.log(`Business found: ${business.businessName}`);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
@@ -239,7 +226,7 @@ exports.addReview = async (req, res) => {
       business,
     });
   } catch (err) {
-    console.error("Error adding review:", err.message);
+    logger.error({ err }, "Error adding review");
     res.status(500).json({
       success: false,
       message: "Server error: " + err.message,
@@ -319,7 +306,7 @@ exports.updateBusiness = async (req, res) => {
       business: updatedBusiness,
     });
   } catch (err) {
-    console.error("Error updating business:", err);
+    logger.error({ err }, "Error updating business");
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -346,7 +333,7 @@ exports.deleteBusiness = async (req, res) => {
       message: "Business deleted successfully",
     });
   } catch (err) {
-    console.error("Error deleting business:", err);
+    logger.error({ err }, "Error deleting business");
     res.status(500).json({ success: false, message: err.message });
   }
 };

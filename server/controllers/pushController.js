@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const logger = require("../utils/logger");
 
 exports.subscribe = async (req, res) => {
   try {
@@ -21,9 +22,16 @@ exports.subscribe = async (req, res) => {
       await user.save();
     }
 
+    logger.info(
+      { userId: req.user.id, deviceType },
+      "User subscribed to push notifications",
+    );
     res.status(201).json({ message: "Subscribed successfully" });
   } catch (error) {
-    console.error("Error subscribing to push:", error);
+    logger.error(
+      { err: error, userId: req.user.id },
+      "Error subscribing to push",
+    );
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -42,9 +50,16 @@ exports.unsubscribe = async (req, res) => {
     );
     await user.save();
 
+    logger.info(
+      { userId: req.user.id },
+      "User unsubscribed from push notifications",
+    );
     res.json({ message: "Unsubscribed successfully" });
   } catch (error) {
-    console.error("Error unsubscribing from push:", error);
+    logger.error(
+      { err: error, userId: req.user.id },
+      "Error unsubscribing from push",
+    );
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -61,11 +76,18 @@ exports.toggleNotifications = async (req, res) => {
     user.notificationsEnabled = notificationsEnabled;
     await user.save();
 
+    logger.info(
+      { userId: req.user.id, enabled: notificationsEnabled },
+      "Push notifications status toggled",
+    );
     res.json({
       message: `Notifications ${notificationsEnabled ? "enabled" : "disabled"}`,
     });
   } catch (error) {
-    console.error("Error toggling notifications:", error);
+    logger.error(
+      { err: error, userId: req.user.id },
+      "Error toggling notifications",
+    );
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -82,12 +104,19 @@ exports.toggleReminders = async (req, res) => {
     user.appointmentRemindersEnabled = enabled;
     await user.save();
 
+    logger.info(
+      { userId: req.user.id, enabled },
+      "Appointment reminders status toggled",
+    );
     res.json({
       message: `Appointment reminders ${enabled ? "enabled" : "disabled"}`,
       enabled: user.appointmentRemindersEnabled,
     });
   } catch (error) {
-    console.error("Error toggling reminders:", error);
+    logger.error(
+      { err: error, userId: req.user.id },
+      "Error toggling reminders",
+    );
     res.status(500).json({ message: "Server error" });
   }
 };

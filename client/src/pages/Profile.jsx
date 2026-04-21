@@ -6,6 +6,7 @@ import {
   businessService,
   jobService,
   referralService,
+  subscriptionService,
 } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -16,6 +17,8 @@ import {
   toggleAppointmentReminders,
 } from "../services/pushService";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
+import { usePlanLimits } from "../hooks/usePlanLimits";
+
 
 import {
   HiOutlineArrowUpRight,
@@ -48,6 +51,7 @@ const Profile = () => {
   const [referralData, setReferralData] = useState(null);
   const [referralLoading, setReferralLoading] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const { limits: planLimits } = usePlanLimits();
   const [formData, setFormData] = useState({
     name: user?.name || "",
     upiId: user?.upiId || "",
@@ -430,6 +434,8 @@ const Profile = () => {
                 <div>
                   <label className={label}>Full Name</label>
                   <input
+                    id="name"
+                    name="name"
                     type="text"
                     className={inputCls}
                     value={formData.name}
@@ -526,6 +532,8 @@ const Profile = () => {
                 <div>
                   <label className={label}>UPI ID</label>
                   <input
+                    id="upiId"
+                    name="upiId"
                     type="text"
                     className={inputCls}
                     value={formData.upiId}
@@ -542,6 +550,8 @@ const Profile = () => {
                 <div>
                   <label className={label}>Phone Number (For Contact)</label>
                   <input
+                    id="phoneNumber"
+                    name="phoneNumber"
                     type="tel"
                     className={inputCls}
                     value={formData.phoneNumber}
@@ -561,6 +571,8 @@ const Profile = () => {
                     <div>
                       <label className={label}>Bank Name</label>
                       <input
+                        id="bankName"
+                        name="bankName"
                         type="text"
                         className={inputCls}
                         value={formData.bankName}
@@ -574,6 +586,8 @@ const Profile = () => {
                     <div>
                       <label className={label}>Account Number</label>
                       <input
+                        id="accountNumber"
+                        name="accountNumber"
                         type="text"
                         className={inputCls}
                         value={formData.accountNumber}
@@ -591,6 +605,8 @@ const Profile = () => {
                       <div>
                         <label className={label}>IFSC Code</label>
                         <input
+                          id="ifscCode"
+                          name="ifscCode"
                           type="text"
                           className={inputCls}
                           value={formData.ifscCode}
@@ -606,6 +622,8 @@ const Profile = () => {
                       <div>
                         <label className={label}>Branch Name</label>
                         <input
+                          id="branch"
+                          name="branch"
                           type="text"
                           className={inputCls}
                           value={formData.branch}
@@ -648,6 +666,8 @@ const Profile = () => {
                           : "Upload QR Code Image"}
                       </span>
                       <input
+                        id="paymentQrCode"
+                        name="paymentQrCode"
                         type="file"
                         hidden
                         accept="image/*"
@@ -997,14 +1017,14 @@ const Profile = () => {
                       <div className="flex justify-between text-[11px] mb-1.5">
                         <span className="text-slate-400">Products</span>
                         <span className="text-white font-bold">
-                          {user?.usage?.productsUploaded || 0} used
+                          {user?.usage?.productsUploaded || 0} / {planLimits?.productsUploaded || 3} used
                         </span>
                       </div>
                       <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-violet-500"
                           style={{
-                            width: `${Math.min(((user?.usage?.productsUploaded || 0) / (user?.subscription?.plan === "platinum" ? 1000 : user?.subscription?.plan === "gold" ? 100 : user?.subscription?.plan === "silver" ? 20 : 3)) * 100, 100)}%`,
+                            width: `${Math.min(((user?.usage?.productsUploaded || 0) / (planLimits?.productsUploaded || 3)) * 100, 100)}%`,
                           }}
                         />
                       </div>
@@ -1013,14 +1033,14 @@ const Profile = () => {
                       <div className="flex justify-between text-[11px] mb-1.5">
                         <span className="text-slate-400">Stories</span>
                         <span className="text-white font-bold">
-                          {user?.usage?.storiesPosted || 0} used
+                          {user?.usage?.storiesPosted || 0} / {planLimits?.storiesPosted || 5} used
                         </span>
                       </div>
                       <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-amber-500"
                           style={{
-                            width: `${Math.min(((user?.usage?.storiesPosted || 0) / (user?.subscription?.plan === "platinum" ? 1000 : user?.subscription?.plan === "gold" ? 200 : user?.subscription?.plan === "silver" ? 50 : 5)) * 100, 100)}%`,
+                            width: `${Math.min(((user?.usage?.storiesPosted || 0) / (planLimits?.storiesPosted || 5)) * 100, 100)}%`,
                           }}
                         />
                       </div>
@@ -1029,14 +1049,14 @@ const Profile = () => {
                       <div className="flex justify-between text-[11px] mb-1.5">
                         <span className="text-slate-400">Jobs Posted</span>
                         <span className="text-white font-bold">
-                          {user?.usage?.jobsPosted || 0} used
+                          {user?.usage?.jobsPosted || 0} / {planLimits?.jobsPosted || 2} used
                         </span>
                       </div>
                       <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-indigo-500"
                           style={{
-                            width: `${Math.min(((user?.usage?.jobsPosted || 0) / (user?.subscription?.plan === "platinum" ? 1000 : user?.subscription?.plan === "gold" ? 50 : user?.subscription?.plan === "silver" ? 10 : 2)) * 100, 100)}%`,
+                            width: `${Math.min(((user?.usage?.jobsPosted || 0) / (planLimits?.jobsPost || 2)) * 100, 100)}%`,
                           }}
                         />
                       </div>

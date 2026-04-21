@@ -6,12 +6,45 @@ const Order = require("../models/Order");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
+    const { page = 1, limit = 20, search, status, plan, district } = req.query;
+    const query = {};
+    
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+    
+    if (status && status !== "All") {
+      query.status = status;
+    }
+    
+    if (plan && plan !== "All") {
+      query["subscription.plan"] = plan;
+    }
+    
+    if (district && district !== "All") {
+      query.district = district;
+    }
+
+    
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit)),
+      User.countDocuments(query),
+    ]);
+
+    res.json({ 
+      users, 
+      total, 
+      page: Number(page), 
+      totalPages: Math.ceil(total / limit) 
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 exports.getUserDetails = async (req, res) => {
   try {

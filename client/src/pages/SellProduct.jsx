@@ -7,6 +7,7 @@ import { useUser } from "../context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import MapPicker from "../components/MapPicker";
+import { usePlanLimits } from "../hooks/usePlanLimits";
 const CustomDropdown = ({
   name,
   value,
@@ -153,6 +154,7 @@ const SellProduct = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { state, availableDistricts } = useLocation();
+  const { limits } = usePlanLimits();
 
   const [shopLocation, setShopLocation] = useState(null);
 
@@ -186,7 +188,6 @@ const SellProduct = () => {
         address: shopLocation.address || prev.address,
         pincode: shopLocation.pincode || prev.pincode,
         state: shopLocation.state || prev.state,
-        
       }));
     }
   }, [shopLocation]);
@@ -343,10 +344,25 @@ const SellProduct = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             List Your Product
           </h1>
-          <p className="text-sm text-white/30">
-            Complete the details below to list your item in the regional
-            directory.
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-white/30">
+              Complete the details below to list your item in the regional
+              directory.
+            </p>
+            {limits && (
+              <div className="shrink-0 px-3 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">
+                  Remaining:{" "}
+                  {Math.max(
+                    0,
+                    (limits.productsUploaded || 0) -
+                      (user?.usage?.productsUploaded || 0),
+                  )}{" "}
+                  / {limits.productsUploaded}
+                </span>
+              </div>
+            )}
+          </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -595,6 +611,8 @@ const SellProduct = () => {
                   {previews.length < 5 && (
                     <label className="aspect-square rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-white/4 hover:border-primary/30 transition-all group">
                       <input
+                        id="productImages"
+                        name="productImages"
                         type="file"
                         multiple
                         accept="image/*"

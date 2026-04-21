@@ -2,9 +2,26 @@ const Business = require("../models/Business");
 const Coupon = require("../models/Coupon");
 const Booking = require("../models/Booking");
 const QRCode = require("qrcode");
-const { getPlanLimits } = require("../config/plans");
 const User = require("../models/User");
+const Plan = require("../models/Plan");
 const { createNotification } = require("./notificationController");
+const logger = require("../utils/logger");
+
+const DEFAULT_FREE_LIMITS = {
+  productsUpload: 3,
+  storiesPost: 5,
+  jobsPost: 2,
+  analytics: false,
+  featuredListings: false,
+  prioritySupport: false,
+  chatMessaging: true,
+};
+
+async function getLimitsForUser(user) {
+  const planSlug = user.subscription?.plan || "free";
+  const planDoc = await Plan.findOne({ slug: planSlug });
+  return planDoc?.limits || DEFAULT_FREE_LIMITS;
+}
 
 exports.getBusinessAnalytics = async (req, res) => {
   try {
@@ -17,7 +34,7 @@ exports.getBusinessAnalytics = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
-    const limits = getPlanLimits(user.subscription.plan);
+    const limits = await getLimitsForUser(user);
 
     if (!limits.analytics) {
       return res.status(403).json({
@@ -31,6 +48,7 @@ exports.getBusinessAnalytics = async (req, res) => {
       dailyVisits: business.dailyVisits,
     });
   } catch (err) {
+    logger.error({ err }, "Error in getBusinessAnalytics");
     res.status(500).json({ message: err.message });
   }
 };
@@ -68,6 +86,7 @@ exports.createCoupon = async (req, res) => {
       qrCode: qrCodeDataUrl,
     });
   } catch (err) {
+    logger.error({ err }, "Error in createCoupon");
     res.status(500).json({ message: err.message });
   }
 };
@@ -267,7 +286,7 @@ exports.createBooking = async (req, res) => {
       return res.status(404).json({ message: "Business not found" });
 
     const businessOwner = await User.findById(business.ownerId);
-    const ownerLimits = getPlanLimits(businessOwner?.subscription?.plan);
+    const ownerLimits = await getLimitsForUser(businessOwner);
 
     if (ownerLimits.featuredListings) {
       const existingBooking = await Booking.findOne({
@@ -353,15 +372,19 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    const { sendPushNotification } = require("../utils/pushService");
-    await sendPushNotification(business.ownerId, {
-      title: "New Booking Request",
-      body: `${user.name} has requested a booking for ${serviceName}.`,
-      data: {
-        url: "/dashboard/bookings",
-        type: "booking",
-      },
-    });
+    try {
+      const { sendPushNotification } = require("../utils/pushService");
+      await sendPushNotification(business.ownerId, {
+        title: "New Booking Request",
+        body: `${user.name} has requested a booking for ${serviceName}.`,
+        data: {
+          url: "/dashboard/bookings",
+          type: "booking",
+        },
+      });
+    } catch (pushErr) {
+      logger.error({ err: pushErr }, "Error sending push notification for booking");
+    }
 
     await createNotification({
       recipientId: business.ownerId,
@@ -375,6 +398,7 @@ exports.createBooking = async (req, res) => {
 
     res.json({ success: true, booking: newBooking, appliedCoupon });
   } catch (err) {
+    logger.error({ err }, "Error in createBooking");
     res.status(500).json({ message: err.message });
   }
 };
@@ -413,17 +437,22 @@ exports.updateBookingStatus = async (req, res) => {
     booking.status = status;
     await booking.save();
 
-    const { sendPushNotification } = require("../utils/pushService");
-    await sendPushNotification(booking.userId, {
-      title: "Booking Update",
-      body: `Your booking for ${booking.serviceName} has been ${status}.`,
-      data: {
-        url: "/my-bookings",
-        type: "booking_update",
-      },
-    });
-
     const io = req.app.get("io");
+
+    try {
+      const { sendPushNotification } = require("../utils/pushService");
+      await sendPushNotification(booking.userId, {
+        title: "Booking Update",
+        body: `Your booking for ${booking.serviceName} has been ${status}.`,
+        data: {
+          url: "/my-bookings",
+          type: "booking_update",
+        },
+      });
+    } catch (pushErr) {
+      logger.error({ err: pushErr }, "Error sending push notification for booking status update");
+    }
+
     await createNotification({
       recipientId: booking.userId.toString(),
       type: "booking",
@@ -436,6 +465,7 @@ exports.updateBookingStatus = async (req, res) => {
 
     res.json({ success: true, booking });
   } catch (err) {
+    logger.error({ err }, "Error in updateBookingStatus");
     res.status(500).json({ message: err.message });
   }
 };

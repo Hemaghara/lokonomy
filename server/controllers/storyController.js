@@ -1,22 +1,8 @@
 const Story = require("../models/Story");
 const User = require("../models/User");
 const { uploadMedia } = require("../utils/uploadMedia");
-const buildLocationGeoJSON = (body) => {
-  const { latitude, longitude, locationAddress } = body;
-  console.log(`Latitude:${latitude}`);
-  console.log(`Longitude:${longitude}`);
-  console.log(`Location Address:${locationAddress}`);
-  if (latitude && longitude) {
-    return {
-      location: {
-        type: "Point",
-        coordinates: [parseFloat(longitude), parseFloat(latitude)],
-      },
-      locationAddress: locationAddress || null,
-    };
-  }
-  return {};
-};
+const { buildLocationGeoJSON } = require("../utils/geoHelpers");
+const logger = require("../utils/logger");
 
 exports.getAllStories = async (req, res, next) => {
   try {
@@ -50,13 +36,13 @@ exports.getAllStories = async (req, res, next) => {
     }
 
     const stories = await Story.find(query).sort({ createdAt: -1 });
-    console.log(`Stories:${stories}`);
     res.status(200).json({
       success: true,
       count: stories.length,
       data: stories,
     });
   } catch (error) {
+    logger.error({ err: error }, "Error fetching stories");
     next(error);
   }
 };
@@ -66,9 +52,8 @@ exports.getStoryById = async (req, res, next) => {
     const story = await Story.findByIdAndUpdate(
       req.params.id,
       { $inc: { views: 1 } },
-      { new: true }
+      { new: true },
     );
-    console.log(`Story:${story}`);
 
     if (!story) {
       return res
@@ -76,7 +61,11 @@ exports.getStoryById = async (req, res, next) => {
         .json({ success: false, message: "Story not found" });
     }
 
-    if (!story.isHighlighted && story.expiresAt && story.expiresAt < new Date()) {
+    if (
+      !story.isHighlighted &&
+      story.expiresAt &&
+      story.expiresAt < new Date()
+    ) {
       return res.status(404).json({
         success: false,
         message: "This story has expired and is no longer available",
@@ -88,6 +77,10 @@ exports.getStoryById = async (req, res, next) => {
       data: story,
     });
   } catch (error) {
+    logger.error(
+      { err: error, storyId: req.params.id },
+      "Error fetching story by ID",
+    );
     next(error);
   }
 };
@@ -113,6 +106,10 @@ exports.createStory = async (req, res, next) => {
         (user.subscription.plan !== "gold" &&
           user.subscription.plan !== "platinum")
       ) {
+        logger.warn(
+          { userId: req.user.id },
+          "Unauthorized attempt to create highlight",
+        );
         return res.status(403).json({
           success: false,
           message:
@@ -121,20 +118,13 @@ exports.createStory = async (req, res, next) => {
       }
     }
 
-    console.log(`Title:${title}`);
-    console.log(`Content:${content}`);
-    console.log(`Type:${type}`);
-    console.log(`Image:${image}`);
-    console.log(`District:${district}`);
-    console.log(`Taluka:${taluka}`);
-    console.log(`Author:${author}`);
+    logger.debug({ title, type, userId: req.user.id }, "Creating new story");
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {
       const res = await uploadMedia(image, "stories");
       imageUrl = res.secure_url;
     }
-    console.log(`Image URL:${imageUrl}`);
 
     const now = new Date();
     const expiresAt = isHighlighted
@@ -155,17 +145,18 @@ exports.createStory = async (req, res, next) => {
       createdAt: now,
       expiresAt,
     };
-    console.log(`Story Data:${JSON.stringify(storyData)}`);
 
     const geoData = buildLocationGeoJSON(req.body);
-    console.log(`Geo Data:${JSON.stringify(geoData)}`);
     if (geoData.location) {
       storyData.location = geoData.location;
       storyData.locationAddress = geoData.locationAddress;
     }
 
     const story = await Story.create(storyData);
-    console.log(`Story:${story}`);
+    logger.info(
+      { storyId: story._id, userId: req.user.id },
+      "Story created successfully",
+    );
 
     await User.findByIdAndUpdate(req.user.id, {
       $inc: { "usage.storiesPosted": 1 },
@@ -179,7 +170,7 @@ exports.createStory = async (req, res, next) => {
         : "Story will be automatically removed after 24 hours",
     });
   } catch (error) {
-    console.error("Error creating story:", error);
+    logger.error({ err: error }, "Error creating story");
     next(error);
   }
 };
@@ -205,13 +196,16 @@ exports.getHighlightsByBusiness = async (req, res, next) => {
 exports.deleteStory = async (req, res, next) => {
   try {
     const story = await Story.findById(req.params.id);
-    console.log(`Story:${story}`);
     if (!story) {
       return res
         .status(404)
         .json({ success: false, message: "Story not found" });
     }
     if (story.authorId.toString() !== req.user.id) {
+      logger.warn(
+        { storyId: req.params.id, userId: req.user.id },
+        "Unauthorized attempt to delete story",
+      );
       return res.status(401).json({
         success: false,
         message: "Not authorized to delete this story",
@@ -219,12 +213,20 @@ exports.deleteStory = async (req, res, next) => {
     }
 
     await story.deleteOne();
+    logger.info(
+      { storyId: req.params.id, userId: req.user.id },
+      "Story deleted successfully",
+    );
 
     res.status(200).json({
       success: true,
       message: "Story deleted",
     });
   } catch (error) {
+    logger.error(
+      { err: error, storyId: req.params.id },
+      "Error deleting story",
+    );
     next(error);
   }
 };
@@ -233,7 +235,9 @@ exports.toggleLike = async (req, res, next) => {
   try {
     const story = await Story.findById(req.params.id);
     if (!story) {
-      return res.status(404).json({ success: false, message: "Story not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Story not found" });
     }
 
     const isLiked = story.likes.includes(req.user.id);
@@ -260,11 +264,13 @@ exports.incrementShare = async (req, res, next) => {
     const updatedStory = await Story.findByIdAndUpdate(
       req.params.id,
       { $inc: { shares: 1 } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedStory) {
-      return res.status(404).json({ success: false, message: "Story not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Story not found" });
     }
 
     res.status(200).json({

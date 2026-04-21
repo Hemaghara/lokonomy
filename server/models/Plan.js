@@ -10,9 +10,9 @@ const planSchema = new mongoose.Schema(
       12: { type: Number, required: true },
     },
     limits: {
-      productsUpload: { type: Number, default: 0 },
-      storiesPost: { type: Number, default: 0 },
-      jobsPost: { type: Number, default: 0 },
+      productsUploaded: { type: Number, default: 0 },
+      storiesPosted: { type: Number, default: 0 },
+      jobsPosted: { type: Number, default: 0 },
       analytics: { type: Boolean, default: false },
       featuredListings: { type: Boolean, default: false },
       prioritySupport: { type: Boolean, default: false },

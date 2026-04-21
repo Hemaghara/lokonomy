@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "../context/LocationContext";
 import { jobService } from "../services";
 import { toast } from "react-hot-toast";
+import { useUser } from "../context/UserContext";
+import { usePlanLimits } from "../hooks/usePlanLimits";
 const CustomDropdown = ({
   name,
   value,
@@ -144,7 +146,9 @@ const Field = ({ label, required, span2, children }) => (
 );
 const PostJob = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   const { availableDistricts } = useLocation();
+  const { limits } = usePlanLimits();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     position: "",
@@ -273,10 +277,19 @@ const PostJob = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             Post a Job Listing
           </h1>
-          <p className="text-sm text-white/30 leading-relaxed">
-            Fill in the details below to reach local talent and publish your
-            opportunity.
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-white/30 leading-relaxed">
+              Fill in the details below to reach local talent and publish your
+              opportunity.
+            </p>
+            {limits && (
+              <div className="shrink-0 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                  Remaining: {Math.max(0, (limits.jobsPost || 0) - (user?.usage?.jobsPosted || 0))} / {limits.jobsPost}
+                </span>
+              </div>
+            )}
+          </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}

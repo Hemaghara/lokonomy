@@ -136,45 +136,61 @@ exports.getRedemptionHistory = async (req, res) => {
 
 exports.getRewardsStats = async (req, res) => {
   try {
-    const users = await User.find({}).select("loyaltyPoints pointsHistory");
+    const stats = await User.aggregate([
+      {
+        $facet: {
+          balances: [
+            {
+              $group: {
+                _id: null,
+                totalActivePoints: { $sum: "$loyaltyPoints" },
+                activeUsers: {
+                  $sum: { $cond: [{ $gt: ["$loyaltyPoints", 0] }, 1, 0] },
+                },
+              },
+            },
+          ],
+          history: [
+            { $unwind: "$pointsHistory" },
+            {
+              $group: {
+                _id: "$pointsHistory.type",
+                totalAmount: { $sum: "$pointsHistory.amount" },
+                count: { $sum: 1 },
+              },
+            },
+          ],
+        },
+      },
+    ]);
 
-    const totalPoints = users.reduce(
-      (sum, u) => sum + (u.loyaltyPoints || 0),
-      0,
-    );
-    const totalRedemptions = users.reduce(
-      (sum, u) =>
-        sum + (u.pointsHistory || []).filter((h) => h.type === "redeem").length,
-      0,
-    );
-    const totalEarned = users.reduce(
-      (sum, u) =>
-        sum +
-        (u.pointsHistory || [])
-          .filter((h) => h.type === "earn")
-          .reduce((s, h) => s + (h.amount || 0), 0),
-      0,
-    );
-    const totalRedeemed = users.reduce(
-      (sum, u) =>
-        sum +
-        (u.pointsHistory || [])
-          .filter((h) => h.type === "redeem")
-          .reduce((s, h) => s + (h.amount || 0), 0),
-      0,
-    );
+    const balanceStats = stats[0].balances[0] || {
+      totalActivePoints: 0,
+      activeUsers: 0,
+    };
+    const historyStats = stats[0].history;
+
+    const earnStats = historyStats.find((h) => h._id === "earn") || {
+      totalAmount: 0,
+      count: 0,
+    };
+    const redeemStats = historyStats.find((h) => h._id === "redeem") || {
+      totalAmount: 0,
+      count: 0,
+    };
 
     res.json({
       success: true,
       stats: {
-        totalActivePoints: totalPoints,
-        totalRedemptions,
-        totalPointsEarned: totalEarned,
-        totalPointsRedeemed: totalRedeemed,
-        activeUsers: users.filter((u) => (u.loyaltyPoints || 0) > 0).length,
+        totalActivePoints: balanceStats.totalActivePoints,
+        totalRedemptions: redeemStats.count,
+        totalPointsEarned: earnStats.totalAmount,
+        totalPointsRedeemed: redeemStats.totalAmount,
+        activeUsers: balanceStats.activeUsers,
       },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+

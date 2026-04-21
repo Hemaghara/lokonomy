@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const logger = require("../utils/logger");
 
 exports.getMyReferralCode = async (req, res) => {
   try {
@@ -31,7 +32,7 @@ exports.getMyReferralCode = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("my-code error:", err.message);
+    logger.error({ err, userId: req.user.id }, "Error in getMyReferralCode");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -52,7 +53,10 @@ exports.validateReferralCode = async (req, res) => {
       referralCode: referrer.referralCode,
     });
   } catch (err) {
-    console.error("validate-code error:", err.message);
+    logger.error(
+      { err, code: req.params.code },
+      "Error in validateReferralCode",
+    );
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -88,12 +92,19 @@ exports.applyReferralReward = async (req, res) => {
       },
     });
 
+    logger.info(
+      { referrerId: referrer._id, refereeId: referee._id },
+      "Referral reward applied successfully",
+    );
     res.json({
       success: true,
       message: "Referral reward applied: 15 days added to referrer",
     });
   } catch (err) {
-    console.error("apply-reward error:", err.message);
+    logger.error(
+      { err, refereeId: req.body.refereeId },
+      "Error in applyReferralReward",
+    );
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -117,7 +128,7 @@ exports.getReferralLeaderboard = async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error("leaderboard error:", err.message);
+    logger.error({ err }, "Error in getReferralLeaderboard");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

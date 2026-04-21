@@ -1,22 +1,7 @@
 const Feed = require("../models/Feed");
 const { uploadMedia } = require("../utils/uploadMedia");
-
-const buildLocationGeoJSON = (body) => {
-  const { latitude, longitude, locationAddress } = body;
-  console.log(`Latitude: ${latitude}`);
-  console.log(`Longitude: ${longitude}`);
-  console.log(`Location Address: ${locationAddress}`);
-  if (latitude && longitude) {
-    return {
-      location: {
-        type: "Point",
-        coordinates: [parseFloat(longitude), parseFloat(latitude)],
-      },
-      locationAddress: locationAddress || null,
-    };
-  }
-  return {};
-};
+const { buildLocationGeoJSON } = require("../utils/geoHelpers");
+const logger = require("../utils/logger");
 
 exports.getAllFeeds = async (req, res, next) => {
   try {
@@ -61,6 +46,7 @@ exports.getAllFeeds = async (req, res, next) => {
       data: feeds,
     });
   } catch (error) {
+    logger.error({ err: error }, "Error fetching feeds");
     next(error);
   }
 };
@@ -68,7 +54,6 @@ exports.getAllFeeds = async (req, res, next) => {
 exports.getFeedById = async (req, res, next) => {
   try {
     const feed = await Feed.findById(req.params.id);
-    console.log(`Feed: ${feed}`);
 
     if (!feed) {
       return res
@@ -81,6 +66,7 @@ exports.getFeedById = async (req, res, next) => {
       data: feed,
     });
   } catch (error) {
+    logger.error({ err: error, feedId: req.params.id }, "Error fetching feed by ID");
     next(error);
   }
 };
@@ -88,13 +74,8 @@ exports.getFeedById = async (req, res, next) => {
 exports.createFeed = async (req, res, next) => {
   try {
     const { title, content, type, image, district, taluka, author } = req.body;
-    console.log(`Title: ${title}`);
-    console.log(`Content: ${content}`);
-    console.log(`Type: ${type}`);
-    console.log(`Image: ${image}`);
-    console.log(`District: ${district}`);
-    console.log(`Taluka: ${taluka}`);
-    console.log(`Author: ${author}`);
+    
+    logger.debug({ title, type, userId: req.user.id }, "Creating new feed");
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {
@@ -115,7 +96,6 @@ exports.createFeed = async (req, res, next) => {
       authorId: req.user.id,
       createdAt: new Date(),
     };
-    console.log(`Feed Data: ${feedData}`);
 
     const geoData = buildLocationGeoJSON(req.body);
     if (geoData.location) {
@@ -124,7 +104,7 @@ exports.createFeed = async (req, res, next) => {
     }
 
     const feed = await Feed.create(feedData);
-    console.log(`Feed: ${feed}`);
+    logger.info({ feedId: feed._id, userId: req.user.id }, "Feed created successfully");
 
     res.status(201).json({
       success: true,
@@ -132,7 +112,7 @@ exports.createFeed = async (req, res, next) => {
       message: "Feed posted successfully",
     });
   } catch (error) {
-    console.error("Error creating feed:", error);
+    logger.error({ err: error }, "Error creating feed");
     next(error);
   }
 };
@@ -148,6 +128,7 @@ exports.deleteFeed = async (req, res, next) => {
     }
 
     if (feed.authorId.toString() !== req.user.id) {
+      logger.warn({ feedId: req.params.id, userId: req.user.id }, "Unauthorized attempt to delete feed");
       return res.status(401).json({
         success: false,
         message: "Not authorized to delete this feed",
@@ -155,12 +136,14 @@ exports.deleteFeed = async (req, res, next) => {
     }
 
     await feed.deleteOne();
+    logger.info({ feedId: req.params.id, userId: req.user.id }, "Feed deleted successfully");
 
     res.status(200).json({
       success: true,
       message: "Feed deleted successfully",
     });
   } catch (error) {
+    logger.error({ err: error, feedId: req.params.id }, "Error deleting feed");
     next(error);
   }
 };

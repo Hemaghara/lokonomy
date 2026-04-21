@@ -64,5 +64,6 @@ const productSchema = new mongoose.Schema({
 });
 
 productSchema.index({ location: "2dsphere" });
+productSchema.index({ isFlagged: 1, isSold: 1, mainCategory: 1 });
 
 module.exports = mongoose.model("Product", productSchema);

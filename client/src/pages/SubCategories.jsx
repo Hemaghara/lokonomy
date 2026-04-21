@@ -106,6 +106,8 @@ const SubCategories = () => {
             <div className="relative sm:w-64 shrink-0">
               <HiOutlineMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 text-sm pointer-events-none" />
               <input
+                id="search"
+                name="search"
                 type="text"
                 placeholder="Search sub-categories…"
                 value={search}

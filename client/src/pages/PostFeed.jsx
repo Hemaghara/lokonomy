@@ -341,6 +341,8 @@ const PostFeed = () => {
                 {!formData.image ? (
                   <label className="flex flex-col items-center justify-center gap-3 w-full py-8 rounded-xl border border-dashed border-white/10 cursor-pointer hover:bg-white/3 hover:border-emerald-500/30 transition-all group">
                     <input
+                      id="image"
+                      name="image"
                       type="file"
                       accept="image/*"
                       className="hidden"

@@ -255,6 +255,8 @@ const Stories = () => {
           <div className="relative">
             <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-base pointer-events-none" />
             <input
+              id="searchQuery"
+              name="searchQuery"
               type="text"
               placeholder="Search community updates…"
               className={inputCls + " pl-11"}
@@ -273,6 +275,8 @@ const Stories = () => {
                   Radius
                 </label>
                 <select
+                  id="radius"
+                  name="radius"
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}
                   className="bg-transparent text-xs font-bold text-violet-400 outline-none cursor-pointer"

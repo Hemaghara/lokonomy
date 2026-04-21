@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Plan = require("../models/Plan");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { createNotification } = require("./notificationController");
+const logger = require("../utils/logger");
 
 exports.getAllJobs = async (req, res) => {
   try {
@@ -31,6 +32,7 @@ exports.getAllJobs = async (req, res) => {
     const jobs = await Job.find(query).sort({ createdAt: -1 });
     res.json(jobs);
   } catch (err) {
+    logger.error({ err }, "Error in getAllJobs");
     res.status(500).json({ message: err.message });
   }
 };
@@ -44,6 +46,10 @@ exports.createJob = async (req, res) => {
     const currentPosted = user.usage?.jobsPosted || 0;
 
     if (currentPosted >= jobsLimit) {
+      logger.warn(
+        { userId: req.user.id, planSlug, jobsLimit },
+        "Job posting limit reached",
+      );
       return res.status(403).json({
         success: false,
         message: `Job posting limit reached for ${planSlug} plan (${jobsLimit} jobs max). Please upgrade your plan.`,
@@ -58,12 +64,17 @@ exports.createJob = async (req, res) => {
       $inc: { "usage.jobsPosted": 1 },
     });
 
+    logger.info(
+      { jobId: newJob._id, userId: req.user.id },
+      "Job posted successfully",
+    );
     res.status(201).json({
       success: true,
       message: "Job posted successfully",
       job: newJob,
     });
   } catch (err) {
+    logger.error({ err }, "Error in createJob");
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -83,6 +94,7 @@ exports.getJobById = async (req, res) => {
     }
     res.json(job);
   } catch (err) {
+    logger.error({ err, jobId: req.params.id }, "Error in getJobById");
     res.status(500).json({ message: err.message });
   }
 };
@@ -99,7 +111,7 @@ exports.applyForJob = async (req, res) => {
       candidateCertificate,
     } = req.body;
     const job = await Job.findById(req.params.id);
-    console.log(`Job: ${job}`);
+
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
@@ -115,7 +127,6 @@ exports.applyForJob = async (req, res) => {
       });
     }
     let biodataUrl = candidateBiodata;
-    console.log(`Candidate Biodata:${biodataUrl}`);
 
     if (candidateBiodata && candidateBiodata.includes("base64")) {
       const uploadResult = await uploadMedia(candidateBiodata, "jobs/biodatas");
@@ -155,11 +166,18 @@ exports.applyForJob = async (req, res) => {
       io,
     });
 
+    logger.info(
+      { jobId: job._id, userId: req.user.id },
+      "Job application submitted",
+    );
     res
       .status(201)
       .json({ success: true, message: "Application submitted successfully" });
   } catch (err) {
-    console.error("Error applying for job:", err);
+    logger.error(
+      { err, jobId: req.params.id, userId: req.user.id },
+      "Error applying for job",
+    );
     res.status(500).json({ message: err.message });
   }
 };
@@ -171,6 +189,7 @@ exports.getMyJobs = async (req, res) => {
     });
     res.json(jobs);
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getMyJobs");
     res.status(500).json({ message: err.message });
   }
 };
@@ -178,20 +197,28 @@ exports.getMyJobs = async (req, res) => {
 exports.deleteJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    console.log(`Job: ${job}`);
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
     if (job.posterId.toString() !== req.user.id) {
+      logger.warn(
+        { jobId: req.params.id, userId: req.user.id },
+        "Unauthorized job deletion attempt",
+      );
       return res
         .status(403)
         .json({ message: "Not authorized to delete this job" });
     }
 
     await Job.findByIdAndDelete(req.params.id);
+    logger.info(
+      { jobId: req.params.id, userId: req.user.id },
+      "Job deleted successfully",
+    );
     res.json({ success: true, message: "Job deleted successfully" });
   } catch (err) {
+    logger.error({ err, jobId: req.params.id }, "Error in deleteJob");
     res.status(500).json({ message: err.message });
   }
 };
@@ -199,12 +226,15 @@ exports.deleteJob = async (req, res) => {
 exports.updateJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    console.log(`Job: ${job}`);
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
     if (job.posterId.toString() !== req.user.id) {
+      logger.warn(
+        { jobId: req.params.id, userId: req.user.id },
+        "Unauthorized job update attempt",
+      );
       return res
         .status(403)
         .json({ message: "Not authorized to update this job" });
@@ -238,8 +268,13 @@ exports.updateJob = async (req, res) => {
     });
 
     await job.save();
+    logger.info(
+      { jobId: job._id, userId: req.user.id },
+      "Job updated successfully",
+    );
     res.json({ success: true, message: "Job updated successfully", job });
   } catch (err) {
+    logger.error({ err, jobId: req.params.id }, "Error in updateJob");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -247,12 +282,15 @@ exports.updateJob = async (req, res) => {
 exports.toggleJobStatus = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    console.log(`Job: ${job}`);
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
     if (job.posterId.toString() !== req.user.id) {
+      logger.warn(
+        { jobId: req.params.id, userId: req.user.id },
+        "Unauthorized job toggle attempt",
+      );
       return res
         .status(403)
         .json({ message: "Not authorized to update this job" });
@@ -261,12 +299,14 @@ exports.toggleJobStatus = async (req, res) => {
     job.status = job.status === "Open" ? "Closed" : "Open";
     await job.save();
 
+    logger.info({ jobId: job._id, status: job.status }, "Job status toggled");
     res.json({
       success: true,
       message: `Job marked as ${job.status}`,
       status: job.status,
     });
   } catch (err) {
+    logger.error({ err, jobId: req.params.id }, "Error in toggleJobStatus");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -303,11 +343,19 @@ exports.updateApplicationStatus = async (req, res) => {
       });
     }
 
+    logger.info(
+      { jobId: job._id, applicantId, status },
+      "Application status updated",
+    );
     res.json({
       success: true,
       message: "Application status updated successfully",
     });
   } catch (err) {
+    logger.error(
+      { err, jobId: req.params.id },
+      "Error in updateApplicationStatus",
+    );
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -335,6 +383,7 @@ exports.getAppliedJobs = async (req, res) => {
     });
     res.json(applications);
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getAppliedJobs");
     res.status(500).json({ message: err.message });
   }
 };

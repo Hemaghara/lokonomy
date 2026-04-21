@@ -472,6 +472,8 @@ const Login = () => {
                 <div className="space-y-4">
                   <div className="relative">
                     <input
+                      id="otp"
+                      name="otp"
                       type="text"
                       className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-center text-3xl font-black tracking-[0.6em] text-white focus:border-primary/50 outline-none transition-all"
                       placeholder="000000"

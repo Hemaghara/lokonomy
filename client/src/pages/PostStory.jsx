@@ -6,6 +6,7 @@ import { useUser } from "../context/UserContext";
 import { storyService } from "../services";
 import { toast } from "react-hot-toast";
 import MapPicker from "../components/MapPicker";
+import { usePlanLimits } from "../hooks/usePlanLimits";
 const CustomDropdown = ({
   name,
   value,
@@ -152,6 +153,7 @@ const PostStory = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { state, availableDistricts } = useLocation();
+  const { limits } = usePlanLimits();
 
   const [storyLocation, setStoryLocation] = useState(null);
 
@@ -320,9 +322,18 @@ const PostStory = () => {
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             Share Local Update
           </h1>
-          <p className="text-sm text-white/30">
-            Broadcast information to your neighborhood.
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-white/30">
+              Broadcast information to your neighborhood.
+            </p>
+            {limits && (
+              <div className="shrink-0 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
+                  Remaining: {Math.max(0, (limits.storiesPosted || 0) - (user?.usage?.storiesPosted || 0))} / {limits.storiesPosted}
+                </span>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         <motion.div

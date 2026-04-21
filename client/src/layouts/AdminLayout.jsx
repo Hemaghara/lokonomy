@@ -58,61 +58,92 @@ const AdminLayout = ({ children }) => {
     navigate("/admin/login");
   };
 
-  const navItems = [
-    { label: "Overview", path: "/admin/dashboard", icon: FiActivity },
-    { label: "Manage Users", path: "/admin/users", icon: FiUsers },
-    { label: "Businesses", path: "/admin/businesses", icon: FiBriefcase },
-    { label: "Verification", path: "/admin/verification", icon: FiShield },
-    { label: "Marketplace", path: "/admin/marketplace", icon: FiPackage },
-    { label: "Orders", path: "/admin/marketplace/orders", icon: FiPackage },
-    { label: "Bookings", path: "/admin/bookings", icon: FiBookOpen },
-    { label: "Jobs", path: "/admin/jobs", icon: FiFileText },
-    { label: "Stories & Feed", path: "/admin/stories-feed", icon: FiBookOpen },
-    { label: "Reviews", path: "/admin/reviews", icon: FiMessageSquare },
-    { label: "Coupons", path: "/admin/coupons", icon: FiZap },
-    { label: "Rewards & Loyalty", path: "/admin/rewards", icon: FiGift },
-    { label: "Referral Management", path: "/admin/referrals", icon: FiUsers },
-    { label: "Support Center", path: "/admin/support", icon: FiMessageSquare },
-    { label: "Moderation", path: "/admin/moderation", icon: FiShield },
-    { label: "Chat Monitoring", path: "/admin/chats", icon: FiMessageSquare },
-    { label: "Push Manager", path: "/admin/notifications", icon: FiZap },
+  const sections = [
     {
-      label: "Revenue & Subs",
-      path: "/admin/subscriptions",
-      icon: FiDollarSign,
+      title: "Core",
+      items: [
+        { label: "Overview", path: "/admin/dashboard", icon: FiActivity },
+        { label: "Users", path: "/admin/users", icon: FiUsers },
+        { label: "Businesses", path: "/admin/businesses", icon: FiBriefcase },
+        { label: "Verification", path: "/admin/verification", icon: FiShield },
+      ],
     },
     {
-      label: "Sub-Admin",
-      path: "/admin/sub-admins",
-      icon: FiShield,
+      title: "Marketplace",
+      items: [
+        { label: "Inventory", path: "/admin/marketplace", icon: FiPackage },
+        { label: "Orders", path: "/admin/marketplace/orders", icon: FiPackage },
+        { label: "Bookings", path: "/admin/bookings", icon: FiBookOpen },
+        { label: "Coupons", path: "/admin/coupons", icon: FiZap },
+      ],
     },
     {
-      label: "Analytics Hub",
-      path: "/admin/analytics",
-      icon: FiPieChart,
+      title: "Community",
+      items: [
+        { label: "Jobs", path: "/admin/jobs", icon: FiFileText },
+        { label: "Feed", path: "/admin/stories-feed", icon: FiBookOpen },
+        { label: "Reviews", path: "/admin/reviews", icon: FiMessageSquare },
+        { label: "Rewards", path: "/admin/rewards", icon: FiGift },
+        { label: "Referrals", path: "/admin/referrals", icon: FiUsers },
+      ],
     },
     {
-      label: "Report Center",
-      path: "/admin/reports",
-      icon: FiPieChart,
+      title: "Communication",
+      items: [
+        { label: "Support", path: "/admin/support", icon: FiMessageSquare },
+        { label: "Moderation", path: "/admin/moderation", icon: FiShield },
+        { label: "Chat Admin", path: "/admin/chats", icon: FiMessageSquare },
+        { label: "Push Manager", path: "/admin/notifications", icon: FiZap },
+      ],
     },
     {
-      label: "Audit Logs",
-      path: "/admin/audit-logs",
-      icon: FiActivity,
+      title: "Business Intelligence",
+      items: [
+        {
+          label: "Revenue",
+          path: "/admin/subscriptions",
+          icon: FiDollarSign,
+        },
+        {
+          label: "Analytics",
+          path: "/admin/analytics",
+          icon: FiPieChart,
+          superadminOnly: true,
+        },
+        {
+          label: "Reports",
+          path: "/admin/reports",
+          icon: FiPieChart,
+        },
+      ],
     },
     {
-      label: "System Health",
-      path: "/admin/health",
-      icon: FiActivity,
+      title: "System",
+      items: [
+        {
+          label: "Sub-Admins",
+          path: "/admin/sub-admins",
+          icon: FiShield,
+          superadminOnly: true,
+        },
+        {
+          label: "Audit Logs",
+          path: "/admin/audit-logs",
+          icon: FiActivity,
+        },
+        {
+          label: "Health",
+          path: "/admin/health",
+          icon: FiActivity,
+          superadminOnly: true,
+        },
+        {
+          label: "Settings",
+          path: "/admin/settings",
+          icon: FiActivity,
+        },
+      ],
     },
-    {
-      label: "Settings",
-      path: "/admin/settings",
-      icon: FiActivity,
-    },
-
-    { label: "My Profile", path: "/admin/profile", icon: FiUser },
   ];
 
   const handleNavClick = (path) => {
@@ -136,11 +167,10 @@ const AdminLayout = ({ children }) => {
           ${isCollapsed ? "w-24" : "w-80"}
         `}
       >
-        <div
-          className={`flex flex-col h-full ${isCollapsed ? "p-4" : "p-8"} overflow-y-auto scrollbar-hide`}
-        >
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header - Static */}
           <div
-            className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} mb-12 px-2`}
+            className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} p-6 pb-2`}
           >
             <div
               className={`flex items-center ${isCollapsed ? "justify-center" : "gap-4"}`}
@@ -177,49 +207,66 @@ const AdminLayout = ({ children }) => {
             </button>
           </div>
 
-          <nav className="flex-1 space-y-3">
-            {navItems
-              .filter((item) => {
-                if (
-                  (item.path === "/admin/sub-admins" ||
-                    item.path === "/admin/analytics" ||
-                    item.path === "/admin/health") &&
-                  adminInfo.role !== "superadmin"
-
-                ) {
+          {/* Sidebar Content - Scrollable */}
+          <nav className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 scroll-smooth">
+            {sections.map((section, sIdx) => {
+              const filteredItems = section.items.filter((item) => {
+                if (item.superadminOnly && adminInfo.role !== "superadmin") {
                   return false;
                 }
                 return true;
-              })
-              .map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => handleNavClick(item.path)}
-                  title={isCollapsed ? item.label : ""}
-                  className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-6"} py-4 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
-                    location.pathname === item.path ||
-                    (item.path !== "/admin/dashboard" &&
-                      location.pathname.startsWith(item.path + "/"))
-                      ? "text-white bg-indigo-600 shadow-xl shadow-indigo-500/30"
-                      : "text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
-                  }`}
-                >
-                  <item.icon
-                    className={`text-xl ${location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/")) ? "scale-110" : "group-hover:scale-110"} transition-transform`}
-                  />
+              });
+
+              if (filteredItems.length === 0) return null;
+
+              return (
+                <div key={sIdx} className="space-y-2">
                   {!isCollapsed && (
-                    <span className="text-sm tracking-wide truncate">
-                      {item.label}
-                    </span>
+                    <h3 className="px-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 opacity-50">
+                      {section.title}
+                    </h3>
                   )}
-                </button>
-              ))}
+                  {isCollapsed && (
+                    <div className="mx-auto w-8 h-px bg-white/5 mb-4" />
+                  )}
+                  <div className="space-y-1">
+                    {filteredItems.map((item) => (
+                      <button
+                        key={item.path}
+                        onClick={() => handleNavClick(item.path)}
+                        title={isCollapsed ? item.label : ""}
+                        className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-6"} py-3 rounded-2xl font-bold transition-all duration-300 relative group overflow-hidden ${
+                          location.pathname === item.path ||
+                          (item.path !== "/admin/dashboard" &&
+                            location.pathname.startsWith(item.path + "/"))
+                            ? "text-white bg-indigo-600 shadow-lg shadow-indigo-500/20"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                        }`}
+                      >
+                        <item.icon
+                          className={`text-xl ${location.pathname === item.path || (item.path !== "/admin/dashboard" && location.pathname.startsWith(item.path + "/")) ? "scale-110" : "group-hover:scale-110 font-medium"} transition-transform`}
+                        />
+                        {!isCollapsed && (
+                          <span className="text-[13px] tracking-wide truncate">
+                            {item.label}
+                          </span>
+                        )}
+                        {location.pathname === item.path && !isCollapsed && (
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-l-full" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </nav>
 
-          <div className="mt-auto pt-6 border-t border-white/5">
+          {/* Sidebar Footer - Static */}
+          <div className="p-6 pt-4 border-t border-white/5">
             <button
               onClick={() => navigate("/admin/profile")}
-              className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-2"} mb-8 hover:bg-white/5 p-3 rounded-2xl transition-all duration-300 group`}
+              className={`w-full flex items-center ${isCollapsed ? "justify-center px-0" : "gap-4 px-2"} mb-4 hover:bg-white/5 p-3 rounded-2xl transition-all duration-300 group`}
             >
               <div
                 className={`${isCollapsed ? "w-10 h-10" : "w-12 h-12"} rounded-2xl bg-indigo-600/10 flex items-center justify-center text-indigo-400 font-bold border border-white/5 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner shrink-0`}
@@ -304,8 +351,8 @@ const AdminLayout = ({ children }) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-indigo-500/5 via-transparent to-transparent">
-          <div className="px-4 py-6 sm:px-8 lg:px-12 xl:px-16 pt-8 max-w-7xl mx-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20">
+          <div className="px-4 py-6 sm:px-8 lg:px-12 xl:px-16 pt-8 pb-10 max-w-7xl mx-auto">
             <nav className="flex items-center gap-2 mb-8 text-[11px] font-black uppercase tracking-widest overflow-x-auto whitespace-nowrap scrollbar-hide">
               <button
                 onClick={() => navigate("/admin/dashboard")}

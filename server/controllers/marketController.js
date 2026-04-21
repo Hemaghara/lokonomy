@@ -4,23 +4,8 @@ const Order = require("../models/Order");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { awardPoints } = require("./rewardsController");
 const { createNotification } = require("./notificationController");
-
-const buildLocationGeoJSON = (body) => {
-  const { latitude, longitude, locationAddress } = body;
-  console.log(`Latitude: ${latitude}`);
-  console.log(`Longitude: ${longitude}`);
-  console.log(`Location Address: ${locationAddress}`);
-  if (latitude && longitude) {
-    return {
-      location: {
-        type: "Point",
-        coordinates: [parseFloat(longitude), parseFloat(latitude)],
-      },
-      locationAddress: locationAddress || null,
-    };
-  }
-  return {};
-};
+const { buildLocationGeoJSON } = require("../utils/geoHelpers");
+const logger = require("../utils/logger");
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -33,13 +18,6 @@ exports.getAllProducts = async (req, res) => {
       subCategory,
       priceType,
     } = req.query;
-    console.log(`Lat: ${lat}`);
-    console.log(`Lng: ${lng}`);
-    console.log(`Radius: ${radius}`);
-    console.log(`District: ${district}`);
-    console.log(`Main Category: ${mainCategory}`);
-    console.log(`Sub Category: ${subCategory}`);
-    console.log(`Price Type: ${priceType}`);
 
     let query = {};
 
@@ -81,13 +59,14 @@ exports.getAllProducts = async (req, res) => {
     });
     res.json(result);
   } catch (err) {
+    logger.error({ err }, "Error in getAllProducts");
     res.status(500).json({ message: err.message });
   }
 };
 exports.addProduct = async (req, res) => {
   try {
     const productData = req.body;
-    console.log(`Product Data: ${productData}`);
+
     if (productData.productImages && Array.isArray(productData.productImages)) {
       const uploadedImages = await Promise.all(
         productData.productImages.map(async (image) => {
@@ -98,22 +77,21 @@ exports.addProduct = async (req, res) => {
           return image;
         }),
       );
-      console.log(`Uploaded Images: ${uploadedImages}`);
       productData.productImages = uploadedImages;
     }
 
     const user = await User.findById(req.user.id);
-    console.log(`User: ${user}`);
     if (!user) {
+      logger.warn({ userId: req.user.id }, "addProduct: User not found");
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
+    productData.sellerProfile = productData.sellerProfile || {};
     productData.sellerProfile.name = user.name;
     productData.sellerId = req.user.id;
-    console.log(`Seller Profile: ${productData.sellerProfile}`);
+
     const geoData = buildLocationGeoJSON(productData);
-    console.log(`Geo Data: ${geoData}`);
     if (geoData.location) {
       productData.location = geoData.location;
       productData.address = geoData.locationAddress;
@@ -153,12 +131,19 @@ exports.addProduct = async (req, res) => {
         `Listed product: ${newProduct.productName || newProduct.name || "New product"}`,
       );
     } catch (pointsErr) {
-      console.error("Points award error:", pointsErr.message);
+      logger.error(
+        { err: pointsErr, userId: req.user.id },
+        "points_award_failed in addProduct",
+      );
     }
 
+    logger.info(
+      { productId: newProduct._id, userId: req.user.id },
+      "Product added successfully",
+    );
     res.status(201).json({ success: true, product: newProduct });
   } catch (err) {
-    console.error("Error adding product:", err);
+    logger.error({ err }, "Error adding product");
     res.status(400).json({ success: false, message: err.message });
   }
 };
@@ -174,11 +159,14 @@ exports.getProductById = async (req, res) => {
     }
 
     const productObj = product.toObject();
-    console.log(`Product Object: ${productObj}`);
     productObj.isSold = productObj.isSold === true;
 
     res.json(productObj);
   } catch (err) {
+    logger.error(
+      { err, productId: req.params.id },
+      "Error fetching product by ID",
+    );
     res.status(500).json({ message: err.message });
   }
 };
@@ -188,9 +176,9 @@ exports.getMyProducts = async (req, res) => {
     const products = await Product.find({ sellerId: req.user.id }).sort({
       createdAt: -1,
     });
-    console.log(`Products: ${products}`);
     res.json(products);
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error fetching my products");
     res.status(500).json({ message: err.message });
   }
 };
@@ -198,20 +186,28 @@ exports.getMyProducts = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    console.log(`Product: ${product}`);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
     if (product.sellerId.toString() !== req.user.id) {
+      logger.warn(
+        { productId: req.params.id, userId: req.user.id },
+        "Unauthorized attempt to delete product",
+      );
       return res
         .status(403)
         .json({ message: "You are not authorized to delete this product" });
     }
 
     await Product.findByIdAndDelete(req.params.id);
+    logger.info(
+      { productId: req.params.id, userId: req.user.id },
+      "Product deleted successfully",
+    );
     res.json({ success: true, message: "Product deleted successfully" });
   } catch (err) {
+    logger.error({ err, productId: req.params.id }, "Error deleting product");
     res.status(500).json({ message: err.message });
   }
 };
@@ -297,14 +293,22 @@ exports.addProductReview = async (req, res) => {
           `5-star review on ${product.productName || product.name || "a product"}`,
         );
       } catch (pointsErr) {
-        console.error("Points award error:", pointsErr.message);
+        logger.error(
+          { err: pointsErr, userId: req.user.id },
+          "points_award_failed in addProductReview",
+        );
       }
     }
 
+    logger.info(
+      { productId: product._id, userId: req.user.id, rating },
+      "Review added successfully",
+    );
     res
       .status(201)
       .json({ success: true, message: "Review added successfully" });
   } catch (err) {
+    logger.error({ err }, "Error adding review");
     res.status(500).json({ message: err.message });
   }
 };
@@ -396,8 +400,13 @@ exports.placeBid = async (req, res) => {
       io,
     });
 
+    logger.info(
+      { productId, userId: req.user.id, amount },
+      "Bid placed successfully",
+    );
     res.status(200).json({ success: true, product });
   } catch (err) {
+    logger.error({ err, productId: req.params.id }, "Error placing bid");
     res.status(500).json({ message: err.message });
   }
 };

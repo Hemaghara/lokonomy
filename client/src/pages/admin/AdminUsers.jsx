@@ -111,21 +111,32 @@ const AdminUsers = () => {
   const [dateFilter, setDateFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   const fetchUsers = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await adminService.getUsers();
-      setUsers(response.data);
+      const response = await adminService.getUsers({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchQuery || undefined,
+        district: selectedDistrict !== "All" ? selectedDistrict : undefined,
+        plan: selectedPlan !== "All" ? selectedPlan : undefined,
+      });
+      setUsers(response.data.users);
+      setTotalUsers(response.data.total);
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       toast.error("Failed to fetch users");
       if (error.response?.status === 401) navigate("/admin/login");
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, currentPage, searchQuery, selectedDistrict, selectedPlan]);
 
   useEffect(() => {
     fetchUsers();
@@ -167,7 +178,7 @@ const AdminUsers = () => {
       "Joined Date",
       "Last Login",
     ];
-    const rows = filteredUsers.map((u) => [
+    const rows = users.map((u) => [
       u._id,
       u.name,
       u.email,
@@ -198,33 +209,25 @@ const AdminUsers = () => {
 
   const districts = [
     "All",
-    ...new Set(users.map((u) => u.district).filter(Boolean)),
+    "Ahmedabad",
+    "Surat",
+    "Vadodara",
+    "Rajkot",
+    "Bhavnagar",
+    "Jamnagar",
+    "Junagadh",
+    "Gandhinagar",
+    "Anand",
+    "Bharuch",
+    "Navsari",
+    "Valsad",
+    "Morbi",
+    "Mehsana",
+    "Patan",
+    "Amreli",
+    "Porbandar",
   ];
   const plans = ["All", "free", "silver", "gold", "platinum"];
-
-  const filteredUsers = users.filter((user) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      user.name?.toLowerCase().includes(q) ||
-      user.email?.toLowerCase().includes(q) ||
-      user.phoneNumber?.includes(searchQuery) ||
-      user._id?.includes(searchQuery);
-    const matchesDistrict =
-      selectedDistrict === "All" || user.district === selectedDistrict;
-    const matchesPlan =
-      selectedPlan === "All" || user.subscription?.plan === selectedPlan;
-    let matchesDate = true;
-    if (dateFilter) {
-      const joinDate = new Date(user.createdAt).toISOString().split("T")[0];
-      matchesDate = joinDate === dateFilter;
-    }
-    return matchesSearch && matchesDistrict && matchesPlan && matchesDate;
-  });
-
-  const indexOfLastUser = currentPage * itemsPerPage;
-  const indexOfFirstUser = indexOfLastUser - itemsPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -418,7 +421,7 @@ const AdminUsers = () => {
             Fetching users…
           </p>
         </div>
-      ) : filteredUsers.length === 0 ? (
+      ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-28 gap-3 text-center">
           <div className="w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center mb-1">
             <FiSearch size={22} className="text-slate-600" />
@@ -431,7 +434,7 @@ const AdminUsers = () => {
       ) : (
         <>
           <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {currentUsers.map((user) => (
+            {users.map((user) => (
               <div
                 key={user._id}
                 className="group bg-slate-900/50 border border-white/5 rounded-2xl p-4 hover:border-indigo-500/25 hover:bg-slate-800/40 transition-all"
@@ -520,11 +523,11 @@ const AdminUsers = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentUsers.map((user, idx) => (
+                {users.map((user, idx) => (
                   <tr
                     key={user._id}
                     className={`group border-b border-white/3 hover:bg-indigo-500/3 transition-colors ${
-                      idx === currentUsers.length - 1 ? "border-b-0" : ""
+                      idx === users.length - 1 ? "border-b-0" : ""
                     }`}
                   >
                     <td className="px-5 py-3.5">
@@ -609,21 +612,19 @@ const AdminUsers = () => {
             </table>
           </div>
 
-          {filteredUsers.length > itemsPerPage && (
+          {totalUsers > itemsPerPage && (
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-700/40">
               <p className="text-xs text-slate-600 order-2 sm:order-1">
                 Showing{" "}
                 <span className="text-slate-300 font-bold">
-                  {indexOfFirstUser + 1}
+                  {(currentPage - 1) * itemsPerPage + 1}
                 </span>
                 –
                 <span className="text-slate-300 font-bold">
-                  {Math.min(indexOfLastUser, filteredUsers.length)}
+                  {Math.min(currentPage * itemsPerPage, totalUsers)}
                 </span>{" "}
                 of{" "}
-                <span className="text-slate-300 font-bold">
-                  {filteredUsers.length}
-                </span>{" "}
+                <span className="text-slate-300 font-bold">{totalUsers}</span>{" "}
                 users
               </p>
 

@@ -1,5 +1,6 @@
 const webpush = require("web-push");
 const User = require("../models/User");
+const logger = require("./logger");
 
 webpush.setVapidDetails(
   "mailto:" + (process.env.EMAIL_FROM || "admin@lokonomy.com"),
@@ -31,19 +32,22 @@ const sendPushNotification = async (userId, payload) => {
         await webpush.sendNotification(subscription, notificationPayload);
       } catch (error) {
         if (error.statusCode === 404 || error.statusCode === 410) {
-        
-          console.log(`Push subscription for user ${userId} expired. Removing...`);
+          logger.info({ userId }, "Push subscription expired. Removing...");
           user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== subscription.endpoint);
           await user.save();
         } else {
-          console.error("Error sending push notification:", error);
+          logger.error({ 
+            err: error,
+            userId, 
+            statusCode: error.statusCode
+          }, "Push notification delivery failed");
         }
       }
     });
 
     await Promise.all(sendPromises);
   } catch (error) {
-    console.error("Error in pushService:", error);
+    logger.error({ err: error }, "Error in pushService");
   }
 };
 

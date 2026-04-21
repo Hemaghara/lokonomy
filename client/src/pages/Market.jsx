@@ -450,6 +450,8 @@ const Market = () => {
           <div className="relative">
             <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-base pointer-events-none" />
             <input
+              id="searchQuery"
+              name="searchQuery"
               type="text"
               placeholder="Search products…"
               className={inputCls + " pl-11"}
@@ -477,6 +479,8 @@ const Market = () => {
                   Radius
                 </label>
                 <select
+                  id="radius"
+                  name="radius"
                   aria-label="Select radius"
                   value={radius}
                   onChange={(e) => setRadius(Number(e.target.value))}

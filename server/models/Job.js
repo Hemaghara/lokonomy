@@ -127,4 +127,6 @@ const jobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+jobSchema.index({ isFlagged: 1, isSuspended: 1, status: 1 });
+
 module.exports = mongoose.model("Job", jobSchema);

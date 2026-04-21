@@ -1,6 +1,7 @@
 const BusinessQA = require("../models/BusinessQA");
 const Business = require("../models/Business");
 const User = require("../models/User");
+const logger = require("../utils/logger");
 
 exports.getQuestions = async (req, res) => {
   try {
@@ -17,7 +18,10 @@ exports.getQuestions = async (req, res) => {
 
     res.json(questions);
   } catch (err) {
-    console.error("QA getQuestions error:", err.message);
+    logger.error(
+      { err, businessId: req.params.businessId },
+      "Error fetching QA questions",
+    );
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -50,9 +54,16 @@ exports.postQuestion = async (req, res) => {
       askedByName: user.name,
     });
 
+    logger.info(
+      { qaId: qa._id, businessId: req.params.businessId, userId: req.user.id },
+      "Question posted successfully",
+    );
     res.status(201).json(qa);
   } catch (err) {
-    console.error("QA postQuestion error:", err.message);
+    logger.error(
+      { err, businessId: req.params.businessId, userId: req.user.id },
+      "Error posting QA question",
+    );
     res.status(500).json({ message: err.message });
   }
 };
@@ -82,9 +93,16 @@ exports.postAnswer = async (req, res) => {
     });
 
     await qa.save();
+    logger.info(
+      { qaId: qa._id, userId: req.user.id },
+      "Answer posted successfully",
+    );
     res.json(qa);
   } catch (err) {
-    console.error("QA postAnswer error:", err.message);
+    logger.error(
+      { err, questionId: req.params.questionId, userId: req.user.id },
+      "Error posting QA answer",
+    );
     res.status(500).json({ message: err.message });
   }
 };
@@ -99,13 +117,24 @@ exports.deleteQuestion = async (req, res) => {
     const isAsker = qa.askedBy === req.user.id;
 
     if (!isAsker && !isBusinessOwner) {
+      logger.warn(
+        { questionId: req.params.questionId, userId: req.user.id },
+        "Unauthorized QA deletion attempt",
+      );
       return res.status(403).json({ message: "Unauthorized" });
     }
 
     await qa.deleteOne();
+    logger.info(
+      { questionId: req.params.questionId, userId: req.user.id },
+      "Question deleted successfully",
+    );
     res.json({ message: "Question deleted" });
   } catch (err) {
-    console.error("QA deleteQuestion error:", err.message);
+    logger.error(
+      { err, questionId: req.params.questionId },
+      "Error deleting QA question",
+    );
     res.status(500).json({ message: err.message });
   }
 };
@@ -127,7 +156,10 @@ exports.upvoteQuestion = async (req, res) => {
     await qa.save();
     res.json({ upvotes: qa.upvotes.length, upvoted: !alreadyUpvoted });
   } catch (err) {
-    console.error("QA upvoteQuestion error:", err.message);
+    logger.error(
+      { err, questionId: req.params.questionId, userId: req.user.id },
+      "Error upvoting QA question",
+    );
     res.status(500).json({ message: err.message });
   }
 };

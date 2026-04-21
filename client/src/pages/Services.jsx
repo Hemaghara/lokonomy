@@ -205,6 +205,8 @@ const Services = () => {
                   <FaSearch />
                 </span>
                 <input
+                  id="searchQuery"
+                  name="searchQuery"
                   type="text"
                   placeholder="Search by name or keyword..."
                   className="w-full bg-transparent p-4 text-sm text-white focus:outline-none placeholder:text-white/20"

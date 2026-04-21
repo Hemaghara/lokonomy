@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const Message = require("./models/Message");
 const OnlineStatus = require("./models/OnlineStatus");
 const { createNotification } = require("./controllers/notificationController");
+const logger = require("./utils/logger");
 
 const initSocket = (server) => {
   const io = new Server(server, {
@@ -11,24 +12,26 @@ const initSocket = (server) => {
     },
   });
 
-  const onlineUsers = new Map(); 
+  const onlineUsers = new Map();
 
   const emitOnlineCount = () => {
-    const regularUsers = Array.from(onlineUsers.entries())
-      .filter(([_, u]) => !u.isAdmin && u.socketIds.size > 0);
-    
+    const regularUsers = Array.from(onlineUsers.entries()).filter(
+      ([_, u]) => !u.isAdmin && u.socketIds.size > 0,
+    );
+
     const count = regularUsers.length;
     const userIds = regularUsers.map(([id]) => id);
-    
-    console.log(`[Socket] Broadcasting count: ${count} (${userIds.join(', ') || 'None'})`);
+
+    logger.debug({ count, userIds }, "[Socket] Broadcasting online user count");
     io.emit("onlineUsersCount", count);
   };
 
   io.on("connection", (socket) => {
-    console.log(`[Socket] New raw connection: ${socket.id}`);
+    logger.debug({ socketId: socket.id }, "[Socket] New raw connection");
 
-    
-    const currentCount = Array.from(onlineUsers.values()).filter(u => !u.isAdmin && u.socketIds.size > 0).length;
+    const currentCount = Array.from(onlineUsers.values()).filter(
+      (u) => !u.isAdmin && u.socketIds.size > 0,
+    ).length;
     socket.emit("onlineUsersCount", currentCount);
 
     socket.on("registerUser", (data) => {
@@ -36,30 +39,45 @@ const initSocket = (server) => {
       const isAdmin =
         typeof data === "object"
           ? !!data.isAdmin
-          : userId === "admin" || userId.includes("admin") || userId.startsWith("admin_");
+          : userId === "admin" ||
+            userId.includes("admin") ||
+            userId.startsWith("admin_");
 
       if (!onlineUsers.has(userId)) {
         onlineUsers.set(userId, { socketIds: new Set(), isAdmin: isAdmin });
       } else {
         onlineUsers.get(userId).isAdmin = isAdmin;
       }
-      
+
       onlineUsers.get(userId).socketIds.add(socket.id);
       socket.join(`user_${userId}`);
 
-      console.log(`[Socket] REGISTERED: ${isAdmin ? 'ADMIN' : 'USER'} | ID: ${userId} | Current Sockets: ${onlineUsers.get(userId).socketIds.size}`);
-      
+      logger.info(
+        {
+          role: isAdmin ? "ADMIN" : "USER",
+          userId,
+          socketCount: onlineUsers.get(userId).socketIds.size,
+        },
+        "[Socket] User registered",
+      );
+
       emitOnlineCount();
     });
 
     socket.on("joinRoom", ({ chatRoom }) => {
       socket.join(chatRoom);
-      console.log(`Socket ${socket.id} joined room: ${chatRoom}`);
+      logger.debug(
+        { socketId: socket.id, chatRoom },
+        "[Socket] Socket joined room",
+      );
     });
 
     socket.on("leaveRoom", ({ chatRoom }) => {
       socket.leave(chatRoom);
-      console.log(`Socket ${socket.id} left room: ${chatRoom}`);
+      logger.debug(
+        { socketId: socket.id, chatRoom },
+        "[Socket] Socket left room",
+      );
     });
 
     socket.on("sendMessage", async (data) => {
@@ -128,7 +146,7 @@ const initSocket = (server) => {
           io,
         });
       } catch (err) {
-        console.error("Error saving message:", err);
+        logger.error({ err }, "[Socket] Error saving message");
         socket.emit("messageError", { error: "Failed to send message" });
       }
     });
@@ -157,7 +175,7 @@ const initSocket = (server) => {
 
         io.to(chatRoom).emit("messagesRead", { chatRoom, userId });
       } catch (err) {
-        console.error("Error marking messages read:", err);
+        logger.error({ err }, "[Socket] Error marking messages read");
       }
     });
 
@@ -178,22 +196,23 @@ const initSocket = (server) => {
       if (regularUserCompletelyOffline) {
         emitOnlineCount();
       }
-      console.log(`Socket disconnected: ${socket.id}`);
+      logger.debug({ socketId: socket.id }, "[Socket] Socket disconnected");
     });
   });
 
   const recordOnlineStats = async () => {
     try {
-      const regularUsers = Array.from(onlineUsers.entries())
-        .filter(([_, u]) => !u.isAdmin && u.socketIds.size > 0);
+      const regularUsers = Array.from(onlineUsers.entries()).filter(
+        ([_, u]) => !u.isAdmin && u.socketIds.size > 0,
+      );
       const count = regularUsers.length;
-      
+
       await OnlineStatus.create({ count });
-      
+
       const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
       await OnlineStatus.deleteMany({ timestamp: { $lt: fortyEightHoursAgo } });
     } catch (err) {
-      console.error("[Socket] Error recording online stats:", err);
+      logger.error({ err }, "[Socket] Error recording online stats");
     }
   };
 

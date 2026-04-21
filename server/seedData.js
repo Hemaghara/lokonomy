@@ -140,7 +140,7 @@ const dummyStories = [
     title: "Big Diwali Sale Starting Tomorrow!",
     content:
       "Up to 50% off on all items in Modern Electronics. Visit us at CG Road.",
-    type: "Sale / Offer",
+    type: "Offers",
     district: "Ahmedabad",
     taluka: "Ahmedabad City",
     author: "Rajesh Kumar",
@@ -148,7 +148,7 @@ const dummyStories = [
   {
     title: "New Collection Launch",
     content: "Check out our new winter collection at Fashion Hub Surat.",
-    type: "Trending Offer",
+    type: "Offers",
     district: "Surat",
     taluka: "Surat City",
     author: "Priya Patel",

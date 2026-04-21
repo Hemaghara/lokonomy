@@ -4,11 +4,14 @@ const cors = require("cors");
 const http = require("http");
 require("dotenv").config();
 
+const logger = require("./utils/logger");
 const globalErrorHandler = require("./middleware/globalErrorHandler");
 const initSocket = require("./socket");
 const { startSubscriptionCron } = require("./cron/subscriptionExpiry");
 const { startBookingRemindersCron } = require("./cron/bookingReminders");
-const { startScheduledNotificationsCron } = require("./cron/scheduledNotifications");
+const {
+  startScheduledNotificationsCron,
+} = require("./cron/scheduledNotifications");
 
 const app = express();
 const server = http.createServer(app);
@@ -34,7 +37,7 @@ app.use(
       if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
         callback(null, true);
       } else {
-        console.error(`Origin ${origin} not allowed by CORS`);
+        logger.error({ origin }, "Origin not allowed by CORS");
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -74,27 +77,29 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });
+
 app.use(globalErrorHandler);
 
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("MongoDB Connected");
+    logger.info("MongoDB Connected successfully");
     startSubscriptionCron();
     startBookingRemindersCron();
     startScheduledNotificationsCron();
   })
   .catch((err) => {
-    console.error("MongoDB Connection Error:");
+    logger.error({ err }, "MongoDB Connection Error");
     if (err.message.includes("ENOTFOUND")) {
-      console.error(
+      logger.fatal(
         "Database Connection Error: Please check your internet connection.",
       );
-    } else {
-      console.error(err.message);
     }
   });
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info({ port: PORT }, "Server started and listening");
 });
+
+module.exports = app;
+

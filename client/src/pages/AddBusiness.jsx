@@ -421,6 +421,8 @@ const AddBusiness = () => {
                 <label className="inline-flex items-center gap-2 bg-[#0d1424] hover:bg-violet-500/10 border border-[#1f2a3d] hover:border-violet-500/30 text-slate-400 hover:text-violet-400 text-xs font-semibold py-2 px-4 rounded-xl cursor-pointer transition-all">
                   <HiOutlinePhoto className="text-sm" /> Upload Logo
                   <input
+                    id="logo"
+                    name="logo"
                     type="file"
                     accept="image/*"
                     className="hidden"
@@ -772,6 +774,8 @@ const AddBusiness = () => {
                         />
                       </div>
                       <input
+                        id={`isOpen-${day}`}
+                        name={`isOpen-${day}`}
                         type="checkbox"
                         checked={hrs.isOpen}
                         onChange={(e) =>

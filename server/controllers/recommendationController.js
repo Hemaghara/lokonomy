@@ -4,6 +4,7 @@ const Job = require("../models/Job");
 const User = require("../models/User");
 const Order = require("../models/Order");
 const Interaction = require("../models/Interaction");
+const logger = require("../utils/logger");
 
 exports.getRecommendations = async (req, res) => {
   try {
@@ -28,8 +29,6 @@ exports.getRecommendations = async (req, res) => {
     });
 
     const history = user?.browsingHistory || [];
-    for (const item of history) {
-    }
     const historyIds = history.map((h) => h.itemId);
     const viewedProducts = await Product.find({
       _id: { $in: historyIds },
@@ -76,7 +75,7 @@ exports.getRecommendations = async (req, res) => {
       jobs: recommendedJobs,
     });
   } catch (err) {
-    console.error("Recommendation error:", err);
+    logger.error({ err, userId: req.user?.id }, "Error in getRecommendations");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -117,6 +116,7 @@ exports.getSearchSuggestions = async (req, res) => {
 
     res.json(suggestions);
   } catch (err) {
+    logger.error({ err, query: req.query.q }, "Error in getSearchSuggestions");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -148,7 +148,10 @@ exports.trackInteraction = async (req, res) => {
 
     res.status(200).json({ message: "Interaction tracked" });
   } catch (err) {
-    console.error("Track interaction error:", err);
+    logger.error(
+      { err, userId: req.user.id, body: req.body },
+      "Error in trackInteraction",
+    );
     res.status(500).json({ message: "Server error" });
   }
 };

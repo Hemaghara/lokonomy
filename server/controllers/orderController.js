@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 const { awardPoints } = require("./rewardsController");
 const { createNotification } = require("./notificationController");
+const logger = require("../utils/logger");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -12,11 +13,6 @@ exports.createOrder = async (req, res) => {
       contactNumber,
       transactionId,
     } = req.body;
-    console.log(`Product ID: ${productId}`);
-    console.log(`Payment Method: ${paymentMethod}`);
-    console.log(`Shipping Address: ${shippingAddress}`);
-    console.log(`Contact Number: ${contactNumber}`);
-    console.log(`Transaction ID: ${transactionId}`);
 
     if (!productId || !paymentMethod || !shippingAddress || !contactNumber) {
       return res.status(400).json({
@@ -27,7 +23,6 @@ exports.createOrder = async (req, res) => {
     }
 
     const product = await Product.findById(productId);
-    console.log(`Product: ${product}`);
     if (!product) {
       return res
         .status(404)
@@ -59,7 +54,6 @@ exports.createOrder = async (req, res) => {
       product: productId,
       buyer: req.user.id,
     });
-    console.log(`Existing Order: ${existingOrder}`);
     if (existingOrder) {
       return res.status(400).json({
         success: false,
@@ -78,10 +72,8 @@ exports.createOrder = async (req, res) => {
       transactionId,
       paymentStatus: "completed",
     });
-    console.log(`New Order: ${newOrder}`);
 
     const savedOrder = await newOrder.save();
-    console.log(`Saved Order: ${savedOrder}`);
 
     await Product.findByIdAndUpdate(
       productId,
@@ -117,12 +109,13 @@ exports.createOrder = async (req, res) => {
         `Order placed for ${product.name}`,
       );
     } catch (pointsErr) {
-      console.error("Points award error:", pointsErr.message);
+      logger.error({ err: pointsErr, userId: req.user.id }, "points_award_failed in createOrder");
     }
 
+    logger.info({ orderId: savedOrder._id, productId, buyerId: req.user.id }, "Order created successfully");
     res.status(201).json({ success: true, order: savedOrder });
   } catch (err) {
-    console.error("Order Creation Error:", err);
+    logger.error({ err }, "Order Creation Error");
     if (err.name === "ValidationError") {
       return res.status(400).json({
         success: false,
@@ -151,9 +144,9 @@ exports.getBuyerOrders = async (req, res) => {
       .populate("product")
       .populate("seller", "name email")
       .sort({ createdAt: -1 });
-    console.log(`Orders:${orders}`);
     res.status(200).json({ success: true, orders });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getBuyerOrders");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -166,6 +159,7 @@ exports.getSellerOrders = async (req, res) => {
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, orders });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getSellerOrders");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -173,8 +167,6 @@ exports.getSellerOrders = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { orderStatus } = req.body;
-
-    console.log(`Order Status: ${orderStatus}`);
     const order = await Order.findById(req.params.id);
 
     if (!order) {
@@ -184,6 +176,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     if (order.seller.toString() !== req.user.id) {
+      logger.warn({ orderId: req.params.id, userId: req.user.id }, "Unauthorized order status update attempt");
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
@@ -211,8 +204,10 @@ exports.updateOrderStatus = async (req, res) => {
       io,
     });
 
+    logger.info({ orderId: order._id, status: orderStatus }, "Order status updated");
     res.status(200).json({ success: true, order });
   } catch (err) {
+    logger.error({ err, orderId: req.params.id }, "Error in updateOrderStatus");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -220,9 +215,7 @@ exports.updateOrderStatus = async (req, res) => {
 exports.getSellerDashboardStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
-    console.log(`Seller ID:${sellerId}`);
     const orders = await Order.find({ seller: sellerId });
-    console.log(`Orders:${orders}`);
     const stats = {
       totalOrders: orders.length,
       totalEarnings: orders
@@ -268,6 +261,7 @@ exports.getSellerDashboardStats = async (req, res) => {
 
     res.status(200).json({ success: true, stats });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getSellerDashboardStats");
     res.status(500).json({ success: false, message: err.message });
   }
 };

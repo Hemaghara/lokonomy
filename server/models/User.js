@@ -155,4 +155,7 @@ const userSchema = new mongoose.Schema({
   ],
 });
 
+userSchema.index({ status: 1 });
+userSchema.index({ "subscription.status": 1, "subscription.plan": 1 });
+
 module.exports = mongoose.model("User", userSchema);

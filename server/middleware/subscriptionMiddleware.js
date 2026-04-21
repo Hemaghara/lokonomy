@@ -1,19 +1,51 @@
 const User = require("../models/User");
 const Plan = require("../models/Plan");
-const { getPlanLimits } = require("../config/plans");
+const Settings = require("../models/Settings");
+
+const DEFAULT_FREE_LIMITS = {
+  productsUpload: 3,
+  storiesPost: 5,
+  jobsPost: 2,
+  analytics: false,
+  featuredListings: false,
+  prioritySupport: false,
+  chatMessaging: true,
+};
+
+let planCache = null;
+let settingsCache = null;
+let planCacheTime = 0;
+let settingsCacheTime = 0;
+const CACHE_TTL = 60000;
+
+async function getPlanBySlug(slug) {
+  if (!planCache || Date.now() - planCacheTime > CACHE_TTL) {
+    const plans = await Plan.find().lean();
+    planCache = Object.fromEntries(plans.map((p) => [p.slug, p]));
+    planCacheTime = Date.now();
+  }
+  return planCache[slug];
+}
+
+async function getSettings() {
+  if (!settingsCache || Date.now() - settingsCacheTime > CACHE_TTL) {
+    settingsCache = await Settings.findOne().lean();
+    settingsCacheTime = Date.now();
+  }
+  return settingsCache;
+}
 
 const checkFeature = (featureName) => async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
-    console.log(`User:${user}`);
     if (!user)
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
 
     const plan = getActivePlan(user);
-    const planDoc = await Plan.findOne({ slug: plan });
-    const limits = planDoc?.limits || getPlanLimits(plan);
+    const planDoc = await getPlanBySlug(plan);
+    const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
 
     if (!limits[featureName]) {
       return res.status(403).json({
@@ -42,8 +74,8 @@ const checkProductLimit = async (req, res, next) => {
         .json({ success: false, message: "User not found" });
 
     const plan = getActivePlan(user);
-    const planDoc = await Plan.findOne({ slug: plan });
-    const limits = planDoc?.limits || getPlanLimits(plan);
+    const planDoc = await getPlanBySlug(plan);
+    const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
 
     const used = user.usage?.productsUploaded || 0;
 
@@ -77,8 +109,8 @@ const checkStoryLimit = async (req, res, next) => {
         .json({ success: false, message: "User not found" });
 
     const plan = getActivePlan(user);
-    const planDoc = await Plan.findOne({ slug: plan });
-    const limits = planDoc?.limits || getPlanLimits(plan);
+    const planDoc = await getPlanBySlug(plan);
+    const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
 
     const used = user.usage?.storiesPosted || 0;
 
@@ -112,8 +144,8 @@ const checkJobLimit = async (req, res, next) => {
         .json({ success: false, message: "User not found" });
 
     const plan = getActivePlan(user);
-    const planDoc = await Plan.findOne({ slug: plan });
-    const limits = planDoc?.limits || getPlanLimits(plan);
+    const planDoc = await getPlanBySlug(plan);
+    const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
 
     const used = user.usage?.jobsPosted || 0;
 

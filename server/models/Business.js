@@ -89,5 +89,6 @@ const businessSchema = new mongoose.Schema({
 });
 
 businessSchema.index({ location: "2dsphere" });
+businessSchema.index({ verificationStatus: 1 });
 
 module.exports = mongoose.model("Business", businessSchema);

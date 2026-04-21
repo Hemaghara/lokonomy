@@ -1,44 +1,22 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const Plan = require("../models/Plan");
 const SubscriptionTransaction = require("../models/SubscriptionTransaction");
-const { getPlanLimits } = require("../config/plans");
 const { getActivePlan } = require("../middleware/subscriptionMiddleware");
+const { serializeUser } = require("../utils/userSerializer");
+const logger = require("../utils/logger");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const buildSubscriptionResponse = (user) => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  district: user.district,
-  taluka: user.taluka,
-  latitude: user.latitude,
-  longitude: user.longitude,
-  locationName: user.locationName,
-  locationPermission: user.locationPermission,
-  upiId: user.upiId,
-  paymentQrCode: user.paymentQrCode,
-  bankName: user.bankName,
-  ifscCode: user.ifscCode,
-  branch: user.branch,
-  accountNumber: user.accountNumber,
-  phoneNumber: user.phoneNumber,
-  subscription: {
-    ...user.subscription,
-    durationMonths: user.subscription?.durationMonths,
-  },
-  usage: user.usage,
-});
-
 exports.getPlans = async (req, res) => {
   try {
     const plans = await Plan.find().sort({ "prices.3": 1 });
-    console.log(`Plans:${plans}`);
+    logger.debug({ count: plans.length }, "Fetching all plans");
 
     const plansObj = {};
     plans.forEach((p) => {
@@ -50,6 +28,7 @@ exports.getPlans = async (req, res) => {
     });
     res.json({ success: true, plans: plansObj });
   } catch (err) {
+    logger.error({ err }, "Error in getPlans");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -57,8 +36,10 @@ exports.getPlans = async (req, res) => {
 exports.createOrder = async (req, res) => {
   try {
     const { plan, durationMonths } = req.body;
-    console.log(`Plan:${plan}`);
-    console.log(`Duration Months:${durationMonths}`);
+    logger.info(
+      { plan, durationMonths, userId: req.user.id },
+      "Creating subscription order",
+    );
 
     if (!plan || !durationMonths) {
       return res
@@ -69,6 +50,7 @@ exports.createOrder = async (req, res) => {
     const planDoc = await Plan.findOne({ slug: plan });
 
     if (!planDoc || plan === "free") {
+      logger.warn({ plan }, "Invalid plan selected for order creation");
       return res
         .status(400)
         .json({ success: false, message: "Invalid plan selected" });
@@ -82,17 +64,12 @@ exports.createOrder = async (req, res) => {
     }
 
     const rzpKey = process.env.RAZORPAY_KEY_ID || "";
-    console.log(`Razorpay Key ID:${rzpKey}`);
-    console.log(
-      `Subscription Creating order for user ${req.user.id}, plan: ${plan}, dur: ${durationMonths}`,
-    );
-    console.log(`Subscription Using Key ID: ${rzpKey.substring(0, 8)}...`);
 
     const amount = planDoc.prices[durationMonths.toString()];
-    console.log("amount1:", amount);
     if (!amount) {
-      console.error(
-        `Subscription Price missing for duration ${durationMonths} in plan ${plan}`,
+      logger.error(
+        { plan, durationMonths },
+        "Price configuration missing for duration",
       );
       return res.status(400).json({
         success: false,
@@ -114,7 +91,10 @@ exports.createOrder = async (req, res) => {
 
     try {
       const order = await razorpay.orders.create(options);
-      console.log(`Subscription Razorpay order created: ${order.id}`);
+      logger.info(
+        { orderId: order.id, userId: req.user.id },
+        "Razorpay order created",
+      );
 
       await User.findByIdAndUpdate(req.user.id, {
         "subscription.razorpayOrderId": order.id,
@@ -140,7 +120,7 @@ exports.createOrder = async (req, res) => {
         durationMonths,
       });
     } catch (rzpErr) {
-      console.error("Subscription Razorpay API Error:", rzpErr);
+      logger.error({ err: rzpErr }, "Razorpay API Error");
       const errorMsg =
         rzpErr.error?.description || rzpErr.message || "Razorpay API error";
       res.status(500).json({
@@ -151,7 +131,7 @@ exports.createOrder = async (req, res) => {
       });
     }
   } catch (err) {
-    console.error("Subscription Internal error:", err);
+    logger.error({ err }, "Internal error during order creation");
     res.status(500).json({
       success: false,
       message: "Server internal error during order creation",
@@ -161,6 +141,8 @@ exports.createOrder = async (req, res) => {
 };
 
 exports.verifyPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const {
       razorpay_order_id,
@@ -170,7 +152,14 @@ exports.verifyPayment = async (req, res) => {
       durationMonths,
     } = req.body;
 
+    logger.info(
+      { razorpay_order_id, userId: req.user.id },
+      "Verifying payment",
+    );
+
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json({ success: false, message: "Payment details missing" });
@@ -182,6 +171,12 @@ exports.verifyPayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
+      logger.error(
+        { razorpay_order_id, userId: req.user.id },
+        "Payment verification failed: invalid signature",
+      );
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({
         success: false,
         message: "Payment verification failed: invalid signature",
@@ -205,7 +200,7 @@ exports.verifyPayment = async (req, res) => {
           durationMonths: parseInt(durationMonths),
         },
       },
-      { new: true },
+      { new: true, session },
     );
 
     // Update transaction record to success
@@ -215,43 +210,56 @@ exports.verifyPayment = async (req, res) => {
         status: "success",
         razorpayPaymentId: razorpay_payment_id,
       },
+      { session },
     );
 
     if (updatedUser.referredBy) {
-      try {
-        const referrer = await User.findById(updatedUser.referredBy);
-        if (referrer) {
-          const currentExpiry = referrer.subscription?.expiryDate
-            ? new Date(referrer.subscription.expiryDate)
-            : new Date();
-          const newExpiry = new Date(
-            currentExpiry.getTime() + 15 * 24 * 60 * 60 * 1000,
-          );
-          await User.findByIdAndUpdate(referrer._id, {
+      const referrer = await User.findById(updatedUser.referredBy).session(
+        session,
+      );
+      if (referrer) {
+        const currentExpiry = referrer.subscription?.expiryDate
+          ? new Date(referrer.subscription.expiryDate)
+          : new Date();
+        const newExpiry = new Date(
+          currentExpiry.getTime() + 15 * 24 * 60 * 60 * 1000,
+        );
+        await User.findByIdAndUpdate(
+          referrer._id,
+          {
             "subscription.expiryDate": newExpiry,
             $inc: { "referralRewards.appliedDays": 15 },
-          });
-        }
-        await User.findByIdAndUpdate(updatedUser.referredBy, {
-          $inc: { "referralRewards.totalDiscountsGiven": 1 },
-        });
-        console.log(
-          `Referral Reward applied: 15 days added to referrer ${updatedUser.referredBy}`,
+          },
+          { session },
         );
-      } catch (referralErr) {
-        console.error("Referral Error applying reward:", referralErr.message);
       }
+      await User.findByIdAndUpdate(
+        updatedUser.referredBy,
+        {
+          $inc: { "referralRewards.totalDiscountsGiven": 1 },
+        },
+        { session },
+      );
+      logger.info(
+        { referrerId: updatedUser.referredBy, userId: updatedUser._id },
+        "Referral Reward applied: 15 days added to referrer",
+      );
     }
+
+    await session.commitTransaction();
+    session.endSession();
 
     const planDoc = await Plan.findOne({ slug: plan });
 
     res.json({
       success: true,
       message: `${planDoc?.name || plan} plan activated successfully!`,
-      user: buildSubscriptionResponse(updatedUser),
+      user: serializeUser(updatedUser),
     });
   } catch (err) {
-    console.error("Verify Payment Error:", err.message);
+    await session.abortTransaction();
+    session.endSession();
+    logger.error({ err, userId: req.user.id }, "Verify Payment Error");
     res
       .status(500)
       .json({ success: false, message: "Failed to verify payment" });
@@ -261,10 +269,12 @@ exports.verifyPayment = async (req, res) => {
 exports.getStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if (!user)
+    if (!user) {
+      logger.warn({ userId: req.user.id }, "getStatus: User not found");
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
+    }
 
     let effectivePlan = getActivePlan(user);
     const subData = user.subscription?.toObject?.() || {};
@@ -279,10 +289,25 @@ exports.getStatus = async (req, res) => {
       });
       subData.status = "expired";
       effectivePlan = "free";
+      logger.info({ userId: req.user.id }, "Subscription expired");
     }
 
     const planDoc = await Plan.findOne({ slug: effectivePlan });
-    const limits = planDoc?.limits || getPlanLimits(effectivePlan);
+
+    // If planDoc is missing, we try to fallback to "free" plan from DB
+    let limits = planDoc?.limits;
+    if (!limits) {
+      const freePlan = await Plan.findOne({ slug: "free" });
+      limits = freePlan?.limits || {
+        productsUpload: 3,
+        storiesPost: 5,
+        jobsPost: 2,
+        analytics: false,
+        featuredListings: false,
+        prioritySupport: false,
+        chatMessaging: true,
+      };
+    }
 
     const isActive = effectivePlan !== "free";
 
@@ -308,7 +333,7 @@ exports.getStatus = async (req, res) => {
       limits,
     });
   } catch (err) {
-    console.error("Status Error:", err.message);
+    logger.error({ err, userId: req.user.id }, "Status Error");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -321,6 +346,7 @@ exports.cancelSubscription = async (req, res) => {
         "Subscription cancellation is not allowed. Please contact support for assistance.",
     });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Cancel Subscription Error");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -329,6 +355,10 @@ exports.cancelSubscription = async (req, res) => {
 exports.logFailedPayment = async (req, res) => {
   try {
     const { razorpay_order_id, plan, durationMonths, failureReason } = req.body;
+    logger.warn(
+      { razorpay_order_id, plan, failureReason, userId: req.user.id },
+      "Logging failed payment",
+    );
 
     const planDoc = await Plan.findOne({ slug: plan });
     const amount = planDoc?.prices?.[durationMonths?.toString()] || 0;
@@ -357,7 +387,7 @@ exports.logFailedPayment = async (req, res) => {
 
     res.json({ success: true, message: "Failed payment logged" });
   } catch (err) {
-    console.error("logFailedPayment error:", err);
+    logger.error({ err, userId: req.user.id }, "logFailedPayment error");
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

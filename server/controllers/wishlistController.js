@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Product = require("../models/Product");
 const Business = require("../models/Business");
 const Job = require("../models/Job");
+const logger = require("../utils/logger");
 
 exports.toggleWishlist = async (req, res) => {
   try {
@@ -45,8 +46,9 @@ exports.toggleWishlist = async (req, res) => {
       isSaved = true;
     }
 
-    console.log(
-      `Wishlist updated for user ${userId}: ${type} ${id} - isSaved: ${isSaved}`,
+    logger.info(
+      { userId, type, itemId: id, isSaved },
+      "Wishlist updated successfully",
     );
 
     res.json({
@@ -55,6 +57,10 @@ exports.toggleWishlist = async (req, res) => {
       isSaved,
     });
   } catch (err) {
+    logger.error(
+      { err, userId: req.user.id, type: req.body.type },
+      "Error in toggleWishlist",
+    );
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -82,6 +88,7 @@ exports.getWishlist = async (req, res) => {
       },
     });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getWishlist");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -118,6 +125,10 @@ exports.checkWishlistStatus = async (req, res) => {
     const isSaved = user[field].some((savedId) => savedId.toString() === id);
     res.json({ success: true, isSaved });
   } catch (err) {
+    logger.error(
+      { err, userId: req.user.id, type: req.params.type },
+      "Error in checkWishlistStatus",
+    );
     res.status(500).json({ success: false, message: err.message });
   }
 };

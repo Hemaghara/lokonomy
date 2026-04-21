@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const logger = require("../utils/logger");
 
 const POINTS_CONFIG = {
   daily_login: 5,
@@ -53,32 +54,41 @@ const REDEMPTION_OPTIONS = [
 ];
 
 const awardPoints = async (userId, event, description) => {
-  const points = POINTS_CONFIG[event];
-  if (!points) return null;
+  try {
+    const points = POINTS_CONFIG[event];
+    if (!points) return null;
 
-  const user = await User.findByIdAndUpdate(
-    userId,
-    {
-      $inc: { loyaltyPoints: points },
-      $push: {
-        pointsHistory: {
-          $each: [
-            {
-              type: "earn",
-              amount: points,
-              event,
-              description,
-              createdAt: new Date(),
-            },
-          ],
-          $position: 0,
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $inc: { loyaltyPoints: points },
+        $push: {
+          pointsHistory: {
+            $each: [
+              {
+                type: "earn",
+                amount: points,
+                event,
+                description,
+                createdAt: new Date(),
+              },
+            ],
+            $position: 0,
+          },
         },
       },
-    },
-    { new: true },
-  );
+      { new: true },
+    );
 
-  return { points, total: user?.loyaltyPoints || 0 };
+    logger.info(
+      { userId, event, points, total: user?.loyaltyPoints },
+      "Points awarded successfully",
+    );
+    return { points, total: user?.loyaltyPoints || 0 };
+  } catch (err) {
+    logger.error({ err, userId, event }, "Error in awardPoints helper");
+    return null;
+  }
 };
 
 exports.getBalance = async (req, res) => {
@@ -97,6 +107,7 @@ exports.getBalance = async (req, res) => {
       history: user.pointsHistory.slice(0, 50),
     });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getBalance");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -110,6 +121,7 @@ exports.getRedemptionOptions = async (req, res) => {
       options: REDEMPTION_OPTIONS,
     });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in getRedemptionOptions");
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -177,6 +189,10 @@ exports.redeemReward = async (req, res) => {
     }
 
     await user.save();
+    logger.info(
+      { userId: req.user.id, optionId, cost: option.cost },
+      "Reward redeemed successfully",
+    );
 
     res.json({
       success: true,
@@ -190,7 +206,10 @@ exports.redeemReward = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Redeem Error:", err);
+    logger.error(
+      { err, userId: req.user.id, optionId: req.body.optionId },
+      "Error in redeemReward",
+    );
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -218,7 +237,6 @@ exports.claimDailyLogin = async (req, res) => {
       });
     }
 
-    user.lastLoginDate = new Date();
     const result = await awardPoints(
       req.user.id,
       "daily_login",
@@ -234,6 +252,7 @@ exports.claimDailyLogin = async (req, res) => {
       points: result?.total || user.loyaltyPoints + POINTS_CONFIG.daily_login,
     });
   } catch (err) {
+    logger.error({ err, userId: req.user.id }, "Error in claimDailyLogin");
     res.status(500).json({ success: false, message: err.message });
   }
 };

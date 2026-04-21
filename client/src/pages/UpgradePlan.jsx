@@ -96,6 +96,7 @@ const UpgradePlan = () => {
   const [appliedRefCode, setAppliedRefCode] = useState("");
   const [refValidating, setRefValidating] = useState(false);
   const [refApplied, setRefApplied] = useState(false);
+  const [dynamicPlans, setDynamicPlans] = useState({});
 
   useEffect(() => {
     if (user?.referredBy) {
@@ -116,7 +117,19 @@ const UpgradePlan = () => {
       return;
     }
     fetchStatus();
+    fetchPlans();
   }, [user]);
+
+  const fetchPlans = async () => {
+    try {
+      const res = await subscriptionService.getPlans();
+      if (res.data.success) {
+        setDynamicPlans(res.data.plans);
+      }
+    } catch (err) {
+      console.error("Error fetching plans:", err);
+    }
+  };
 
   const fetchStatus = async () => {
     try {
@@ -447,6 +460,8 @@ const UpgradePlan = () => {
             {!refApplied ? (
               <div className="flex gap-2">
                 <input
+                  id="referralCode"
+                  name="referralCode"
                   type="text"
                   value={refCodeInput}
                   onChange={(e) =>
@@ -508,9 +523,41 @@ const UpgradePlan = () => {
 
         <div className="grid sm:grid-cols-3 gap-5 mb-12">
           {PLANS_CONFIG.map((plan, idx) => {
-            console.log("plan", plan);
-            const price = plan.prices[selectedDuration];
-            const perMonth = Math.round(price / selectedDuration);
+            const dynamicData = dynamicPlans[plan.key] || {};
+            const price = dynamicData.prices
+              ? dynamicData.prices[selectedDuration]
+              : plan.prices[selectedDuration];
+
+            // Map limits to human readable features
+            const dynamicFeatures = dynamicData.limits
+              ? [
+                  {
+                    label: `${dynamicData.limits.productsUploaded === 1e308 ? "Unlimited" : dynamicData.limits.productsUploaded} Product Listings`,
+                    included: true,
+                  },
+                  {
+                    label: `${dynamicData.limits.storiesPosted === 1e308 ? "Unlimited" : dynamicData.limits.storiesPosted} Stories`,
+                    included: true,
+                  },
+                  {
+                    label: "Advanced Analytics",
+                    included: dynamicData.limits.analytics,
+                  },
+                  {
+                    label: "Featured Listings",
+                    included: dynamicData.limits.featuredListings,
+                  },
+                  {
+                    label: "Priority Support",
+                    included: dynamicData.limits.prioritySupport,
+                  },
+                  {
+                    label: "Chat Messaging",
+                    included: dynamicData.limits.chatMessaging,
+                  },
+                ]
+              : plan.features;
+
             const isCurrentTier = currentPlan === plan.key && isActive;
             const isCurrentPlan =
               isCurrentTier && activeDuration === selectedDuration;
@@ -590,7 +637,7 @@ const UpgradePlan = () => {
                 </div>
 
                 <ul className="space-y-2.5 mb-6 flex-1">
-                  {plan.features.map((f, fi) => (
+                  {dynamicFeatures.map((f, fi) => (
                     <li key={fi} className="flex items-center gap-2.5 text-xs">
                       {f.included ? (
                         <HiOutlineCheckCircle className="text-emerald-400 shrink-0 text-base" />
@@ -687,35 +734,82 @@ const UpgradePlan = () => {
 
               <tbody className="divide-y divide-[#1f2a3d]">
                 {[
-                  ["Product Listings", "3", "20", "100", "Unlimited"],
-                  ["Stories / Month", "5", "50", "200", "Unlimited"],
-                  ["Analytics Dashboard", "✗", "✗", "✓", "✓"],
-                  ["Featured Listings", "✗", "✗", "✗", "✓"],
-                  ["Priority Support", "✗", "✗", "✗", "✓"],
-                  ["Chat Messaging", "✓", "✓", "✓", "✓"],
-                ].map(([feature, free, silver, gold, platinum], i) => (
-                  <tr key={i} className="hover:bg-dark-bg/40 transition-colors">
-                    <td className="py-3 text-slate-400 font-medium">
-                      {feature}
-                    </td>
+                  [
+                    "Product Listings",
+                    dynamicPlans.free?.limits?.productsUploaded || "3",
+                    dynamicPlans.silver?.limits?.productsUploaded || "20",
+                    dynamicPlans.gold?.limits?.productsUploaded || "100",
+                    dynamicPlans.platinum?.limits?.productsUploaded ||
+                      "Unlimited",
+                  ],
+                  [
+                    "Stories / Month",
+                    dynamicPlans.free?.limits?.storiesPosted || "5",
+                    dynamicPlans.silver?.limits?.storiesPosted || "50",
+                    dynamicPlans.gold?.limits?.storiesPosted || "200",
+                    dynamicPlans.platinum?.limits?.storiesPosted || "Unlimited",
+                  ],
+                  [
+                    "Analytics Dashboard",
+                    dynamicPlans.free?.limits?.analytics ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.analytics ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.analytics ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.analytics ? "✓" : "✗",
+                  ],
+                  [
+                    "Featured Listings",
+                    dynamicPlans.free?.limits?.featuredListings ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.featuredListings ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.featuredListings ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.featuredListings ? "✓" : "✗",
+                  ],
+                  [
+                    "Priority Support",
+                    dynamicPlans.free?.limits?.prioritySupport ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.prioritySupport ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.prioritySupport ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.prioritySupport ? "✓" : "✗",
+                  ],
+                  [
+                    "Chat Messaging",
+                    dynamicPlans.free?.limits?.chatMessaging ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.chatMessaging ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.chatMessaging ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.chatMessaging ? "✓" : "✗",
+                  ],
+                ].map(([feature, free, silver, gold, platinum], i) => {
+                  const formatVal = (v) => {
+                    if (v === 1e308 || v === "1e+308" || v === Infinity)
+                      return "Unlimited";
+                    return v;
+                  };
+                  return (
+                    <tr
+                      key={i}
+                      className="hover:bg-dark-bg/40 transition-colors"
+                    >
+                      <td className="py-3 text-slate-400 font-medium">
+                        {feature}
+                      </td>
 
-                    <td className="py-3 text-center">
-                      <FeatureIcon value={free} />
-                    </td>
+                      <td className="py-3 text-center">
+                        <FeatureIcon value={formatVal(free)} />
+                      </td>
 
-                    <td className="py-3 text-center">
-                      <FeatureIcon value={silver} />
-                    </td>
+                      <td className="py-3 text-center">
+                        <FeatureIcon value={formatVal(silver)} />
+                      </td>
 
-                    <td className="py-3 text-center">
-                      <FeatureIcon value={gold} />
-                    </td>
+                      <td className="py-3 text-center">
+                        <FeatureIcon value={formatVal(gold)} />
+                      </td>
 
-                    <td className="py-3 text-center">
-                      <FeatureIcon value={platinum} />
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-3 text-center">
+                        <FeatureIcon value={formatVal(platinum)} />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

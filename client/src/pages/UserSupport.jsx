@@ -86,6 +86,8 @@ const UserSupport = () => {
                     Subject
                   </label>
                   <input
+                    id="subject"
+                    name="subject"
                     required
                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-600 transition-all"
                     placeholder="Briefly describe the issue"
@@ -100,6 +102,8 @@ const UserSupport = () => {
                     Category
                   </label>
                   <select
+                    id="category"
+                    name="category"
                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-600 transition-all appearance-none"
                     value={newTicket.category}
                     onChange={(e) =>
@@ -144,6 +148,8 @@ const UserSupport = () => {
                   Description
                 </label>
                 <textarea
+                  id="description"
+                  name="description"
                   required
                   rows={5}
                   className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-600 transition-all resize-none"
