@@ -131,10 +131,19 @@ const AdminBusinessDetails = () => {
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [healthData, setHealthData] = useState(null);
 
   useEffect(() => {
     fetchDetails();
+    fetchHealthScore();
   }, [id]);
+
+  const fetchHealthScore = async () => {
+    try {
+      const res = await adminService.getBusinessScore(id);
+      setHealthData(res.data);
+    } catch (_) {}
+  };
 
   const fetchDetails = async () => {
     try {
@@ -363,6 +372,61 @@ const AdminBusinessDetails = () => {
               </div>
             </Card>
           </motion.div>
+
+          {healthData && (
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={3}
+            >
+              <Card className="p-5">
+                <div className="flex justify-between items-center mb-4">
+                  <SectionHeading
+                    icon={FiActivity}
+                    label="Health Scorecard"
+                    accent="text-emerald-400"
+                  />
+                  <span
+                    className={`text-2xl font-black ${healthData.score > 70 ? "text-emerald-400" : healthData.score > 40 ? "text-amber-400" : "text-rose-400"}`}
+                  >
+                    {healthData.score}
+                  </span>
+                </div>
+
+                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-5">
+                  <div
+                    className={`h-full transition-all duration-1000 ${healthData.score > 70 ? "bg-emerald-500" : healthData.score > 40 ? "bg-amber-500" : "bg-rose-500"}`}
+                    style={{ width: `${healthData.score}%` }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {healthData.signals?.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-2 rounded-lg bg-white/2 border border-white/2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-1 h-1 rounded-full ${s.type === "positive" ? "bg-emerald-400" : s.type === "negative" ? "bg-rose-400" : "bg-slate-400"}`}
+                        />
+                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
+                          {s.label}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[10px] font-black ${s.points > 0 ? "text-emerald-400" : s.points < 0 ? "text-rose-400" : "text-slate-500"}`}
+                      >
+                        {s.points > 0 ? "+" : ""}
+                        {s.points}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
+          )}
         </div>
 
         <div className="lg:col-span-8 space-y-6">

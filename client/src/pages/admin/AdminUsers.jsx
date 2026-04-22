@@ -21,6 +21,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiUsers,
+  FiUserCheck,
 } from "react-icons/fi";
 
 const statusConfig = {
@@ -134,6 +135,8 @@ const AdminUsers = () => {
   const confirm = useConfirm();
   const { canManageUsers } = useAdminPermission();
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const { getParam, setParam, setParams } = useUrlState({
     page: "1",
@@ -165,7 +168,7 @@ const AdminUsers = () => {
         plan: selectedPlan !== "All" ? selectedPlan : undefined,
         date: dateFilter || undefined,
       }),
-    [currentPage, searchQuery, selectedDistrict, selectedPlan, dateFilter]
+    [currentPage, searchQuery, selectedDistrict, selectedPlan, dateFilter],
   );
 
   const users = data?.users || [];
@@ -185,7 +188,8 @@ const AdminUsers = () => {
   const handleDelete = async (id) => {
     const isConfirmed = await confirm({
       title: "Delete User",
-      description: "Are you sure you want to delete this user permanently? This action cannot be undone.",
+      description:
+        "Are you sure you want to delete this user permanently? This action cannot be undone.",
       confirmLabel: "Delete Permanently",
       isDanger: true,
     });
@@ -201,45 +205,52 @@ const AdminUsers = () => {
     }
   };
 
-  const exportToCSV = () => {
-    const headers = [
-      "ID",
-      "Name",
-      "Email",
-      "Phone",
-      "District",
-      "Plan",
-      "Status",
-      "Joined Date",
-      "Last Login",
-    ];
-    const rows = users.map((u) => [
-      u._id,
-      u.name,
-      u.email,
-      u.phoneNumber || "N/A",
-      u.district || "N/A",
-      u.subscription?.plan || "free",
-      u.status || "active",
-      new Date(u.createdAt).toLocaleDateString(),
-      u.lastLoginDate ? new Date(u.lastLoginDate).toLocaleString() : "Never",
-    ]);
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers, ...rows]
-        .map((row) =>
-          row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(",")
-        )
-        .join("\n");
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute(
-      "download",
-      `users_export_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleImpersonate = async (userId) => {
+    try {
+      toast.loading("Starting impersonation...", { id: "impersonate" });
+      const res = await adminService.impersonateUser(userId);
+
+      // Store the impersonation token and info
+      localStorage.setItem("impersonationToken", res.data.token);
+      localStorage.setItem("impersonatedUser", JSON.stringify(res.data.user));
+
+      toast.success(res.data.message, { id: "impersonate" });
+
+      // Redirect to home page in "impersonation mode"
+      window.location.href = "/";
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Impersonation failed", {
+        id: "impersonate",
+      });
+    }
+  };
+
+  const exportToCSV = async () => {
+    try {
+      toast.loading("Generating export...", { id: "export" });
+      const res = await adminService.exportUsersCSV({
+        search: searchQuery || undefined,
+        status: undefined,
+        plan: selectedPlan !== "All" ? selectedPlan : undefined,
+        district: selectedDistrict !== "All" ? selectedDistrict : undefined,
+        date: dateFilter || undefined,
+      });
+      const blob = new Blob([res.data], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `users_export_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Export downloaded!", { id: "export" });
+    } catch {
+      toast.error("Export failed", { id: "export" });
+    }
   };
 
   const handlePageChange = (page) => {
@@ -248,7 +259,48 @@ const AdminUsers = () => {
   };
 
   const handleSearchChange = (val) => {
-    setParams({ search: val, page: "1" });
+    setParam("search", val, { debounce: 300 });
+    setParam("page", "1");
+  };
+
+  const toggleSelectUser = (id) => {
+    setSelectedUsers((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.length === users.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(users.map((u) => u._id));
+    }
+  };
+
+  const handleBulkAction = async (status) => {
+    if (selectedUsers.length === 0) return;
+    const isConfirmed = await confirm({
+      title: `Bulk ${status} Users`,
+      description: `Are you sure you want to ${status} ${selectedUsers.length} selected users?`,
+      confirmLabel: `${status.charAt(0).toUpperCase() + status.slice(1)} All`,
+      isDanger: status === "banned",
+    });
+    if (!isConfirmed) return;
+
+    setBulkLoading(true);
+    try {
+      const res = await adminService.bulkUpdateUserStatus(
+        selectedUsers,
+        status,
+      );
+      toast.success(res.data.message);
+      setSelectedUsers([]);
+      fetchUsers();
+    } catch {
+      toast.error("Bulk action failed");
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
   const hasActiveFilters =
@@ -288,6 +340,11 @@ const AdminUsers = () => {
           color="rose"
         />
       )}
+      <ActionBtn
+        onClick={() => handleImpersonate(user._id)}
+        icon={FiUserCheck}
+        color="indigo"
+      />
     </div>
   );
 
@@ -416,7 +473,12 @@ const AdminUsers = () => {
               <div className="sm:col-span-3 flex justify-end">
                 <button
                   onClick={() => {
-                    setParams({ district: "All", plan: "All", date: "", page: "1" });
+                    setParams({
+                      district: "All",
+                      plan: "All",
+                      date: "",
+                      page: "1",
+                    });
                   }}
                   className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 font-bold
                     bg-rose-500/5 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/10 transition-all"
@@ -428,6 +490,43 @@ const AdminUsers = () => {
           </div>
         )}
       </div>
+
+      {selectedUsers.length > 0 && (
+        <div className="flex items-center gap-3 p-3 mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl animate-in fade-in">
+          <span className="text-xs font-bold text-indigo-300 px-2">
+            {selectedUsers.length} selected
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => handleBulkAction("active")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all disabled:opacity-50"
+            >
+              <FiCheckCircle className="inline mr-1" size={11} /> Activate
+            </button>
+            <button
+              onClick={() => handleBulkAction("suspended")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:bg-amber-500/25 transition-all disabled:opacity-50"
+            >
+              <FiSlash className="inline mr-1" size={11} /> Suspend
+            </button>
+            <button
+              onClick={() => handleBulkAction("banned")}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-rose-500/15 text-rose-400 border border-rose-500/20 hover:bg-rose-500/25 transition-all disabled:opacity-50"
+            >
+              <FiX className="inline mr-1" size={11} /> Ban
+            </button>
+            <button
+              onClick={() => setSelectedUsers([])}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-all"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <TableSkeleton rows={10} cols={7} />
@@ -508,6 +607,17 @@ const AdminUsers = () => {
             <table className="w-full text-left min-w-180">
               <thead>
                 <tr className="border-b border-slate-700/40 bg-slate-950/30">
+                  <th className="px-3 py-3.5 w-10">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedUsers.length === users.length &&
+                        users.length > 0
+                      }
+                      onChange={toggleSelectAll}
+                      className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/30 cursor-pointer"
+                    />
+                  </th>
                   {[
                     "User",
                     "Status",
@@ -540,6 +650,14 @@ const AdminUsers = () => {
                       idx === users.length - 1 ? "border-b-0" : ""
                     }`}
                   >
+                    <td className="px-3 py-3.5 w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user._id)}
+                        onChange={() => toggleSelectUser(user._id)}
+                        className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/30 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar name={user.name} />
@@ -593,7 +711,7 @@ const AdminUsers = () => {
                               {
                                 month: "short",
                                 day: "numeric",
-                              }
+                              },
                             )
                           : "—"}
                       </p>
@@ -605,7 +723,7 @@ const AdminUsers = () => {
                               hour: "2-digit",
                               minute: "2-digit",
                               hour12: true,
-                            }
+                            },
                           )}
                         </p>
                       )}

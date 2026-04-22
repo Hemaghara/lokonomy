@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import AdminGlobalSearch from "../components/admin/AdminGlobalSearch";
 import AdminNotificationBell from "../components/admin/AdminNotificationBell";
+import AdminCommandPalette from "../components/admin/AdminCommandPalette";
 import { toast } from "react-hot-toast";
 import {
   FiUsers,
@@ -19,6 +20,12 @@ import {
   FiMessageSquare,
   FiGift,
   FiPieChart,
+  FiAlertCircle,
+  FiTarget,
+  FiBarChart2,
+  FiCalendar,
+  FiKey,
+  FiCommand,
 } from "react-icons/fi";
 
 import AdminErrorBoundary from "../components/admin/AdminErrorBoundary";
@@ -30,7 +37,19 @@ const AdminLayout = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem("adminSidebarCollapsed") === "true";
   });
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, []);
 
   const toggleCollapse = () => {
     const newState = !isCollapsed;
@@ -100,49 +119,30 @@ const AdminLayout = ({ children }) => {
     {
       title: "Business Intelligence",
       items: [
-        {
-          label: "Revenue",
-          path: "/admin/subscriptions",
-          icon: FiDollarSign,
-        },
-        {
-          label: "Analytics",
-          path: "/admin/analytics",
-          icon: FiPieChart,
-          superadminOnly: true,
-        },
-        {
-          label: "Reports",
-          path: "/admin/reports",
-          icon: FiPieChart,
-        },
+        { label: "Revenue", path: "/admin/subscriptions", icon: FiDollarSign },
+        { label: "Analytics", path: "/admin/analytics", icon: FiPieChart, superadminOnly: true },
+        { label: "Reports", path: "/admin/reports", icon: FiPieChart },
+        { label: "Activity Heatmap", path: "/admin/heatmap", icon: FiBarChart2 },
+        { label: "Churn Predictor", path: "/admin/churn", icon: FiActivity },
+      ],
+    },
+    {
+      title: "Operations",
+      items: [
+        { label: "Alert Center", path: "/admin/alerts", icon: FiAlertCircle },
+        { label: "Fraud Detection", path: "/admin/fraud", icon: FiShield },
+        { label: "Campaigns", path: "/admin/campaigns", icon: FiTarget },
+        { label: "Content Schedule", path: "/admin/content-schedule", icon: FiCalendar },
+        { label: "API Keys", path: "/admin/api-keys", icon: FiKey, superadminOnly: true },
       ],
     },
     {
       title: "System",
       items: [
-        {
-          label: "Sub-Admins",
-          path: "/admin/sub-admins",
-          icon: FiShield,
-          superadminOnly: true,
-        },
-        {
-          label: "Audit Logs",
-          path: "/admin/audit-logs",
-          icon: FiActivity,
-        },
-        {
-          label: "Health",
-          path: "/admin/health",
-          icon: FiActivity,
-          superadminOnly: true,
-        },
-        {
-          label: "Settings",
-          path: "/admin/settings",
-          icon: FiActivity,
-        },
+        { label: "Sub-Admins", path: "/admin/sub-admins", icon: FiShield, superadminOnly: true },
+        { label: "Audit Logs", path: "/admin/audit-logs", icon: FiActivity },
+        { label: "Health", path: "/admin/health", icon: FiActivity, superadminOnly: true },
+        { label: "Settings", path: "/admin/settings", icon: FiActivity },
       ],
     },
   ];
@@ -318,6 +318,16 @@ const AdminLayout = ({ children }) => {
               <AdminGlobalSearch />
             </div>
 
+            {/* Cmd+K shortcut button */}
+            <button
+              onClick={() => setPaletteOpen(true)}
+              title="Open command palette (Ctrl+K)"
+              className="hidden lg:flex items-center gap-2 px-3 py-2 bg-slate-900/50 border border-white/5 rounded-xl text-xs font-bold text-slate-500 hover:text-indigo-400 hover:border-indigo-500/30 transition-all"
+            >
+              <FiCommand size={13} />
+              <span>K</span>
+            </button>
+
             <div className="flex items-center gap-3 lg:gap-5">
               <AdminNotificationBell />
 
@@ -378,6 +388,7 @@ const AdminLayout = ({ children }) => {
           </main>
         </div>
       </div>
+      <AdminCommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </AdminErrorBoundary>
   );
 };

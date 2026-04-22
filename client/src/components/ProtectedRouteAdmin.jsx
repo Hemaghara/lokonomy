@@ -44,7 +44,7 @@ const ProtectedRouteAdmin = ({ requiredRole }) => {
     const now = Date.now();
     if (
       verificationCache.token === adminToken &&
-      now - verificationCache.timestamp < 300000
+      now - verificationCache.timestamp < 60000
     ) {
       setIsVerified(verificationCache.isVerified);
       return;
@@ -112,10 +112,7 @@ const ProtectedRouteAdmin = ({ requiredRole }) => {
 
     setIsReauthenticating(true);
     try {
-      const res = await adminService.login({
-        email: adminInfo.email,
-        password: reauthPassword,
-      });
+      const res = await adminService.reauth(reauthPassword);
 
       localStorage.setItem("adminToken", res.data.token);
       localStorage.setItem("adminInfo", JSON.stringify(res.data.admin));

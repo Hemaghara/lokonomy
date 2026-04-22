@@ -354,3 +354,47 @@ exports.getRevenueTrends = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getRegionStats = async (req, res) => {
+  try {
+    const [usersByDistrict, bizByDistrict] = await Promise.all([
+      User.aggregate([
+        { $match: { district: { $exists: true, $ne: null, $ne: "" } } },
+        { $group: { _id: "$district", users: { $sum: 1 } } },
+        { $sort: { users: -1 } },
+        { $limit: 15 },
+      ]),
+      Business.aggregate([
+        { $match: { district: { $exists: true, $ne: null, $ne: "" } } },
+        { $group: { _id: "$district", businesses: { $sum: 1 } } },
+        { $sort: { businesses: -1 } },
+        { $limit: 15 },
+      ]),
+    ]);
+
+    const districtMap = {};
+    usersByDistrict.forEach((d) => {
+      districtMap[d._id] = { name: d._id, users: d.users, businesses: 0 };
+    });
+    bizByDistrict.forEach((d) => {
+      if (!districtMap[d._id]) {
+        districtMap[d._id] = {
+          name: d._id,
+          users: 0,
+          businesses: d.businesses,
+        };
+      } else {
+        districtMap[d._id].businesses = d.businesses;
+      }
+    });
+
+    const regions = Object.values(districtMap)
+      .map((r) => ({ ...r, total: r.users + r.businesses }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10);
+
+    res.json({ regions });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

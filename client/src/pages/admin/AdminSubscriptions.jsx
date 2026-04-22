@@ -33,13 +33,6 @@ import {
   Legend,
 } from "recharts";
 
-/* ─── Design tokens ──────────────────────────────────────────── 
-   Page bg  : #0d1117  (deep navy-black — not flat #000000)
-   Card bg  : #161c27  (slate-900-ish with blue undertone)
-   Elevated : #1e2535  (inner elements, hover states)
-   Border   : rgba(255,255,255,0.07)
-   ─────────────────────────────────────────────────────────── */
-
 const AdminSubscriptions = () => {
   const { canViewAnalytics } = useAdminPermission();
   const { getParam, setParam, setParams } = useUrlState({
@@ -54,13 +47,13 @@ const AdminSubscriptions = () => {
 
   const activeTab = getParam("tab", "transactions");
   const currentPage = parseInt(getParam("page", "1"));
-  
+
   const filter = {
     plan: getParam("plan", "all"),
     status: getParam("status", "all"),
     search: getParam("search", ""),
   };
-  
+
   const revenuePeriod = getParam("period", "month");
   const reportPeriod = getParam("report_period", "month");
 
@@ -68,22 +61,42 @@ const AdminSubscriptions = () => {
 
   const fetchFn = useCallback(() => {
     const params = { ...filter, page: currentPage, limit: 15 };
-    if (activeTab === "transactions") return adminService.getSubscriptionTransactions(params);
-    if (activeTab === "revenue") return adminService.getRevenueData(revenuePeriod);
-    if (activeTab === "failed") return adminService.getFailedPayments({ search: filter.search, page: currentPage });
-    if (activeTab === "reports") return adminService.getFinancialReport(reportPeriod);
+    if (activeTab === "transactions")
+      return adminService.getSubscriptionTransactions(params);
+    if (activeTab === "revenue")
+      return adminService.getRevenueData(revenuePeriod);
+    if (activeTab === "failed")
+      return adminService.getFailedPayments({
+        search: filter.search,
+        page: currentPage,
+      });
+    if (activeTab === "reports")
+      return adminService.getFinancialReport(reportPeriod);
     return Promise.resolve({ data: {} });
   }, [activeTab, filter, currentPage, revenuePeriod, reportPeriod]);
 
-  const { data, loading, refetch } = useAdminFetch(fetchFn, [activeTab, filter.plan, filter.status, filter.search, currentPage, revenuePeriod, reportPeriod], {
-    onSuccess: (result) => {
-      if (activeTab === "transactions") {
-        setStats({ plans: result.planStats, failed: result.failedCount });
-      }
-    }
-  });
+  const { data, loading, refetch } = useAdminFetch(
+    fetchFn,
+    [
+      activeTab,
+      filter.plan,
+      filter.status,
+      filter.search,
+      currentPage,
+      revenuePeriod,
+      reportPeriod,
+    ],
+    {
+      onSuccess: (result) => {
+        if (activeTab === "transactions") {
+          setStats({ plans: result.planStats, failed: result.failedCount });
+        }
+      },
+    },
+  );
 
-  const transactions = activeTab === "transactions" ? data?.transactions || [] : [];
+  const transactions =
+    activeTab === "transactions" ? data?.transactions || [] : [];
   const revenueData = activeTab === "revenue" ? data : null;
   const failedPayments = activeTab === "failed" ? data?.payments || [] : [];
   const financialReport = activeTab === "reports" ? data?.report : null;
@@ -95,7 +108,7 @@ const AdminSubscriptions = () => {
     const rows = dataList.map((o) =>
       Object.values(o)
         .map((v) => `"${v}"`)
-        .join(",")
+        .join(","),
     );
     const blob = new Blob([[header, ...rows].join("\n")], {
       type: "text/csv;charset=utf-8;",
@@ -115,11 +128,11 @@ const AdminSubscriptions = () => {
       [
         {
           Metric: "Total Revenue",
-          Value: `₹${financialReport.allTime.totalRevenue}`,
+          Value: `₹${financialReport.allTime?.totalRevenue || 0}`,
         },
         {
           Metric: "Period Revenue",
-          Value: `₹${financialReport.periodStats.revenue}`,
+          Value: `₹${financialReport.periodStats?.revenue || 0}`,
         },
         {
           Metric: "Active Subscribers",
@@ -127,22 +140,48 @@ const AdminSubscriptions = () => {
         },
         {
           Metric: "Success Rate",
-          Value: `${financialReport.transactions.successRate}%`,
+          Value: `${financialReport.transactions?.successRate || 100}%`,
         },
       ],
-      `financial_report_${reportPeriod}`
+      `financial_report_${reportPeriod}`,
     );
     toast.success("Report exported successfully");
   };
 
+  const handleExport = async () => {
+    try {
+      if (activeTab === "transactions") {
+        const response =
+          await adminService.exportSubscriptionTransactions(filter);
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute(
+          "download",
+          `subscriptions_${new Date().toISOString().split("T")[0]}.csv`,
+        );
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        toast.success("Transactions exported");
+      } else if (activeTab === "reports") {
+        handleExportReport();
+      } else {
+        setParams({ tab: "reports", page: "1" });
+      }
+    } catch (error) {
+      toast.error("Export failed");
+    }
+  };
+
   const formatChartData = () => {
-    if (!revenueData) return [];
+    if (!revenueData?.labels) return [];
     return revenueData.labels.map((label, i) => ({
       name: label,
-      Total: revenueData.datasets.total[i],
-      Silver: revenueData.datasets.silver[i],
-      Gold: revenueData.datasets.gold[i],
-      Platinum: revenueData.datasets.platinum[i],
+      Total: revenueData.datasets?.total?.[i] || 0,
+      Silver: revenueData.datasets?.silver?.[i] || 0,
+      Gold: revenueData.datasets?.gold?.[i] || 0,
+      Platinum: revenueData.datasets?.platinum?.[i] || 0,
     }));
   };
 
@@ -236,13 +275,14 @@ const AdminSubscriptions = () => {
               />
             </button>
             <button
-              onClick={() => {
-                setParams({ tab: "reports", page: "1" });
-              }}
+              onClick={handleExport}
               className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-lg"
               style={{ boxShadow: "0 4px 24px rgba(99,102,241,0.25)" }}
             >
-              <FiDownload size={14} /> Export
+              <FiDownload size={14} />{" "}
+              {activeTab === "transactions" || activeTab === "reports"
+                ? "Download"
+                : "Export"}
             </button>
           </div>
         </div>
@@ -319,7 +359,10 @@ const AdminSubscriptions = () => {
                   placeholder="Search transactions..."
                   value={filter.search}
                   onChange={(e) =>
-                    setParams({ search: e.target.value, page: "1" })
+                    setParams(
+                      { search: e.target.value, page: "1" },
+                      { debounce: 300 },
+                    )
                   }
                   className={`w-full pl-8 pr-4 py-2.5 ${innerBg} border border-[rgba(255,255,255,0.07)] rounded-xl text-white text-xs font-semibold placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all`}
                 />
@@ -341,7 +384,7 @@ const AdminSubscriptions = () => {
                           >
                             {h}
                           </th>
-                        )
+                        ),
                       )}
                     </tr>
                   </thead>
@@ -437,14 +480,18 @@ const AdminSubscriptions = () => {
                 <div className="flex gap-2">
                   <button
                     disabled={currentPage === 1}
-                    onClick={() => setParam("page", (currentPage - 1).toString())}
+                    onClick={() =>
+                      setParam("page", (currentPage - 1).toString())
+                    }
                     className={`px-3 py-1.5 text-xs font-bold ${cardBg} disabled:opacity-25 text-slate-300 rounded-lg border border-[rgba(255,255,255,0.07)] hover:bg-[#1e2535] transition-all`}
                   >
                     Prev
                   </button>
                   <button
                     disabled={currentPage === totalPages}
-                    onClick={() => setParam("page", (currentPage + 1).toString())}
+                    onClick={() =>
+                      setParam("page", (currentPage + 1).toString())
+                    }
                     className="px-3 py-1.5 text-xs font-bold bg-indigo-600 disabled:opacity-25 text-white rounded-lg hover:bg-indigo-500 transition-all"
                   >
                     Next
@@ -631,7 +678,10 @@ const AdminSubscriptions = () => {
                   placeholder="Search by email…"
                   value={filter.search}
                   onChange={(e) =>
-                    setFilter({ ...filter, search: e.target.value })
+                    setParams(
+                      { search: e.target.value, page: "1" },
+                      { debounce: 300 },
+                    )
                   }
                   className={`w-full pl-8 pr-4 py-2.5 ${innerBg} border border-[rgba(255,255,255,0.07)] rounded-xl text-white text-xs font-semibold placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-rose-500/40 transition-all`}
                 />

@@ -104,6 +104,23 @@ const CreateSubAdmin = lazy(() => import("./pages/admin/CreateSubAdmin"));
 const AdminHealthMonitor = lazy(
   () => import("./pages/admin/AdminHealthMonitor"),
 );
+const AdminAlertCenter = lazy(() => import("./pages/admin/AdminAlertCenter"));
+const AdminFraudDetection = lazy(
+  () => import("./pages/admin/AdminFraudDetection"),
+);
+const AdminCampaigns = lazy(() => import("./pages/admin/AdminCampaigns"));
+const AdminActivityHeatmap = lazy(
+  () => import("./pages/admin/AdminActivityHeatmap"),
+);
+const AdminChurnPredictor = lazy(
+  () => import("./pages/admin/AdminChurnPredictor"),
+);
+const AdminApiKeyManagement = lazy(
+  () => import("./pages/admin/AdminApiKeyManagement"),
+);
+const AdminContentSchedule = lazy(
+  () => import("./pages/admin/AdminContentSchedule"),
+);
 const ProtectedRouteAdmin = lazy(
   () => import("./components/ProtectedRouteAdmin"),
 );
@@ -307,6 +324,34 @@ function App() {
                       <Route
                         path="/admin/sub-admins/edit/:id"
                         element={<CreateSubAdmin />}
+                      />
+                      <Route
+                        path="/admin/alerts"
+                        element={<AdminAlertCenter />}
+                      />
+                      <Route
+                        path="/admin/fraud"
+                        element={<AdminFraudDetection />}
+                      />
+                      <Route
+                        path="/admin/campaigns"
+                        element={<AdminCampaigns />}
+                      />
+                      <Route
+                        path="/admin/heatmap"
+                        element={<AdminActivityHeatmap />}
+                      />
+                      <Route
+                        path="/admin/churn"
+                        element={<AdminChurnPredictor />}
+                      />
+                      <Route
+                        path="/admin/api-keys"
+                        element={<AdminApiKeyManagement />}
+                      />
+                      <Route
+                        path="/admin/content-schedule"
+                        element={<AdminContentSchedule />}
                       />
                     </Route>
                   </Route>

@@ -5,6 +5,7 @@ const {
   loginAdmin,
   verifyAdmin,
   updateAdminProfile,
+  reauthAdmin,
 } = require("../../controllers/adminAuthController");
 const { protectAdmin } = require("../../middleware/adminMiddleware");
 
@@ -12,5 +13,6 @@ router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);
 router.get("/verify", protectAdmin, verifyAdmin);
 router.put("/profile", protectAdmin, updateAdminProfile);
+router.post("/reauth", protectAdmin, reauthAdmin);
 
 module.exports = router;

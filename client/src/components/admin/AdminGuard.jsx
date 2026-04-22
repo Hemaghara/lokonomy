@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import useAdminPermission from "../../hooks/useAdminPermission";
 import { toast } from "react-hot-toast";
@@ -12,8 +12,13 @@ const AdminGuard = ({ permission, children }) => {
   const permissions = useAdminPermission();
   const isAuthorized = permission ? permissions[permission] : true;
 
+  useEffect(() => {
+    if (!isAuthorized) {
+      toast.error("Access Denied: You do not have permission to view this page.");
+    }
+  }, [isAuthorized]);
+
   if (!isAuthorized) {
-    toast.error("Access Denied: You do not have permission to view this page.");
     return <Navigate to="/admin/dashboard" replace />;
   }
 

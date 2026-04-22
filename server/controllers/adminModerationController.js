@@ -87,7 +87,6 @@ exports.resolveReport = async (req, res) => {
           break;
       }
 
-      // Notify owner if found
       if (contentOwnerId) {
         await notificationController.createNotification({
           recipientId: contentOwnerId,
@@ -96,6 +95,38 @@ exports.resolveReport = async (req, res) => {
           message: `Your ${report.targetType} has been removed by administrators due to community complaints: ${report.reason}`,
           io: req.app.get("io"),
         });
+      }
+    } else if (action === "warned") {
+      const contentModels = {
+        feed: Feed,
+        post: Feed,
+        story: Story,
+        product: Product,
+        job: Job,
+        business: Business,
+      };
+      const ownerFields = {
+        feed: "authorId",
+        post: "authorId",
+        story: "authorId",
+        product: "ownerId",
+        job: "posterId",
+        business: "ownerId",
+      };
+      const Model = contentModels[report.targetType];
+      const ownerField = ownerFields[report.targetType];
+      if (Model && ownerField) {
+        const content = await Model.findById(report.targetId);
+        if (content) {
+          contentOwnerId = content[ownerField];
+          await notificationController.createNotification({
+            recipientId: contentOwnerId,
+            type: "system",
+            title: "Content Warning",
+            message: `Your ${report.targetType} has received a community report for: "${report.reason}". Please review and ensure it complies with our community guidelines to avoid removal.`,
+            io: req.app.get("io"),
+          });
+        }
       }
     }
 
@@ -113,6 +144,53 @@ exports.resolveReport = async (req, res) => {
     );
 
     res.json({ message: "Report resolved and action taken", report });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getReportedContent = async (req, res) => {
+  try {
+    const report = await Report.findById(req.params.id);
+    if (!report) return res.status(404).json({ message: "Report not found" });
+
+    let content = null;
+    switch (report.targetType) {
+      case "feed":
+      case "post":
+        content = await Feed.findById(report.targetId)
+          .populate("authorId", "name profileImage")
+          .lean();
+        break;
+      case "story":
+        content = await Story.findById(report.targetId)
+          .populate("authorId", "name profileImage")
+          .lean();
+        break;
+      case "product":
+        content = await Product.findById(report.targetId)
+          .populate("creator", "name profileImage")
+          .lean();
+        break;
+      case "job":
+        content = await Job.findById(report.targetId)
+          .populate("postedBy", "name profileImage")
+          .lean();
+        break;
+      case "business":
+        content = await Business.findById(report.targetId)
+          .populate("ownerId", "name profileImage")
+          .lean();
+        break;
+    }
+
+    res.json({
+      targetType: report.targetType,
+      content: content || {
+        deleted: true,
+        message: "Content has been removed",
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

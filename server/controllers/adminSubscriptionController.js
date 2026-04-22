@@ -475,3 +475,71 @@ exports.getFinancialReport = async (req, res) => {
       .json({ success: false, message: "Server error", error: error.message });
   }
 };
+
+exports.exportSubscriptionTransactions = async (req, res) => {
+  try {
+    const { plan, status, search } = req.query;
+    const filter = {};
+
+    if (plan && plan !== "all") filter.plan = plan;
+    if (status && status !== "all") filter.status = status;
+
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }).select("_id");
+      filter.user = { $in: users.map((u) => u._id) };
+    }
+
+    const transactions = await SubscriptionTransaction.find(filter)
+      .populate("user", "name email phoneNumber")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const headers = [
+      "Transaction ID",
+      "User Name",
+      "User Email",
+      "Plan",
+      "Amount",
+      "Currency",
+      "Status",
+      "Razorpay Order ID",
+      "Razorpay Payment ID",
+      "Failure Reason",
+      "Date",
+    ];
+
+    const rows = transactions.map((t) => [
+      t._id,
+      t.user?.name || "Deleted User",
+      t.user?.email || "N/A",
+      t.plan,
+      t.amount,
+      t.currency,
+      t.status,
+      t.razorpayOrderId || "N/A",
+      t.razorpayPaymentId || "N/A",
+      t.failureReason || "None",
+      new Date(t.createdAt).toLocaleString(),
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(","),
+      )
+      .join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=subscriptions_export_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    res.send(csvContent);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

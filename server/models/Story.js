@@ -75,6 +75,8 @@ const storySchema = new mongoose.Schema({
     type: Date,
     default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
   },
+  scheduledAt: { type: Date, default: null },
+  isFeatured: { type: Boolean, default: false },
 });
 
 storySchema.index({ location: "2dsphere" });

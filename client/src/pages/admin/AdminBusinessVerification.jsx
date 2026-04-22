@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+import { useConfirm } from "../../context/ConfirmContext";
 import {
   FiCheckCircle,
   FiXCircle,
@@ -13,6 +14,8 @@ import {
   FiCalendar,
   FiMapPin,
   FiTrendingUp,
+  FiX,
+  FiExternalLink,
 } from "react-icons/fi";
 
 const statusConfig = {
@@ -22,6 +25,38 @@ const statusConfig = {
   rejected: "bg-rose-500/15 text-rose-400 border-rose-500/25",
 };
 
+const getTimeInQueue = (createdAt) => {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffMs = now - created;
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return { text: `${days}d ${hours % 24}h`, isUrgent: days >= 3 };
+  if (hours > 0) return { text: `${hours}h`, isUrgent: hours >= 48 };
+  return { text: "< 1h", isUrgent: false };
+};
+
+const DocumentLightbox = ({ src, onClose }) => (
+  <div
+    className="fixed inset-0 z-9999 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+    onClick={onClose}
+  >
+    <button
+      onClick={onClose}
+      className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-10"
+    >
+      <FiX size={20} />
+    </button>
+    <img
+      src={src}
+      alt="KYC Document"
+      className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+);
+
 const AdminBusinessVerification = () => {
   const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +64,8 @@ const AdminBusinessVerification = () => {
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchData();
@@ -48,7 +85,15 @@ const AdminBusinessVerification = () => {
   };
 
   const handleApprove = async (id) => {
-    if (!window.confirm("Approve and verify this business?")) return;
+    const isConfirmed = await confirm({
+      title: "Approve Business",
+      description:
+        "Are you sure you want to verify this business? This will grant them verified status and unlock premium features.",
+      confirmLabel: "Approve & Verify",
+      isDanger: false,
+    });
+    if (!isConfirmed) return;
+
     try {
       await adminService.approveBusiness(id);
       toast.success("Business verified successfully");
@@ -81,6 +126,16 @@ const AdminBusinessVerification = () => {
     } catch (error) {
       toast.error("Operation failed");
     }
+  };
+
+  const isImageUrl = (url) => {
+    if (!url) return false;
+    return (
+      /\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(url) ||
+      url.includes("cloudinary") ||
+      url.includes("imgur") ||
+      url.includes("firebase")
+    );
   };
 
   return (
@@ -158,54 +213,70 @@ const AdminBusinessVerification = () => {
               </p>
             </div>
           ) : (
-            businesses.map((b) => (
-              <div
-                key={b._id}
-                onClick={() => setSelectedBusiness(b)}
-                className={`group bg-slate-900/50 border border-white/5 rounded-2xl p-4 cursor-pointer transition-all hover:border-emerald-500/30 ${selectedBusiness?._id === b._id ? "ring-2 ring-emerald-500/50 border-emerald-500/50 bg-emerald-500/5" : ""}`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-800 border border-white/5 overflow-hidden flex items-center justify-center text-slate-400 font-bold">
-                      {b.logo ? (
-                        <img
-                          src={b.logo}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        b.businessName?.[0]
-                      )}
+            businesses.map((b) => {
+              const queueTime = getTimeInQueue(b.createdAt);
+              return (
+                <div
+                  key={b._id}
+                  onClick={() => setSelectedBusiness(b)}
+                  className={`group bg-slate-900/50 border border-white/5 rounded-2xl p-4 cursor-pointer transition-all hover:border-emerald-500/30 ${selectedBusiness?._id === b._id ? "ring-2 ring-emerald-500/50 border-emerald-500/50 bg-emerald-500/5" : ""}`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-slate-800 border border-white/5 overflow-hidden flex items-center justify-center text-slate-400 font-bold">
+                        {b.logo ? (
+                          <img
+                            src={b.logo}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          b.businessName?.[0]
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white leading-tight group-hover:text-emerald-400 transition-colors uppercase">
+                          {b.businessName}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                          {b.category || b.mainCategory}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-black text-white leading-tight group-hover:text-emerald-400 transition-colors uppercase">
-                        {b.businessName}
-                      </h4>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
-                        {b.category || b.mainCategory}
-                      </p>
+                    <div className="flex flex-col items-end gap-1">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${statusConfig[b.verificationStatus]}`}
+                      >
+                        {b.verificationStatus?.replace("_", " ")}
+                      </span>
+
+                      <span
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                          queueTime.isUrgent
+                            ? "bg-rose-500/15 text-rose-400 border border-rose-500/25"
+                            : "bg-slate-800 text-slate-500 border border-slate-700/50"
+                        }`}
+                      >
+                        <FiClock size={8} />
+                        {queueTime.text}
+                      </span>
                     </div>
                   </div>
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${statusConfig[b.verificationStatus]}`}
-                  >
-                    {b.verificationStatus?.replace("_", " ")}
-                  </span>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500">
+                    <span className="flex items-center gap-1 font-bold uppercase tracking-tight">
+                      <FiMapPin size={10} />
+                      Gujarat, {b.district}
+                    </span>
+                    <span>{new Date(b.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500">
-                  <span className="flex items-center gap-1 font-bold uppercase tracking-tight">
-                    <FiMapPin size={10} />
-                    Gujarat, {b.district}
-                  </span>
-                  <span>{new Date(b.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
         <div className="lg:col-span-7 bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden min-h-125 flex flex-col relative">
           {selectedBusiness ? (
-            <div className="p-6 h-full flex flex-col">
+            <div className="p-6 h-full flex flex-col overflow-y-auto">
               <div className="flex justify-between items-start mb-8">
                 <div>
                   <h3 className="text-2xl font-black text-white tracking-tight uppercase leading-none mb-2">
@@ -262,9 +333,44 @@ const AdminBusinessVerification = () => {
                       selectedBusiness.kycDocuments.map((doc, idx) => (
                         <div
                           key={idx}
-                          className="aspect-video bg-slate-950 rounded-xl border border-white/5 flex items-center justify-center cursor-pointer hover:border-emerald-500/50 transition-all"
+                          onClick={() => {
+                            if (isImageUrl(doc)) {
+                              setLightboxSrc(doc);
+                            } else {
+                              window.open(doc, "_blank");
+                            }
+                          }}
+                          className="group/doc relative aspect-video bg-slate-950 rounded-xl border border-white/5 overflow-hidden cursor-pointer hover:border-emerald-500/50 transition-all"
                         >
-                          <FiFileText size={24} className="text-slate-600" />
+                          {isImageUrl(doc) ? (
+                            <>
+                              <img
+                                src={doc}
+                                alt={`KYC Document ${idx + 1}`}
+                                className="w-full h-full object-cover group-hover/doc:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/doc:opacity-100 transition-opacity flex items-center justify-center">
+                                <FiEye size={20} className="text-white" />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 group-hover/doc:bg-slate-900 transition-colors">
+                              <FiFileText
+                                size={20}
+                                className="text-slate-500 group-hover/doc:text-emerald-400 transition-colors"
+                              />
+                              <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">
+                                View Doc
+                              </span>
+                              <FiExternalLink
+                                size={10}
+                                className="text-slate-700"
+                              />
+                            </div>
+                          )}
+                          <span className="absolute top-1.5 right-1.5 text-[8px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded">
+                            {idx + 1}
+                          </span>
                         </div>
                       ))
                     ) : (
@@ -307,6 +413,13 @@ const AdminBusinessVerification = () => {
           )}
         </div>
       </div>
+
+      {lightboxSrc && (
+        <DocumentLightbox
+          src={lightboxSrc}
+          onClose={() => setLightboxSrc(null)}
+        />
+      )}
 
       {showRejectionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">

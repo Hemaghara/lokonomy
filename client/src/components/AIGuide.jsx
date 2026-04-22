@@ -134,7 +134,7 @@ const AIGuide = () => {
       const searchTerm = finalQuery
         .toLowerCase()
         .replace(
-          /\b(find|near|by|me|show|is|a|of|the|in|search|for|any|type|shop|give|suggestion|how|do|i|can|you|tell|about|what|where|website|platform|lokonomy|please|recommend|looking)\b/g,
+          /\b(find|near|by|me|show|is|a|of|the|in|search|for|any|type|shop|give|suggestion|can|you|tell|about|what|where|website|platform|lokonomy|please|recommend|looking)\b/g,
           "",
         )
         .replace(/\s+/g, " ")
@@ -212,7 +212,11 @@ const AIGuide = () => {
         isRadiusSearch: !!coords,
       };
 
-      const response = await askLocalGuide(finalQuery, context, messages);
+      const response = await askLocalGuide(
+        finalQuery,
+        context,
+        messages.slice(-10),
+      );
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: response },

@@ -6,7 +6,12 @@ const logger = require("../utils/logger");
 exports.getAllFeeds = async (req, res, next) => {
   try {
     const { lat, lng, radius = 5000, district, type, search } = req.query;
-    let query = {};
+    let query = {
+      $or: [
+        { scheduledAt: { $exists: false } },
+        { scheduledAt: { $lte: new Date() } },
+      ],
+    };
 
     if (lat && lng) {
       query.location = {
@@ -37,7 +42,11 @@ exports.getAllFeeds = async (req, res, next) => {
     if (lat && lng) {
       feeds = await Feed.find(query);
     } else {
-      feeds = await Feed.find(query).sort({ createdAt: -1 });
+      feeds = await Feed.find(query).sort({
+        isPinned: -1,
+        pinnedAt: -1,
+        createdAt: -1,
+      });
     }
 
     res.status(200).json({
@@ -66,7 +75,10 @@ exports.getFeedById = async (req, res, next) => {
       data: feed,
     });
   } catch (error) {
-    logger.error({ err: error, feedId: req.params.id }, "Error fetching feed by ID");
+    logger.error(
+      { err: error, feedId: req.params.id },
+      "Error fetching feed by ID",
+    );
     next(error);
   }
 };
@@ -74,7 +86,7 @@ exports.getFeedById = async (req, res, next) => {
 exports.createFeed = async (req, res, next) => {
   try {
     const { title, content, type, image, district, taluka, author } = req.body;
-    
+
     logger.debug({ title, type, userId: req.user.id }, "Creating new feed");
 
     let imageUrl = image;
@@ -104,7 +116,10 @@ exports.createFeed = async (req, res, next) => {
     }
 
     const feed = await Feed.create(feedData);
-    logger.info({ feedId: feed._id, userId: req.user.id }, "Feed created successfully");
+    logger.info(
+      { feedId: feed._id, userId: req.user.id },
+      "Feed created successfully",
+    );
 
     res.status(201).json({
       success: true,
@@ -128,7 +143,10 @@ exports.deleteFeed = async (req, res, next) => {
     }
 
     if (feed.authorId.toString() !== req.user.id) {
-      logger.warn({ feedId: req.params.id, userId: req.user.id }, "Unauthorized attempt to delete feed");
+      logger.warn(
+        { feedId: req.params.id, userId: req.user.id },
+        "Unauthorized attempt to delete feed",
+      );
       return res.status(401).json({
         success: false,
         message: "Not authorized to delete this feed",
@@ -136,7 +154,10 @@ exports.deleteFeed = async (req, res, next) => {
     }
 
     await feed.deleteOne();
-    logger.info({ feedId: req.params.id, userId: req.user.id }, "Feed deleted successfully");
+    logger.info(
+      { feedId: req.params.id, userId: req.user.id },
+      "Feed deleted successfully",
+    );
 
     res.status(200).json({
       success: true,

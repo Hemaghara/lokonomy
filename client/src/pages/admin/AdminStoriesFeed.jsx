@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+import { useConfirm } from "../../context/ConfirmContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiBookOpen,
@@ -133,7 +134,6 @@ const EmptyState = ({ text, icon: Icon }) => (
   </div>
 );
 
-
 const StoryCard = ({ story, onDelete, onView }) => (
   <motion.div
     layout
@@ -241,7 +241,10 @@ const StoryCard = ({ story, onDelete, onView }) => (
       </div>
 
       <button
-        onClick={(e) => { e.stopPropagation(); onDelete(story); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(story);
+        }}
         className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:border-rose-500/40 mt-auto"
       >
         <FiTrash2 size={12} /> Delete Content
@@ -353,7 +356,10 @@ const FeedCard = ({ feed, onDelete, onView }) => (
       </div>
 
       <button
-        onClick={(e) => { e.stopPropagation(); onDelete(feed); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(feed);
+        }}
         className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:border-rose-500/40 mt-auto"
       >
         <FiTrash2 size={12} /> Delete Content
@@ -364,6 +370,7 @@ const FeedCard = ({ feed, onDelete, onView }) => (
 
 const AdminStoriesFeed = () => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState("stories");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -420,9 +427,13 @@ const AdminStoriesFeed = () => {
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Are you sure you want to delete this ${isStories ? "story" : "feed post"}? This action cannot be undone.`)) {
-      return;
-    }
+    const isConfirmed = await confirm({
+      title: `Delete ${isStories ? "Story" : "Feed Post"}`,
+      description: `Are you sure you want to delete this ${isStories ? "story" : "feed post"}? This action cannot be undone.`,
+      confirmLabel: "Delete Permanently",
+      isDanger: true,
+    });
+    if (!isConfirmed) return;
     try {
       if (isStories) {
         await adminService.deleteStory(item._id);
@@ -563,7 +574,12 @@ const AdminStoriesFeed = () => {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPage(1);
+                  if (e.target._debounceTimer)
+                    clearTimeout(e.target._debounceTimer);
+                  const val = e.target.value;
+                  e.target._debounceTimer = setTimeout(() => {
+                    setPage(1);
+                  }, 300);
                 }}
                 className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/60 transition-all"
               />
@@ -620,14 +636,18 @@ const AdminStoriesFeed = () => {
                         key={item._id}
                         story={item}
                         onDelete={() => handleDelete(item)}
-                        onView={(s) => navigate(`/admin/stories-feed/story/${s._id}`)}
+                        onView={(s) =>
+                          navigate(`/admin/stories-feed/story/${s._id}`)
+                        }
                       />
                     ) : (
                       <FeedCard
                         key={item._id}
                         feed={item}
                         onDelete={() => handleDelete(item)}
-                        onView={(f) => navigate(`/admin/stories-feed/feed/${f._id}`)}
+                        onView={(f) =>
+                          navigate(`/admin/stories-feed/feed/${f._id}`)
+                        }
                       />
                     ),
                   )}
@@ -648,7 +668,6 @@ const AdminStoriesFeed = () => {
             )}
           </motion.div>
         </AnimatePresence>
-
       </div>
     </AdminLayout>
   );

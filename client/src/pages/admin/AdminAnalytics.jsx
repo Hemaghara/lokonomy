@@ -246,6 +246,8 @@ const AdminAnalytics = () => {
   const [revData, setRevData] = useState([]);
   const [revBreakdown, setRevBreakdown] = useState([]);
   const [revLoading, setRevLoading] = useState(true);
+  const [regionData, setRegionData] = useState([]);
+  const [regionLoading, setRegionLoading] = useState(true);
 
   const fetchOverview = useCallback(async () => {
     setOverviewLoading(true);
@@ -310,6 +312,7 @@ const AdminAnalytics = () => {
 
   useEffect(() => {
     fetchOverview();
+    fetchRegions();
   }, [fetchOverview]);
   useEffect(() => {
     fetchUsers(userPeriod);
@@ -323,6 +326,18 @@ const AdminAnalytics = () => {
   useEffect(() => {
     fetchRevenue(revPeriod);
   }, [revPeriod, fetchRevenue]);
+
+  const fetchRegions = async () => {
+    setRegionLoading(true);
+    try {
+      const res = await adminService.getRegionStats();
+      setRegionData(res.data.regions || []);
+    } catch {
+      console.error("Failed to load region stats");
+    } finally {
+      setRegionLoading(false);
+    }
+  };
 
   const handleDownloadFullReport = () => {
     const hasData =
@@ -525,28 +540,22 @@ const AdminAnalytics = () => {
               <div className="h-75 flex flex-col justify-center space-y-4">
                 {[
                   {
-                    label: "Total Visitors",
-                    value: overview?.totalUsers * 5 || 0,
+                    label: "Registered Users",
+                    value: overview?.totalUsers || 0,
                     color: "bg-indigo-500/20",
                     text: "text-indigo-400",
                   },
                   {
-                    label: "Signed Up",
-                    value: overview?.totalUsers || 0,
+                    label: "Active Business",
+                    value: overview?.totalBusinesses || 0,
                     color: "bg-emerald-500/20",
                     text: "text-emerald-400",
                   },
                   {
-                    label: "Active Business",
-                    value: overview?.totalBusinesses || 0,
+                    label: "Job Posters",
+                    value: overview?.totalJobs || 0,
                     color: "bg-amber-500/20",
                     text: "text-amber-400",
-                  },
-                  {
-                    label: "Paying Members",
-                    value: Math.round(overview?.totalBusinesses * 0.15) || 0,
-                    color: "bg-rose-500/20",
-                    text: "text-rose-400",
                   },
                 ].map((step, i, arr) => {
                   const pct = Math.round((step.value / arr[0].value) * 100);
@@ -575,40 +584,59 @@ const AdminAnalytics = () => {
               </div>
             </ChartCard>
 
-            <ChartCard loading={overviewLoading}>
+            <ChartCard loading={regionLoading}>
               <SectionHeader title="Top" accent="Regions" icon={FiMapPin} />
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  layout="vertical"
-                  data={[
-                    { name: "Gujarat", count: 1200 },
-                    { name: "Maharashtra", count: 950 },
-                    { name: "Rajasthan", count: 600 },
-                    { name: "Madhya Pradesh", count: 450 },
-                    { name: "Delhi", count: 300 },
-                  ]}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: "bold" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                  />
-                  <Bar
-                    dataKey="count"
-                    fill={COLORS.indigo}
-                    radius={[0, 4, 4, 0]}
-                    barSize={12}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {regionData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    layout="vertical"
+                    data={regionData.map((r) => ({
+                      name: r.name,
+                      users: r.users,
+                      businesses: r.businesses,
+                    }))}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tick={{
+                        fontSize: 10,
+                        fill: "#94a3b8",
+                        fontWeight: "bold",
+                      }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={100}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                    />
+                    <Legend
+                      iconType="circle"
+                      wrapperStyle={{ fontSize: "10px", fontWeight: "bold" }}
+                    />
+                    <Bar
+                      dataKey="users"
+                      name="Users"
+                      fill={COLORS.indigo}
+                      radius={[0, 4, 4, 0]}
+                      barSize={10}
+                    />
+                    <Bar
+                      dataKey="businesses"
+                      name="Businesses"
+                      fill={COLORS.emerald}
+                      radius={[0, 4, 4, 0]}
+                      barSize={10}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <EmptyChart />
+              )}
             </ChartCard>
           </div>
         </section>

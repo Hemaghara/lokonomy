@@ -10,17 +10,21 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    const impersonationToken = localStorage.getItem("impersonationToken");
     const user = JSON.parse(localStorage.getItem("lokonomy_user"));
     const adminToken = localStorage.getItem("adminToken");
 
-    // Use adminToken if we're on an admin path, UNLESS it's a specific user auth endpoint
-    // This prevents background user session checks from using the admin token
-    if (window.location.pathname.startsWith("/admin") && !config.url?.includes("/auth/me")) {
+    if (impersonationToken && !window.location.pathname.startsWith("/admin")) {
+      config.headers.Authorization = `Bearer ${impersonationToken}`;
+      config._tokenType = "impersonation";
+    } 
+    else if (window.location.pathname.startsWith("/admin") && !config.url?.includes("/auth/me")) {
       if (adminToken) {
         config.headers.Authorization = `Bearer ${adminToken}`;
         config._tokenType = "admin";
       }
-    } else if (user && user.token) {
+    } 
+    else if (user && user.token) {
       config.headers.Authorization = `Bearer ${user.token}`;
       config._tokenType = "user";
     }
@@ -50,6 +54,11 @@ api.interceptors.response.use(
           toast.error("Admin session expired. Please login again.");
           window.location.href = "/admin/login";
         }
+      } else if (tokenType === "impersonation") {
+        localStorage.removeItem("impersonationToken");
+        localStorage.removeItem("impersonatedUser");
+        toast.error("Impersonation session expired.");
+        window.location.href = "/admin/users";
       } else {
         localStorage.removeItem("lokonomy_user");
         

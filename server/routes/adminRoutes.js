@@ -24,6 +24,14 @@ const adminAuditRoutes = require("./admin/adminAudit");
 const adminQARoutes = require("./admin/adminQA");
 const adminModerationRoutes = require("./admin/adminModeration");
 const adminExtraRoutes = require("./admin/adminExtras");
+const adminImpersonateRoutes = require("./admin/adminImpersonate");
+const adminAlertRoutes = require("./admin/adminAlerts");
+const adminFraudRoutes = require("./admin/adminFraud");
+const adminCampaignRoutes = require("./admin/adminCampaigns");
+const adminHeatmapRoutes = require("./admin/adminHeatmap");
+const adminChurnRoutes = require("./admin/adminChurn");
+const adminApiKeyRoutes = require("./admin/adminApiKeys");
+const adminContentScheduleRoutes = require("./admin/adminContentSchedule");
 
 router.use("/", adminAuthRoutes);
 router.use("/", adminUserRoutes);
@@ -48,5 +56,13 @@ router.use("/", adminAuditRoutes);
 router.use("/", adminQARoutes);
 router.use("/", adminModerationRoutes);
 router.use("/", adminExtraRoutes);
+router.use("/", adminImpersonateRoutes);
+router.use("/", adminAlertRoutes);
+router.use("/", adminFraudRoutes);
+router.use("/", adminCampaignRoutes);
+router.use("/", adminHeatmapRoutes);
+router.use("/", adminChurnRoutes);
+router.use("/", adminApiKeyRoutes);
+router.use("/", adminContentScheduleRoutes);
 
 module.exports = router;

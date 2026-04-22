@@ -8,7 +8,10 @@ exports.getAllStories = async (req, res, next) => {
   try {
     const { lat, lng, radius = 5000, district, type, search } = req.query;
     let query = {
-      $or: [{ expiresAt: { $gt: new Date() } }, { isHighlighted: true }],
+      $and: [
+        { $or: [{ expiresAt: { $gt: new Date() } }, { isHighlighted: true }] },
+        { $or: [{ scheduledAt: { $exists: false } }, { scheduledAt: { $lte: new Date() } }] }
+      ]
     };
 
     if (lat && lng) {

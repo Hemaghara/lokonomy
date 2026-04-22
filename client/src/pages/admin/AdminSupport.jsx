@@ -31,11 +31,37 @@ const statusConfig = {
   closed: "bg-slate-900 text-slate-600 border-slate-800",
 };
 
+const CANNED_RESPONSES = [
+  {
+    label: "Greeting",
+    text: "Hello! Thank you for reaching out to Lokonomy support. How can we help you today?",
+  },
+  {
+    label: "KYC Pending",
+    text: "Your KYC verification is currently in our queue. We typically process requests within 48-72 hours. Thank you for your patience.",
+  },
+  {
+    label: "Resolved",
+    text: "We have resolved the issue you reported. Please let us know if there is anything else we can assist you with.",
+  },
+  {
+    label: "Closing",
+    text: "Since we haven't heard back from you, we are closing this ticket. Feel free to open a new one if the issue persists.",
+  },
+];
+
+const isSLABreached = (createdAt, status) => {
+  if (status === "resolved" || status === "closed") return false;
+  const hours = (new Date() - new Date(createdAt)) / (1000 * 60 * 60);
+  return hours > 48;
+};
+
 const AdminSupport = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
   const [reply, setReply] = useState("");
   const [filter, setFilter] = useState({ status: "all", priority: "all" });
   const [subAdmins, setSubAdmins] = useState([]);
@@ -167,8 +193,10 @@ const AdminSupport = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-150">
-        <div className="lg:col-span-4 bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-150 relative overflow-hidden">
+        <div
+          className={`lg:col-span-4 bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden flex flex-col ${showMobileDetail ? "hidden lg:flex" : "flex"}`}
+        >
           <div className="p-4 border-b border-white/5">
             <div className="relative">
               <FiSearch
@@ -194,13 +222,24 @@ const AdminSupport = () => {
               tickets.map((t) => (
                 <div
                   key={t._id}
-                  onClick={() => setSelectedTicket(t)}
+                  onClick={() => {
+                    setSelectedTicket(t);
+                    setShowMobileDetail(true);
+                  }}
                   className={`p-4 border-b border-white/5 cursor-pointer transition-all hover:bg-white/5 ${selectedTicket?._id === t._id ? "bg-indigo-500/10 border-l-4 border-l-indigo-500" : ""}`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-[10px] font-black text-indigo-400 font-mono tracking-tighter uppercase">
-                      {t.ticketNumber}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-indigo-400 font-mono tracking-tighter uppercase">
+                        {t.ticketNumber}
+                      </span>
+                      {isSLABreached(t.createdAt, t.status) && (
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse"
+                          title="SLA Breached"
+                        />
+                      )}
+                    </div>
                     <span
                       className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${priorityConfig[t.priority]}`}
                     >
@@ -222,23 +261,33 @@ const AdminSupport = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-8 bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden flex flex-col relative">
+        <div
+          className={`lg:col-span-8 bg-slate-900/50 border border-white/5 rounded-3xl overflow-hidden flex flex-col relative ${!showMobileDetail ? "hidden lg:flex" : "flex"}`}
+        >
           {selectedTicket ? (
             <>
               <div className="p-5 border-b border-white/5 flex justify-between items-center bg-white/2">
-                <div>
-                  <h3 className="text-lg font-black text-white tracking-tight">
-                    {selectedTicket.subject}
-                  </h3>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${statusConfig[selectedTicket.status]}`}
-                    >
-                      {selectedTicket.status.replace("_", " ")}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase">
-                      {selectedTicket.category}
-                    </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowMobileDetail(false)}
+                    className="lg:hidden p-2 -ml-2 rounded-lg text-slate-400 hover:text-white transition-all"
+                  >
+                    <FiChevronLeft size={20} />
+                  </button>
+                  <div>
+                    <h3 className="text-lg font-black text-white tracking-tight">
+                      {selectedTicket.subject}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${statusConfig[selectedTicket.status]}`}
+                      >
+                        {selectedTicket.status.replace("_", " ")}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">
+                        {selectedTicket.category}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -337,6 +386,22 @@ const AdminSupport = () => {
 
               {selectedTicket.status !== "closed" && (
                 <div className="p-4 border-t border-white/5 bg-slate-900/80 backdrop-blur-md">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      Quick Replies:
+                    </span>
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                      {CANNED_RESPONSES.map((res, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setReply(res.text)}
+                          className="px-3 py-1 rounded-lg bg-slate-800 border border-white/5 text-[9px] font-bold text-slate-400 hover:text-white hover:border-indigo-500/30 transition-all whitespace-nowrap"
+                        >
+                          {res.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <textarea
                       value={reply}

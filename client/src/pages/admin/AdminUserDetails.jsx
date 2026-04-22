@@ -18,6 +18,8 @@ import {
   FiCheckCircle,
   FiSlash,
   FiX,
+  FiUserCheck,
+  FiShield,
 } from "react-icons/fi";
 
 const StatCard = ({ icon: Icon, label, count, color }) => {
@@ -69,10 +71,19 @@ const AdminUserDetails = () => {
   const navigate = useNavigate();
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [riskData, setRiskData] = useState(null);
 
   useEffect(() => {
     fetchUserDetails();
+    fetchRiskScore();
   }, [id]);
+
+  const fetchRiskScore = async () => {
+    try {
+      const res = await adminService.getUserRiskScore(id);
+      setRiskData(res.data);
+    } catch (_) {}
+  };
 
   const fetchUserDetails = async () => {
     setLoading(true);
@@ -94,6 +105,21 @@ const AdminUserDetails = () => {
       fetchUserDetails();
     } catch {
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleImpersonate = async () => {
+    try {
+      toast.loading("Starting impersonation...", { id: "impersonate" });
+      const res = await adminService.impersonateUser(id);
+      localStorage.setItem("impersonationToken", res.data.token);
+      localStorage.setItem("impersonatedUser", JSON.stringify(res.data.user));
+      toast.success(res.data.message, { id: "impersonate" });
+      window.location.href = "/";
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Impersonation failed", {
+        id: "impersonate",
+      });
     }
   };
 
@@ -159,6 +185,12 @@ const AdminUserDetails = () => {
               </button>
             </>
           )}
+          <button
+            onClick={handleImpersonate}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-500 transition-all text-sm font-bold flex items-center gap-2"
+          >
+            <FiUserCheck size={14} /> Log in as User
+          </button>
         </div>
       </div>
 
@@ -254,6 +286,55 @@ const AdminUserDetails = () => {
               and priority listings.
             </p>
           </div>
+
+          {riskData && (
+            <div
+              className={`rounded-2xl p-6 border ${riskData.riskScore > 50 ? "bg-rose-500/10 border-rose-500/30" : "bg-slate-800/40 border-slate-700/50"}`}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <FiShield
+                    size={12}
+                    className={
+                      riskData.riskScore > 50
+                        ? "text-rose-400"
+                        : "text-indigo-400"
+                    }
+                  />{" "}
+                  Fraud Risk Analysis
+                </h4>
+                <span
+                  className={`text-xl font-black ${riskData.riskScore > 50 ? "text-rose-400" : "text-emerald-400"}`}
+                >
+                  {riskData.riskScore}%
+                </span>
+              </div>
+
+              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
+                <div
+                  className={`h-full transition-all duration-1000 ${riskData.riskScore > 70 ? "bg-rose-500" : riskData.riskScore > 30 ? "bg-amber-500" : "bg-emerald-500"}`}
+                  style={{ width: `${riskData.riskScore}%` }}
+                />
+              </div>
+
+              {riskData.flags?.length > 0 && (
+                <div className="space-y-2">
+                  {riskData.flags.map((flag, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 text-[10px] text-slate-400 leading-tight"
+                    >
+                      <FiAlertCircle
+                        size={10}
+                        className="text-rose-400 shrink-0 mt-0.5"
+                      />
+                      {flag}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="lg:col-span-2 flex flex-col gap-6">

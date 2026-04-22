@@ -26,6 +26,8 @@ import {
   FiShield,
   FiMessageSquare,
   FiClock,
+  FiCheckCircle,
+  FiShoppingBag,
 } from "react-icons/fi";
 
 const STAT_COLORS = {
@@ -241,19 +243,36 @@ const AdminDashboard = () => {
       const response = await adminService.getDashboardStats(params);
       setStats(response.data);
 
+      const mixedActivities = [];
+
       if (response.data.recentUsers) {
-        const mockActivities = response.data.recentUsers
-          .slice(0, 5)
-          .map((u) => ({
-            id: u._id,
+        response.data.recentUsers.slice(0, 3).forEach((u) => {
+          mixedActivities.push({
+            id: `user-${u._id}`,
             type: "registration",
             user: u.name,
             time: u.createdAt,
-            message: `signed up to Lokonomy`,
+            message: "signed up to Lokonomy",
             icon: <FiUsers className="text-indigo-400" />,
-          }));
-        setActivities(mockActivities);
+          });
+        });
       }
+
+      if (response.data.recentBusinesses) {
+        response.data.recentBusinesses.slice(0, 3).forEach((b) => {
+          mixedActivities.push({
+            id: `biz-${b._id}`,
+            type: "business",
+            user: b.businessName,
+            time: b.createdAt,
+            message: "registered a new business",
+            icon: <FiBriefcase className="text-sky-400" />,
+          });
+        });
+      }
+
+      mixedActivities.sort((a, b) => new Date(b.time) - new Date(a.time));
+      setActivities(mixedActivities.slice(0, 10));
     } catch {
       toast.error("Failed to fetch statistics");
     } finally {
@@ -383,7 +402,7 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <header className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 mb-10">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
         <div>
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter leading-none">
             Dashboard <span className="text-indigo-500 italic">Overview</span>
@@ -394,6 +413,36 @@ const AdminDashboard = () => {
               Live performance & ecosystem tracker
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800/80 rounded-2xl px-4 py-2.5 backdrop-blur-md">
+          <FiCalendar size={14} className="text-indigo-400 shrink-0" />
+          <input
+            type="date"
+            name="startDate"
+            value={dateRange.startDate}
+            onChange={handleDateChange}
+            className="bg-transparent text-xs text-slate-300 outline-none font-bold w-28 scheme-dark"
+            title="Start date"
+          />
+          <span className="text-slate-600 text-xs font-bold">→</span>
+          <input
+            type="date"
+            name="endDate"
+            value={dateRange.endDate}
+            onChange={handleDateChange}
+            className="bg-transparent text-xs text-slate-300 outline-none font-bold w-28 scheme-dark"
+            title="End date"
+          />
+          {(dateRange.startDate || dateRange.endDate) && (
+            <button
+              onClick={clearDateRange}
+              className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+              title="Clear date range"
+            >
+              <FiX size={14} />
+            </button>
+          )}
         </div>
       </header>
 

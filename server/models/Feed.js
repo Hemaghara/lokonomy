@@ -50,6 +50,9 @@ const feedSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  scheduledAt: { type: Date, default: null },
+  isPinned: { type: Boolean, default: false },
+  pinnedAt: { type: Date, default: null },
 });
 
 feedSchema.index({ location: "2dsphere" });

@@ -26,9 +26,9 @@ import {
   Bell,
   Search,
   MessageCircle,
-  User as UserIcon,
   Zap,
   Star,
+  UserCheck,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -37,6 +37,29 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [impersonating, setImpersonating] = useState(null);
+
+  useEffect(() => {
+    const checkImpersonation = () => {
+      const token = localStorage.getItem("impersonationToken");
+      const user = localStorage.getItem("impersonatedUser");
+      if (token && user) {
+        setImpersonating(JSON.parse(user));
+      } else {
+        setImpersonating(null);
+      }
+    };
+    checkImpersonation();
+    window.addEventListener("storage", checkImpersonation);
+    return () => window.removeEventListener("storage", checkImpersonation);
+  }, []);
+
+  const endImpersonation = () => {
+    localStorage.removeItem("impersonationToken");
+    localStorage.removeItem("impersonatedUser");
+    localStorage.removeItem("adminToken"); // If the admin token was replaced or if we want a fresh start
+    window.location.href = "/admin/users";
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -114,8 +137,35 @@ const Navbar = () => {
 
   return (
     <>
+      <AnimatePresence>
+        {impersonating && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="fixed top-0 left-0 right-0 z-70 bg-linear-to-r from-rose-600 via-rose-500 to-rose-600 border-b border-rose-400/30 overflow-hidden"
+          >
+            <div className="max-w-425 mx-auto px-4 md:px-10 h-10 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white">
+                <UserCheck className="w-4 h-4 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  Impersonating: <span className="underline">{impersonating.name}</span> ({impersonating.email})
+                </span>
+              </div>
+              <button
+                onClick={endImpersonation}
+                className="px-3 py-1 bg-white text-rose-600 text-[9px] font-black uppercase tracking-widest rounded-full hover:bg-rose-50 transition-all active:scale-95"
+              >
+                End Session
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <nav
-        className={`fixed top-0 left-0 right-0 z-60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+        className={`fixed left-0 right-0 z-60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+          impersonating ? "top-10" : "top-0"
+        } ${
           scrolled || isOpen
             ? "bg-[#050508]/85 backdrop-blur-3xl border-b border-white/8 py-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
             : "bg-transparent py-4 md:py-8"
