@@ -32,7 +32,6 @@ const migrate = async () => {
 
     for (const fileUrl of files) {
       try {
-       
         const pathMatch = fileUrl.split("/upload/")[1];
         const logicalPath = pathMatch.replace(/^v\d+\//, "");
 

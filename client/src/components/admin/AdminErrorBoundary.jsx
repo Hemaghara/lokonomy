@@ -23,7 +23,7 @@ class AdminErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-dark-bg flex items-center justify-center p-6">
           <div className="max-w-md w-full bg-[#161c27] border border-red-500/20 rounded-[2.5rem] p-8 text-center shadow-2xl shadow-red-500/5">
             <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-500/20">
               <FiAlertTriangle size={40} />
