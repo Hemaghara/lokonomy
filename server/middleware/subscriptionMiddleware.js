@@ -3,9 +3,9 @@ const Plan = require("../models/Plan");
 const Settings = require("../models/Settings");
 
 const DEFAULT_FREE_LIMITS = {
-  productsUpload: 3,
-  storiesPost: 5,
-  jobsPost: 2,
+  productsUploaded: 3,
+  storiesPosted: 5,
+  jobsPosted: 2,
   analytics: false,
   featuredListings: false,
   prioritySupport: false,
@@ -79,13 +79,13 @@ const checkProductLimit = async (req, res, next) => {
 
     const used = user.usage?.productsUploaded || 0;
 
-    if (limits.productsUpload < 999999 && used >= limits.productsUpload) {
+    if (limits.productsUploaded < 999999 && used >= limits.productsUploaded) {
       return res.status(403).json({
         success: false,
         code: "LIMIT_REACHED",
-        message: `Plan Limit Reached: You've already listed ${limits.productsUpload} products on your ${plan} plan. Upgrade your membership to keep growing your store!`,
+        message: `Plan Limit Reached: You've already listed ${limits.productsUploaded} products on your ${plan} plan. Upgrade your membership to keep growing your store!`,
         used,
-        limit: limits.productsUpload,
+        limit: limits.productsUploaded,
         currentPlan: plan,
       });
     }
@@ -114,13 +114,13 @@ const checkStoryLimit = async (req, res, next) => {
 
     const used = user.usage?.storiesPosted || 0;
 
-    if (limits.storiesPost < 999999 && used >= limits.storiesPost) {
+    if (limits.storiesPosted < 999999 && used >= limits.storiesPosted) {
       return res.status(403).json({
         success: false,
         code: "LIMIT_REACHED",
-        message: `Limit Reached: You've hit your monthly qouta of ${limits.storiesPost} stories. Upgrade to a premium plan to share more updates!`,
+        message: `Limit Reached: You've hit your monthly qouta of ${limits.storiesPosted} stories. Upgrade to a premium plan to share more updates!`,
         used,
-        limit: limits.storiesPost,
+        limit: limits.storiesPosted,
         currentPlan: plan,
       });
     }
@@ -149,13 +149,13 @@ const checkJobLimit = async (req, res, next) => {
 
     const used = user.usage?.jobsPosted || 0;
 
-    if (limits.jobsPost < 999999 && used >= limits.jobsPost) {
+    if (limits.jobsPosted < 999999 && used >= limits.jobsPosted) {
       return res.status(403).json({
         success: false,
         code: "LIMIT_REACHED",
-        message: `Quota Exhausted: You've posted ${limits.jobsPost} jobs. Upgrade your plan to continue hiring the best talent!`,
+        message: `Quota Exhausted: You've posted ${limits.jobsPosted} jobs. Upgrade your plan to continue hiring the best talent!`,
         used,
-        limit: limits.jobsPost,
+        limit: limits.jobsPosted,
         currentPlan: plan,
       });
     }

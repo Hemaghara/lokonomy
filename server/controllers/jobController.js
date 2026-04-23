@@ -42,7 +42,7 @@ exports.createJob = async (req, res) => {
     const user = await User.findById(req.user.id);
     const planSlug = user.subscription?.plan || "free";
     const plan = await Plan.findOne({ slug: planSlug });
-    const jobsLimit = plan?.limits?.jobsPost || 0;
+    const jobsLimit = plan?.limits?.jobsPosted || 0;
     const currentPosted = user.usage?.jobsPosted || 0;
 
     if (currentPosted >= jobsLimit) {

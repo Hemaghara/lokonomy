@@ -13,14 +13,22 @@ const startBookingRemindersCron = () => {
     );
 
     try {
-      const bookings = await Booking.find({
+      const maxDate = new Date(now.getTime() + 26 * 60 * 60 * 1000);
+      const cursor = Booking.find({
         status: "confirmed",
         $or: [{ reminderSent24h: false }, { reminderSent1h: false }],
+
+        date: { $lte: maxDate.toISOString().split("T")[0] },
       })
         .populate("businessId")
-        .populate("userId");
+        .populate("userId")
+        .cursor();
 
-      for (const booking of bookings) {
+      for (
+        let booking = await cursor.next();
+        booking != null;
+        booking = await cursor.next()
+      ) {
         try {
           if (
             !booking.userId ||
@@ -32,19 +40,12 @@ const startBookingRemindersCron = () => {
             `${booking.date}T${booking.timeSlot}`,
           );
 
-          if (isNaN(bookingDateTime.getTime())) {
-            console.error(
-              `[Cron] Invalid date/time for booking ${booking._id}: ${booking.date} ${booking.timeSlot}`,
-            );
-            continue;
-          }
+          if (isNaN(bookingDateTime.getTime())) continue;
 
           const diffMs = bookingDateTime - now;
-          const diffHrs = diffMs / (1000 * 60 * 60);
+          const diffHrs = diffMs / 3600000;
+
           if (!booking.reminderSent24h && diffHrs > 23 && diffHrs <= 25) {
-            console.log(
-              `[Cron] Sending 24h reminder for booking ${booking._id}`,
-            );
             await sendPushNotification(booking.userId._id, {
               title: "Upcoming Appointment Reminder",
               body: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} is in 24 hours (Tomorrow, ${booking.date} at ${booking.timeSlot}).`,
@@ -61,20 +62,18 @@ const startBookingRemindersCron = () => {
             booking.reminderSent24h = true;
             await booking.save();
           }
+
           if (!booking.reminderSent1h && diffHrs > 0 && diffHrs <= 1.5) {
-            console.log(
-              `[Cron] Sending 1h reminder for booking ${booking._id}`,
-            );
             await sendPushNotification(booking.userId._id, {
               title: "Appointment Reminder (1 Hour)",
-              body: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} is in 1 hour (${booking.timeSlot}). See you soon!`,
+              body: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} is in 1 hour (${booking.timeSlot}).`,
               data: { url: "/profile" },
             });
             await createNotification({
               recipientId: booking.userId._id,
               type: "booking",
               title: "Appointment in 1 Hour",
-              message: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} starts at ${booking.timeSlot}. Get ready!`,
+              message: `Your appointment for ${booking.serviceName} at ${booking.businessId?.businessName || "the business"} starts at ${booking.timeSlot}.`,
               actionUrl: `/business/${booking.businessId?._id}`,
               metadata: { bookingId: booking._id },
             });
@@ -84,7 +83,7 @@ const startBookingRemindersCron = () => {
         } catch (error) {
           console.error(
             `[Cron] Error processing booking ${booking._id}:`,
-            error,
+            error.message,
           );
         }
       }

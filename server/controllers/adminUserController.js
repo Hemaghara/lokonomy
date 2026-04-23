@@ -164,6 +164,8 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
+const adminAuditController = require("./adminAuditController");
+
 exports.updateUserStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -177,6 +179,13 @@ exports.updateUserStatus = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    await adminAuditController.logAction(
+      req.admin.id,
+      "USER_STATUS_UPDATE",
+      `Updated user ${user.email} status to ${status}`,
+      req.ip,
+    );
 
     res.json({ message: `User status updated to ${status}`, user });
   } catch (error) {
@@ -199,6 +208,13 @@ exports.bulkUpdateUserStatus = async (req, res) => {
     const result = await User.updateMany(
       { _id: { $in: ids } },
       { $set: { status } },
+    );
+
+    await adminAuditController.logAction(
+      req.admin.id,
+      "USER_BULK_STATUS_UPDATE",
+      `Bulk updated ${result.modifiedCount} users status to ${status}`,
+      req.ip,
     );
 
     res.json({

@@ -16,146 +16,127 @@ exports.login = async (req, res) => {
     locationPermission,
   } = req.body;
 
-  logger.info({ email }, "Login Attempt");
-
   if (!email || !password) {
     return res
       .status(400)
-      .json({ success: false, message: "Please provide email and password" });
+      .json({ success: false, message: "Email and password required" });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid email format" });
   }
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      logger.warn({ email }, "Login failed: User not found");
+    const user = await User.findOne({ email }).select(
+      "+password +otp +otpExpires",
+    );
+
+    const dummyHash = "$2a$10$dummy.hash.to.prevent.timing.attacks.xxx";
+    const isMatch = user
+      ? await bcrypt.compare(password, user.password)
+      : await bcrypt.compare(password, dummyHash);
+
+    if (!user || !isMatch) {
+      logger.warn({ email }, "Login failed: Invalid credentials");
       return res
-        .status(400)
+        .status(401)
         .json({ success: false, message: "Invalid email or password" });
     }
 
     if (user.status && user.status !== "active") {
-      const statusMsg =
+      const msg =
         user.status === "banned"
-          ? "Your account has been permanently banned by the administrator."
-          : "Your account is temporarily suspended. Please contact support.";
-
-      logger.warn(
-        { email, status: user.status },
-        "Blocked login attempt for inactive user",
-      );
-      return res.status(403).json({
-        success: false,
-        message: statusMsg,
-        status: user.status,
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      logger.warn({ email }, "Login failed: Password mismatch");
+          ? "Account permanently banned."
+          : "Account suspended. Contact support.";
       return res
-        .status(400)
-        .json({ success: false, message: "Invalid email or password" });
+        .status(403)
+        .json({ success: false, message: msg, status: user.status });
     }
+
     if (locationPermission === "granted" && latitude && longitude) {
       user.latitude = parseFloat(latitude);
       user.longitude = parseFloat(longitude);
       user.locationName = locationName || null;
       user.locationPermission = "granted";
-      logger.debug(
-        { userId: user._id, latitude, longitude },
-        "Location updated for user",
-      );
     } else if (locationPermission === "denied") {
       user.locationPermission = "denied";
-      logger.debug({ userId: user._id }, "Location permission denied for user");
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 60000);
+    const otpExpires = new Date(Date.now() + 300000);
 
     await User.findByIdAndUpdate(user._id, {
-      $set: { otp, otpExpires },
+      $set: {
+        otp,
+        otpExpires,
+        latitude: user.latitude,
+        longitude: user.longitude,
+        locationName: user.locationName,
+        locationPermission: user.locationPermission,
+      },
     });
-    // Log intent, not the OTP itself in production
-    logger.debug({ userId: user._id }, "OTP generated for user");
 
-    const isConfigMissing = !process.env.EMAIL_USER || !process.env.EMAIL_PASS;
+    const isEmailConfigured =
+      process.env.EMAIL_USER &&
+      !process.env.EMAIL_USER.includes("your-email") &&
+      process.env.EMAIL_PASS;
 
-    const isPlaceholder =
-      process.env.EMAIL_USER && process.env.EMAIL_USER.includes("your-email");
-
-    if (isConfigMissing || isPlaceholder) {
+    if (!isEmailConfigured) {
+      if (process.env.NODE_ENV === "production") {
+        logger.error("Email not configured in production!");
+        return res.status(503).json({
+          success: false,
+          message: "Email service unavailable. Contact support.",
+        });
+      }
       logger.warn(
-        "Email configuration missing or placeholder found. Using Debug OTP.",
+        { userId: user._id },
+        "Dev mode: OTP logged server-side only",
       );
-
+      logger.info({ otp }, "DEV OTP (never send to client in prod)");
       return res.json({
         success: true,
-        message: "give the orignal email and password",
+        message: "OTP sent (dev mode)",
         step: "otp",
-        devOtp: otp,
       });
     }
 
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 15000,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
       });
 
       await transporter.sendMail({
-        from: `"Lokonomy Service" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your Verification Code",
-        html: `
-          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px; max-width: 400px;">
-            <h3>Verification Code</h3>
-            <p>Hello <b>${user.name}</b>,</p>
-            <p>Your login code is:</p>
-            <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px;">
-              ${otp}
-            </div>
-            <p style="font-size: 12px; color: #888;">Valid for 1 minute.</p>
-          </div>
-        `,
+        html: `<div style="font-family:sans-serif;padding:20px">
+          <h3>Verification Code</h3>
+          <p>Hello <b>${user.name}</b>,</p>
+          <p>Your login OTP is:</p>
+          <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
+          <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
+        </div>`,
       });
-      logger.info({ email }, "Email dispatched successfully");
-      return res.json({
-        success: true,
-        message: "Verification code sent to your email.",
-        step: "otp",
-      });
-    } catch (mailErr) {
-      logger.error({ err: mailErr }, "SMTP ERROR");
 
       return res.json({
         success: true,
-        message: "OTP Service currently unavailable. Using Debug OTP.",
+        message: "Verification code sent.",
         step: "otp",
-        devOtp: otp,
       });
+    } catch (mailErr) {
+      logger.error({ err: mailErr }, "SMTP error");
+      return res
+        .status(503)
+        .json({ success: false, message: "Failed to send OTP. Try again." });
     }
   } catch (err) {
-    logger.error({ err }, "Login server error");
-    let msg = "A server error occurred.";
-    if (err.message.includes("ENOTFOUND")) {
-      msg = "Database Connection Error: Please check your internet connection.";
-    } else if (err.message.includes("timeout")) {
-      msg = "Database request timed out. Please check your Atlas IP Whitelist.";
-    }
-    res
-      .status(500)
-      .json({ success: false, message: msg, details: err.message });
+    logger.error({ err }, "Login error");
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -187,22 +168,75 @@ exports.verifyOtp = async (req, res) => {
     user.otp = undefined;
     user.otpExpires = undefined;
     user.lastLoginDate = new Date();
-    await user.save();
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET || "lokonomy_secret_key_123",
-      { expiresIn: 360000 },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
     );
+    const refreshToken = jwt.sign(
+      { user: { id: user.id } },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    user.refreshToken = refreshToken;
+    await user.save();
 
     res.json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       user: serializeUser(user),
     });
   } catch (err) {
     logger.error({ err }, "OTP verification error");
     res.status(500).json({ success: false, message: "Verification failed" });
+  }
+};
+
+exports.refresh = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Refresh token required" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.user.id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Invalid refresh token" });
+    }
+
+    const newAccessToken = jwt.sign(
+      { user: { id: user.id } },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+    const newRefreshToken = jwt.sign(
+      { user: { id: user.id } },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.json({
+      success: true,
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (err) {
+    logger.error({ err }, "Refresh token error");
+    res
+      .status(403)
+      .json({ success: false, message: "Invalid or expired token" });
   }
 };
 
@@ -278,6 +312,19 @@ exports.register = async (req, res) => {
 
     const suffix = user._id.toString().slice(-4).toUpperCase();
     user.referralCode = `LOKO-${suffix}`;
+
+    const accessToken = jwt.sign(
+      { user: { id: user.id } },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" },
+    );
+    const refreshToken = jwt.sign(
+      { user: { id: user.id } },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    user.refreshToken = refreshToken;
     await user.save();
 
     if (referrerUser) {
@@ -286,17 +333,12 @@ exports.register = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { user: { id: user.id } },
-      process.env.JWT_SECRET || "lokonomy_secret_key_123",
-      { expiresIn: 360000 },
-    );
-
     logger.info({ userId: user._id, email }, "User registered successfully");
 
     res.status(201).json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       user: serializeUser(user),
       message: "User registered successfully",
     });

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const { awardPoints } = require("./rewardsController");
@@ -5,6 +6,9 @@ const { createNotification } = require("./notificationController");
 const logger = require("../utils/logger");
 
 exports.createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       productId,
@@ -15,6 +19,8 @@ exports.createOrder = async (req, res) => {
     } = req.body;
 
     if (!productId || !paymentMethod || !shippingAddress || !contactNumber) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({
         success: false,
         message:
@@ -22,43 +28,62 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, isSold: false, isFlagged: { $ne: true } },
+      { $set: { isSold: true } },
+      { new: false, session },
+    );
 
-    if (product.isSold === true) {
+    if (!product) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({
         success: false,
-        message: "This product has already been sold to another buyer.",
+        message: "Product not available or already sold.",
       });
     }
 
     if (!product.sellerId) {
-      return res.status(400).json({
-        success: false,
-        message: "This product listing is incomplete (missing sellerId).",
-      });
+      await Product.findByIdAndUpdate(
+        productId,
+        { $set: { isSold: false } },
+        { session },
+      );
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid product listing." });
     }
 
     if (product.sellerId.toString() === req.user.id) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot purchase your own product.",
-      });
+      await Product.findByIdAndUpdate(
+        productId,
+        { $set: { isSold: false } },
+        { session },
+      );
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot purchase your own product." });
     }
 
     const existingOrder = await Order.findOne({
       product: productId,
       buyer: req.user.id,
-    });
+    }).session(session);
     if (existingOrder) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already placed an order for this product.",
-      });
+      await Product.findByIdAndUpdate(
+        productId,
+        { $set: { isSold: false } },
+        { session },
+      );
+      await session.abortTransaction();
+      session.endSession();
+      return res
+        .status(400)
+        .json({ success: false, message: "Already ordered this product." });
     }
 
     const newOrder = new Order({
@@ -73,68 +98,45 @@ exports.createOrder = async (req, res) => {
       paymentStatus: "completed",
     });
 
-    const savedOrder = await newOrder.save();
-
-    await Product.findByIdAndUpdate(
-      productId,
-      { $set: { isSold: true } },
-      { strict: false },
-    );
-
-    const { sendPushNotification } = require("../utils/pushService");
-    await sendPushNotification(product.sellerId, {
-      title: "New Order Received",
-      body: `You have a new order for ${product.name}.`,
-      data: {
-        url: "/seller/orders",
-        type: "order",
-      },
-    });
-
-    const io = req.app.get("io");
-    await createNotification({
-      recipientId: product.sellerId,
-      type: "order",
-      title: "New Order Received",
-      message: `You have a new order for ${product.name} — ₹${product.price}.`,
-      actionUrl: "/sales-management",
-      metadata: { orderId: savedOrder._id, productId },
-      io,
-    });
+    const savedOrder = await newOrder.save({ session });
+    await session.commitTransaction();
+    session.endSession();
 
     try {
       await awardPoints(
         req.user.id,
         "making_order",
-        `Order placed for ${product.name}`,
+        `Order for ${product.productName || product.name}`,
       );
-    } catch (pointsErr) {
-      logger.error({ err: pointsErr, userId: req.user.id }, "points_award_failed in createOrder");
+      const { sendPushNotification } = require("../utils/pushService");
+      await sendPushNotification(product.sellerId, {
+        title: "New Order",
+        body: `New order for ${product.productName || product.name}`,
+        data: { url: "/sales" },
+      });
+      const io = req.app.get("io");
+      await createNotification({
+        recipientId: product.sellerId,
+        type: "order",
+        title: "New Order",
+        message: `Order for ${product.productName || product.name} - ₹${product.price}`,
+        actionUrl: "/sales-management",
+        metadata: { orderId: savedOrder._id },
+        io,
+      });
+    } catch (sideEffectErr) {
+      logger.error(
+        { err: sideEffectErr },
+        "Post-order side effects failed (non-critical)",
+      );
     }
 
-    logger.info({ orderId: savedOrder._id, productId, buyerId: req.user.id }, "Order created successfully");
-    res.status(201).json({ success: true, order: savedOrder });
+    return res.status(201).json({ success: true, order: savedOrder });
   } catch (err) {
-    logger.error({ err }, "Order Creation Error");
-    if (err.name === "ValidationError") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Validation Error: " +
-          Object.values(err.errors)
-            .map((e) => e.message)
-            .join(", "),
-      });
-    }
-    if (err.name === "CastError") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid ID provided." });
-    }
-    res.status(500).json({
-      success: false,
-      message: "Server Error: " + err.message,
-    });
+    await session.abortTransaction();
+    session.endSession();
+    logger.error({ err }, "Order creation error");
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -176,7 +178,10 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     if (order.seller.toString() !== req.user.id) {
-      logger.warn({ orderId: req.params.id, userId: req.user.id }, "Unauthorized order status update attempt");
+      logger.warn(
+        { orderId: req.params.id, userId: req.user.id },
+        "Unauthorized order status update attempt",
+      );
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
@@ -204,7 +209,10 @@ exports.updateOrderStatus = async (req, res) => {
       io,
     });
 
-    logger.info({ orderId: order._id, status: orderStatus }, "Order status updated");
+    logger.info(
+      { orderId: order._id, status: orderStatus },
+      "Order status updated",
+    );
     res.status(200).json({ success: true, order });
   } catch (err) {
     logger.error({ err, orderId: req.params.id }, "Error in updateOrderStatus");
@@ -261,7 +269,10 @@ exports.getSellerDashboardStats = async (req, res) => {
 
     res.status(200).json({ success: true, stats });
   } catch (err) {
-    logger.error({ err, userId: req.user.id }, "Error in getSellerDashboardStats");
+    logger.error(
+      { err, userId: req.user.id },
+      "Error in getSellerDashboardStats",
+    );
     res.status(500).json({ success: false, message: err.message });
   }
 };

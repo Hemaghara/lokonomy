@@ -44,27 +44,37 @@ exports.getFraudSignals = async (req, res) => {
 
     try {
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      const businesses = await Business.find({})
-        .select("_id businessName reviews district")
-        .lean();
-      for (const biz of businesses) {
-        if (!biz.reviews) continue;
-        const recentReviews = biz.reviews.filter(
-          (r) => r.createdAt && new Date(r.createdAt) >= oneHourAgo,
-        );
-        if (recentReviews.length >= 10) {
-          signals.push({
-            type: "review_bombing",
-            severity: "critical",
-            title: "Review Bombing Detected",
-            detail: `"${biz.businessName}" received ${recentReviews.length} reviews in the last hour.`,
-            affectedCount: recentReviews.length,
-            entities: [{ id: biz._id, name: biz.businessName }],
-            riskScore: Math.min(100, recentReviews.length * 10),
-            actionPath: `/admin/business/${biz._id}`,
-          });
-        }
-      }
+      const reviewBombing = await Business.aggregate([
+        {
+          $project: {
+            businessName: 1,
+            district: 1,
+            recentReviews: {
+              $filter: {
+                input: { $ifNull: ["$reviews", []] },
+                as: "r",
+                cond: { $gte: ["$$r.createdAt", oneHourAgo] },
+              },
+            },
+          },
+        },
+        { $addFields: { recentCount: { $size: "$recentReviews" } } },
+        { $match: { recentCount: { $gte: 10 } } },
+        { $limit: 20 },
+      ]);
+
+      reviewBombing.forEach((biz) => {
+        signals.push({
+          type: "review_bombing",
+          severity: "critical",
+          title: "Review Bombing Detected",
+          detail: `"${biz.businessName}" received ${biz.recentCount} reviews in the last hour.`,
+          affectedCount: biz.recentCount,
+          entities: [{ id: biz._id, name: biz.businessName }],
+          riskScore: Math.min(100, biz.recentCount * 10),
+          actionPath: `/admin/business/${biz._id}`,
+        });
+      });
     } catch (_) {}
 
     try {

@@ -100,7 +100,6 @@ exports.createOrder = async (req, res) => {
         "subscription.razorpayOrderId": order.id,
       });
 
-      // Log pending transaction
       await SubscriptionTransaction.create({
         user: req.user.id,
         plan,
@@ -203,7 +202,6 @@ exports.verifyPayment = async (req, res) => {
       { new: true, session },
     );
 
-    // Update transaction record to success
     await SubscriptionTransaction.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id },
       {
@@ -213,37 +211,39 @@ exports.verifyPayment = async (req, res) => {
       { session },
     );
 
-    if (updatedUser.referredBy) {
+    if (updatedUser.referredBy && !updatedUser.referralRewards?.rewardApplied) {
       const referrer = await User.findById(updatedUser.referredBy).session(
         session,
       );
       if (referrer) {
-        const currentExpiry = referrer.subscription?.expiryDate
-          ? new Date(referrer.subscription.expiryDate)
-          : new Date();
         const newExpiry = new Date(
-          currentExpiry.getTime() + 15 * 24 * 60 * 60 * 1000,
+          (referrer.subscription?.expiryDate
+            ? new Date(referrer.subscription.expiryDate)
+            : new Date()
+          ).getTime() +
+            15 * 86400000,
         );
         await User.findByIdAndUpdate(
           referrer._id,
           {
             "subscription.expiryDate": newExpiry,
-            $inc: { "referralRewards.appliedDays": 15 },
+            $inc: {
+              "referralRewards.appliedDays": 15,
+              "referralRewards.totalDiscountsGiven": 1,
+            },
           },
           { session },
         );
+        await User.findByIdAndUpdate(
+          updatedUser._id,
+          { "referralRewards.rewardApplied": true },
+          { session },
+        );
+        logger.info(
+          { referrerId: updatedUser.referredBy, userId: updatedUser._id },
+          "Referral Reward applied: 15 days added to referrer",
+        );
       }
-      await User.findByIdAndUpdate(
-        updatedUser.referredBy,
-        {
-          $inc: { "referralRewards.totalDiscountsGiven": 1 },
-        },
-        { session },
-      );
-      logger.info(
-        { referrerId: updatedUser.referredBy, userId: updatedUser._id },
-        "Referral Reward applied: 15 days added to referrer",
-      );
     }
 
     await session.commitTransaction();
@@ -294,7 +294,6 @@ exports.getStatus = async (req, res) => {
 
     const planDoc = await Plan.findOne({ slug: effectivePlan });
 
-    // If planDoc is missing, we try to fallback to "free" plan from DB
     let limits = planDoc?.limits;
     if (!limits) {
       const freePlan = await Plan.findOne({ slug: "free" });
@@ -351,7 +350,6 @@ exports.cancelSubscription = async (req, res) => {
   }
 };
 
-// Log failed payment
 exports.logFailedPayment = async (req, res) => {
   try {
     const { razorpay_order_id, plan, durationMonths, failureReason } = req.body;
@@ -363,7 +361,6 @@ exports.logFailedPayment = async (req, res) => {
     const planDoc = await Plan.findOne({ slug: plan });
     const amount = planDoc?.prices?.[durationMonths?.toString()] || 0;
 
-    // Update existing pending transaction or create new
     const existing = await SubscriptionTransaction.findOneAndUpdate(
       { razorpayOrderId: razorpay_order_id },
       {

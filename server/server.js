@@ -4,8 +4,14 @@ const cors = require("cors");
 const http = require("http");
 require("dotenv").config();
 
+const validateEnv = require("./utils/validateEnv");
+validateEnv();
+
 const logger = require("./utils/logger");
 const globalErrorHandler = require("./middleware/globalErrorHandler");
+const sanitizeMiddleware = require("./middleware/sanitize");
+const { apiLimiter, authLimiter } = require("./middleware/rateLimiter");
+const setupIndexes = require("./utils/setupIndexes");
 const initSocket = require("./socket");
 const { startSubscriptionCron } = require("./cron/subscriptionExpiry");
 const { startBookingRemindersCron } = require("./cron/bookingReminders");
@@ -16,9 +22,16 @@ const {
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
-
 const io = initSocket(server);
 app.set("io", io);
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
 
 const allowedOrigins = [
   process.env.APP_URL,
@@ -27,36 +40,30 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-
       if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
         callback(null, true);
       } else {
-        logger.error({ origin }, "Origin not allowed by CORS");
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error("CORS policy violation"));
       }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-    ],
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
   }),
 );
 
-app.use(express.json({ limit: "100mb" }));
-app.use(express.urlencoded({ limit: "100mb", extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(sanitizeMiddleware);
+app.use("/api/", apiLimiter);
+
+app.use("/api/auth", authLimiter, require("./routes/auth"));
 app.use("/api/businesses", require("./routes/businesses"));
-app.use("/api/auth", require("./routes/auth"));
 app.use("/api/market", require("./routes/market"));
 app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/stories", require("./routes/stories"));
@@ -74,32 +81,33 @@ app.use("/api/rewards", require("./routes/rewards"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/reports", require("./routes/report"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+
 app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });
 
-app.use(globalErrorHandler);
-
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
-    logger.info("MongoDB Connected successfully");
+  .then(async () => {
+    logger.info("MongoDB Connected");
+    await setupIndexes();
     startSubscriptionCron();
     startBookingRemindersCron();
     startScheduledNotificationsCron();
   })
   .catch((err) => {
-    logger.error({ err }, "MongoDB Connection Error");
-    if (err.message.includes("ENOTFOUND")) {
-      logger.fatal(
-        "Database Connection Error: Please check your internet connection.",
-      );
-    }
+    logger.fatal({ err }, "MongoDB connection failed");
+    process.exit(1);
   });
 
-server.listen(PORT, () => {
-  logger.info({ port: PORT }, "Server started and listening");
+process.on("SIGTERM", async () => {
+  logger.info("SIGTERM received. Shutting down gracefully...");
+  server.close(async () => {
+    await mongoose.connection.close();
+    process.exit(0);
+  });
 });
 
+app.use(globalErrorHandler);
+server.listen(PORT, () => logger.info({ port: PORT }, "Server running"));
 module.exports = app;
-

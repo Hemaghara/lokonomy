@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
@@ -127,92 +128,77 @@ exports.getRedemptionOptions = async (req, res) => {
 };
 
 exports.redeemReward = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
     const { optionId } = req.body;
-    const option = REDEMPTION_OPTIONS.find((o) => o.id === optionId);
-
+    const option = REDEMPTION_OPTIONS.find(o => o.id === optionId);
+    
     if (!option) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid redemption option" });
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ success: false, message: 'Invalid option' });
     }
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findOneAndUpdate(
+      { _id: req.user.id, loyaltyPoints: { $gte: option.cost } },
+      { 
+        $inc: { loyaltyPoints: -option.cost },
+        $push: { 
+          pointsHistory: { 
+            $each: [{
+              type: 'redeem', amount: option.cost,
+              event: option.type === 'coupon' ? 'redeem_coupon' : 'redeem_upgrade',
+              description: `Redeemed: ${option.name}`,
+              createdAt: new Date(),
+            }],
+            $position: 0 
+          } 
+        }
+      },
+      { new: true, session }
+    );
+
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    if (user.loyaltyPoints < option.cost) {
-      return res.status(400).json({
-        success: false,
-        message: `Not enough points. You need ${option.cost} points but have ${user.loyaltyPoints}.`,
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ 
+        success: false, 
+        message: `Insufficient points. Need ${option.cost} points.` 
       });
     }
 
-    user.loyaltyPoints -= option.cost;
-    user.pointsHistory.unshift({
-      type: "redeem",
-      amount: option.cost,
-      event: option.type === "coupon" ? "redeem_coupon" : "redeem_upgrade",
-      description: `Redeemed: ${option.name}`,
-      createdAt: new Date(),
-    });
-
-    if (option.type === "upgrade") {
+    if (option.type === 'upgrade') {
       const now = new Date();
-      const currentExpiry =
-        user.subscription?.expiryDate &&
-        new Date(user.subscription.expiryDate) > now
-          ? new Date(user.subscription.expiryDate)
-          : now;
-      const newExpiry = new Date(
-        currentExpiry.getTime() + option.days * 24 * 60 * 60 * 1000,
+      const currentExpiry = user.subscription?.expiryDate && new Date(user.subscription.expiryDate) > now
+        ? new Date(user.subscription.expiryDate) : now;
+      const newExpiry = new Date(currentExpiry.getTime() + option.days * 86400000);
+      
+      await User.findByIdAndUpdate(
+        user._id,
+        { 'subscription.expiryDate': newExpiry, 'subscription.status': 'active',
+          'subscription.plan': option.plan },
+        { session }
       );
-
-      const planRank = { free: 0, silver: 1, gold: 2, platinum: 3 };
-      const currentRank = planRank[user.subscription?.plan] || 0;
-      const newRank = planRank[option.plan] || 0;
-
-      if (newRank >= currentRank) {
-        user.subscription = {
-          ...user.subscription?.toObject?.(),
-          plan: option.plan,
-          status: "active",
-          startDate: user.subscription?.startDate || now,
-          expiryDate: newExpiry,
-        };
-      } else {
-        user.subscription.expiryDate = newExpiry;
-      }
     }
 
-    await user.save();
-    logger.info(
-      { userId: req.user.id, optionId, cost: option.cost },
-      "Reward redeemed successfully",
-    );
-
-    res.json({
-      success: true,
-      message: `Successfully redeemed "${option.name}"!`,
+    await session.commitTransaction();
+    session.endSession();
+    
+    return res.json({
+      success: true, message: `Redeemed "${option.name}"!`,
       points: user.loyaltyPoints,
-      reward: {
-        type: option.type,
-        value: option.value || null,
-        plan: option.plan || null,
-        days: option.days || null,
-      },
+      reward: { type: option.type, value: option.value || null, plan: option.plan || null }
     });
   } catch (err) {
-    logger.error(
-      { err, userId: req.user.id, optionId: req.body.optionId },
-      "Error in redeemReward",
-    );
-    res.status(500).json({ success: false, message: err.message });
+    await session.abortTransaction();
+    session.endSession();
+    logger.error({ err, userId: req.user.id }, 'Redeem error');
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
 
 exports.claimDailyLogin = async (req, res) => {
   try {

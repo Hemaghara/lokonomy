@@ -13,7 +13,7 @@ module.exports = async function (req, res, next) {
     return res.status(401).json({ message: "No token, authorization denied" });
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "lokonomy_secret_key_123");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Support both user payload { user: { id } } and admin payload { id }
     if (decoded.user) {

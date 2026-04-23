@@ -74,9 +74,8 @@ api.interceptors.response.use(
       toast.error("You do not have permission to perform this action.");
     } else if (status === 404) {
       console.error("Resource not found:", message);
-    } else if (status === 429) {
-      toast.error("Too many requests. Please slow down.");
     } else if (status >= 500) {
+
       toast.error("Server error. Please try again later.");
     } else if (!status) {
       toast.error("Network error. Please check your connection.");

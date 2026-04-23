@@ -119,6 +119,7 @@ const userSchema = new mongoose.Schema({
     pendingDays: { type: Number, default: 0 },
     appliedDays: { type: Number, default: 0 },
     totalDiscountsGiven: { type: Number, default: 0 },
+    rewardApplied: { type: Boolean, default: false },
   },
   browsingHistory: [
     {
@@ -153,6 +154,7 @@ const userSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+  refreshToken: { type: String, default: null },
 });
 
 userSchema.index({ status: 1 });

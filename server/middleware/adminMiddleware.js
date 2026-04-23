@@ -10,10 +10,7 @@ const protectAdmin = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "lokonomy_secret_key_123",
-      );
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       req.admin = await Admin.findById(decoded.id).select("-password");
       if (!req.admin) {

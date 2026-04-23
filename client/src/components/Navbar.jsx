@@ -29,6 +29,7 @@ import {
   Zap,
   Star,
   UserCheck,
+  User as UserIcon,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -149,7 +150,9 @@ const Navbar = () => {
               <div className="flex items-center gap-2 text-white">
                 <UserCheck className="w-4 h-4 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest">
-                  Impersonating: <span className="underline">{impersonating.name}</span> ({impersonating.email})
+                  Impersonating:{" "}
+                  <span className="underline">{impersonating.name}</span> (
+                  {impersonating.email})
                 </span>
               </div>
               <button

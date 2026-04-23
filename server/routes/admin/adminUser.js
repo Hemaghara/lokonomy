@@ -9,10 +9,25 @@ const {
 } = require("../../controllers/adminUserController");
 const { protectAdmin } = require("../../middleware/adminMiddleware");
 
+const {
+  validateUserStatusUpdate,
+  validateBulkStatusUpdate,
+} = require("../../middleware/validators/userValidator");
+
 router.get("/users", protectAdmin, getAllUsers);
 router.get("/users/export", protectAdmin, exportUsers);
 router.get("/user/:id", protectAdmin, getUserDetails);
-router.put("/user/:id/status", protectAdmin, updateUserStatus);
-router.put("/users/bulk-status", protectAdmin, bulkUpdateUserStatus);
+router.put(
+  "/user/:id/status",
+  protectAdmin,
+  validateUserStatusUpdate,
+  updateUserStatus,
+);
+router.put(
+  "/users/bulk-status",
+  protectAdmin,
+  validateBulkStatusUpdate,
+  bulkUpdateUserStatus,
+);
 
 module.exports = router;
