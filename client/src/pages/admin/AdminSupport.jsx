@@ -143,9 +143,7 @@ const AdminSupport = () => {
               Support Center
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Manage user inquiries and technical issues
-          </p>
+          
         </div>
       </header>
 

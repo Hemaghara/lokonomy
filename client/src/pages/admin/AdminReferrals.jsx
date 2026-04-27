@@ -153,10 +153,7 @@ const AdminReferrals = () => {
                 Referral <span className="text-indigo-400">Analytics</span>
               </h1>
             </div>
-            <p className="flex items-center gap-2 text-slate-400 text-xs sm:text-sm ml-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              Real-time community growth tracking
-            </p>
+           
           </div>
 
           <div className="flex bg-slate-900 border border-white/8 rounded-xl p-1 gap-1 w-full sm:w-auto">

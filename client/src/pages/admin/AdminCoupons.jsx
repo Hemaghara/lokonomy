@@ -100,9 +100,7 @@ const AdminCoupons = () => {
               Coupon Management
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Create and manage platform promo codes
-          </p>
+         
         </div>
 
         <button

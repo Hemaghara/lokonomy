@@ -52,9 +52,7 @@ const AdminBusinesses = () => {
           <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-white">
             Business Management
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base">
-            Review and moderate registered businesses on Lokonomy
-          </p>
+         
         </div>
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-72">

@@ -407,12 +407,7 @@ const AdminDashboard = () => {
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter leading-none">
             Dashboard <span className="text-indigo-500 italic">Overview</span>
           </h2>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
-            <p className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-wider">
-              Live performance & ecosystem tracker
-            </p>
-          </div>
+          
         </div>
 
         <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800/80 rounded-2xl px-4 py-2.5 backdrop-blur-md">

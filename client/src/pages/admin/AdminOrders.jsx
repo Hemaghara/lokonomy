@@ -189,9 +189,7 @@ const AdminOrders = () => {
               Order Management
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Manage marketplace transactions and logistics
-          </p>
+          
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">

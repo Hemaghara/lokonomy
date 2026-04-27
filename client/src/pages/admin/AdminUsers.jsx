@@ -360,11 +360,7 @@ const AdminUsers = () => {
               User Management
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            {loading
-              ? "Loading..."
-              : `${totalUsers} registered users on the platform`}
-          </p>
+         
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">

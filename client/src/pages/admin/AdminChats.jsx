@@ -59,9 +59,7 @@ const AdminChats = () => {
               Chat Monitoring
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Analyze platform conversation volumes and manage reports
-          </p>
+         
         </div>
       </header>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

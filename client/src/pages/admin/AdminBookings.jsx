@@ -73,9 +73,7 @@ const AdminBookings = () => {
               Service Bookings
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Manage appointments and service requests
-          </p>
+        
         </div>
       </header>
 

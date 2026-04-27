@@ -20,6 +20,7 @@ import {
   FiX,
   FiUserCheck,
   FiShield,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 const StatCard = ({ icon: Icon, label, count, color }) => {

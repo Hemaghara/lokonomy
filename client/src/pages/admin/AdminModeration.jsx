@@ -208,9 +208,7 @@ const AdminModeration = () => {
               Moderation Center
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Manage reported content and platform safety
-          </p>
+          
         </div>
       </header>
 

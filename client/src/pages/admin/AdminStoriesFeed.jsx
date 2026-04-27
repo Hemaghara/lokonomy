@@ -472,9 +472,7 @@ const AdminStoriesFeed = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Stories & Feed <span className={ac.text}>Management</span>
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Monitor and moderate all stories and community feed posts.
-            </p>
+           
           </div>
           <div className="flex items-center gap-3 self-start sm:self-auto">
             <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl">

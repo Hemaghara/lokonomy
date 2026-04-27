@@ -150,9 +150,7 @@ const AdminBusinessVerification = () => {
               KYC Verification
             </h2>
           </div>
-          <p className="text-slate-500 text-sm pl-10.5">
-            Approve or reject business verification requests
-          </p>
+          
         </div>
       </header>
 

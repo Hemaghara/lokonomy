@@ -283,9 +283,7 @@ const AdminRewards = () => {
                 Rewards &amp; <span className="text-amber-400">Loyalty</span>
               </span>
             </h1>
-            <p className="text-slate-500 font-bold text-xs sm:text-sm uppercase tracking-widest pl-1">
-              Admin Control Panel &bull; Point Management
-            </p>
+            
           </div>
 
           <div className="flex bg-slate-900 shadow-2xl p-1.5 rounded-2xl border border-slate-800/80 backdrop-blur-xl self-stretch lg:self-auto group">

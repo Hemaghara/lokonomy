@@ -94,9 +94,7 @@ const AdminReviews = () => {
               </span>
               Review <span className="text-indigo-500">Management</span>
             </h1>
-            <p className="text-slate-400 mt-2 font-medium">
-              Control and analyze platform feedback
-            </p>
+          
           </div>
 
           <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800/80 backdrop-blur-sm self-stretch md:self-auto">

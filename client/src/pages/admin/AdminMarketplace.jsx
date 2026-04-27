@@ -445,9 +445,7 @@ const AdminMarketplace = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Marketplace <span className="text-indigo-400">Management</span>
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Monitor, ban or suspend listings across the platform.
-            </p>
+           
           </div>
 
           <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-2xl self-start sm:self-auto">
