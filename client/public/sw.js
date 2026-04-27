@@ -1,4 +1,4 @@
-const CACHE_NAME = "lokonomy-v2";
+const CACHE_NAME = "lokonomy-v3";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
@@ -35,9 +35,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  // Skip potentially problematic requests
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith("http")) return;
+
+  // Don't intercept requests for assets that are not in our cache list
+  // especially if they are fingerprinted (Vite assets)
+  const isAsset = url.pathname.startsWith('/assets/');
 
   event.respondWith(
     (async () => {
@@ -47,35 +50,30 @@ self.addEventListener("fetch", (event) => {
           return cachedResponse;
         }
 
-        try {
-          const networkResponse = await fetch(event.request);
-          
-          // Optionally cache successful responses for specific assets
-          // if (networkResponse.ok && url.pathname.startsWith('/assets/')) {
-          //   const cache = await caches.open(CACHE_NAME);
-          //   cache.put(event.request, networkResponse.clone());
-          // }
-
-          return networkResponse;
-        } catch (fetchError) {
-          console.error("[Service Worker] Network fetch failed:", fetchError);
-
-          if (event.request.mode === "navigate") {
-            const fallback = await caches.match("/");
-            if (fallback) return fallback;
-          }
-
-          // Return a structured error response instead of letting it fail or returning undefined
-          return new Response("Offline or Network Error", { 
-            status: 503, 
-            statusText: "Service Unavailable",
-            headers: { "Content-Type": "text/plain" }
-          });
+        const networkResponse = await fetch(event.request);
+        
+        // If it's a 404 on an asset, it means we have a stale version of index.html
+        // pointing to a file that no longer exists on the server.
+        if (!networkResponse || networkResponse.status === 404) {
+           if (isAsset) {
+             // Return a proper error for assets so the browser doesn't try to parse HTML
+             return new Response("Asset not found", { status: 404, statusText: "Not Found" });
+           }
         }
-      } catch (e) {
-        console.error("[Service Worker] Serious error in fetch handler:", e);
-        // Fallback to network directly if SW logic fails
-        return fetch(event.request);
+
+        return networkResponse;
+      } catch (fetchError) {
+        console.error("[Service Worker] Network fetch failed:", fetchError);
+
+        if (event.request.mode === "navigate") {
+          const fallback = await caches.match("/");
+          if (fallback) return fallback;
+        }
+
+        return new Response("Offline", { 
+          status: 503, 
+          headers: { "Content-Type": "text/plain" }
+        });
       }
     })(),
   );
