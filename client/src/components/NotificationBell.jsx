@@ -178,6 +178,7 @@ const NotificationBell = () => {
       <button
         id="notification-bell-btn"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notifications"
         className="relative p-2.5 bg-white/3 hover:bg-white/8 rounded-xl border border-white/5 transition-all group/tool"
       >
         <Bell

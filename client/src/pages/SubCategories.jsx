@@ -68,7 +68,7 @@ const SubCategories = () => {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors mb-6"
+          className="flex items-center gap-2 text-white hover:text-slate-300 text-xs font-medium transition-colors mb-6"
         >
           <HiOutlineArrowLeft className="text-sm" /> Back to Directory
         </motion.button>
@@ -90,7 +90,7 @@ const SubCategories = () => {
                 <h1 className="text-white font-bold text-xl sm:text-2xl leading-tight">
                   {categoryData.name}
                 </h1>
-                <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
+                <p className="text-white text-xs mt-0.5 flex items-center gap-1">
                   <HiOutlineMapPin className="text-rose-400 text-xs" />
                   {user?.locationName ||
                     (taluka && district
