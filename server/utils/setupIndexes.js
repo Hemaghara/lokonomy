@@ -18,7 +18,7 @@ const setupIndexes = async () => {
         {
           key: { phoneNumber: 1 },
           partialFilterExpression: {
-            phoneNumber: { $exists: true, $ne: null },
+            phoneNumber: { $exists: true, $type: "string" },
           },
         },
         { key: { status: 1, createdAt: -1 } },
@@ -69,7 +69,7 @@ const setupIndexes = async () => {
         {
           key: { razorpayOrderId: 1 },
           unique: true,
-          partialFilterExpression: { razorpayOrderId: { $ne: null } },
+          partialFilterExpression: { razorpayOrderId: { $type: "string" } },
         },
         { key: { status: 1, createdAt: -1 } },
       ]);
