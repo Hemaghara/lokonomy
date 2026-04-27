@@ -38,17 +38,42 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith("http")) return;
 
+  const isNavigation = event.request.mode === "navigate";
   const isAsset = url.pathname.startsWith("/assets/");
 
   event.respondWith(
     (async () => {
-      try {
-        const cachedResponse = await caches.match(event.request);
-        if (cachedResponse) {
-          return cachedResponse;
+      // For navigation requests (index.html), try the network first.
+      // This ensures we always have the latest HTML that points to the correct JS bundles.
+      if (isNavigation) {
+        try {
+          const networkResponse = await fetch(event.request);
+          if (networkResponse && networkResponse.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          }
+        } catch (error) {
+          console.log("[Service Worker] Navigation fetch failed, serving from cache", error);
         }
+      }
 
+      // Check cache first for all other requests
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      try {
         const networkResponse = await fetch(event.request);
+
+        // If it's a valid response, consider caching it if it's an asset
+        if (networkResponse && networkResponse.status === 200) {
+          if (isAsset) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(event.request, networkResponse.clone());
+          }
+        }
 
         if (!networkResponse || networkResponse.status === 404) {
           if (isAsset) {
@@ -63,8 +88,8 @@ self.addEventListener("fetch", (event) => {
       } catch (fetchError) {
         console.error("[Service Worker] Network fetch failed:", fetchError);
 
-        if (event.request.mode === "navigate") {
-          const fallback = await caches.match("/");
+        if (isNavigation) {
+          const fallback = await caches.match("/") || await caches.match("/index.html");
           if (fallback) return fallback;
         }
 
