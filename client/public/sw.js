@@ -38,9 +38,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith("http")) return;
 
-  // Don't intercept requests for assets that are not in our cache list
-  // especially if they are fingerprinted (Vite assets)
-  const isAsset = url.pathname.startsWith('/assets/');
+  const isAsset = url.pathname.startsWith("/assets/");
 
   event.respondWith(
     (async () => {
@@ -51,14 +49,14 @@ self.addEventListener("fetch", (event) => {
         }
 
         const networkResponse = await fetch(event.request);
-        
-        // If it's a 404 on an asset, it means we have a stale version of index.html
-        // pointing to a file that no longer exists on the server.
+
         if (!networkResponse || networkResponse.status === 404) {
-           if (isAsset) {
-             // Return a proper error for assets so the browser doesn't try to parse HTML
-             return new Response("Asset not found", { status: 404, statusText: "Not Found" });
-           }
+          if (isAsset) {
+            return new Response("Asset not found", {
+              status: 404,
+              statusText: "Not Found",
+            });
+          }
         }
 
         return networkResponse;
@@ -70,9 +68,9 @@ self.addEventListener("fetch", (event) => {
           if (fallback) return fallback;
         }
 
-        return new Response("Offline", { 
-          status: 503, 
-          headers: { "Content-Type": "text/plain" }
+        return new Response("Offline", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" },
         });
       }
     })(),
