@@ -193,7 +193,7 @@ const BusinessDetails = () => {
       <div className="bd max-w-6xl mx-auto px-4">
         <Link to="/explore" className="inline-block">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors">
+            <div className="flex items-center gap-2 text-white hover:text-slate-300 text-xs font-medium transition-colors">
               <HiOutlineArrowLeft className="text-sm" /> Back to Results
             </div>
             <button
@@ -201,7 +201,7 @@ const BusinessDetails = () => {
                 e.preventDefault();
                 setShowReport(true);
               }}
-              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-[#1f2a3d] text-slate-500 hover:text-rose-400 hover:border-rose-900/40 hover:bg-rose-950/20 transition-all"
+              className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-[#1f2a3d] text-white hover:text-rose-400 hover:border-rose-900/40 hover:bg-rose-950/20 transition-all"
             >
               <FiFlag className="text-xs" /> Report Business
             </button>
@@ -249,7 +249,7 @@ const BusinessDetails = () => {
                 <span className="text-amber-400 font-semibold text-sm">
                   {business.rating?.toFixed(1) || "0.0"}
                 </span>
-                <span className="text-slate-600 text-xs">
+                <span className="text-white text-xs">
                   ({business.reviews?.length || 0} reviews)
                 </span>
               </div>
@@ -263,10 +263,10 @@ const BusinessDetails = () => {
                   <HiOutlineTag className="text-xs" />
                   {business.mainCategory}
                 </span>
-                <span className="px-3 py-1 bg-[#0d1424] border border-[#1f2a3d] text-slate-500 rounded-lg text-[11px] font-semibold">
+                <span className="px-3 py-1 bg-[#0d1424] border border-[#1f2a3d] text-white rounded-lg text-[11px] font-semibold">
                   {business.subCategory}
                 </span>
-                <span className="flex items-center gap-1 px-3 py-1 bg-[#0d1424] border border-[#1f2a3d] text-slate-500 rounded-lg text-[11px] font-semibold">
+                <span className="flex items-center gap-1 px-3 py-1 bg-[#0d1424] border border-[#1f2a3d] text-white rounded-lg text-[11px] font-semibold">
                   <HiOutlineMapPin className="text-rose-400 text-xs" />
                   {business.locationAddress ||
                     business.address ||
@@ -307,6 +307,7 @@ const BusinessDetails = () => {
                 type="business"
                 id={business._id}
                 className="flex items-center justify-center gap-2 sm:w-44"
+                aria-label="Add to wishlist"
               />
             </div>
           </div>
