@@ -354,7 +354,6 @@ exports.submitVerification = async (req, res) => {
     business.verificationStatus = "pending";
     business.kycDocuments = business.kycDocuments || [];
     business.kycDocuments.push(documentFile);
-    // You could also save documentType/Number if needed
     await business.save();
 
     res.json({ success: true, message: "Verification submitted", business });

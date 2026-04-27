@@ -113,7 +113,7 @@ exports.getFeeds = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-// GET /api/admin/stories-feed/story/:id
+
 exports.getStoryDetails = async (req, res) => {
   try {
     const story = await Story.findById(req.params.id)

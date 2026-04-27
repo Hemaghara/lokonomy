@@ -81,7 +81,6 @@ exports.updateTicketStatus = async (req, res) => {
     if (status === "closed") ticket.closedAt = new Date();
     await ticket.save();
 
-    // Log the audit
     await adminAuditController.logAction(
       req.admin.id,
       "TICKET_STATUS_UPDATE",
