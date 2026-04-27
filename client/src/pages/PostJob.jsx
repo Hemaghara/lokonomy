@@ -6,6 +6,7 @@ import { jobService } from "../services";
 import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
 import { usePlanLimits } from "../hooks/usePlanLimits";
+import { FiBriefcase, FiTarget, FiPhone } from "react-icons/fi";
 const CustomDropdown = ({
   name,
   value,
@@ -300,7 +301,7 @@ const PostJob = () => {
             onSubmit={handleSubmit}
             className="bg-white/2.5 border border-white/8 rounded-2xl p-7 sm:p-10 backdrop-blur-sm shadow-2xl shadow-black/30 space-y-10"
           >
-            <Section icon="📋" title="Role Specifications" delay={0.15}>
+            <Section icon={<FiBriefcase className="text-primary" />} title="Role Specifications" delay={0.15}>
               <Field label="Job Position" required>
                 <input
                   type="text"
@@ -371,7 +372,7 @@ const PostJob = () => {
 
             <div className="h-px bg-linear-to-r from-transparent via-white/8 to-transparent" />
 
-            <Section icon="🎯" title="Requirements & Value" delay={0.2}>
+            <Section icon={<FiTarget className="text-primary" />} title="Requirements & Value" delay={0.2}>
               <Field label="Education" required>
                 <CustomDropdown
                   name="education"
@@ -442,7 +443,7 @@ const PostJob = () => {
 
             <div className="h-px bg-linear-to-r from-transparent via-white/8 to-transparent" />
 
-            <Section icon="📞" title="Contact Information" delay={0.25}>
+            <Section icon={<FiPhone className="text-primary" />} title="Contact Information" delay={0.25}>
               <Field label="Hiring Officer" required>
                 <input
                   type="text"
