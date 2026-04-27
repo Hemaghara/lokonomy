@@ -301,7 +301,7 @@ const Login = () => {
             <h1 className="text-white text-2xl md:text-3xl font-bold mb-3 tracking-tight">
               {step === "credentials" ? "Welcome Back" : "Security Check"}
             </h1>
-            <p className="text-text-dim text-sm max-w-70 mx-auto">
+            <p className="text-white text-sm max-w-70 mx-auto">
               {step === "credentials"
                 ? "Enter your credentials to access your local business dashboard"
                 : "Please enter the verification code sent to your email"}

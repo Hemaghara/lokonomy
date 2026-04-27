@@ -254,6 +254,7 @@ const AIGuide = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
+            aria-label="Open chat"
             className="w-14 h-14 rounded-full bg-linear-to-br from-primary to-secondary text-white shadow-2xl flex items-center justify-center hover:scale-110 transition-transform group"
           >
             <Sparkles className="group-hover:rotate-12 transition-transform" />
