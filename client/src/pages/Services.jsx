@@ -104,18 +104,18 @@ const Services = () => {
         <div className="flex flex-wrap items-center gap-3 mb-10 text-[10px] font-bold uppercase tracking-[0.2em]">
           <Link
             to="/explore"
-            className="text-text-dim hover:text-white transition-colors"
+            className="text-white hover:text-white transition-colors"
           >
             Directory
           </Link>
-          <span className="text-white/10">❯</span>
+          <span className="text-white">❯</span>
           <Link
             to={`/category/${category}`}
-            className="text-text-dim hover:text-white transition-colors"
+            className="text-white hover:text-white transition-colors"
           >
             {category}
           </Link>
-          <span className="text-white/10">❯</span>
+          <span className="text-white">❯</span>
           <span className="text-primary">{subcategory || "Browse All"}</span>
         </div>
 
@@ -301,7 +301,9 @@ const Services = () => {
                       onClick={() => navigate(`/business/${shop._id}`)}
                     >
                       <div className="absolute top-4 right-4 z-10">
-                        <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                        <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
+                        aria-label="Rating"
+                        >
                           <span className="text-xs">
                             <HiStar />
                           </span>
@@ -312,7 +314,7 @@ const Services = () => {
                       </div>
 
                       <div className="absolute top-4 right-14 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <WishlistButton type="business" id={shop._id} />
+                        <WishlistButton type="business" id={shop._id} aria-label="Add to wishlist" />
                       </div>
 
                       <div className="p-8 flex-1">
