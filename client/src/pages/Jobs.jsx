@@ -30,7 +30,6 @@ import { FiExternalLink, FiFlag } from "react-icons/fi";
 import WishlistButton from "../components/WishlistButton";
 import ReportModal from "../components/ReportModal";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
 const getDeadlineInfo = (deadline) => {
   if (!deadline) return null;
   const diff = Math.ceil(
@@ -59,7 +58,6 @@ const JobTypeBadge = ({ type }) => {
   );
 };
 
-// ─── Skeleton Card ───────────────────────────────────────────────────────────
 const SkeletonCard = () => (
   <div className="bg-[#111827] border border-[#1f2a3d] rounded-2xl overflow-hidden animate-pulse">
     <div className="p-5 flex-1 flex flex-col">
@@ -84,7 +82,6 @@ const SkeletonCard = () => (
   </div>
 );
 
-// ─── Main Component ────────────────────────────────────────────────────────
 const Jobs = () => {
   const navigate = useNavigate();
   const {
@@ -225,7 +222,6 @@ const Jobs = () => {
       `}</style>
 
       <div className="jb max-w-6xl mx-auto px-4">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -262,9 +258,7 @@ const Jobs = () => {
           </div>
         </motion.div>
 
-        {/* Filters Panel */}
         <div className={`${card} p-4 mb-6 space-y-4`}>
-          {/* Keyword Search */}
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <HiOutlineMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-base pointer-events-none" />
@@ -298,7 +292,6 @@ const Jobs = () => {
           </form>
 
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-            {/* Gender filter */}
             <div className="no-sb flex items-center gap-2 overflow-x-auto shrink-0">
               <HiOutlineFunnel className="text-slate-600 text-base shrink-0" />
               {genderFilters.map((f) => (
@@ -319,7 +312,6 @@ const Jobs = () => {
 
             <div className="h-px lg:h-7 w-full lg:w-px bg-[#1f2a3d] shrink-0" />
 
-            {/* Job Type filter */}
             <div className="no-sb flex items-center gap-2 overflow-x-auto shrink-0">
               {jobTypeFilters.map((f) => (
                 <button
@@ -339,7 +331,6 @@ const Jobs = () => {
 
             <div className="h-px lg:h-7 w-full lg:w-px bg-[#1f2a3d] shrink-0" />
 
-            {/* Location dropdowns */}
             <div className="flex flex-wrap gap-3 flex-1 w-full">
               <div className="relative flex-1 min-w-36">
                 <label htmlFor="district" className="sr-only">
@@ -390,7 +381,6 @@ const Jobs = () => {
           </div>
         </div>
 
-        {/* Job Grid */}
         <div className="min-h-64">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -429,7 +419,6 @@ const Jobs = () => {
                       onClick={() => navigate(`/jobs/${job._id}`)}
                     >
                       <div className="p-5 flex-1 flex flex-col">
-                        {/* Top row: icon + badges */}
                         <div className="flex items-start justify-between gap-2 mb-4">
                           <div className="w-11 h-11 rounded-xl bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center shrink-0 group-hover:border-violet-500/30 transition-colors">
                             <HiOutlineBriefcase className="text-violet-400 text-xl" />
@@ -482,7 +471,6 @@ const Jobs = () => {
                           </div>
                         </div>
 
-                        {/* Title & Salary */}
                         <h3 className="text-slate-100 font-semibold text-base leading-snug mb-1 group-hover:text-violet-400 transition-colors line-clamp-1">
                           {job.position}
                         </h3>
@@ -494,7 +482,6 @@ const Jobs = () => {
                           </span>
                         </div>
 
-                        {/* Meta rows */}
                         <div className="space-y-2 mb-4">
                           <div className="flex items-center gap-2.5 text-xs text-slate-400">
                             <HiOutlineMapPin className="text-rose-400 shrink-0 text-sm" />
@@ -518,7 +505,6 @@ const Jobs = () => {
                           </div>
                         </div>
 
-                        {/* #11 Vacancy Fill-Rate bar */}
                         <div className="mt-auto">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] text-slate-600">
@@ -541,7 +527,6 @@ const Jobs = () => {
                         </div>
                       </div>
 
-                      {/* Actions */}
                       <div className="border-t border-[#1f2a3d] p-4 flex flex-col gap-2">
                         <div className="flex gap-2">
                           {applied ? (

@@ -74,7 +74,6 @@ const AdminBusinesses = () => {
         </div>
       ) : (
         <>
-          {/* Mobile Card View (Data-Dense) */}
           <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredBusinesses.map((biz) => (
               <div key={biz._id} className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 space-y-4 hover:border-indigo-500/30 transition-all">
@@ -122,7 +121,6 @@ const AdminBusinesses = () => {
             ))}
           </div>
 
-          {/* Desktop Table View (Efficient) */}
           <div className="hidden lg:block overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse min-w-225">
               <thead className="bg-slate-950/20 text-slate-500 text-[10px] font-black uppercase tracking-widest">
