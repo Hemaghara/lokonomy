@@ -28,7 +28,7 @@ const ChatBox = ({
   chatType = "product",
   businessId,
   businessName,
-  ownerId, 
+  ownerId,
 }) => {
   const { user } = useUser();
 
@@ -42,13 +42,13 @@ const ChatBox = ({
   const inputRef = useRef(null);
 
   const isBusinessInquiry = chatType === "business_inquiry";
-  
+
   const isSeller = !isBusinessInquiry && user?.id === sellerId;
   const isBusinessOwner = isBusinessInquiry && user?.id === ownerId;
-  
-  const buyerId = propBuyerId || (isSeller || isBusinessOwner ? null : user?.id);
-  const effectiveSellerId = isBusinessInquiry ? ownerId : sellerId;
 
+  const buyerId =
+    propBuyerId || (isSeller || isBusinessOwner ? null : user?.id);
+  const effectiveSellerId = isBusinessInquiry ? ownerId : sellerId;
 
   const generateChatRoom = (pId, bId, sId, type, bizId) => {
     if (!bId || !sId) return null;
@@ -59,12 +59,23 @@ const ChatBox = ({
     return `${pId}_${ids[0]}_${ids[1]}`;
   };
 
-  const chatRoom = generateChatRoom(productId, buyerId, effectiveSellerId, chatType, businessId);
+  const chatRoom = generateChatRoom(
+    productId,
+    buyerId,
+    effectiveSellerId,
+    chatType,
+    businessId,
+  );
 
-  const displayName = otherUserName || 
-    (isBusinessInquiry 
-      ? (isBusinessOwner ? "Customer" : businessName) 
-      : (isSeller ? "Customer" : "Seller"));
+  const displayName =
+    otherUserName ||
+    (isBusinessInquiry
+      ? isBusinessOwner
+        ? "Customer"
+        : businessName
+      : isSeller
+        ? "Customer"
+        : "Seller");
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,7 +84,10 @@ const ChatBox = ({
   useEffect(() => {
     if (!user || !chatRoom) return;
 
-    const socket = connectSocket({ userId: user.id || user._id, isAdmin: false });
+    const socket = connectSocket({
+      userId: user.id || user._id,
+      isAdmin: false,
+    });
     joinRoom(chatRoom);
 
     socket.on("receiveMessage", (message) => {
@@ -130,9 +144,13 @@ const ChatBox = ({
     try {
       setLoading(true);
       const res = isBusinessInquiry
-        ? await chatService.getBusinessMessages(businessId, buyerId, effectiveSellerId)
+        ? await chatService.getBusinessMessages(
+            businessId,
+            buyerId,
+            effectiveSellerId,
+          )
         : await chatService.getMessages(productId, buyerId, effectiveSellerId);
-      
+
       if (res.data.success) {
         setMessages(res.data.messages);
         emitMarkRead(chatRoom, user.id);
@@ -150,7 +168,8 @@ const ChatBox = ({
 
     setSending(true);
 
-    const receiverId = user.id === effectiveSellerId ? buyerId : effectiveSellerId;
+    const receiverId =
+      user.id === effectiveSellerId ? buyerId : effectiveSellerId;
 
     socketSendMessage({
       chatRoom,
@@ -213,9 +232,10 @@ const ChatBox = ({
 
   if (!user || !chatRoom) return null;
 
-  const headerColorClass = (isSeller || isBusinessOwner)
-    ? "bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20"
-    : "bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-500/20";
+  const headerColorClass =
+    isSeller || isBusinessOwner
+      ? "bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20"
+      : "bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-500/20";
 
   return (
     <motion.div
@@ -248,7 +268,9 @@ const ChatBox = ({
               {displayName}
             </p>
             {isBusinessInquiry && !isBusinessOwner && (
-              <span className="text-[10px] text-violet-400/80 font-medium">Business Inquiry</span>
+              <span className="text-[10px] text-violet-400/80 font-medium">
+                Business Inquiry
+              </span>
             )}
           </div>
         </div>
@@ -275,18 +297,24 @@ const ChatBox = ({
             </div>
             <div>
               <p className="text-slate-400 text-sm font-medium">
-                {isSeller || isBusinessOwner ? "No messages yet" : "Start the conversation"}
+                {isSeller || isBusinessOwner
+                  ? "No messages yet"
+                  : "Start the conversation"}
               </p>
               <p className="text-slate-600 text-xs mt-1">
                 {isSeller || isBusinessOwner ? (
                   <>
                     Waiting for inquiries about{" "}
-                    <span className="text-violet-400">{isBusinessInquiry ? businessName : productName}</span>
+                    <span className="text-violet-400">
+                      {isBusinessInquiry ? businessName : productName}
+                    </span>
                   </>
                 ) : (
                   <>
                     Send a message to{" "}
-                    <span className="text-violet-400">{isBusinessInquiry ? businessName : productName}</span>
+                    <span className="text-violet-400">
+                      {isBusinessInquiry ? businessName : productName}
+                    </span>
                   </>
                 )}
               </p>
@@ -314,7 +342,7 @@ const ChatBox = ({
                     <div
                       className={`max-w-[75%] px-3.5 py-2 rounded-2xl relative group ${
                         isMine
-                          ? (isSeller || isBusinessOwner)
+                          ? isSeller || isBusinessOwner
                             ? "bg-linear-to-br from-emerald-600 to-teal-600 text-white rounded-br-md shadow-lg shadow-emerald-900/20"
                             : "bg-linear-to-br from-violet-600 to-indigo-600 text-white rounded-br-md shadow-lg shadow-violet-900/20"
                           : "bg-white/6 text-slate-200 rounded-bl-md border border-white/4"
@@ -400,7 +428,11 @@ const ChatBox = ({
             type="text"
             value={newMessage}
             onChange={handleTyping}
-            placeholder={isSeller || isBusinessOwner ? "Reply to customer…" : "Ask about the business…"}
+            placeholder={
+              isSeller || isBusinessOwner
+                ? "Reply to customer…"
+                : "Ask about the business…"
+            }
             className="flex-1 bg-transparent text-sm text-white placeholder-slate-600 outline-none py-1.5"
           />
           <button

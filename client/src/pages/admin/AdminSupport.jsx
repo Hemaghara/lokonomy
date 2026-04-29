@@ -143,7 +143,6 @@ const AdminSupport = () => {
               Support Center
             </h2>
           </div>
-          
         </div>
       </header>
 

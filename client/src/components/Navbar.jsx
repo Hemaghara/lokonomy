@@ -58,7 +58,7 @@ const Navbar = () => {
   const endImpersonation = () => {
     localStorage.removeItem("impersonationToken");
     localStorage.removeItem("impersonatedUser");
-    localStorage.removeItem("adminToken"); // If the admin token was replaced or if we want a fresh start
+    localStorage.removeItem("adminToken");
     window.location.href = "/admin/users";
   };
 

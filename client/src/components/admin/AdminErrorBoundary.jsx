@@ -35,11 +35,11 @@ class AdminErrorBoundary extends React.Component {
               An unexpected error occurred in this section of the admin panel.
               Don't worry, your data is safe.
             </p>
-            
+
             <div className="bg-slate-950/50 rounded-2xl p-4 mb-8 border border-white/5 text-left overflow-auto max-h-32">
-               <code className="text-[10px] text-rose-300 font-mono">
-                  {this.state.error?.toString()}
-               </code>
+              <code className="text-[10px] text-rose-300 font-mono">
+                {this.state.error?.toString()}
+              </code>
             </div>
 
             <button

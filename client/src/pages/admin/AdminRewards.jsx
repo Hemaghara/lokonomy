@@ -283,7 +283,6 @@ const AdminRewards = () => {
                 Rewards &amp; <span className="text-amber-400">Loyalty</span>
               </span>
             </h1>
-            
           </div>
 
           <div className="flex bg-slate-900 shadow-2xl p-1.5 rounded-2xl border border-slate-800/80 backdrop-blur-xl self-stretch lg:self-auto group">

@@ -66,7 +66,11 @@ const WishlistButton = ({ type, id, className = "", onToggle }) => {
           exit={{ scale: 0.8, opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          {isSaved ? <HiHeart className="text-xl" /> : <HiOutlineHeart className="text-xl" />}
+          {isSaved ? (
+            <HiHeart className="text-xl" />
+          ) : (
+            <HiOutlineHeart className="text-xl" />
+          )}
         </motion.div>
       </AnimatePresence>
     </motion.button>

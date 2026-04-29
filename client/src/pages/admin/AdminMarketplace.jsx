@@ -445,7 +445,6 @@ const AdminMarketplace = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Marketplace <span className="text-indigo-400">Management</span>
             </h1>
-           
           </div>
 
           <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-2xl self-start sm:self-auto">

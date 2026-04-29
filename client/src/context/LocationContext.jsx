@@ -20,7 +20,6 @@ export const LocationProvider = ({ children }) => {
     const districts = getDistricts(state);
     setAvailableDistricts(districts);
 
-   
     if (district && !districts.includes(district)) {
       setDistrict("");
       setTaluka("");

@@ -71,15 +71,25 @@ const BusinessAnalytics = ({ businessId, plan }) => {
 
         const peakEntry = chartData.reduce(
           (max, v) => (v.views > max.views ? v : max),
-          chartData[0] || { views: 0, name: "" }
+          chartData[0] || { views: 0, name: "" },
         );
 
         const avg =
           chartData.length > 0
-            ? Math.round(chartData.reduce((s, v) => s + v.views, 0) / chartData.length)
+            ? Math.round(
+                chartData.reduce((s, v) => s + v.views, 0) / chartData.length,
+              )
             : 0;
 
-        setStats({ total, growth, peak: peakEntry?.views || 0, peakDay: peakEntry?.name || "", avg, thisWeek, lastWeek });
+        setStats({
+          total,
+          growth,
+          peak: peakEntry?.views || 0,
+          peakDay: peakEntry?.name || "",
+          avg,
+          thisWeek,
+          lastWeek,
+        });
         setData(chartData);
       } catch (err) {
         if (err.response?.status === 403) setIsLocked(true);
@@ -93,12 +103,14 @@ const BusinessAnalytics = ({ businessId, plan }) => {
 
   const formatDate = (str) => {
     try {
-      return new Date(str).toLocaleDateString("en-US", { day: "numeric", month: "short" });
+      return new Date(str).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+      });
     } catch {
       return str;
     }
   };
-
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -121,7 +133,17 @@ const BusinessAnalytics = ({ businessId, plan }) => {
     <div className="relative rounded-3xl bg-linear-to-br from-[#0a0f1d] to-[#0d1020] border border-white/5 p-16 overflow-hidden flex flex-col items-center">
       <div className="absolute inset-0 opacity-10 blur-sm pointer-events-none">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={[{ v: 10 }, { v: 30 }, { v: 20 }, { v: 50 }, { v: 40 }, { v: 70 }, { v: 55 }]}>
+          <AreaChart
+            data={[
+              { v: 10 },
+              { v: 30 },
+              { v: 20 },
+              { v: 50 },
+              { v: 40 },
+              { v: 70 },
+              { v: 55 },
+            ]}
+          >
             <Area type="monotone" dataKey="v" stroke="#818cf8" fill="#4f46e5" />
           </AreaChart>
         </ResponsiveContainer>
@@ -130,7 +152,9 @@ const BusinessAnalytics = ({ businessId, plan }) => {
         <div className="w-20 h-20 rounded-full bg-yellow-500/10 border-2 border-yellow-500/25 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(234,179,8,0.15)]">
           <Lock size={32} className="text-yellow-400" />
         </div>
-        <h3 className="text-white text-2xl font-extrabold mb-3">Premium Insights</h3>
+        <h3 className="text-white text-2xl font-extrabold mb-3">
+          Premium Insights
+        </h3>
         <p className="text-slate-500 text-sm leading-relaxed mb-8">
           Unlock granular visitor analytics, growth trends, and performance
           tracking with our{" "}
@@ -207,10 +231,8 @@ const BusinessAnalytics = ({ businessId, plan }) => {
     },
   ];
 
-
   return (
     <div className="bg-linear-to-br from-[#080e1a] via-[#0a1020] to-[#080c18] rounded-3xl border border-white/[0.07] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.6)] flex flex-col gap-7">
-
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -232,15 +254,16 @@ const BusinessAnalytics = ({ businessId, plan }) => {
         <div className="flex bg-white/4 border border-white/[0.07] rounded-2xl p-1 gap-1">
           {[
             { id: "area", label: "Area", icon: <Activity size={12} /> },
-            { id: "bar",  label: "Bar",  icon: <BarChart2 size={12} /> },
+            { id: "bar", label: "Bar", icon: <BarChart2 size={12} /> },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveChart(t.id)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-bold transition-all border-none cursor-pointer
-                ${activeChart === t.id
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-300 bg-transparent"
+                ${
+                  activeChart === t.id
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-300 bg-transparent"
                 }`}
             >
               {t.icon} {t.label}
@@ -262,14 +285,20 @@ const BusinessAnalytics = ({ businessId, plan }) => {
               <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                 {card.label}
               </span>
-              <div className={`w-7 h-7 rounded-lg ${card.colorBg} border ${card.colorBorder} flex items-center justify-center ${card.colorText}`}>
+              <div
+                className={`w-7 h-7 rounded-lg ${card.colorBg} border ${card.colorBorder} flex items-center justify-center ${card.colorText}`}
+              >
                 {card.icon}
               </div>
             </div>
-            <div className={`${card.colorText} text-2xl font-extrabold leading-none`}>
+            <div
+              className={`${card.colorText} text-2xl font-extrabold leading-none`}
+            >
               {card.value}
             </div>
-            <div className="text-slate-600 text-[10px] font-semibold">{card.sub}</div>
+            <div className="text-slate-600 text-[10px] font-semibold">
+              {card.sub}
+            </div>
           </motion.div>
         ))}
       </div>
@@ -284,14 +313,21 @@ const BusinessAnalytics = ({ businessId, plan }) => {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             {activeChart === "area" ? (
-              <AreaChart data={recentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart
+                data={recentData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#6366f1" stopOpacity={0.35} />
                     <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.04)"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="name"
                   stroke="#1e293b"
@@ -312,14 +348,23 @@ const BusinessAnalytics = ({ businessId, plan }) => {
                 />
                 <Tooltip
                   content={<CustomTooltip />}
-                  cursor={{ stroke: "rgba(99,102,241,0.35)", strokeWidth: 1, strokeDasharray: "4 4" }}
+                  cursor={{
+                    stroke: "rgba(99,102,241,0.35)",
+                    strokeWidth: 1,
+                    strokeDasharray: "4 4",
+                  }}
                 />
                 {stats.avg > 0 && (
                   <ReferenceLine
                     y={stats.avg}
                     stroke="rgba(99,102,241,0.3)"
                     strokeDasharray="5 5"
-                    label={{ value: `avg ${stats.avg}`, position: "right", fill: "#475569", fontSize: 9 }}
+                    label={{
+                      value: `avg ${stats.avg}`,
+                      position: "right",
+                      fill: "#475569",
+                      fontSize: 9,
+                    }}
                   />
                 )}
                 <Area
@@ -329,19 +374,35 @@ const BusinessAnalytics = ({ businessId, plan }) => {
                   strokeWidth={3}
                   fill="url(#areaFill)"
                   dot={false}
-                  activeDot={{ r: 5, fill: "#6366f1", stroke: "#0a0f1d", strokeWidth: 2 }}
+                  activeDot={{
+                    r: 5,
+                    fill: "#6366f1",
+                    stroke: "#0a0f1d",
+                    strokeWidth: 2,
+                  }}
                   animationDuration={1200}
                 />
               </AreaChart>
             ) : (
-              <BarChart data={recentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart
+                data={recentData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#818cf8" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.85} />
+                    <stop
+                      offset="100%"
+                      stopColor="#4f46e5"
+                      stopOpacity={0.85}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.04)"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="name"
                   stroke="#1e293b"
@@ -352,16 +413,31 @@ const BusinessAnalytics = ({ businessId, plan }) => {
                   dy={10}
                   tick={{ fill: "#334155" }}
                 />
-                <YAxis stroke="#1e293b" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: "#334155" }} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(99,102,241,0.06)" }} />
+                <YAxis
+                  stroke="#1e293b"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#334155" }}
+                />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "rgba(99,102,241,0.06)" }}
+                />
                 {stats.avg > 0 && (
-                  <ReferenceLine y={stats.avg} stroke="rgba(99,102,241,0.3)" strokeDasharray="5 5" />
+                  <ReferenceLine
+                    y={stats.avg}
+                    stroke="rgba(99,102,241,0.3)"
+                    strokeDasharray="5 5"
+                  />
                 )}
                 <Bar dataKey="views" fill="url(#barFill)" radius={[6, 6, 0, 0]}>
                   {recentData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.views === stats.peak ? "#a78bfa" : "url(#barFill)"}
+                      fill={
+                        entry.views === stats.peak ? "#a78bfa" : "url(#barFill)"
+                      }
                     />
                   ))}
                 </Bar>
@@ -395,12 +471,22 @@ const BusinessAnalytics = ({ businessId, plan }) => {
           </p>
           <div className="flex flex-col gap-4">
             {[
-              { label: "This Week", val: stats.thisWeek, bar: "bg-gradient-to-r from-indigo-600 to-indigo-400" },
-              { label: "Last Week", val: stats.lastWeek, bar: "bg-slate-700/80" },
+              {
+                label: "This Week",
+                val: stats.thisWeek,
+                bar: "bg-gradient-to-r from-indigo-600 to-indigo-400",
+              },
+              {
+                label: "Last Week",
+                val: stats.lastWeek,
+                bar: "bg-slate-700/80",
+              },
             ].map((row) => (
               <div key={row.label}>
                 <div className="flex justify-between mb-2">
-                  <span className="text-slate-500 text-[11px] font-semibold">{row.label}</span>
+                  <span className="text-slate-500 text-[11px] font-semibold">
+                    {row.label}
+                  </span>
                   <span className="text-slate-200 text-[11px] font-bold">
                     {row.val.toLocaleString()} views
                   </span>
@@ -408,7 +494,9 @@ const BusinessAnalytics = ({ businessId, plan }) => {
                 <div className="h-2 bg-white/4 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.round((row.val / weekMax) * 100)}%` }}
+                    animate={{
+                      width: `${Math.round((row.val / weekMax) * 100)}%`,
+                    }}
                     transition={{ duration: 0.9, ease: "easeOut" }}
                     className={`h-full ${row.bar} rounded-full`}
                   />

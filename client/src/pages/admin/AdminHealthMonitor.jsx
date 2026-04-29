@@ -41,8 +41,6 @@ const AdminHealthMonitor = () => {
         memory: data.memory,
         uptime: data.uptime,
       });
-
-      // Keep sample errors or fetch them if they existed on backend
       setErrors([
         {
           id: 1,

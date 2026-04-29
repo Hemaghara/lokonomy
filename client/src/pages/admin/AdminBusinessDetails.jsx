@@ -500,7 +500,6 @@ const AdminBusinessDetails = () => {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18 }}
             >
-              {/* ── Overview Tab ── */}
               {activeTab === "overview" && (
                 <div className="space-y-5">
                   <Card className="p-5">

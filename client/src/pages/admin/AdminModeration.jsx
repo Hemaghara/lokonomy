@@ -208,7 +208,6 @@ const AdminModeration = () => {
               Moderation Center
             </h2>
           </div>
-          
         </div>
       </header>
 
@@ -228,7 +227,6 @@ const AdminModeration = () => {
         ))}
       </div>
 
-     
       {selectedReports.length > 0 && (
         <div className="flex items-center gap-3 p-3 mb-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
           <span className="text-xs font-bold text-rose-300 px-2">
@@ -277,7 +275,6 @@ const AdminModeration = () => {
           </div>
         ) : (
           <>
-         
             {filter.status === "pending" && reports.length > 0 && (
               <div className="flex items-center gap-2 px-2">
                 <input

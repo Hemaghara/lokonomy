@@ -371,7 +371,6 @@ const AdminJobs = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Job <span className="text-indigo-400">Management</span>
             </h1>
-           
           </div>
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl self-start sm:self-auto">
             <FiBriefcase size={16} className="text-indigo-400" />

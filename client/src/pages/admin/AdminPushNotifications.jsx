@@ -187,7 +187,6 @@ const AdminPushNotifications = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Push <span className="text-indigo-500">Notification Manager</span>
           </h1>
-         
         </div>
 
         <div className="flex overflow-x-auto no-scrollbar gap-1 border-b border-slate-200 dark:border-slate-700/60">

@@ -59,7 +59,6 @@ const AdminChats = () => {
               Chat Monitoring
             </h2>
           </div>
-         
         </div>
       </header>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

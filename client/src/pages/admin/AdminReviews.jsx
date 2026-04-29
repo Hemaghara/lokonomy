@@ -20,7 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const AdminReviews = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("business"); 
+  const [activeTab, setActiveTab] = useState("business");
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -94,7 +94,6 @@ const AdminReviews = () => {
               </span>
               Review <span className="text-indigo-500">Management</span>
             </h1>
-          
           </div>
 
           <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800/80 backdrop-blur-sm self-stretch md:self-auto">

@@ -120,9 +120,18 @@ const AdminLayout = ({ children }) => {
       title: "Business Intelligence",
       items: [
         { label: "Revenue", path: "/admin/subscriptions", icon: FiDollarSign },
-        { label: "Analytics", path: "/admin/analytics", icon: FiPieChart, superadminOnly: true },
+        {
+          label: "Analytics",
+          path: "/admin/analytics",
+          icon: FiPieChart,
+          superadminOnly: true,
+        },
         { label: "Reports", path: "/admin/reports", icon: FiPieChart },
-        { label: "Activity Heatmap", path: "/admin/heatmap", icon: FiBarChart2 },
+        {
+          label: "Activity Heatmap",
+          path: "/admin/heatmap",
+          icon: FiBarChart2,
+        },
         { label: "Churn Predictor", path: "/admin/churn", icon: FiActivity },
       ],
     },
@@ -132,16 +141,35 @@ const AdminLayout = ({ children }) => {
         { label: "Alert Center", path: "/admin/alerts", icon: FiAlertCircle },
         { label: "Fraud Detection", path: "/admin/fraud", icon: FiShield },
         { label: "Campaigns", path: "/admin/campaigns", icon: FiTarget },
-        { label: "Content Schedule", path: "/admin/content-schedule", icon: FiCalendar },
-        { label: "API Keys", path: "/admin/api-keys", icon: FiKey, superadminOnly: true },
+        {
+          label: "Content Schedule",
+          path: "/admin/content-schedule",
+          icon: FiCalendar,
+        },
+        {
+          label: "API Keys",
+          path: "/admin/api-keys",
+          icon: FiKey,
+          superadminOnly: true,
+        },
       ],
     },
     {
       title: "System",
       items: [
-        { label: "Sub-Admins", path: "/admin/sub-admins", icon: FiShield, superadminOnly: true },
+        {
+          label: "Sub-Admins",
+          path: "/admin/sub-admins",
+          icon: FiShield,
+          superadminOnly: true,
+        },
         { label: "Audit Logs", path: "/admin/audit-logs", icon: FiActivity },
-        { label: "Health", path: "/admin/health", icon: FiActivity, superadminOnly: true },
+        {
+          label: "Health",
+          path: "/admin/health",
+          icon: FiActivity,
+          superadminOnly: true,
+        },
         { label: "Settings", path: "/admin/settings", icon: FiActivity },
       ],
     },
@@ -318,7 +346,6 @@ const AdminLayout = ({ children }) => {
               <AdminGlobalSearch />
             </div>
 
-            {/* Cmd+K shortcut button */}
             <button
               onClick={() => setPaletteOpen(true)}
               title="Open command palette (Ctrl+K)"
@@ -388,7 +415,10 @@ const AdminLayout = ({ children }) => {
           </main>
         </div>
       </div>
-      <AdminCommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <AdminCommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+      />
     </AdminErrorBoundary>
   );
 };

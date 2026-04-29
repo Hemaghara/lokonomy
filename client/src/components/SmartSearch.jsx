@@ -46,7 +46,7 @@ const SmartSearch = () => {
   const handleSelect = (item) => {
     setQuery("");
     setShowDropdown(false);
-    
+
     recommendationService.trackInteraction("click", item.type, item.id);
 
     if (item.type === "business") navigate(`/business/${item.id}`);
@@ -56,10 +56,14 @@ const SmartSearch = () => {
 
   const getIcon = (type) => {
     switch (type) {
-      case "business": return <Store className="text-blue-400" size={18} />;
-      case "product": return <ShoppingBag className="text-pink-400" size={18} />;
-      case "job": return <Briefcase className="text-green-400" size={18} />;
-      default: return <Search size={18} />;
+      case "business":
+        return <Store className="text-blue-400" size={18} />;
+      case "product":
+        return <ShoppingBag className="text-pink-400" size={18} />;
+      case "job":
+        return <Briefcase className="text-green-400" size={18} />;
+      default:
+        return <Search size={18} />;
     }
   };
 
@@ -97,20 +101,29 @@ const SmartSearch = () => {
                   {getIcon(item.type)}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-text-main">{item.text}</p>
-                  <p className="text-xs text-text-dim capitalize">{item.type}</p>
+                  <p className="text-sm font-medium text-text-main">
+                    {item.text}
+                  </p>
+                  <p className="text-xs text-text-dim capitalize">
+                    {item.type}
+                  </p>
                 </div>
               </button>
             ))}
           </div>
         </div>
       )}
-      
-      {showDropdown && query.length >= 2 && suggestions.length === 0 && !isLoading && (
-        <div className="absolute z-50 w-full mt-2 bg-card-bg border border-border rounded-2xl p-6 text-center glass backdrop-blur-xl">
-          <p className="text-text-dim text-sm">No results found for "{query}"</p>
-        </div>
-      )}
+
+      {showDropdown &&
+        query.length >= 2 &&
+        suggestions.length === 0 &&
+        !isLoading && (
+          <div className="absolute z-50 w-full mt-2 bg-card-bg border border-border rounded-2xl p-6 text-center glass backdrop-blur-xl">
+            <p className="text-text-dim text-sm">
+              No results found for "{query}"
+            </p>
+          </div>
+        )}
     </div>
   );
 };
