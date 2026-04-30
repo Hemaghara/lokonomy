@@ -6,7 +6,7 @@ import { categories } from "../data/categories";
 import SmartSearch from "../components/SmartSearch";
 import { ProductSkeleton } from "../components/Skeleton";
 import recommendationService from "../services/recommendationService";
-import { feedService } from "../services/feedService";
+import { feedService } from "../services";
 import {
   Store,
   ShoppingBag,

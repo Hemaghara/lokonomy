@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
-import { FiTrash2, FiSearch, FiExternalLink, FiStar } from "react-icons/fi";
+import { FiTrash2, FiSearch,  FiExternalLink,
+  FiStar,
+  FiFilter,
+  FiPlus,
+  FiBriefcase,
+} from "react-icons/fi";
 import useAdminFetch from "../../hooks/useAdminFetch";
 import { useConfirm } from "../../context/ConfirmContext";
 import { TableSkeleton } from "../../components/admin/Skeleton";
@@ -13,7 +18,7 @@ const AdminBusinesses = () => {
   const { getParam, setParam } = useUrlState({ search: "" });
   const searchQuery = getParam("search", "");
   const navigate = useNavigate();
-  const { confirm } = useConfirm();
+  const confirm = useConfirm();
 
   const fetchFn = useCallback(() => adminService.getBusinesses(), []);
   const { data, loading, refetch } = useAdminFetch(fetchFn);
@@ -40,10 +45,11 @@ const AdminBusinesses = () => {
 
   const filteredBusinesses = businesses.filter(
     (biz) =>
-      biz.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      biz.mainCategory?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      biz.ownerName?.toLowerCase().includes(searchQuery.toLowerCase()),
+      biz.businessName?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+      biz.mainCategory?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+      biz.ownerName?.toLowerCase()?.includes(searchQuery.toLowerCase()),
   );
+
 
   return (
     <AdminLayout>
@@ -110,10 +116,10 @@ const AdminBusinesses = () => {
                 </div>
 
                 <div className="flex items-center justify-end gap-2">
-                   <button onClick={() => navigate(`/admin/business/${biz._id}`)} className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                   <button onClick={() => navigate(`/admin/business/${biz._id}`)} aria-label="View Business" className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
                       <FiExternalLink size={16} />
                    </button>
-                   <button onClick={() => handleDelete(biz._id)} className="p-2 bg-rose-500/10 text-rose-400 rounded-lg">
+                   <button onClick={() => handleDelete(biz._id)} aria-label="Delete Business" className="p-2 bg-rose-500/10 text-rose-400 rounded-lg">
                       <FiTrash2 size={16} />
                    </button>
                 </div>
@@ -162,10 +168,10 @@ const AdminBusinesses = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-300">
-                        <button onClick={() => navigate(`/admin/business/${biz._id}`)} className="p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 rounded-lg">
+                        <button onClick={() => navigate(`/admin/business/${biz._id}`)} aria-label="View Business" className="p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 rounded-lg">
                           <FiExternalLink size={17} />
                         </button>
-                        <button onClick={() => handleDelete(biz._id)} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg">
+                        <button onClick={() => handleDelete(biz._id)} aria-label="Delete Business" className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg">
                           <FiTrash2 size={17} />
                         </button>
                       </div>
@@ -175,7 +181,14 @@ const AdminBusinesses = () => {
               </tbody>
             </table>
           </div>
+          {filteredBusinesses.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <FiBriefcase className="text-4xl mb-4 opacity-20" />
+              <p className="text-sm font-medium">No businesses found matching your criteria</p>
+            </div>
+          )}
         </>
+
       )}
     </AdminLayout>
   );

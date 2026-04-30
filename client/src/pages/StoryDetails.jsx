@@ -197,6 +197,7 @@ const StoryDetails = () => {
 
           <button
             onClick={handleShare}
+            aria-label={copied ? "Copied!" : "Share"}
             className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
               ${
                 copied
@@ -367,6 +368,7 @@ const StoryDetails = () => {
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <button
                 onClick={handleShare}
+                aria-label={copied ? "Link Copied!" : "Share Story"}
                 className={`flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-3.5 rounded-xl transition-all
                   ${
                     copied

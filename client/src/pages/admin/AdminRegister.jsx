@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 
 const AdminRegister = () => {
   const [formData, setFormData] = useState({

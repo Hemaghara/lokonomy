@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { storyService } from "../services/storyService";
+import { storyService } from "../services";
 import {
   HiOutlineTag,
   HiOutlinePhoto,

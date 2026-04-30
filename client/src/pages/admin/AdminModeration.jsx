@@ -276,7 +276,7 @@ const AdminModeration = () => {
         ) : (
           <>
             {filter.status === "pending" && reports.length > 0 && (
-              <div className="flex items-center gap-2 px-2">
+              <label className="flex items-center gap-2 px-2 cursor-pointer w-fit">
                 <input
                   type="checkbox"
                   checked={selectedReports.length === reports.length}
@@ -286,7 +286,7 @@ const AdminModeration = () => {
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                   Select All
                 </span>
-              </div>
+              </label>
             )}
 
             {reports.map((r) => (

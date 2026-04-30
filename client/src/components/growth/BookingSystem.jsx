@@ -458,10 +458,11 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
               <form onSubmit={handleBooking} className="space-y-5">
                 <div className="grid grid-cols-1 gap-5">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-2">
+                    <label htmlFor="booking-service" className="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-2">
                       Required Service
                     </label>
                     <input
+                      id="booking-service"
                       type="text"
                       required
                       placeholder="e.g. Full Hair Grooming"
@@ -478,10 +479,11 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 uppercase ml-1">
+                      <label htmlFor="booking-date" className="text-xs font-bold text-gray-500 uppercase ml-1">
                         Date
                       </label>
                       <input
+                        id="booking-date"
                         type="date"
                         required
                         className="w-full bg-gray-800 border-2 border-gray-800 rounded-2xl p-4 text-white focus:border-blue-500/50 outline-none transition-all"
@@ -492,10 +494,11 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-500 uppercase ml-1">
+                      <label htmlFor="booking-time" className="text-xs font-bold text-gray-500 uppercase ml-1">
                         Time
                       </label>
                       <input
+                        id="booking-time"
                         type="time"
                         required
                         className="w-full bg-gray-800 border-2 border-gray-800 rounded-2xl p-4 text-white focus:border-blue-500/50 outline-none transition-all"
@@ -508,10 +511,11 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-2">
+                    <label htmlFor="booking-message" className="text-xs font-bold text-gray-500 uppercase ml-1 flex items-center gap-2">
                       <MessageSquare size={12} /> Special Notes
                     </label>
                     <textarea
+                      id="booking-message"
                       placeholder="Add any specific requirements..."
                       className="w-full bg-gray-800 border-2 border-gray-800 rounded-2xl p-4 text-white h-24 focus:border-blue-500/50 outline-none transition-all resize-none placeholder:text-gray-600"
                       value={formData.message}

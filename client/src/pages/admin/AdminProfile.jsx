@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 import {
   User,
   Mail,
@@ -212,9 +212,11 @@ const AdminProfile = () => {
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <Field
                     label="Full Name"
+                    htmlFor="admin-name"
                     icon={<User className="w-3.5 h-3.5" />}
                   >
                     <input
+                      id="admin-name"
                       type="text"
                       name="name"
                       value={formData.name}
@@ -226,9 +228,11 @@ const AdminProfile = () => {
 
                   <Field
                     label="Email Address"
+                    htmlFor="admin-email"
                     icon={<Mail className="w-3.5 h-3.5" />}
                   >
                     <input
+                      id="admin-email"
                       type="email"
                       name="email"
                       value={formData.email}
@@ -242,9 +246,11 @@ const AdminProfile = () => {
                 <div className="mt-4 sm:mt-5">
                   <Field
                     label="Account Role"
+                    htmlFor="admin-role"
                     icon={<Shield className="w-3.5 h-3.5" />}
                   >
                     <select
+                      id="admin-role"
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
@@ -390,10 +396,13 @@ const SectionHeader = ({ label, icon }) => (
   </div>
 );
 
-const Field = ({ label, icon, children }) => (
+const Field = ({ label, icon, htmlFor, children }) => (
   <div className="space-y-1.5">
     {label && (
-      <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+      <label 
+        htmlFor={htmlFor}
+        className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider"
+      >
         {icon}
         {label}
       </label>

@@ -448,7 +448,7 @@ const AdminSubscriptions = () => {
                             </p>
                           </td>
                           <td className="px-4 py-4 text-white font-black text-sm">
-                            ₹{t.amount}
+                            ₹{t.amount?.toLocaleString()}
                           </td>
                           <td className="px-4 py-4">{statusEl(t.status)}</td>
                           <td className="px-4 py-4">
@@ -651,7 +651,7 @@ const AdminSubscriptions = () => {
                       {s.label}
                     </p>
                     <p className="text-xl font-black text-white">
-                      ₹{s.value || 0}
+                      ₹{s.value?.toLocaleString() || 0}
                     </p>
                   </div>
                 </div>
@@ -752,7 +752,7 @@ const AdminSubscriptions = () => {
                             </span>
                           </td>
                           <td className="px-4 py-4 font-black text-rose-400 text-sm">
-                            ₹{p.amount}
+                            ₹{p.amount?.toLocaleString()}
                           </td>
                           <td className="px-4 py-4 text-slate-400 text-[11px] italic max-w-40">
                             {p.failureReason || "Payment abandoned"}
@@ -907,7 +907,7 @@ const AdminSubscriptions = () => {
                       Tier Distribution
                     </p>
                     <div className="space-y-4">
-                      {Object.entries(financialReport.subscribers.byPlan).map(
+                      {financialReport?.subscribers?.byPlan && Object.entries(financialReport.subscribers.byPlan).map(
                         ([plan, count]) => {
                           const pct =
                             financialReport.subscribers.active > 0
@@ -979,14 +979,14 @@ const AdminSubscriptions = () => {
                     {[
                       {
                         label: "Active",
-                        value: financialReport.subscribers.active,
+                        value: financialReport?.subscribers?.active || 0,
                         icon: FiCheckCircle,
                         textColor: "text-emerald-400",
                         boxCls: "bg-emerald-500/10 border-emerald-500/20",
                       },
                       {
                         label: "Expired",
-                        value: financialReport.subscribers.expired,
+                        value: financialReport?.subscribers?.expired || 0,
                         icon: FiXCircle,
                         textColor: "text-rose-400",
                         boxCls: "bg-rose-500/10    border-rose-500/20",

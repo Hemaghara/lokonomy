@@ -21,7 +21,7 @@ import {
   FiKey,
   FiTarget,
 } from "react-icons/fi";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 
 const NAV_COMMANDS = [
   {

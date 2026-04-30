@@ -422,23 +422,29 @@ const AdminUsers = () => {
             {[
               {
                 label: "District",
+                id: "filter-district",
                 value: selectedDistrict,
                 onChange: (val) => setParams({ district: val, page: "1" }),
                 options: districts,
               },
               {
                 label: "Plan",
+                id: "filter-plan",
                 value: selectedPlan,
                 onChange: (val) => setParams({ plan: val, page: "1" }),
                 options: plans,
                 cap: true,
               },
-            ].map(({ label, value, onChange, options, cap }) => (
+            ].map(({ label, id, value, onChange, options, cap }) => (
               <div key={label}>
-                <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+                <label 
+                  htmlFor={id}
+                  className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5"
+                >
                   {label}
                 </label>
                 <select
+                  id={id}
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-300
@@ -453,10 +459,14 @@ const AdminUsers = () => {
               </div>
             ))}
             <div>
-              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+              <label 
+                htmlFor="filter-date"
+                className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5"
+              >
                 Join Date
               </label>
               <input
+                id="filter-date"
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setParams({ date: e.target.value, page: "1" })}

@@ -271,10 +271,14 @@ const AdminOrders = () => {
         {showFilters && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-slate-900/40 border border-slate-700/40 rounded-2xl">
             <div>
-              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+              <label 
+                htmlFor="order-status"
+                className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5"
+              >
                 Status
               </label>
               <select
+                id="order-status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none appearance-none cursor-pointer"
@@ -288,10 +292,14 @@ const AdminOrders = () => {
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+              <label 
+                htmlFor="start-date"
+                className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5"
+              >
                 Start Date
               </label>
               <input
+                id="start-date"
                 type="date"
                 value={dateRange.start}
                 onChange={(e) =>
@@ -301,10 +309,14 @@ const AdminOrders = () => {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
+              <label 
+                htmlFor="end-date"
+                className="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5"
+              >
                 End Date
               </label>
               <input
+                id="end-date"
                 type="date"
                 value={dateRange.end}
                 onChange={(e) =>

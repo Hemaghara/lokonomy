@@ -131,9 +131,12 @@ const CustomDropdown = ({
 const inputCls =
   "w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all duration-200";
 
-const Field = ({ label, required, span2, children }) => (
+const Field = ({ label, required, span2, id, children }) => (
   <div className={span2 ? "sm:col-span-2" : ""}>
-    <label className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase">
+    <label 
+      htmlFor={id}
+      className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase"
+    >
       {label}
       {required && <span className="text-emerald-500/60 ml-0.5">*</span>}
     </label>
@@ -274,7 +277,7 @@ const PostFeed = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Divider label="Feed Content" />
 
-              <Field label="Feed Category" required>
+              <Field label="Feed Category" required id="type">
                 <CustomDropdown
                   name="type"
                   value={formData.type}
@@ -283,8 +286,9 @@ const PostFeed = () => {
                 />
               </Field>
 
-              <Field label="Title / Heading" required>
+              <Field label="Title / Heading" required id="title">
                 <input
+                  id="title"
                   type="text"
                   name="title"
                   placeholder="e.g. Mega Sale at Central Plaza"
@@ -295,8 +299,9 @@ const PostFeed = () => {
                 />
               </Field>
 
-              <Field label="Description" required span2>
+              <Field label="Description" required span2 id="content">
                 <textarea
+                  id="content"
                   name="content"
                   placeholder="Share the details..."
                   className={`${inputCls} min-h-36 resize-none leading-relaxed`}
@@ -307,8 +312,9 @@ const PostFeed = () => {
               </Field>
               {formData.type === "Event" && (
                 <>
-                  <Field label="Event Date" required>
+                  <Field label="Event Date" required id="eventDate">
                     <input
+                      id="eventDate"
                       type="date"
                       name="eventDate"
                       className={inputCls}
@@ -317,8 +323,9 @@ const PostFeed = () => {
                       onChange={handleChange}
                     />
                   </Field>
-                  <Field label="Event Time" required>
+                  <Field label="Event Time" required id="eventTime">
                     <input
+                      id="eventTime"
                       type="time"
                       name="eventTime"
                       className={inputCls}

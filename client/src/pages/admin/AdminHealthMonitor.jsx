@@ -13,7 +13,7 @@ import {
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 
 const AdminHealthMonitor = () => {
   const [status, setStatus] = useState({

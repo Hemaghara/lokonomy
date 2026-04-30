@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
 import {
   FiGift,
@@ -484,6 +484,7 @@ const AdminRewards = () => {
                             {editingId === user._id ? (
                               <div className="flex gap-2 justify-end">
                                 <button
+                                  aria-label="Save"
                                   id={`save-btn-${user._id}`}
                                   disabled={saving}
                                   onClick={() => saveEdit(user._id)}
@@ -492,6 +493,7 @@ const AdminRewards = () => {
                                   <FiCheck size={18} />
                                 </button>
                                 <button
+                                  aria-label="Cancel"
                                   onClick={cancelEdit}
                                   disabled={saving}
                                   className="p-2.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-rose-500/5 active:scale-95 border border-rose-500/20"
@@ -501,6 +503,7 @@ const AdminRewards = () => {
                               </div>
                             ) : (
                               <button
+                                aria-label="Edit"
                                 id={`edit-btn-${user._id}`}
                                 onClick={() => startEdit(user)}
                                 className="p-3 bg-slate-800/80 text-slate-400 hover:bg-amber-500 hover:text-slate-900 rounded-2xl transition-all sm:opacity-0 sm:translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 shadow-xl border border-slate-700 hover:border-amber-300 active:scale-90 duration-500"

@@ -246,10 +246,11 @@ const CouponManager = ({ businessId }) => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                  <label htmlFor="coupon-code" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                     Coupon Code
                   </label>
                   <input
+                    id="coupon-code"
                     type="text"
                     required
                     placeholder="e.g. SAVE20"
@@ -266,10 +267,11 @@ const CouponManager = ({ businessId }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                    <label htmlFor="discount-value" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Discount Value
                     </label>
                     <input
+                      id="discount-value"
                       type="number"
                       required
                       min="1"
@@ -283,10 +285,11 @@ const CouponManager = ({ businessId }) => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                    <label htmlFor="discount-type" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Discount Type
                     </label>
                     <select
+                      id="discount-type"
                       className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all"
                       value={formData.discountType}
                       onChange={(e) =>
@@ -304,10 +307,11 @@ const CouponManager = ({ businessId }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                    <label htmlFor="expiry-date" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Expiry Date
                     </label>
                     <input
+                      id="expiry-date"
                       type="date"
                       required
                       min={today}
@@ -320,10 +324,11 @@ const CouponManager = ({ businessId }) => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                    <label htmlFor="usage-limit" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Usage Limit
                     </label>
                     <input
+                      id="usage-limit"
                       type="number"
                       min="1"
                       className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all"
@@ -337,10 +342,11 @@ const CouponManager = ({ businessId }) => {
 
                 {editingCoupon && (
                   <div>
-                    <label className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                    <label htmlFor="coupon-status" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Status
                     </label>
                     <select
+                      id="coupon-status"
                       className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition-all"
                       value={formData.status}
                       onChange={(e) =>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import AdminLayout from "../../layouts/AdminLayout";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 import {
   FiTarget,
   FiPlus,
@@ -378,6 +378,7 @@ const AdminCampaigns = () => {
                   )}
                   <button
                     onClick={() => handleDelete(c._id)}
+                    aria-label="Delete Campaign"
                     className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20"
                   >
                     <FiTrash2 size={14} />

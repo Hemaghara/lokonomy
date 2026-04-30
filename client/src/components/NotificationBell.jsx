@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "../context/UserContext";
-import { notificationService } from "../services/notificationService";
+import { notificationService } from "../services";
 import { connectSocket } from "../services/socket";
 import {
   Bell,

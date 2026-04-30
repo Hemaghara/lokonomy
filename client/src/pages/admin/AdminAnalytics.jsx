@@ -1077,7 +1077,7 @@ const AdminAnalytics = () => {
                                       {cfg.label} Tier
                                     </p>
                                     <p className="text-base font-black text-white">
-                                      ₹{plan.total.toLocaleString()}
+                                      ₹{plan.total?.toLocaleString() ?? 0}
                                     </p>
                                   </div>
                                 </div>

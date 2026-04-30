@@ -22,10 +22,10 @@ import {
   MessageCircle,
   Briefcase,
 } from "lucide-react";
-import { askLocalGuide } from "../services/aiService";
-import { businessService } from "../services/businessService";
-import { storyService } from "../services/storyService";
-import { jobService } from "../services/jobService";
+import { askLocalGuide } from "../services";
+import { businessService } from "../services";
+import { storyService } from "../services";
+import { jobService } from "../services";
 import { useUser } from "../context/UserContext";
 import { useLocation } from "../context/LocationContext";
 import { FaBullseye } from "react-icons/fa";

@@ -466,10 +466,11 @@ const AddBusiness = () => {
                 />
               </div>
               <div>
-                <label className={labelCls}>
+                <label htmlFor="mainCategory" className={labelCls}>
                   <HiOutlineTag className="text-violet-400" /> Main Category *
                 </label>
                 <select
+                  id="mainCategory"
                   name="mainCategory"
                   className={inputCls}
                   required
@@ -485,10 +486,11 @@ const AddBusiness = () => {
                 </select>
               </div>
               <div>
-                <label className={labelCls}>
+                <label htmlFor="subCategory" className={labelCls}>
                   <HiOutlineTag className="text-violet-400" /> Sub Category *
                 </label>
                 <select
+                  id="subCategory"
                   name="subCategory"
                   className={inputCls}
                   required
@@ -506,6 +508,7 @@ const AddBusiness = () => {
                     ))}
                 </select>
               </div>
+
               <div className="sm:col-span-2">
                 <label className={labelCls}>
                   <HiOutlineDocumentText className="text-violet-400" />{" "}

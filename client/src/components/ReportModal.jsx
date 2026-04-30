@@ -107,7 +107,7 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
 
           <button
             type="submit"
-            disabled={loading || !reason}
+            disabled={loading}
             className="w-full py-4 bg-slate-900 text-white font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-rose-600 transition-all shadow-xl disabled:opacity-50"
           >
             {loading ? "Submitting..." : "Submit Report"}

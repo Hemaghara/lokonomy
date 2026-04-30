@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
 import {
   FiUsers,
@@ -518,6 +518,7 @@ const AdminReferrals = () => {
               <div className="flex items-center gap-1.5">
                 <button
                   disabled={page === 1}
+                  aria-label="Previous page"
                   onClick={() => setPage((p) => p - 1)}
                   className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-slate-900 border border-white/8 text-slate-400 hover:text-white hover:border-indigo-500/30 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-all duration-200 active:scale-90"
                 >
@@ -545,6 +546,7 @@ const AdminReferrals = () => {
 
                 <button
                   disabled={page === totalPages}
+                  aria-label="Next page"
                   onClick={() => setPage((p) => p + 1)}
                   className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-slate-900 border border-white/8 text-slate-400 hover:text-white hover:border-indigo-500/30 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-all duration-200 active:scale-90"
                 >

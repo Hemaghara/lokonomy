@@ -9,7 +9,7 @@ import {
   FiX,
   FiArrowRight,
 } from "react-icons/fi";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 
 const AdminGlobalSearch = () => {
   const [query, setQuery] = useState("");
@@ -85,6 +85,7 @@ const AdminGlobalSearch = () => {
         />
         {query && (
           <button
+            aria-label="Clear search"
             onClick={() => {
               setQuery("");
               setIsOpen(false);

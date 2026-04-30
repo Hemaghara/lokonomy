@@ -506,6 +506,7 @@ const Rewards = () => {
                         <button
                           onClick={() => handleRedeem(opt.id)}
                           disabled={!canAfford || isRedeeming}
+                          aria-label={`Redeem ${opt.name}`}
                           className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                             canAfford
                               ? "bg-violet-600 text-white hover:bg-violet-500 active:scale-[0.97] shadow-md shadow-violet-600/20"
@@ -619,6 +620,7 @@ const Rewards = () => {
                         <button
                           onClick={() => handleRedeem(opt.id)}
                           disabled={!canAfford || isRedeeming}
+                          aria-label={`Redeem ${opt.name}`}
                           className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                             canAfford
                               ? `${planColor.btnBg} text-white active:scale-[0.97] shadow-md`

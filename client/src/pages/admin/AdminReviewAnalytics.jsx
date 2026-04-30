@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
 import {
   FiArrowLeft,

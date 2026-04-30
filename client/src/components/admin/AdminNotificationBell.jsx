@@ -12,7 +12,7 @@ import {
   FiPackage,
   FiZap,
 } from "react-icons/fi";
-import { notificationService } from "../../services/notificationService";
+import { notificationService } from "../../services";
 
 const CATEGORY_META = {
   order: {

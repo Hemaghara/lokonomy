@@ -241,6 +241,7 @@ const AdminCoupons = () => {
                   {coupon.status === "active" ? "Disable" : "Enable"}
                 </button>
                 <button
+                  aria-label="Edit"
                   onClick={() => {
                     setEditingCoupon(coupon);
                     setFormData({
@@ -258,6 +259,7 @@ const AdminCoupons = () => {
                   <FiEdit2 size={14} />
                 </button>
                 <button
+                  aria-label="Delete"
                   onClick={() => handleDelete(coupon._id)}
                   className="p-2 rounded-xl bg-rose-500/5 text-rose-500 hover:bg-rose-500/10 border border-rose-500/10 transition-all"
                 >
@@ -277,10 +279,11 @@ const AdminCoupons = () => {
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
+                <label htmlFor="coupon-code" className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
                   Code
                 </label>
                 <input
+                  id="coupon-code"
                   required
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none transition-all"
                   value={formData.code}
@@ -294,10 +297,11 @@ const AdminCoupons = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
+                  <label htmlFor="coupon-discount" className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
                     Discount
                   </label>
                   <input
+                    id="coupon-discount"
                     type="number"
                     required
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none"
@@ -308,10 +312,11 @@ const AdminCoupons = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
+                  <label htmlFor="coupon-type" className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
                     Type
                   </label>
                   <select
+                    id="coupon-type"
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none cursor-pointer"
                     value={formData.discountType}
                     onChange={(e) =>
@@ -325,10 +330,11 @@ const AdminCoupons = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
+                  <label htmlFor="coupon-expiry" className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
                     Expiry Date
                   </label>
                   <input
+                    id="coupon-expiry"
                     type="date"
                     required
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none"
@@ -339,10 +345,11 @@ const AdminCoupons = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
+                  <label htmlFor="coupon-limit" className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">
                     Usage Limit
                   </label>
                   <input
+                    id="coupon-limit"
                     type="number"
                     required
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none"
@@ -363,6 +370,7 @@ const AdminCoupons = () => {
                 </button>
                 <button
                   type="submit"
+                  data-testid="coupon-submit-btn"
                   className="flex-2 py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
                 >
                   {editingCoupon ? "Save Changes" : "Create Coupon"}

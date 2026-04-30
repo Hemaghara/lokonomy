@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminService } from "../../services/adminService";
+import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
 import {
   FiMessageSquare,
@@ -120,11 +120,15 @@ const AdminReviews = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-slate-900/40 border border-slate-800/60 p-4 rounded-2xl flex flex-col gap-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <label 
+              htmlFor="filter-rating"
+              className="text-[10px] font-black uppercase tracking-widest text-slate-500"
+            >
               Filter by Rating
             </label>
             <div className="relative">
               <select
+                id="filter-rating"
                 value={filterRating}
                 onChange={(e) => {
                   setFilterRating(e.target.value);

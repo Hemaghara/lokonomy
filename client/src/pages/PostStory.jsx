@@ -461,55 +461,50 @@ const PostStory = () => {
               <Divider label="Highlight (Premium Only)" />
 
               <div className="sm:col-span-2">
-                <div
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
-                    formData.isHighlighted
-                      ? "bg-primary/10 border-primary/30"
-                      : "bg-white/4 border-white/10"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        formData.isHighlighted
-                          ? "bg-primary/20 text-primary"
-                          : "bg-white/5 text-white/30"
-                      }`}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
+                  <label className="flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer w-full ...">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          formData.isHighlighted
+                            ? "bg-primary/20 text-primary"
+                            : "bg-white/5 text-white/30"
+                        }`}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                        />
-                      </svg>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          Pin to Highlights
+                        </p>
+                        <p className="text-[10px] text-white/40">
+                          Permanently display on your profile
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        Pin to Highlights
-                      </p>
-                      <p className="text-[10px] text-white/40">
-                        Permanently display on your profile
-                      </p>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        name="isHighlighted"
+                        checked={formData.isHighlighted}
+                        onChange={handleChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="isHighlighted"
-                      checked={formData.isHighlighted}
-                      onChange={handleChange}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
-                </div>
+
               </div>
 
               {formData.isHighlighted && (

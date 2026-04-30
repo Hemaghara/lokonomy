@@ -528,7 +528,6 @@ const UpgradePlan = () => {
               ? dynamicData.prices[selectedDuration]
               : plan.prices[selectedDuration];
 
-            // Map limits to human readable features
             const dynamicFeatures = dynamicData.limits
               ? [
                   {

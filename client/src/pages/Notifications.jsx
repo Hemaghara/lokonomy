@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { notificationService } from "../services/notificationService";
+import { notificationService } from "../services";
 import { useUser } from "../context/UserContext";
 import { connectSocket } from "../services/socket";
 import {

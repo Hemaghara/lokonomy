@@ -73,6 +73,20 @@ const Register = () => {
         let locationName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
         let district = "";
         let taluka = "";
+
+        // Set granted immediately so the UI updates without waiting for network
+        setGpsState({
+          status: "granted",
+          latitude,
+          longitude,
+          locationName,
+          district,
+          taluka,
+          accuracy: Math.round(accuracy),
+        });
+        toast.success("Location captured successfully!", { id: "gps-toast" });
+
+        // Enrich with reverse-geocoding (best-effort, does not block UI)
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en`,
@@ -93,19 +107,15 @@ const Register = () => {
               addr.city_district ||
               ""
             ).trim();
+
+            setGpsState((prev) => ({
+              ...prev,
+              locationName,
+              district,
+              taluka,
+            }));
           }
         } catch {}
-
-        setGpsState({
-          status: "granted",
-          latitude,
-          longitude,
-          locationName,
-          district,
-          taluka,
-          accuracy: Math.round(accuracy),
-        });
-        toast.success("Location captured successfully!", { id: "gps-toast" });
       },
       (err) => {
         toast.dismiss("gps-toast");
@@ -267,7 +277,7 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-dim">
+              <label htmlFor="username" className="text-sm font-medium text-text-dim">
                 Full Name
               </label>
               <input
@@ -282,7 +292,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-dim">
+              <label htmlFor="email" className="text-sm font-medium text-text-dim">
                 Email Address
               </label>
               <input
@@ -300,7 +310,7 @@ const Register = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-dim">
+              <label htmlFor="password" className="text-sm font-medium text-text-dim">
                 Create Password
               </label>
               <input
@@ -315,7 +325,7 @@ const Register = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-text-dim">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-text-dim">
                 Confirm Password
               </label>
               <input

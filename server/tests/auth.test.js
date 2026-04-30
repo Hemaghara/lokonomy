@@ -39,7 +39,7 @@ describe("Auth Routes", () => {
         .post("/api/auth/login")
         .send({ email: "nonexistent@test.com", password: "AnyPass123!" });
       expect(res.status).toBe(401);
-      expect(res.body.message).toBe("Invalid email or password"); // Same message
+      expect(res.body.message).toBe("Invalid email or password"); 
     });
 
     it("should block suspended user", async () => {
