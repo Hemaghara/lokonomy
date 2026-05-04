@@ -20,8 +20,14 @@ import {
 } from "lucide-react";
 import { subscribeToPush } from "../services/pushService";
 const Login = () => {
+  const { user, login } = useUser();
   const navigate = useNavigate();
-  const { login } = useUser();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/home", { replace: true });
+    }
+  }, [user, navigate]);
 
   const [step, setStep] = useState("credentials");
   const [loading, setLoading] = useState(false);
@@ -145,6 +151,13 @@ const Login = () => {
       return;
     }
 
+    const wakeUpToastId = setTimeout(() => {
+      toast.loading("Server is waking up from its nap, please wait...", {
+        id: "login-wakeup",
+        duration: 10000,
+      });
+    }, 4000);
+
     try {
       const payload = {
         email: formData.email,
@@ -161,6 +174,8 @@ const Login = () => {
       }
 
       const response = await authService.login(payload);
+      clearTimeout(wakeUpToastId);
+      toast.dismiss("login-wakeup");
 
       if (response.data.success && response.data.step === "otp") {
         if (response.data.devOtp) {
@@ -176,6 +191,8 @@ const Login = () => {
         toast.error(response.data.message || "Invalid Credentials");
       }
     } catch (err) {
+      clearTimeout(wakeUpToastId);
+      toast.dismiss("login-wakeup");
       console.error("Login error:", err);
       toast.error(
         err.response?.data?.message || "Login failed. Please try again.",

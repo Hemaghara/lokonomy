@@ -11,6 +11,13 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useState(() => {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
