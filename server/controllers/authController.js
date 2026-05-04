@@ -6,10 +6,22 @@ const { uploadMedia } = require("../utils/uploadMedia");
 const { serializeUser } = require("../utils/userSerializer");
 const logger = require("../utils/logger");
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-});
+let transporter;
+const getTransporter = () => {
+  if (!transporter) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return null;
+    }
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS 
+      },
+    });
+  }
+  return transporter;
+};
 
 exports.login = async (req, res) => {
   const {
@@ -84,17 +96,19 @@ exports.login = async (req, res) => {
       },
     });
 
-    const isEmailConfigured =
-      process.env.EMAIL_USER &&
-      !process.env.EMAIL_USER.includes("your-email") &&
-      process.env.EMAIL_PASS;
+    const mailService = getTransporter();
+    const isEmailConfigured = !!mailService && !process.env.EMAIL_USER.includes("your-email");
 
     if (!isEmailConfigured) {
       if (process.env.NODE_ENV === "production") {
-        logger.error("Email not configured in production!");
+        logger.error({
+          emailUser: !!process.env.EMAIL_USER,
+          emailPass: !!process.env.EMAIL_PASS
+        }, "Email configuration missing in production!");
+        
         return res.status(503).json({
           success: false,
-          message: "Email service unavailable. Contact support.",
+          message: "Email service is not configured. Please set EMAIL_USER and EMAIL_PASS in Render settings.",
         });
       }
       logger.warn(
@@ -112,7 +126,7 @@ exports.login = async (req, res) => {
     try {
       // Transporter moved outside for reuse
 
-      await transporter.sendMail({
+      await mailService.sendMail({
         from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your Verification Code",
