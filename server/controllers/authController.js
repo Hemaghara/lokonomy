@@ -6,6 +6,11 @@ const { uploadMedia } = require("../utils/uploadMedia");
 const { serializeUser } = require("../utils/userSerializer");
 const logger = require("../utils/logger");
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+});
+
 exports.login = async (req, res) => {
   const {
     email,
@@ -105,10 +110,7 @@ exports.login = async (req, res) => {
     }
 
     try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-      });
+      // Transporter moved outside for reuse
 
       await transporter.sendMail({
         from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
