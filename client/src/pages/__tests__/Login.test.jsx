@@ -1,47 +1,62 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../utils/test-utils';
-import Login from '../Login';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authService } from '../../services';
-import toast from 'react-hot-toast';
+import React from "react";
+import { render, screen, fireEvent, waitFor, act } from "../../utils/test-utils";
+import Login from "../Login";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { authService } from "../../services";
+import toast from "react-hot-toast";
+import * as pushService from "../../services/pushService";
 
-// Mock services and external libraries
-vi.mock('../../services', () => ({
+// Mock services
+vi.mock("../../services", () => ({
   authService: {
     login: vi.fn(),
     verifyOtp: vi.fn(),
+    getMe: vi.fn().mockResolvedValue({ data: { success: false } }),
   },
 }));
 
-vi.mock('react-hot-toast', () => {
-  const toastMock = {
-    success: vi.fn(),
-    error: vi.fn(),
-    loading: vi.fn().mockReturnValue('loading-id'),
-    dismiss: vi.fn(),
-  };
-  return {
-    default: toastMock,
-    toast: toastMock,
-    Toaster: () => null,
-  };
-});
-
-// Mock pushService
-vi.mock('../../services/pushService', () => ({
+vi.mock("../../services/pushService", () => ({
   subscribeToPush: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock Geolocation
+const mockLogin = vi.hoisted(() => vi.fn());
+vi.mock("../../context/UserContext", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useUser: () => ({
+      login: mockLogin,
+      user: null,
+    }),
+  };
+});
+
+const mockToast = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+  loading: vi.fn(),
+  dismiss: vi.fn(),
+}));
+
+vi.mock("react-hot-toast", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    toast: mockToast,
+    default: mockToast,
+  };
+});
+
+
 const mockGeolocation = {
   getCurrentPosition: vi.fn().mockImplementation((success) =>
     success({
       coords: {
-        latitude: 12.34,
-        longitude: 56.78,
-        accuracy: 10,
+        latitude: 12.3456,
+        longitude: 56.789,
+        accuracy: 15,
       },
-    })
+    }),
   ),
 };
 global.navigator.geolocation = mockGeolocation;
@@ -49,92 +64,284 @@ global.navigator.geolocation = mockGeolocation;
 // Mock fetch for reverse geocoding
 global.fetch = vi.fn().mockResolvedValue({
   json: vi.fn().mockResolvedValue({
-    display_name: 'Test City, State, Country',
-    address: { state_district: 'Test District', suburb: 'Test Taluka' },
+    display_name: "Test City, Mumbai, Maharashtra, India",
+    address: { state_district: "Mumbai", suburb: "Andheri" },
   }),
 });
 
-// Mock framer-motion
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }) => {
-      const filtered = { ...props };
-      delete filtered.initial; delete filtered.animate; delete filtered.exit;
-      delete filtered.transition; delete filtered.layout; delete filtered.whileHover;
-      delete filtered.whileTap; delete filtered.whileInView;
-      return <div {...filtered}>{children}</div>;
-    },
-    form: ({ children, ...props }) => {
-      const filtered = { ...props };
-      delete filtered.initial; delete filtered.animate; delete filtered.exit;
-      delete filtered.transition; delete filtered.layout;
-      return <form aria-label="login-form" {...filtered}>{children}</form>;
-    },
-    h1: ({ children, ...props }) => {
-      const filtered = { ...props };
-      delete filtered.initial; delete filtered.animate; delete filtered.exit;
-      delete filtered.transition;
-      return <h1 {...filtered}>{children}</h1>;
-    },
-    button: ({ children, ...props }) => {
-      const filtered = { ...props };
-      delete filtered.initial; delete filtered.animate; delete filtered.exit;
-      delete filtered.transition; delete filtered.whileHover; delete filtered.whileTap;
-      return <button {...filtered}>{children}</button>;
-    },
-    p: ({ children, ...props }) => {
-      const filtered = { ...props };
-      delete filtered.initial; delete filtered.animate; delete filtered.exit;
-      delete filtered.transition;
-      return <p {...filtered}>{children}</p>;
-    },
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
-
-import { LocationProvider } from '../../context/LocationContext';
-
-describe('Login Page', () => {
+describe("Login Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders login form with email and password fields', () => {
-    render(<Login />);
-
-    expect(screen.getByPlaceholderText(/name@example.com/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/••••••••••••/i)).toBeDefined();
-    expect(screen.getAllByRole('button', { name: /Authorize/i })[0]).toBeDefined();
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('enables login button after GPS authorization', async () => {
+  it("renders initial credentials step", () => {
+    render(<Login />);
+    expect(screen.getByText("Welcome Back")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/name@example.com/i),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/••••••••••••/i)).toBeInTheDocument();
+  });
+
+  it("handles GPS authorization flow successfully", async () => {
     render(<Login />);
 
-    const authorizeBtn = screen.getAllByRole('button', { name: /Authorize/i })[0];
+    const authorizeBtn = screen.getByRole("button", { name: /Authorize/i });
     fireEvent.click(authorizeBtn);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Access Verified/i)).toBeDefined();
-    });
+    expect(screen.getByText(/Detecting Location/i)).toBeInTheDocument();
 
-    const loginBtn = screen.getAllByRole('button', { name: /Sign In Now/i })[0];
-    expect(loginBtn.hasAttribute('disabled')).toBe(false);
+    await waitFor(() => {
+      expect(screen.getByText(/Access Verified/i)).toBeInTheDocument();
+      expect(screen.getByText(/Test City/i)).toBeInTheDocument();
+    });
   });
 
-  it('shows error toast if fields are empty and login is clicked', async () => {
+  it("handles GPS authorization permission denied", async () => {
+    mockGeolocation.getCurrentPosition.mockImplementationOnce(
+      (success, error) => error({ code: 1, PERMISSION_DENIED: 1 }),
+    );
+
     render(<Login />);
-
-    // Authorize GPS first
-    fireEvent.click(screen.getAllByRole('button', { name: /Authorize/i })[0]);
-    
-    await waitFor(() => screen.getByText(/Access Verified/i));
-
-    // Submit the form using aria-label
-    const form = screen.getByRole('form', { name: /login-form/i });
-    fireEvent.submit(form);
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Please fill all fields');
+      expect(screen.getByText(/GPS Access Denied/i)).toBeInTheDocument();
+      expect(toast.error).toHaveBeenCalledWith("Location access denied.");
     });
+  });
+
+  it("handles GPS authorization generic error", async () => {
+    mockGeolocation.getCurrentPosition.mockImplementationOnce(
+      (success, error) => error({ code: 2 }), // POSITION_UNAVAILABLE
+    );
+
+    render(<Login />);
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Detection Failed/i)).toBeInTheDocument();
+      expect(toast.error).toHaveBeenCalledWith("Could not fetch location.");
+    });
+  });
+
+  it("handles browser geocoding failure", async () => {
+    global.fetch.mockRejectedValueOnce(new Error("Network Error"));
+    render(<Login />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Access Verified/i)).toBeInTheDocument();
+      // Should show coordinates if geocoding fails
+      expect(screen.getByText(/12.3456, 56.7890/i)).toBeInTheDocument();
+    });
+  });
+
+  it("submits credentials and moves to OTP step", async () => {
+    authService.login.mockResolvedValue({
+      data: { success: true, step: "otp", devOtp: "123456" },
+    });
+
+    render(<Login />);
+
+    // Fill fields
+    fireEvent.change(screen.getByPlaceholderText(/name@example.com/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), {
+      target: { value: "password123" },
+    });
+
+    // Try submitting without GPS
+    fireEvent.submit(screen.getByPlaceholderText(/name@example.com/i).closest("form"));
+    expect(toast.error).toHaveBeenCalledWith(
+      "GPS location is required to secure your login.",
+    );
+
+    // Authorize GPS
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+    await waitFor(() => screen.getByText(/Access Verified/i));
+
+    // Sign in
+    fireEvent.submit(screen.getByPlaceholderText(/name@example.com/i).closest("form"));
+
+    await waitFor(() => {
+      expect(authService.login).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "test@example.com",
+          latitude: 12.3456,
+          locationName: expect.any(String),
+        }),
+      );
+      expect(screen.getByText("Security Check")).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining("Verification Code: 123456"),
+        expect.any(Object),
+      );
+    });
+  });
+
+  it("handles login failure", async () => {
+    authService.login.mockResolvedValue({
+      data: { success: false, message: "Invalid credentials" },
+    });
+
+    render(<Login />);
+    fireEvent.change(screen.getByPlaceholderText(/name@example.com/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), {
+      target: { value: "wrong" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+    await waitFor(() => screen.getByText(/Access Verified/i));
+
+    fireEvent.submit(screen.getByRole("button", { name: /Sign In Now/i }).closest("form"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Invalid credentials");
+    });
+  });
+
+  it("verifies OTP and navigates to home", async () => {
+    authService.login.mockResolvedValue({
+      data: { success: true, step: "otp" },
+    });
+    authService.verifyOtp.mockResolvedValue({
+      data: {
+        success: true,
+        user: { _id: "u1", name: "Test User" },
+        token: "t1",
+      },
+    });
+
+    render(<Login />);
+    // Transition to OTP
+    fireEvent.change(screen.getByPlaceholderText(/name@example.com/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), {
+      target: { value: "pass" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+    await waitFor(() => screen.getByText(/Access Verified/i));
+    fireEvent.submit(screen.getByRole("button", { name: /Sign In Now/i }).closest("form"));
+
+    await waitFor(() => screen.getByPlaceholderText("000000"));
+
+    const otpInput = screen.getByPlaceholderText("000000");
+
+    // Test invalid OTP length
+    fireEvent.change(otpInput, { target: { value: "123" } });
+    fireEvent.click(screen.getByRole("button", { name: /Verify Account/i }));
+    expect(toast.error).toHaveBeenCalledWith("Invalid verification code");
+
+    // Valid OTP
+    fireEvent.change(otpInput, { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: /Verify Account/i }));
+
+    await waitFor(() => {
+      expect(authService.verifyOtp).toHaveBeenCalledWith({
+        email: "test@example.com",
+        otp: "123456",
+      });
+      expect(toast.success).toHaveBeenCalledWith("Login successful!");
+      expect(pushService.subscribeToPush).toHaveBeenCalled();
+    });
+  });
+
+  it("handles OTP verification failure", async () => {
+    authService.login.mockResolvedValue({
+      data: { success: true, step: "otp" },
+    });
+    authService.verifyOtp.mockResolvedValue({
+      data: { success: false, message: "Wrong OTP" },
+    });
+
+    render(<Login />);
+    // Get to OTP step... (skipping steps for brevity in thought, but full in test)
+    fireEvent.change(screen.getByPlaceholderText(/name@example.com/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), {
+      target: { value: "pass" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+    await waitFor(() => screen.getByText(/Access Verified/i));
+    fireEvent.submit(screen.getByRole("button", { name: /Sign In Now/i }).closest("form"));
+
+    await waitFor(() => screen.getByPlaceholderText("000000"));
+    fireEvent.change(screen.getByPlaceholderText("000000"), {
+      target: { value: "111111" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Verify Account/i }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Wrong OTP");
+    });
+  });
+
+  it("handles resend OTP with timer", async () => {
+    authService.login.mockResolvedValue({
+      data: { success: true, step: "otp" },
+    });
+
+    render(<Login />);
+    fireEvent.change(screen.getByPlaceholderText(/name@example.com/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), {
+      target: { value: "pass" },
+    });
+    
+    // GPS
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+    await screen.findByText(/Access Verified/i);
+    
+    fireEvent.click(screen.getByRole("button", { name: /Sign In Now/i }));
+
+    await screen.findByText("Security Check");
+    
+    expect(screen.getByText(/RESEND CODE IN/i)).toBeInTheDocument();
+  });
+
+  it("allows going back to credentials step", async () => {
+    authService.login.mockResolvedValue({
+      data: { success: true, step: "otp" },
+    });
+    render(<Login />);
+
+    fireEvent.change(screen.getByPlaceholderText(/name@example.com/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), {
+      target: { value: "pass" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
+    await waitFor(() => screen.getByText(/Access Verified/i));
+    fireEvent.submit(screen.getByRole("button", { name: /Sign In Now/i }).closest("form"));
+
+    await waitFor(() => {
+      expect(authService.login).toHaveBeenCalled();
+      expect(screen.getByText("Security Check")).toBeInTheDocument();
+    });
+
+    const backBtn = await screen.findByRole("button", { name: /Change Login Email/i });
+    fireEvent.click(backBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Welcome Back")).toBeInTheDocument();
+    });
+  });
+
+  it("shows error if fields are empty", async () => {
+    render(<Login />);
+    fireEvent.submit(screen.getByRole("button", { name: /Sign In Now/i }).closest("form"));
+    expect(toast.error).toHaveBeenCalledWith("Please fill all fields");
   });
 });

@@ -199,6 +199,7 @@ const ProductCard = ({ product, onBan, onSuspend, onView }) => (
             e.stopPropagation();
             onBan();
           }}
+          aria-label={product.isFlagged ? "Unban Product" : "Ban Product"}
           title={product.isFlagged ? "Unban" : "Ban"}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
             product.isFlagged
@@ -213,6 +214,7 @@ const ProductCard = ({ product, onBan, onSuspend, onView }) => (
             e.stopPropagation();
             onSuspend();
           }}
+          aria-label={product.isSuspended ? "Activate Product" : "Suspend Product"}
           title={product.isSuspended ? "Activate" : "Suspend"}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
             product.isSuspended
@@ -228,6 +230,7 @@ const ProductCard = ({ product, onBan, onSuspend, onView }) => (
             e.stopPropagation();
             onView(product);
           }}
+          aria-label="View Product Details"
           className="w-10 h-10 flex items-center justify-center bg-slate-800 border border-slate-700 rounded-xl text-slate-400 hover:text-white hover:border-indigo-500 transition-all shrink-0"
         >
           <FiEye size={14} />
@@ -499,6 +502,7 @@ const AdminMarketplace = () => {
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
             />
             <input
+              id="search-input"
               type="text"
               placeholder={`Search ${activeTab}…`}
               value={search}
@@ -549,6 +553,8 @@ const AdminMarketplace = () => {
                 <FiCalendar size={14} className="text-slate-600 shrink-0" />
                 <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 px-2">
                   <input
+                    id="start-date"
+                    aria-label="Start Date"
                     type="date"
                     value={startDate}
                     onChange={(e) => {
@@ -559,6 +565,8 @@ const AdminMarketplace = () => {
                   />
                   <span className="text-slate-600 text-[10px]">to</span>
                   <input
+                    id="end-date"
+                    aria-label="End Date"
                     type="date"
                     value={endDate}
                     onChange={(e) => {
@@ -700,6 +708,7 @@ const AdminMarketplace = () => {
                                 <td className="px-5 py-4">
                                   <button
                                     onClick={() => handleViewOrder(order._id)}
+                                    aria-label="View Order Details"
                                     className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-500 hover:text-white hover:border-indigo-500 transition-all"
                                   >
                                     <FiEye size={14} />

@@ -73,12 +73,13 @@ const AdminRegister = () => {
           <p className="text-slate-400">Create a new controller account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">
+            <label htmlFor="name" className="text-sm font-medium text-slate-300 ml-1">
               Full Name
             </label>
             <input
+              id="name"
               type="text"
               name="name"
               value={formData.name}
@@ -90,10 +91,11 @@ const AdminRegister = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">
+            <label htmlFor="email" className="text-sm font-medium text-slate-300 ml-1">
               Email Address
             </label>
             <input
+              id="email"
               type="email"
               name="email"
               value={formData.email}
@@ -105,10 +107,11 @@ const AdminRegister = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">
+            <label htmlFor="password" className="text-sm font-medium text-slate-300 ml-1">
               Password
             </label>
             <input
+              id="password"
               type="password"
               name="password"
               value={formData.password}
@@ -120,10 +123,11 @@ const AdminRegister = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">
+            <label htmlFor="role" className="text-sm font-medium text-slate-300 ml-1">
               Role
             </label>
             <select
+              id="role"
               name="role"
               value={formData.role}
               onChange={handleChange}

@@ -1,83 +1,155 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../../utils/test-utils';
-import AdminLogin from '../../admin/AdminLogin';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { adminService } from '../../../services';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "../../../utils/test-utils";
+import AdminLogin from "../../admin/AdminLogin";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { adminService } from "../../../services";
+import { toast } from "react-hot-toast";
 
-// Mock adminService
-vi.mock('../../../services', () => ({
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+vi.mock("../../../services", () => ({
   adminService: {
-    login: vi.fn().mockResolvedValue({
-      data: {
-        token: 'mock-token',
-        name: 'Admin User'
-      }
-    })
-  }
+    login: vi.fn(),
+  },
 }));
 
-describe('AdminLogin Page', () => {
+vi.mock('react-hot-toast', () => ({
+  Toaster: () => null,
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+describe("AdminLogin Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
   });
 
-  it('renders login form correctly', () => {
+  it("renders login form correctly", () => {
     render(<AdminLogin />);
-    
-    expect(screen.getAllByText('Lokonomy Admin')[0]).toBeDefined();
-    expect(screen.getByPlaceholderText('admin@lokonomy.com')).toBeDefined();
-    expect(screen.getByPlaceholderText('••••••••')).toBeDefined();
-    expect(screen.getAllByRole('button', { name: /Sign In to Panel/i })[0]).toBeDefined();
+
+    expect(screen.getByText("Lokonomy Admin")).toBeInTheDocument();
+    expect(screen.getByText("Control Center Access")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Sign In to Panel/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Create Admin")).toBeInTheDocument();
   });
 
-  it('handles input changes', () => {
+  it("shows error if email is missing", async () => {
     render(<AdminLogin />);
-    
-    const emailInput = screen.getByPlaceholderText('admin@lokonomy.com');
-    const passwordInput = screen.getByPlaceholderText('••••••••');
 
-    fireEvent.change(emailInput, { target: { value: 'admin@test.com', name: 'email' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123', name: 'password' } });
+    const submitBtn = screen.getByRole("button", { name: /Sign In to Panel/i });
+    fireEvent.click(submitBtn);
 
-    expect(emailInput.value).toBe('admin@test.com');
-    expect(passwordInput.value).toBe('password123');
+    expect(toast.error).toHaveBeenCalledWith(
+      "Please enter your admin email address",
+    );
+    expect(adminService.login).not.toHaveBeenCalled();
   });
 
-  it('submits form successfully', async () => {
+  it("shows error if password is missing", async () => {
     render(<AdminLogin />);
-    
-    fireEvent.change(screen.getByPlaceholderText('admin@lokonomy.com'), { target: { value: 'admin@test.com', name: 'email' } });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123', name: 'password' } });
-    
-    fireEvent.click(screen.getAllByRole('button', { name: /Sign In to Panel/i })[0]);
+
+    const emailInput = screen.getByLabelText(/Email Address/i);
+    fireEvent.change(emailInput, {
+      target: { name: "email", value: "admin@test.com" },
+    });
+
+    const submitBtn = screen.getByRole("button", { name: /Sign In to Panel/i });
+    fireEvent.click(submitBtn);
+
+    expect(toast.error).toHaveBeenCalledWith("Please enter your password");
+    expect(adminService.login).not.toHaveBeenCalled();
+  });
+
+  it("handles successful login", async () => {
+    const mockResponse = {
+      data: {
+        token: "test-token",
+        user: { id: "admin1", email: "admin@test.com" },
+      },
+    };
+    adminService.login.mockResolvedValue(mockResponse);
+
+    render(<AdminLogin />);
+
+    fireEvent.change(screen.getByLabelText(/Email Address/i), {
+      target: { name: "email", value: "admin@test.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Password/i), {
+      target: { name: "password", value: "password123" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Sign In to Panel/i }));
+
+    expect(screen.getByText("Authenticating...")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(adminService.login).toHaveBeenCalledWith({
-        email: 'admin@test.com',
-        password: 'password123'
+        email: "admin@test.com",
+        password: "password123",
       });
-      expect(localStorage.getItem('adminToken')).toBe('mock-token');
+      expect(localStorage.getItem("adminToken")).toBe("test-token");
+      expect(JSON.parse(localStorage.getItem("adminInfo"))).toEqual(
+        mockResponse.data,
+      );
+      expect(toast.success).toHaveBeenCalledWith("Welcome back, Admin!");
+      expect(mockNavigate).toHaveBeenCalledWith("/admin/dashboard");
     });
   });
 
-  it('handles login failure', async () => {
-    adminService.login.mockRejectedValueOnce({
-      response: { data: { message: 'Invalid credentials' } }
+  it("handles login failure with specific message", async () => {
+    adminService.login.mockRejectedValue({
+      response: { data: { message: "Invalid credentials" } },
     });
 
     render(<AdminLogin />);
-    
-    fireEvent.change(screen.getByPlaceholderText('admin@lokonomy.com'), { target: { value: 'wrong@test.com', name: 'email' } });
-    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'wrongpass', name: 'password' } });
-    
-    fireEvent.click(screen.getAllByRole('button', { name: /Sign In to Panel/i })[0]);
+
+    fireEvent.change(screen.getByLabelText(/Email Address/i), {
+      target: { name: "email", value: "admin@test.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Password/i), {
+      target: { name: "password", value: "wrongpass" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Sign In to Panel/i }));
 
     await waitFor(() => {
-      expect(adminService.login).toHaveBeenCalled();
-      // Toast message check usually requires mocking toast, but we can check if navigate wasn't called
-      expect(localStorage.getItem('adminToken')).toBeNull();
+      expect(toast.error).toHaveBeenCalledWith("Invalid credentials");
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
+
+  it("handles login failure with generic message", async () => {
+    adminService.login.mockRejectedValue(new Error("Network error"));
+
+    render(<AdminLogin />);
+
+    fireEvent.change(screen.getByLabelText(/Email Address/i), {
+      target: { name: "email", value: "admin@test.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Password/i), {
+      target: { name: "password", value: "wrongpass" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Sign In to Panel/i }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        "Login failed. Please check your credentials.",
+      );
     });
   });
 });
-

@@ -130,9 +130,12 @@ const CustomDropdown = ({
 const inputCls =
   "w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:border-primary/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-primary/10 outline-none transition-all duration-200";
 
-const Field = ({ label, required, span2, children }) => (
+const Field = ({ label, id, required, span2, children }) => (
   <div className={span2 ? "sm:col-span-2" : ""}>
-    <label className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase">
+    <label 
+      htmlFor={id}
+      className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase"
+    >
       {label}
       {required && <span className="text-primary/60 ml-0.5">*</span>}
     </label>
@@ -348,7 +351,7 @@ const PostStory = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Divider label="Story Info" />
 
-              <Field label="Update Category" required>
+              <Field label="Update Category" id="story-type" required>
                 <CustomDropdown
                   name="type"
                   value={formData.type}
@@ -357,8 +360,9 @@ const PostStory = () => {
                 />
               </Field>
 
-              <Field label="Title / Subject" required>
+              <Field label="Title / Subject" id="story-title" required>
                 <input
+                  id="story-title"
                   type="text"
                   name="title"
                   placeholder="e.g. New Local Shop Opening"
@@ -369,8 +373,9 @@ const PostStory = () => {
                 />
               </Field>
 
-              <Field label="Content Description" required span2>
+              <Field label="Content Description" id="story-content" required span2>
                 <textarea
+                  id="story-content"
                   name="content"
                   placeholder="Write your community update here..."
                   className={`${inputCls} min-h-36 resize-none leading-relaxed`}

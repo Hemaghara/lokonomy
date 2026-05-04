@@ -96,6 +96,7 @@ const Pagination = ({ page, totalPages, onPage }) =>
       <button
         disabled={page === 1}
         onClick={() => onPage(page - 1)}
+        aria-label="Previous Page"
         className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:border-slate-700 hover:text-white transition-all"
       >
         <FiChevronLeft size={14} /> Prev
@@ -106,6 +107,7 @@ const Pagination = ({ page, totalPages, onPage }) =>
       <button
         disabled={page === totalPages}
         onClick={() => onPage(page + 1)}
+        aria-label="Next Page"
         className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
       >
         Next <FiChevronRight size={14} />
@@ -244,6 +246,7 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
             e.stopPropagation();
             onBan();
           }}
+          aria-label={job.isFlagged ? "Unban Job" : "Ban Job"}
           title={job.isFlagged ? "Unban" : "Ban"}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
             job.isFlagged
@@ -258,6 +261,7 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
             e.stopPropagation();
             onSuspend();
           }}
+          aria-label={job.isSuspended ? "Activate Job" : "Suspend Job"}
           title={job.isSuspended ? "Activate" : "Suspend"}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
             job.isSuspended
@@ -272,6 +276,7 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
             e.stopPropagation();
             onView(job);
           }}
+          aria-label="View Job Details"
           className="w-10 h-10 flex items-center justify-center bg-slate-800 border border-slate-700 rounded-xl text-slate-400 hover:text-white hover:border-indigo-500 transition-all shrink-0"
         >
           <FiEye size={14} />
@@ -294,6 +299,9 @@ const AdminJobs = () => {
 
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  useEffect(() => {
     fetchData();
   }, [filter, education, search, page]);
 
@@ -411,11 +419,15 @@ const AdminJobs = () => {
         <div className="flex flex-col gap-3 bg-slate-900/50 border border-slate-800 rounded-2xl p-3">
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
             <div className="relative flex-1 min-w-0 sm:max-w-xs">
+              <label htmlFor="search-input" className="sr-only">
+                Search Jobs
+              </label>
               <FiSearch
                 size={14}
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
               />
               <input
+                id="search-input"
                 type="text"
                 placeholder="Search jobs by position, location…"
                 value={search}

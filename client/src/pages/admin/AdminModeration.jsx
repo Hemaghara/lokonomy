@@ -66,6 +66,7 @@ const ContentPreview = ({ report, onClose }) => {
         <button
           onClick={onClose}
           className="p-1 text-slate-500 hover:text-white transition-colors"
+          aria-label="Close preview"
         >
           <FiX size={14} />
         </button>

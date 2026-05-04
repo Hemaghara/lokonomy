@@ -1,121 +1,179 @@
-import React from 'react';
-import { render, screen, waitFor } from '../../../utils/test-utils';
-import AdminOrderDetails from '../../admin/AdminOrderDetails';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { adminService } from '../../../services';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "../../../utils/test-utils";
+import AdminOrderDetails from "../../admin/AdminOrderDetails";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { adminService } from "../../../services";
+import { toast } from "react-hot-toast";
 
-// Mock AdminLayout
-vi.mock('../../../layouts/AdminLayout', () => ({
-  __esModule: true,
-  default: ({ children }) => <>{children}</>
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }) => {
+      const { initial, animate, exit, transition, custom, variants, ...rest } =
+        props;
+      return <div {...rest}>{children}</div>;
+    },
+    header: ({ children, ...props }) => {
+      const { initial, animate, exit, transition, custom, variants, ...rest } =
+        props;
+      return <header {...rest}>{children}</header>;
+    },
+  },
+  AnimatePresence: ({ children }) => <>{children}</>,
 }));
 
-// Mock react-router-dom
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
-    useParams: () => ({ id: 'o1' }),
-    useNavigate: () => vi.fn(),
+    useParams: () => ({ id: "order123" }),
+    useNavigate: () => mockNavigate,
   };
 });
 
-// Mock adminService
-vi.mock('../../../services', () => ({
+vi.mock("../../../services", () => ({
   adminService: {
-    getMarketOrderDetails: vi.fn().mockResolvedValue({
-      data: {
-        _id: 'o1',
-        orderStatus: 'shipped',
-        createdAt: new Date().toISOString(),
-        price: 1500,
-        paymentMethod: 'razorpay',
-        transactionId: 'txn_123456',
-        contactNumber: '9988776655',
-        shippingAddress: '456 Garden Street, Mehsana',
-        product: {
-          _id: 'p1',
-          productName: 'Leather Bag',
-          mainCategory: 'Fashion',
-          subCategory: 'Bags',
-          productImages: ['bag.png']
-        },
-        buyer: {
-          name: 'Alice Buyer',
-          email: 'alice@example.com'
-        },
-        seller: {
-          name: 'Bob Seller',
-          email: 'bob@example.com',
-          mobile: '1122334455',
-          location: { address: '789 Market Yard, Kadi' }
-        }
-      }
-    })
-  }
+    getMarketOrderDetails: vi.fn(),
+  },
 }));
 
-describe('AdminOrderDetails Page', () => {
+vi.mock('react-hot-toast', () => ({
+  Toaster: () => null,
+  toast: {
+    error: vi.fn(),
+  },
+}));
+
+const mockOrderData = {
+  data: {
+    _id: "order123",
+    price: 5000,
+    orderStatus: "shipped",
+    paymentMethod: "credit_card",
+    transactionId: "txn_987654321",
+    createdAt: new Date("2023-10-15T12:00:00Z").toISOString(),
+    contactNumber: "1234567890",
+    shippingAddress: "123 Main St, Cityville",
+    product: {
+      _id: "prod1",
+      productName: "Premium Headphones",
+      mainCategory: "Electronics",
+      subCategory: "Audio",
+      productImages: ["image1.jpg"],
+    },
+    buyer: {
+      name: "John Buyer",
+      email: "john@buyer.com",
+    },
+    seller: {
+      name: "Tech Seller",
+      email: "sales@techseller.com",
+      mobile: "0987654321",
+      location: { address: "Tech Park, Valley" },
+    },
+  },
+};
+
+describe("AdminOrderDetails Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders order summary and status', async () => {
+  it("renders loading state initially", () => {
+    adminService.getMarketOrderDetails.mockReturnValue(new Promise(() => {}));
     render(<AdminOrderDetails />);
-
-    await waitFor(() => {
-      // The heading renders "Order #<last8chars>"
-      expect(screen.getAllByText(/Order/i).length).toBeGreaterThan(0);
-      // Status badge shows the orderStatus
-      expect(screen.getAllByText(/shipped/i).length).toBeGreaterThan(0);
-      // Price appears in multiple places (subtotal, total)
-      expect(screen.getAllByText(/₹1500/i).length).toBeGreaterThan(0);
-      // Transaction ID
-      expect(screen.getByText(/txn_123456/i)).toBeInTheDocument();
-    });
+    expect(screen.getByText("Fetching Order Data…")).toBeInTheDocument();
   });
 
-  it('renders product details correctly', async () => {
+  it("renders not found state when order fetch fails", async () => {
+    adminService.getMarketOrderDetails.mockRejectedValue(
+      new Error("Fetch error"),
+    );
     render(<AdminOrderDetails />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Leather Bag/i)).toBeInTheDocument();
-      // Category rendered as "Fashion • Bags"
-      expect(screen.getByText(/Fashion/i)).toBeInTheDocument();
-      expect(screen.getByText(/Bags/i)).toBeInTheDocument();
+    await screen.findByText("Order Not Found");
+    expect(
+      screen.getByText("This order may have been removed or doesn't exist."),
+    ).toBeInTheDocument();
+    expect(toast.error).toHaveBeenCalledWith("Failed to fetch order details");
+
+    const backBtn = screen.getByRole("button", {
+      name: /Back to Marketplace/i,
     });
+    fireEvent.click(backBtn);
+    expect(mockNavigate).toHaveBeenCalledWith("/admin/marketplace");
   });
 
-  it('renders buyer and seller information', async () => {
+  it("renders not found state when order is null", async () => {
+    adminService.getMarketOrderDetails.mockResolvedValue({ data: null });
     render(<AdminOrderDetails />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Alice Buyer/i)).toBeInTheDocument();
-      expect(screen.getByText(/456 Garden Street, Mehsana/i)).toBeInTheDocument();
-      expect(screen.getByText(/Bob Seller/i)).toBeInTheDocument();
-      expect(screen.getByText(/789 Market Yard, Kadi/i)).toBeInTheDocument();
-    });
+    await screen.findByText("Order Not Found");
   });
 
-  it('renders fulfillment timeline correctly', async () => {
+  it("renders order details correctly", async () => {
+    adminService.getMarketOrderDetails.mockResolvedValue(mockOrderData);
     render(<AdminOrderDetails />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Order Received/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/Shipped/i).length).toBeGreaterThan(0);
-      // "On the way..." subtitle is shown for the active "shipped" step
-      expect(screen.getByText(/On the way/i)).toBeInTheDocument();
-      expect(screen.getByText(/Delivered/i)).toBeInTheDocument();
-    });
+    await screen.findByText("Premium Headphones");
+
+    // Header
+    expect(screen.getByText("#ORDER123")).toBeInTheDocument();
+    expect(screen.getByText("shipped")).toBeInTheDocument();
+    expect(screen.getByText(/Placed/)).toBeInTheDocument(); // Date string
+
+    // Product Details
+    expect(screen.getByText("Electronics • Audio")).toBeInTheDocument();
+    expect(screen.getByText("prod1")).toBeInTheDocument();
+
+    // Buyer Details
+    expect(screen.getByText("John Buyer")).toBeInTheDocument();
+    expect(screen.getByText("john@buyer.com")).toBeInTheDocument();
+    expect(screen.getByText("1234567890")).toBeInTheDocument();
+    expect(screen.getByText("123 Main St, Cityville")).toBeInTheDocument();
+
+    // Seller Details
+    expect(screen.getByText("Tech Seller")).toBeInTheDocument();
+    expect(screen.getByText("sales@techseller.com")).toBeInTheDocument();
+    expect(screen.getByText("0987654321")).toBeInTheDocument();
+    expect(screen.getByText("Tech Park, Valley")).toBeInTheDocument();
+
+    // Order Summary
+    expect(screen.getAllByText("₹5000").length).toBeGreaterThan(0);
+    expect(screen.getByText("credit card")).toBeInTheDocument();
+    expect(screen.getByText("txn_987654321")).toBeInTheDocument();
+
+    // Fulfillment
+    expect(screen.getByText("Order Received")).toBeInTheDocument();
+    expect(screen.getByText("Shipped")).toBeInTheDocument();
+    expect(screen.getByText("Delivered")).toBeInTheDocument();
+    expect(screen.getByText("On the way…")).toBeInTheDocument();
   });
 
-  it('shows error state when order not found', async () => {
-    adminService.getMarketOrderDetails.mockRejectedValueOnce(new Error('Not Found'));
-
+  it("handles navigation back via header button", async () => {
+    adminService.getMarketOrderDetails.mockResolvedValue(mockOrderData);
     render(<AdminOrderDetails />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Order Not Found/i)).toBeInTheDocument();
-    });
+    await screen.findByText("Premium Headphones");
+
+    const backBtn = screen.getByRole("button", { name: /Go back/i });
+    fireEvent.click(backBtn);
+
+    expect(mockNavigate).toHaveBeenCalledWith(-1);
+  });
+
+  it("displays cancelled state correctly", async () => {
+    const cancelledOrder = {
+      data: {
+        ...mockOrderData.data,
+        orderStatus: "cancelled",
+      },
+    };
+    adminService.getMarketOrderDetails.mockResolvedValue(cancelledOrder);
+    render(<AdminOrderDetails />);
+
+    await screen.findByText("Order was cancelled");
+    // Top badge should be cancelled
+    expect(screen.getAllByText("cancelled").length).toBeGreaterThan(0);
   });
 });

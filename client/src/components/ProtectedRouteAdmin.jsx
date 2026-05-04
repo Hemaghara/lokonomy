@@ -4,11 +4,6 @@ import { adminService } from "../services";
 import { FiLock, FiAlertTriangle, FiRefreshCw, FiLogOut } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
-let verificationCache = {
-  token: null,
-  isVerified: null,
-  timestamp: 0,
-};
 const decodeToken = (token) => {
   try {
     const base64Url = token.split(".")[1];
@@ -23,6 +18,20 @@ const decodeToken = (token) => {
   } catch (e) {
     return null;
   }
+};
+
+let verificationCache = {
+  token: null,
+  isVerified: null,
+  timestamp: 0,
+};
+
+export const resetVerificationCache = () => {
+  verificationCache = {
+    token: null,
+    isVerified: null,
+    timestamp: 0,
+  };
 };
 
 const ProtectedRouteAdmin = ({ requiredRole }) => {

@@ -136,9 +136,12 @@ const Section = ({ icon, title, children, delay = 0 }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
   </motion.div>
 );
-const Field = ({ label, required, span2, children }) => (
+const Field = ({ label, required, span2, id, children }) => (
   <div className={span2 ? "sm:col-span-2" : ""}>
-    <label className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase">
+    <label 
+      htmlFor={id}
+      className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase"
+    >
       {label}
       {required && <span className="text-primary/60 ml-0.5">*</span>}
     </label>
@@ -302,8 +305,9 @@ const PostJob = () => {
             className="bg-white/2.5 border border-white/8 rounded-2xl p-7 sm:p-10 backdrop-blur-sm shadow-2xl shadow-black/30 space-y-10"
           >
             <Section icon={<FiBriefcase className="text-primary" />} title="Role Specifications" delay={0.15}>
-              <Field label="Job Position" required>
+              <Field label="Job Position" required id="position">
                 <input
+                  id="position"
                   type="text"
                   name="position"
                   placeholder="e.g. Sales Executive"
@@ -314,8 +318,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Location / Area" required>
+              <Field label="Location / Area" required id="location">
                 <input
+                  id="location"
                   type="text"
                   name="location"
                   placeholder="e.g. MG Road, Pune"
@@ -326,8 +331,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Vacancies" required>
+              <Field label="Vacancies" required id="vacancies">
                 <input
+                  id="vacancies"
                   type="number"
                   name="vacancies"
                   placeholder="e.g. 3"
@@ -338,8 +344,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="District" required>
+              <Field label="District" required id="district">
                 <CustomDropdown
+                  id="district"
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
@@ -348,8 +355,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Job Type" required>
+              <Field label="Job Type" required id="jobType">
                 <CustomDropdown
+                  id="jobType"
                   name="jobType"
                   value={formData.jobType}
                   onChange={handleChange}
@@ -358,8 +366,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Application Deadline">
+              <Field label="Application Deadline" id="deadline">
                 <input
+                  id="deadline"
                   type="date"
                   name="deadline"
                   className={inputCls}
@@ -373,8 +382,9 @@ const PostJob = () => {
             <div className="h-px bg-linear-to-r from-transparent via-white/8 to-transparent" />
 
             <Section icon={<FiTarget className="text-primary" />} title="Requirements & Value" delay={0.2}>
-              <Field label="Education" required>
+              <Field label="Education" required id="education">
                 <CustomDropdown
+                  id="education"
                   name="education"
                   value={formData.education}
                   onChange={handleChange}
@@ -383,8 +393,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Experience" required>
+              <Field label="Experience" required id="experience">
                 <input
+                  id="experience"
                   type="text"
                   name="experience"
                   placeholder="e.g. 0–2 Years"
@@ -395,8 +406,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Monthly Salary (₹)" required>
+              <Field label="Monthly Salary (₹)" required id="salary">
                 <input
+                  id="salary"
                   type="text"
                   name="salary"
                   placeholder="e.g. 15,000 – 20,000"
@@ -407,8 +419,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Gender Preference">
+              <Field label="Gender Preference" id="gender">
                 <CustomDropdown
+                  id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
@@ -417,8 +430,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Required Skills" required span2>
+              <Field label="Required Skills" required span2 id="skills">
                 <input
+                  id="skills"
                   type="text"
                   name="skills"
                   placeholder="e.g. Communication, Basic Tally, MS Excel"
@@ -429,8 +443,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Job Description" required span2>
+              <Field label="Job Description" required span2 id="description">
                 <textarea
+                  id="description"
                   name="description"
                   placeholder="Detailed description of the role, responsibilities, and benefits..."
                   className={inputCls + " min-h-30 resize-none"}
@@ -444,8 +459,9 @@ const PostJob = () => {
             <div className="h-px bg-linear-to-r from-transparent via-white/8 to-transparent" />
 
             <Section icon={<FiPhone className="text-primary" />} title="Contact Information" delay={0.25}>
-              <Field label="Hiring Officer" required>
+              <Field label="Hiring Officer" required id="posterName">
                 <input
+                  id="posterName"
                   type="text"
                   name="posterName"
                   placeholder="Full Name"
@@ -456,8 +472,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Official Email" required>
+              <Field label="Official Email" required id="posterEmail">
                 <input
+                  id="posterEmail"
                   type="email"
                   name="posterEmail"
                   placeholder="email@company.com"
@@ -468,8 +485,9 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Primary Contact" required span2>
+              <Field label="Primary Contact" required span2 id="posterContact">
                 <input
+                  id="posterContact"
                   type="tel"
                   name="posterContact"
                   placeholder="Mobile Number"

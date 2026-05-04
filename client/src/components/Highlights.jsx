@@ -40,7 +40,7 @@ const HighlightCircle = ({ highlight, onClick }) => {
           {highlight.image ? (
             <img
               src={highlight.image}
-              alt=""
+              alt={highlight.highlightCategory}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -86,7 +86,7 @@ const StoryModal = ({ highlight, onClose }) => {
           {highlight.image && (
             <img
               src={highlight.image}
-              alt=""
+              alt={highlight.title}
               className="w-full h-full object-cover"
             />
           )}
@@ -142,7 +142,7 @@ const Highlights = ({ ownerId }) => {
 
   if (loading)
     return (
-      <div className="flex gap-4 overflow-hidden mb-8">
+      <div data-testid="loading-fallback" className="flex gap-4 overflow-hidden mb-8">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}

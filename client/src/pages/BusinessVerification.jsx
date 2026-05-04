@@ -343,6 +343,8 @@ const BusinessVerification = () => {
                     >
                       <input
                         type="file"
+                        id="document-upload"
+                        aria-label="Click to Select File"
                         accept=".pdf,.jpg,.jpeg,.png"
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         onChange={handleFileUpload}

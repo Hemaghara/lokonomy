@@ -1,24 +1,63 @@
-import { render, screen, fireEvent } from '../../utils/test-utils';
-import MediaImage from '../MediaImage';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from "../../utils/test-utils";
+import MediaImage from "../MediaImage";
+import { describe, it, expect, vi } from "vitest";
+import * as mediaUrlUtils from "../../utils/mediaUrl";
 
-vi.mock('../../utils/mediaUrl', () => ({
-  getMediaUrl: (id, type) => `/mock-media/${id}/${type}`
+vi.mock("../../utils/mediaUrl", () => ({
+  getMediaUrl: vi.fn(),
 }));
 
-describe('MediaImage Component', () => {
-  it('renders an image with correct src and alt', () => {
-    render(<MediaImage mediaId="123" type="thumb" alt="Test Image" />);
-    const img = screen.getByRole('img');
-    expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute('src', '/mock-media/123/thumb');
-    expect(img).toHaveAttribute('alt', 'Test Image');
+describe("MediaImage Component", () => {
+  it("renders with default props", () => {
+    mediaUrlUtils.getMediaUrl.mockReturnValue("http://example.com/image.jpg");
+
+    render(<MediaImage mediaId="123" />);
+
+    expect(mediaUrlUtils.getMediaUrl).toHaveBeenCalledWith("123", "thumb");
+
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "http://example.com/image.jpg");
+    expect(img).toHaveAttribute("alt", "Media");
+    expect(img).toHaveAttribute("loading", "lazy");
+    expect(img).toHaveClass("object-cover");
   });
 
-  it('falls back to placeholder on error', () => {
+  it("renders with custom props", () => {
+    mediaUrlUtils.getMediaUrl.mockReturnValue(
+      "http://example.com/image_full.jpg",
+    );
+
+    render(
+      <MediaImage
+        mediaId="456"
+        type="full"
+        alt="Custom Alt"
+        className="custom-class"
+        data-testid="media-img"
+      />,
+    );
+
+    expect(mediaUrlUtils.getMediaUrl).toHaveBeenCalledWith("456", "full");
+
+    const img = screen.getByTestId("media-img");
+    expect(img).toHaveAttribute("src", "http://example.com/image_full.jpg");
+    expect(img).toHaveAttribute("alt", "Custom Alt");
+    expect(img).toHaveClass("object-cover custom-class");
+  });
+
+  it("handles image load error by setting placeholder", () => {
+    mediaUrlUtils.getMediaUrl.mockReturnValue(
+      "http://example.com/bad_image.jpg",
+    );
+
     render(<MediaImage mediaId="123" />);
-    const img = screen.getByRole('img');
+
+    const img = screen.getByRole("img");
+    expect(img).toHaveAttribute("src", "http://example.com/bad_image.jpg");
+
+    // Simulate error
     fireEvent.error(img);
-    expect(img).toHaveAttribute('src', '/placeholders/missing.png');
+
+    expect(img.src).toContain("/placeholders/missing.png");
   });
 });

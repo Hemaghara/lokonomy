@@ -114,6 +114,7 @@ const StatCard = ({ item }) => {
 
   return (
     <div
+      data-testid={`stat-card-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
       onClick={() => item.path && navigate(item.path)}
       className={`group relative flex flex-col justify-between gap-4 bg-slate-900/60 border border-slate-800/80 ${color.ring} p-5 rounded-3xl transition-all duration-500 shadow-xl ${color.glow} backdrop-blur-md overflow-hidden ${item.path ? "cursor-pointer active:scale-95" : ""}`}
     >
@@ -150,7 +151,10 @@ const StatCard = ({ item }) => {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-1">
               {item.label}
             </p>
-            <p className="text-3xl font-black tracking-tight text-white leading-none">
+            <p 
+              data-testid="stat-value"
+              className="text-3xl font-black tracking-tight text-white leading-none"
+            >
               {item.value}
             </p>
           </div>
@@ -306,15 +310,11 @@ const AdminDashboard = () => {
     const { name, value } = e.target;
     const newRange = { ...dateRange, [name]: value };
     setDateRange(newRange);
-    if (newRange.startDate && newRange.endDate) {
-      fetchStats(newRange);
-    }
   };
 
   const clearDateRange = () => {
     const cleared = { startDate: "", endDate: "" };
     setDateRange(cleared);
-    fetchStats(cleared);
   };
 
   const fetchOnlineTrend = async () => {

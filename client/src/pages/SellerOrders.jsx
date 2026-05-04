@@ -39,6 +39,7 @@ const SellerOrders = () => {
   }, []);
 
   const fetchData = async () => {
+    console.log("Fetching data for SellerOrders...");
     setLoading(true);
     try {
       const [ordersRes, productsRes, statsRes] = await Promise.all([
@@ -46,6 +47,7 @@ const SellerOrders = () => {
         marketService.getMyProducts(),
         orderService.getSellerStats(),
       ]);
+      console.log("Data fetched successfully", { orders: ordersRes.data, products: productsRes.data, stats: statsRes.data });
       setOrders(ordersRes.data.orders);
       setMyProducts(productsRes.data);
       setStats(statsRes.data.stats);
@@ -53,6 +55,7 @@ const SellerOrders = () => {
       console.error("Error fetching seller data:", err);
       toast.error("Failed to load dashboard data");
     } finally {
+      console.log("Setting loading to false");
       setLoading(false);
     }
   };
@@ -226,7 +229,7 @@ const SellerOrders = () => {
                     Total Earnings
                   </p>
                   <h3 className="text-3xl font-black text-white mb-2">
-                    ₹{stats?.totalEarnings.toLocaleString()}
+                    ₹{stats?.totalEarnings?.toLocaleString()}
                   </h3>
                   <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold">
                     <HiOutlineArrowTrendingUp className="text-xs" /> Revenue
@@ -336,7 +339,7 @@ const SellerOrders = () => {
                                 className="w-full sm:w-8 bg-linear-to-t from-violet-600 via-indigo-500 to-indigo-400 rounded-lg sm:rounded-xl relative z-10 shadow-lg shadow-indigo-900/20 group-hover:from-violet-500 group-hover:to-indigo-300 transition-all duration-300"
                               />
                               <div className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-white text-black px-2 py-1 rounded text-xs font-bold z-20 whitespace-nowrap">
-                                ₹{day.amount}
+                                ₹{day.amount?.toLocaleString()}
                               </div>
                             </div>
                             <p className="text-[10px] font-bold text-slate-500 uppercase">
@@ -487,7 +490,7 @@ const SellerOrders = () => {
                                 </h3>
                                 <div className="flex items-center gap-2 mb-3">
                                   <span className="text-emerald-400 font-black text-lg">
-                                    ₹{order.price.toLocaleString()}
+                                    ₹{order.price?.toLocaleString()}
                                   </span>
                                   <span className="text-slate-600 text-xs font-bold uppercase tracking-widest bg-slate-400/5 px-2 py-0.5 rounded-md border border-slate-400/10">
                                     {order.paymentMethod?.replace(/_/g, " ")}
@@ -664,7 +667,7 @@ const SellerOrders = () => {
                       {prod.productName}
                     </h4>
                     <p className="text-emerald-400 font-black text-xl mb-6">
-                      ₹{prod.price.toLocaleString()}
+                      ₹{prod.price?.toLocaleString()}
                     </p>
                     <div className="mt-auto flex gap-3">
                       <button

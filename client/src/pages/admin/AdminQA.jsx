@@ -185,12 +185,14 @@ const AdminQA = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleTogglePin(qa._id)}
+                    aria-label={qa.isPinned ? "Unpin question" : "Pin question"}
                     className={`p-2 rounded-lg transition-all ${qa.isPinned ? "text-indigo-400 bg-indigo-400/10" : "text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10"}`}
                   >
                     <FiAnchor size={16} />
                   </button>
                   <button
                     onClick={() => handleDeleteQuestion(qa._id)}
+                    aria-label="Delete question"
                     className="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                   >
                     <FiTrash2 size={16} />

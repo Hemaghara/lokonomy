@@ -247,8 +247,9 @@ const AdminPushNotifications = () => {
 
               <form onSubmit={handleSendGlobal} className="space-y-4">
                 <div>
-                  <label className={labelClass}>Notification Title</label>
+                  <label htmlFor="globalTitle" className={labelClass}>Notification Title</label>
                   <input
+                    id="globalTitle"
                     type="text"
                     className={inputClass}
                     placeholder="e.g., System Maintenance"
@@ -260,8 +261,9 @@ const AdminPushNotifications = () => {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Message Body</label>
+                  <label htmlFor="globalMessage" className={labelClass}>Message Body</label>
                   <textarea
+                    id="globalMessage"
                     rows={4}
                     className={inputClass + " resize-none"}
                     placeholder="Type your message here... users cannot reply."
@@ -273,8 +275,9 @@ const AdminPushNotifications = () => {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Action URL (Optional)</label>
+                  <label htmlFor="globalActionUrl" className={labelClass}>Action URL (Optional)</label>
                   <input
+                    id="globalActionUrl"
                     type="text"
                     className={inputClass}
                     placeholder="e.g., /marketplace"
@@ -313,8 +316,9 @@ const AdminPushNotifications = () => {
 
                 {isSchedulingGlobal && (
                   <div>
-                    <label className={labelClass}>Date &amp; Time</label>
+                    <label htmlFor="globalScheduleDate" className={labelClass}>Date &amp; Time</label>
                     <input
+                      id="globalScheduleDate"
                       type="datetime-local"
                       className={inputClass + " scheme-dark"}
                       value={scheduledGlobalDate}
@@ -378,8 +382,9 @@ const AdminPushNotifications = () => {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Notification Title</label>
+                  <label htmlFor="planTitle" className={labelClass}>Notification Title</label>
                   <input
+                    id="planTitle"
                     type="text"
                     className={inputClass}
                     placeholder="e.g., Exclusive Gold Offer"
@@ -391,8 +396,9 @@ const AdminPushNotifications = () => {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Message Body</label>
+                  <label htmlFor="planMessage" className={labelClass}>Message Body</label>
                   <textarea
+                    id="planMessage"
                     rows={4}
                     className={inputClass + " resize-none"}
                     placeholder="Type your message for tier users..."
@@ -404,8 +410,9 @@ const AdminPushNotifications = () => {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Action URL (Optional)</label>
+                  <label htmlFor="planActionUrl" className={labelClass}>Action URL (Optional)</label>
                   <input
+                    id="planActionUrl"
                     type="text"
                     className={inputClass}
                     placeholder="e.g., /upgrade-plan"
@@ -440,8 +447,9 @@ const AdminPushNotifications = () => {
 
                 {isSchedulingPlan && (
                   <div>
-                    <label className={labelClass}>Date &amp; Time</label>
+                    <label htmlFor="planScheduleDate" className={labelClass}>Date &amp; Time</label>
                     <input
+                      id="planScheduleDate"
                       type="datetime-local"
                       className={inputClass + " scheme-dark"}
                       value={scheduledPlanDate}

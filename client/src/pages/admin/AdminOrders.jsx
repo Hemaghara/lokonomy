@@ -348,6 +348,7 @@ const AdminOrders = () => {
                 <th className="px-5 py-3.5 text-center">
                   <input
                     type="checkbox"
+                    aria-label="Select all orders"
                     checked={
                       selectedOrders.length === orders.length &&
                       orders.length > 0

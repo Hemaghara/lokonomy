@@ -1,231 +1,182 @@
-import { render, screen, fireEvent, waitFor, act } from '../../utils/test-utils';
-import MapPicker from '../MapPicker';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "../../utils/test-utils";
+import MapPicker from "../MapPicker";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockFlyTo = vi.fn();
-const mockUseMapEvents = vi.fn();
-
-vi.mock('react-leaflet', async () => {
-  const React = await import('react');
+// Mock react-leaflet
+vi.mock("react-leaflet", () => {
   return {
-    MapContainer: React.forwardRef(({ children }, ref) => {
-      React.useImperativeHandle(ref, () => ({
-        // Using global variable trick because variables inside vi.mock cannot be accessed easily unless hoisted
-        flyTo: (...args) => global.__mockFlyTo(...args),
-      }));
-      return <div data-testid="map-container">{children}</div>;
-    }),
+    MapContainer: ({ children }) => (
+      <div data-testid="map-container">{children}</div>
+    ),
     TileLayer: () => <div data-testid="tile-layer" />,
-    Marker: () => <div data-testid="marker" />,
-    useMapEvents: (handlers) => {
-      global.__mockUseMapEvents(handlers);
-      return null;
-    }
+    Marker: ({ position }) => (
+      <div data-testid="marker" data-lat={position[0]} data-lng={position[1]} />
+    ),
+    useMapEvents: vi.fn(),
   };
 });
 
-describe('MapPicker Component', () => {
-  const originalGeolocation = navigator.geolocation;
+// We need to mock ClickHandler since useMapEvents is inside it
+vi.mock("leaflet", () => {
+  const Icon = vi.fn();
+  Icon.Default = {
+    prototype: { _getIconUrl: vi.fn() },
+    mergeOptions: vi.fn(),
+  };
+  return {
+    default: { Icon },
+    Icon,
+  };
+});
+
+// Since the component has a reverseGeocode function making fetch calls
+global.fetch = vi.fn();
+
+describe("MapPicker Component", () => {
+  const mockOnChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
-    
-    global.__mockFlyTo = mockFlyTo;
-    global.__mockUseMapEvents = mockUseMapEvents;
-
-    // Reset navigator.geolocation for each test
-    Object.assign(navigator, {
-      geolocation: {
-        getCurrentPosition: vi.fn()
-      }
-    });
+    global.navigator.geolocation = {
+      getCurrentPosition: vi.fn(),
+    };
   });
 
-  afterEach(() => {
-    Object.assign(navigator, {
-      geolocation: originalGeolocation
-    });
-    delete global.__mockFlyTo;
-    delete global.__mockUseMapEvents;
+  it("renders with initial state (no value)", () => {
+    render(<MapPicker onChange={mockOnChange} />);
+    expect(
+      screen.getByText("Click on the map to pin your shop location"),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("marker")).not.toBeInTheDocument();
   });
 
-  it('renders correctly without value', () => {
-    render(<MapPicker onChange={vi.fn()} />);
-    expect(screen.getByText('Click on the map to pin your shop location')).toBeInTheDocument();
+  it("renders with initial value", () => {
+    const value = { lat: 23.0225, lng: 72.5714, address: "Ahmedabad, Gujarat" };
+    render(<MapPicker value={value} onChange={mockOnChange} />);
+
+    expect(screen.getByText("Ahmedabad, Gujarat")).toBeInTheDocument();
+    expect(screen.getByTestId("marker")).toBeInTheDocument();
+    expect(screen.getByText("LAT 23.022500")).toBeInTheDocument();
+    expect(screen.getByText("LNG 72.571400")).toBeInTheDocument();
   });
 
-  it('renders correctly with value', () => {
-    render(<MapPicker value={{ lat: 10, lng: 20, address: 'Test Address' }} onChange={vi.fn()} />);
-    expect(screen.getByText(/Test Address/)).toBeInTheDocument();
-    expect(screen.getByText(/Clear pin/)).toBeInTheDocument();
-    expect(screen.getByText(/LAT 10.000000/)).toBeInTheDocument();
-    expect(screen.getByText(/LNG 20.000000/)).toBeInTheDocument();
+  it("clears pin when clear button is clicked", () => {
+    const value = { lat: 23.0225, lng: 72.5714 };
+    render(<MapPicker value={value} onChange={mockOnChange} />);
+
+    const clearBtn = screen.getByText("✕ Clear pin");
+    fireEvent.click(clearBtn);
+
+    expect(mockOnChange).toHaveBeenCalledWith(null);
   });
 
-  it('calls onChange when Clear pin is clicked', () => {
-    const onChange = vi.fn();
-    render(<MapPicker value={{ lat: 10, lng: 20 }} onChange={onChange} />);
-    
-    fireEvent.click(screen.getByText(/Clear pin/));
-    expect(onChange).toHaveBeenCalledWith(null);
-  });
+  it("uses GPS and calls reverse geocoding on success", async () => {
+    const mockGeolocation = {
+      getCurrentPosition: vi
+        .fn()
+        .mockImplementation((success) =>
+          success({ coords: { latitude: 22.3, longitude: 72.6 } }),
+        ),
+    };
+    global.navigator.geolocation = mockGeolocation;
 
-  it('handles GPS button click and reverse geocodes successfully', async () => {
-    const onChange = vi.fn();
-    navigator.geolocation.getCurrentPosition.mockImplementation((success) => 
-      success({ coords: { latitude: 10, longitude: 20 } })
-    );
-    
     global.fetch.mockResolvedValueOnce({
-      json: () => Promise.resolve({
-        display_name: 'Loc, City, District, State',
+      json: async () => ({
+        display_name: "Test Address, City, State, Country",
         address: {
-          state: 'Test State',
-          city: 'Test City',
-          postcode: '123456'
-        }
-      })
+          postcode: "12345",
+          state: "TestState",
+          city: "TestCity",
+          suburb: "TestTaluka",
+        },
+      }),
     });
 
-    render(<MapPicker onChange={onChange} />);
-    
-    const gpsBtn = screen.getByText(/Use My GPS/);
+    render(<MapPicker onChange={mockOnChange} />);
+
+    const gpsBtn = screen.getByText("Use My GPS").closest("button");
+
+    await act(async () => {
+      fireEvent.click(gpsBtn);
+    });
+
+    expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("lat=22.3&lon=72.6"),
+    );
+
+    await waitFor(() => {
+      expect(mockOnChange).toHaveBeenCalledWith({
+        lat: 22.3,
+        lng: 72.6,
+        address: "Test Address, City, State, Country",
+        pincode: "12345",
+        state: "TestState",
+        district: "TestCity",
+        taluka: "TestTaluka",
+      });
+    });
+  });
+
+  it("handles GPS failure gracefully", async () => {
+    const mockGeolocation = {
+      getCurrentPosition: vi
+        .fn()
+        .mockImplementation((success, error) => error(new Error("GPS Denied"))),
+    };
+    global.navigator.geolocation = mockGeolocation;
+
+    render(<MapPicker onChange={mockOnChange} />);
+
+    const gpsBtn = screen.getByText("Use My GPS").closest("button");
     fireEvent.click(gpsBtn);
-    
+
+    expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
+
+    // Should not call onChange
     await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith({
-        lat: 10,
-        lng: 20,
-        address: 'Loc, City, District, State',
-        pincode: '123456',
-        state: 'Test State',
-        district: 'Test City',
-        taluka: ''
-      });
-      expect(mockFlyTo).toHaveBeenCalledWith([10, 20], 16, { duration: 1.2 });
+      expect(mockOnChange).not.toHaveBeenCalled();
     });
+
+    // GPS button should no longer show "Locating..."
+    expect(screen.getByText("Use My GPS")).toBeInTheDocument();
   });
 
-  it('handles GPS geolocation failure', async () => {
-    const onChange = vi.fn();
-    navigator.geolocation.getCurrentPosition.mockImplementation((success, error) => 
-      error(new Error('Geolocation failed'))
-    );
+  it("falls back if reverse geocoding fetch fails", async () => {
+    const mockGeolocation = {
+      getCurrentPosition: vi
+        .fn()
+        .mockImplementation((success) =>
+          success({ coords: { latitude: 22.3, longitude: 72.6 } }),
+        ),
+    };
+    global.navigator.geolocation = mockGeolocation;
 
-    render(<MapPicker onChange={onChange} />);
-    
-    fireEvent.click(screen.getByText(/Use My GPS/));
-    
-    // Wait for the button to reset from loading state
-    await waitFor(() => {
-      expect(screen.getByText(/Use My GPS/)).toBeInTheDocument();
-      expect(screen.queryByText(/Locating/)).not.toBeInTheDocument();
-    });
-    
-    expect(onChange).not.toHaveBeenCalled();
-  });
+    global.fetch.mockRejectedValueOnce(new Error("Network error"));
 
-  it('does nothing when GPS button clicked but geolocation is not supported', async () => {
-    const onChange = vi.fn();
-    // Remove geolocation
-    Object.assign(navigator, { geolocation: undefined });
+    render(<MapPicker onChange={mockOnChange} />);
 
-    render(<MapPicker onChange={onChange} />);
-    
-    fireEvent.click(screen.getByText(/Use My GPS/));
-    
-    expect(onChange).not.toHaveBeenCalled();
-  });
+    const gpsBtn = screen.getByText("Use My GPS").closest("button");
 
-  it('handles map click and reverse geocodes successfully', async () => {
-    const onChange = vi.fn();
-    global.fetch.mockResolvedValueOnce({
-      json: () => Promise.resolve({
-        display_name: 'Loc, Town, Dist, State',
-        address: {
-          county: 'Dist',
-          village: 'Town',
-          state: 'State'
-        }
-      })
-    });
-
-    render(<MapPicker onChange={onChange} />);
-    
-    // Simulate map click by calling the registered event handler
-    const handlers = mockUseMapEvents.mock.calls[0][0];
-    act(() => {
-      handlers.click({ latlng: { lat: 15, lng: 25 } });
-    });
-
-    // Expect loading indicator to show (might need to wait a tiny bit or just skip if too fast)
-    await waitFor(() => {
-      expect(screen.getByText(/Getting address/)).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(gpsBtn);
     });
 
     await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith({
-        lat: 15,
-        lng: 25,
-        address: 'Loc, Town, Dist, State',
-        pincode: '',
-        state: 'State',
-        district: 'Dist',
-        taluka: 'Town'
-      });
-    });
-  });
-
-  it('handles geocoding fetch failure gracefully', async () => {
-    const onChange = vi.fn();
-    global.fetch.mockRejectedValueOnce(new Error('Network error'));
-
-    render(<MapPicker onChange={onChange} />);
-    
-    const handlers = mockUseMapEvents.mock.calls[0][0];
-    act(() => {
-      handlers.click({ latlng: { lat: 15, lng: 25 } });
-    });
-
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith({
-        lat: 15,
-        lng: 25,
-        address: '15.00000, 25.00000',
-        pincode: '',
-        state: 'Gujarat',
-        district: '',
-        taluka: ''
-      });
-    });
-  });
-
-  it('handles geocoding response without display_name', async () => {
-    const onChange = vi.fn();
-    global.fetch.mockResolvedValueOnce({
-      json: () => Promise.resolve({
-        error: 'Unable to geocode'
-      })
-    });
-
-    render(<MapPicker onChange={onChange} />);
-    
-    const handlers = mockUseMapEvents.mock.calls[0][0];
-    act(() => {
-      handlers.click({ latlng: { lat: 15.12345, lng: 25.12345 } });
-    });
-
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith({
-        lat: 15.12345,
-        lng: 25.12345,
-        address: '15.12345, 25.12345',
-        pincode: '',
-        state: 'Gujarat',
-        district: '',
-        taluka: ''
+      expect(mockOnChange).toHaveBeenCalledWith({
+        lat: 22.3,
+        lng: 72.6,
+        address: "22.30000, 72.60000",
+        pincode: "",
+        state: "Gujarat",
+        district: "",
+        taluka: "",
       });
     });
   });

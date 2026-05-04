@@ -616,6 +616,7 @@ const BookingSystem = ({ businessId, isOwner, ownerId }) => {
                             type="button"
                             onClick={removeCoupon}
                             className="text-gray-500 hover:text-white transition-colors"
+                            aria-label="Remove coupon"
                           >
                             <X size={16} />
                           </button>

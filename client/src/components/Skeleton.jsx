@@ -62,7 +62,7 @@ export const BusinessDetailsSkeleton = () => (
 );
 
 export const ProductDetailsSkeleton = () => (
-  <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
+  <div data-testid="product-skeleton" className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
     <div className="max-w-5xl mx-auto px-4 space-y-8">
       <div className="flex items-center justify-between mb-6">
         <Skeleton className="h-6 w-48 rounded-lg" />

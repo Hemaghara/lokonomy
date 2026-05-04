@@ -277,6 +277,7 @@ const ChatBox = ({
         <button
           onClick={onClose}
           className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all"
+          aria-label="Close chat"
         >
           <HiOutlineXMark className="text-base" />
         </button>

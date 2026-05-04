@@ -256,6 +256,7 @@ const Feed = () => {
                       </div>
 
                       <button 
+                        aria-label="Report post"
                         onClick={(e) => {
                           e.stopPropagation();
                           setReportConfig({ isOpen: true, targetId: item._id });

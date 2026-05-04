@@ -27,7 +27,7 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchMe = async () => {
-      if (window.location.pathname.startsWith("/admin")) return;
+      if (window?.location?.pathname?.startsWith("/admin")) return;
 
       if (user && user.token) {
         try {

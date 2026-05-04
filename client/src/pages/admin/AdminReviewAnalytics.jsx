@@ -135,6 +135,8 @@ const AdminReviewAnalytics = () => {
     );
   }
 
+  if (!data) return null;
+
   const COLORS = ["#ef4444", "#f97316", "#fbbf24", "#84cc16", "#22c55e"];
 
   const barData = Object.entries(data.ratingDistribution).map(

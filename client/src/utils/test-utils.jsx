@@ -38,12 +38,25 @@ if (typeof window !== 'undefined') {
   }
 }
 
-const SafeToaster = Toaster || (() => null);
+const SafeToaster = (() => {
+  try { return Toaster; } catch (e) { return null; }
+})() || (() => null);
 
-const SafeLocationProvider = LocationProvider || (({ children }) => <>{children}</>);
-const SafeConfirmProvider = ConfirmProvider || (({ children }) => <>{children}</>);
-const SafeUserProvider = UserProvider || (({ children }) => <>{children}</>);
-const SafeComparisonProvider = ComparisonProvider || (({ children }) => <>{children}</>);
+const SafeLocationProvider = (() => {
+  try { return LocationProvider; } catch (e) { return null; }
+})() || (({ children }) => <>{children}</>);
+
+const SafeConfirmProvider = (() => {
+  try { return ConfirmProvider; } catch (e) { return null; }
+})() || (({ children }) => <>{children}</>);
+
+const SafeUserProvider = (() => {
+  try { return UserProvider; } catch (e) { return null; }
+})() || (({ children }) => <>{children}</>);
+
+const SafeComparisonProvider = (() => {
+  try { return ComparisonProvider; } catch (e) { return null; }
+})() || (({ children }) => <>{children}</>);
 
 const AllTheProviders = ({ children, initialEntries = ['/'] }) => {
   return (

@@ -461,6 +461,7 @@ const Market = () => {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 transition-colors"
               >
                 <HiOutlineXMark className="text-sm" />

@@ -1,36 +1,47 @@
-import { render } from '../../utils/test-utils';
-import Skeleton, { CardSkeleton, ProductSkeleton, MarketSkeleton, BusinessDetailsSkeleton, ProductDetailsSkeleton } from '../Skeleton';
-import { describe, it, expect } from 'vitest';
+import { render, screen } from "../../utils/test-utils";
+import Skeleton, {
+  CardSkeleton,
+  ProductSkeleton,
+  MarketSkeleton,
+  BusinessDetailsSkeleton,
+  ProductDetailsSkeleton,
+} from "../Skeleton";
+import { describe, it, expect } from "vitest";
 
-describe('Skeleton Components', () => {
-  it('renders base skeleton with custom className', () => {
-    const { container } = render(<Skeleton className="custom-class" />);
-    expect(container.querySelector('.skeleton')).toHaveClass('custom-class');
+describe("Skeleton Components", () => {
+  it("renders default Skeleton component", () => {
+    const { container } = render(<Skeleton className="custom-skel" />);
+    const skel = container.firstChild;
+    expect(skel).toHaveClass("skeleton");
+    expect(skel).toHaveClass("custom-skel");
   });
- 
-  it('renders CardSkeleton', () => {
+
+  it("renders CardSkeleton", () => {
     const { container } = render(<CardSkeleton />);
-    expect(container.querySelector('.card')).toBeInTheDocument();
+    expect(container.querySelector(".card")).toBeInTheDocument();
+    expect(container.querySelectorAll(".skeleton").length).toBeGreaterThan(0);
   });
- 
-  it('renders ProductSkeleton', () => {
+
+  it("renders ProductSkeleton", () => {
     const { container } = render(<ProductSkeleton />);
-    expect(container.querySelector('.bg-\\[\\#0d1120\\]')).toBeInTheDocument();
+    // Contains multiple skeleton lines
+    expect(container.querySelectorAll(".skeleton").length).toBe(6);
   });
- 
-  it('renders MarketSkeleton with 8 product skeletons', () => {
+
+  it("renders MarketSkeleton", () => {
     const { container } = render(<MarketSkeleton />);
-    const skeletons = container.querySelectorAll('.bg-\\[\\#0d1120\\]');
-    expect(skeletons).toHaveLength(8);
+    // MarketSkeleton renders 8 ProductSkeletons
+    // 8 * 6 = 48 skeleton elements
+    expect(container.querySelectorAll(".skeleton").length).toBe(48);
   });
- 
-  it('renders BusinessDetailsSkeleton', () => {
+
+  it("renders BusinessDetailsSkeleton", () => {
     const { container } = render(<BusinessDetailsSkeleton />);
-    expect(container.querySelector('.max-w-7xl')).toBeInTheDocument();
+    expect(container.querySelectorAll(".skeleton").length).toBeGreaterThan(0);
   });
- 
-  it('renders ProductDetailsSkeleton', () => {
+
+  it("renders ProductDetailsSkeleton", () => {
     const { container } = render(<ProductDetailsSkeleton />);
-    expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
+    expect(container.querySelectorAll(".skeleton").length).toBeGreaterThan(0);
   });
 });

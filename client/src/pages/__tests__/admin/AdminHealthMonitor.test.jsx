@@ -1,83 +1,142 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../../utils/test-utils';
-import AdminHealthMonitor from '../../admin/AdminHealthMonitor';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { adminService } from '../../../services';
+import React from "react";
+import { render, screen, fireEvent, waitFor, act } from "../../../utils/test-utils";
+import AdminHealthMonitor from "../../admin/AdminHealthMonitor";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { adminService } from "../../../services";
+import { toast } from "react-hot-toast";
 
-// Mock adminService
-vi.mock('../../../services', () => ({
-  adminService: {
-    getHealthStatus: vi.fn().mockResolvedValue({
-      data: {
-        api: 'healthy',
-        database: 'healthy',
-        redis: 'healthy',
-        cpu: 25,
-        memory: 60,
-        uptime: '15d 4h 20m',
-        dbPing: 12
-      }
-    })
-  }
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: ({ children, ...props }) => {
+      const { initial, animate, transition, ...rest } = props;
+      return <div {...rest}>{children}</div>;
+    },
+  },
 }));
 
-describe('AdminHealthMonitor Page', () => {
+vi.mock("../../../services", () => ({
+  adminService: {
+    getHealthStatus: vi.fn(),
+  },
+}));
+
+vi.mock('react-hot-toast', () => ({
+  Toaster: () => null,
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+const mockHealthData = {
+  data: {
+    api: "healthy",
+    database: "healthy",
+    redis: "healthy",
+    cpu: 45,
+    memory: 60,
+    uptime: "15d 4h 20m",
+    dbPing: 12,
+  },
+};
+
+describe("AdminHealthMonitor Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders health status of all systems', async () => {
-    render(<AdminHealthMonitor />);
-    
-    await waitFor(() => {
-      expect(screen.getAllByText('API Cluster')[0]).toBeDefined();
-      expect(screen.getAllByText('Primary DB')[0]).toBeDefined();
-      expect(screen.getAllByText('Cache Engine')[0]).toBeDefined();
-      expect(screen.getAllByText('Healthy').length).toBeGreaterThanOrEqual(3);
-    });
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('renders resource usage and uptime', async () => {
+  it("renders initial checking state and fetches data", async () => {
+    adminService.getHealthStatus.mockReturnValue(new Promise(() => {})); // pending promise
     render(<AdminHealthMonitor />);
-    
-    await waitFor(() => {
-      expect(screen.getAllByText('25%')[0]).toBeDefined(); // CPU
-      expect(screen.getAllByText('60%')[0]).toBeDefined(); // Memory
-      expect(screen.getAllByText('15d 4h 20m')[0]).toBeDefined(); // Uptime
-    });
+
+    // Header
+    expect(screen.getByRole("heading", { name: /Health Monitor/i })).toBeInTheDocument();
+
+    // Initial checking state
+    const checkingIndicators = screen.getAllByText("Checking");
+    expect(checkingIndicators.length).toBeGreaterThan(0);
   });
 
-  it('renders incident logs correctly', async () => {
+  it("renders health stats after successful fetch", async () => {
+    adminService.getHealthStatus.mockResolvedValue(mockHealthData);
     render(<AdminHealthMonitor />);
-    
+
     await waitFor(() => {
-      expect(screen.getAllByText('Primary DB Latency: 12ms')[0]).toBeDefined();
-      expect(screen.getAllByText('Warning')[0]).toBeDefined();
+      expect(adminService.getHealthStatus).toHaveBeenCalledTimes(1);
     });
+
+    // Status indicators
+    const healthyIndicators = screen.getAllByText("Healthy");
+    // API, DB, Redis + Hardcoded Security Layer = 4
+    expect(healthyIndicators.length).toBeGreaterThanOrEqual(4);
+
+    // CPU & Memory
+    expect(screen.getByText("45%")).toBeInTheDocument();
+    expect(screen.getByText("60%")).toBeInTheDocument();
+
+    // Uptime
+    expect(screen.getByText("15d 4h 20m")).toBeInTheDocument();
+
+    // Incident log
+    expect(screen.getByText("Primary DB Latency: 12ms")).toBeInTheDocument();
+
+    // Toast
+    expect(toast.success).toHaveBeenCalledWith("Health status updated");
   });
 
-  it('handles manual refresh diagnostics', async () => {
+  it("handles API failure correctly", async () => {
+    adminService.getHealthStatus.mockRejectedValue(new Error("API Down"));
+    await act(async () => {
+      render(<AdminHealthMonitor />);
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Failed to check system health");
+    });
+
+    // Should show down status for API and DB
+    const downIndicators = screen.getAllByText("Down");
+    expect(downIndicators.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("handles manual refresh", async () => {
+    adminService.getHealthStatus.mockResolvedValue(mockHealthData);
     render(<AdminHealthMonitor />);
-    
-    // Wait for initial load
-    await screen.findByText(/Healthy/i);
-    
-    const refreshBtn = screen.getAllByRole('button', { name: /Refresh Diagnostics/i })[0];
-    fireEvent.click(refreshBtn);
+
+    await waitFor(() => {
+      expect(adminService.getHealthStatus).toHaveBeenCalledTimes(1);
+    });
+
+    const refreshBtn = screen.getByRole("button", {
+      name: /Refresh Diagnostics/i,
+    });
+    await act(async () => {
+      fireEvent.click(refreshBtn);
+    });
 
     await waitFor(() => {
       expect(adminService.getHealthStatus).toHaveBeenCalledTimes(2);
     });
   });
 
-  it('shows "Down" status on API failure', async () => {
-    adminService.getHealthStatus.mockRejectedValueOnce(new Error('Network Error'));
+  it("polls health data on interval", async () => {
+    vi.useFakeTimers();
+    adminService.getHealthStatus.mockResolvedValue(mockHealthData);
     
-    render(<AdminHealthMonitor />);
-    
-    await waitFor(() => {
-      expect(screen.getAllByText('Down').length).toBeGreaterThanOrEqual(2);
+    await act(async () => {
+      render(<AdminHealthMonitor />);
     });
+
+    expect(adminService.getHealthStatus).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(30000);
+    });
+
+    expect(adminService.getHealthStatus).toHaveBeenCalledTimes(2);
   });
 });
-

@@ -374,6 +374,7 @@ const Stories = () => {
                           });
                         }}
                         className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-slate-900/60 backdrop-blur-md border border-white/10 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-400 hover:bg-slate-900 transition-all flex items-center justify-center z-10"
+                        aria-label="Report"
                       >
                         <FiFlag size={14} />
                       </button>
@@ -507,6 +508,7 @@ const FloatingActionButton = ({ onClick }) => (
     whileHover={{ scale: 1.1 }}
     whileTap={{ scale: 0.9 }}
     onClick={onClick}
+    aria-label="Broadcast Update"
     className="fixed bottom-24 right-6 z-50 sm:hidden w-14 h-14 bg-violet-600 text-white rounded-full shadow-2xl shadow-violet-900/50 flex items-center justify-center border border-violet-500/50 backdrop-blur-md"
   >
     <HiOutlinePlus className="text-2xl" />

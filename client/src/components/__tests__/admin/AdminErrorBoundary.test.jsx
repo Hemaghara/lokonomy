@@ -1,14 +1,16 @@
-import { render, screen, fireEvent, act } from '../../../utils/test-utils';
-import AdminErrorBoundary from '../../admin/AdminErrorBoundary';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent } from "../../../utils/test-utils";
+import AdminErrorBoundary from "../../admin/AdminErrorBoundary";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const ThrowError = () => {
-  throw new Error('Test error');
+const ThrowError = ({ message = "Test error" }) => {
+  throw new Error(message);
 };
 
-describe('AdminErrorBoundary Component', () => {
+describe("AdminErrorBoundary Component", () => {
+  let consoleSpy;
+
   beforeEach(() => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -16,53 +18,77 @@ describe('AdminErrorBoundary Component', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders children when no error occurs', () => {
+  it("renders children when no error occurs", () => {
     render(
       <AdminErrorBoundary>
         <div data-testid="child">Child Content</div>
-      </AdminErrorBoundary>
+      </AdminErrorBoundary>,
     );
-    expect(screen.getByTestId('child')).toBeInTheDocument();
+    expect(screen.getByTestId("child")).toBeInTheDocument();
   });
 
-  it('renders error UI when a child throws an error', () => {
-    // In React 18+, we need to suppress the error from failing the test
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+  it("renders error UI when a child throws an error", () => {
     render(
       <AdminErrorBoundary>
         <ThrowError />
-      </AdminErrorBoundary>
+      </AdminErrorBoundary>,
     );
 
     expect(screen.getByText(/Return to Dashboard/i)).toBeInTheDocument();
     expect(screen.getByText(/Crash/i)).toBeInTheDocument();
-    spy.mockRestore();
+    expect(
+      screen.getByText(/An unexpected error occurred/i),
+    ).toBeInTheDocument();
   });
 
-  it('calls handleReset and redirects on button click', () => {
-    const originalLocation = window.location;
-    // Use a proxy or just a simple object that mimics URL/Location
+  it("displays the specific error message", () => {
+    const errorMessage = "CRITICAL FAILURE";
+    render(
+      <AdminErrorBoundary>
+        <ThrowError message={errorMessage} />
+      </AdminErrorBoundary>,
+    );
+
+    expect(screen.getByText(new RegExp(errorMessage))).toBeInTheDocument();
+  });
+
+  it("logs the error to console", () => {
+    render(
+      <AdminErrorBoundary>
+        <ThrowError />
+      </AdminErrorBoundary>,
+    );
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Admin Dashboard Error:"),
+      expect.any(Error),
+      expect.any(Object),
+    );
+  });
+
+  it("calls handleReset and redirects on button click", () => {
     const locationMock = {
-      href: 'http://localhost/',
-      pathname: '/',
+      href: "http://localhost/",
+      pathname: "/",
       assign: vi.fn(),
       replace: vi.fn(),
       reload: vi.fn(),
-      toString: () => 'http://localhost/',
+      toString: () => "http://localhost/",
     };
-    
-    vi.stubGlobal('location', locationMock);
+
+    vi.stubGlobal("location", locationMock);
 
     render(
       <AdminErrorBoundary>
         <ThrowError />
-      </AdminErrorBoundary>
+      </AdminErrorBoundary>,
     );
 
-    const resetButton = screen.getByRole('button', { name: /Return to Dashboard/i });
+    const resetButton = screen.getByRole("button", {
+      name: /Return to Dashboard/i,
+    });
     fireEvent.click(resetButton);
 
-    expect(locationMock.href).toBe('/admin/dashboard');
+    expect(locationMock.href).toBe("/admin/dashboard");
   });
 });

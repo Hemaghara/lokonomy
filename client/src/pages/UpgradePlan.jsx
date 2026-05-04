@@ -521,169 +521,183 @@ const UpgradePlan = () => {
           </div>
         </motion.div>
 
-        <div className="grid sm:grid-cols-3 gap-5 mb-12">
-          {PLANS_CONFIG.map((plan, idx) => {
-            const dynamicData = dynamicPlans[plan.key] || {};
-            const price = dynamicData.prices
-              ? dynamicData.prices[selectedDuration]
-              : plan.prices[selectedDuration];
+        <div className="grid sm:grid-cols-3 gap-5 mb-12 unique-grid-identifier">
+          {(() => {
+            const mapped = PLANS_CONFIG.map((plan, idx) => {
+              const dynamicData = dynamicPlans[plan.key] || {};
+              const price = dynamicData.prices
+                ? dynamicData.prices[selectedDuration]
+                : plan.prices[selectedDuration];
 
-            const dynamicFeatures = dynamicData.limits
-              ? [
-                  {
-                    label: `${dynamicData.limits.productsUploaded === 1e308 ? "Unlimited" : dynamicData.limits.productsUploaded} Product Listings`,
-                    included: true,
-                  },
-                  {
-                    label: `${dynamicData.limits.storiesPosted === 1e308 ? "Unlimited" : dynamicData.limits.storiesPosted} Stories`,
-                    included: true,
-                  },
-                  {
-                    label: "Advanced Analytics",
-                    included: dynamicData.limits.analytics,
-                  },
-                  {
-                    label: "Featured Listings",
-                    included: dynamicData.limits.featuredListings,
-                  },
-                  {
-                    label: "Priority Support",
-                    included: dynamicData.limits.prioritySupport,
-                  },
-                  {
-                    label: "Chat Messaging",
-                    included: dynamicData.limits.chatMessaging,
-                  },
-                ]
-              : plan.features;
+              const dynamicFeatures = dynamicData.limits
+                ? [
+                    {
+                      label: `${dynamicData.limits.productsUploaded === 1e308 ? "Unlimited" : dynamicData.limits.productsUploaded} Product Listings`,
+                      included: true,
+                    },
+                    {
+                      label: `${dynamicData.limits.storiesPosted === 1e308 ? "Unlimited" : dynamicData.limits.storiesPosted} Stories`,
+                      included: true,
+                    },
+                    {
+                      label: "Advanced Analytics",
+                      included: dynamicData.limits.analytics,
+                    },
+                    {
+                      label: "Featured Listings",
+                      included: dynamicData.limits.featuredListings,
+                    },
+                    {
+                      label: "Priority Support",
+                      included: dynamicData.limits.prioritySupport,
+                    },
+                    {
+                      label: "Chat Messaging",
+                      included: dynamicData.limits.chatMessaging,
+                    },
+                  ]
+                : plan.features;
 
-            const isCurrentTier = currentPlan === plan.key && isActive;
-            const isCurrentPlan =
-              isCurrentTier && activeDuration === selectedDuration;
-            const isBuying = loading && selectedPlan === plan.key;
+              const isCurrentTier = currentPlan === plan.key && isActive;
+              const isCurrentPlan =
+                isCurrentTier && activeDuration === selectedDuration;
+              const isBuying = loading && selectedPlan === plan.key;
 
-            return (
-              <motion.div
-                key={plan.key}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 + idx * 0.08 }}
-                className={`plan-card relative ${card} ${plan.borderColor} p-6 flex flex-col shadow-xl ${plan.glowColor}
+              return (
+                <div
+                  key={plan.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 + idx * 0.08 }}
+                  className={`plan-card relative ${card} ${plan.borderColor} p-6 flex flex-col shadow-xl ${plan.glowColor}
                   ${plan.badge ? "ring-1 ring-amber-500/30" : ""}
                   ${isCurrentTier ? "ring-1 ring-violet-500/40" : ""}
                   ${isCurrentPlan ? "ring-2 ring-emerald-500/50" : ""}
                 `}
-              >
-                {plan.badge && !isCurrentPlan && (
-                  <div
-                    className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold border ${plan.badgeColor}`}
-                  >
-                    {plan.badge}
-                  </div>
-                )}
-                {isCurrentPlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    ✓ Active Plan
-                  </div>
-                )}
-                {!isCurrentPlan && isCurrentTier && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/30">
-                    Good Plan
-                  </div>
-                )}
+                >
+                  {plan.badge && !isCurrentPlan && (
+                    <div
+                      className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold border ${plan.badgeColor}`}
+                    >
+                      {plan.badge}
+                    </div>
+                  )}
+                  {isCurrentPlan && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      ✓ Active Plan
+                    </div>
+                  )}
+                  {!isCurrentPlan && isCurrentTier && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/30">
+                      Good Plan
+                    </div>
+                  )}
 
-                <div className="mb-5">
-                  <div
-                    className={`w-12 h-12 rounded-xl bg-linear-to-br ${plan.color} flex items-center justify-center text-2xl mb-3 shadow-lg`}
-                  >
-                    {plan.icon}
-                  </div>
-                  <h3 className="text-white font-bold text-xl">{plan.name}</h3>
+                  <div className="mb-5">
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-linear-to-br ${plan.color} flex items-center justify-center text-2xl mb-3 shadow-lg`}
+                    >
+                      {plan.icon}
+                    </div>
+                    <h3 className="text-white font-bold text-xl">
+                      {plan.name}
+                    </h3>
 
-                  <div className="mt-3 flex items-baseline gap-1 flex-wrap">
-                    {refApplied ? (
+                    <div className="mt-3 flex items-baseline gap-1 flex-wrap">
+                      {refApplied ? (
+                        <>
+                          <span className="text-slate-500 line-through text-sm">
+                            ₹{price}
+                          </span>
+                          <span className="text-slate-500 text-sm">₹</span>
+                          <span className="text-emerald-400 font-extrabold text-3xl">
+                            {getPrice(price)}
+                          </span>
+                          <span className="text-slate-500 text-xs ml-1">
+                            / {selectedDuration}mo
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-slate-500 text-sm">₹</span>
+                          <span className="text-white font-extrabold text-3xl">
+                            {price}
+                          </span>
+                          <span className="text-slate-500 text-xs ml-1">
+                            / {selectedDuration}mo
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-slate-600 text-[11px] mt-1">
+                      ₹{Math.round(getPrice(price) / selectedDuration)}/month
+                      billed{" "}
+                      {selectedDuration === 1
+                        ? "monthly"
+                        : `every ${selectedDuration} months`}
+                    </p>
+                  </div>
+
+                  <ul className="space-y-2.5 mb-6 flex-1">
+                    {dynamicFeatures.map((f, fi) => (
+                      <li
+                        key={fi}
+                        className="flex items-center gap-2.5 text-xs"
+                      >
+                        {f.included ? (
+                          <HiOutlineCheckCircle className="text-emerald-400 shrink-0 text-base" />
+                        ) : (
+                          <HiOutlineXCircle className="text-slate-700 shrink-0 text-base" />
+                        )}
+                        <span
+                          className={
+                            f.included ? "text-slate-300" : "text-slate-600"
+                          }
+                        >
+                          {f.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => !isCurrentPlan && handlePurchase(plan.key)}
+                    disabled={isCurrentPlan || isBuying || loading}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[.97] flex items-center justify-center gap-2 ${
+                      isCurrentPlan
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-default"
+                        : isBuying
+                          ? "bg-violet-600/60 text-violet-300 cursor-wait"
+                          : `bg-linear-to-r ${plan.color} text-white shadow-lg hover:opacity-90`
+                    }`}
+                  >
+                    {isCurrentPlan ? (
                       <>
-                        <span className="text-slate-500 line-through text-sm">
-                          ₹{price}
-                        </span>
-                        <span className="text-slate-500 text-sm">₹</span>
-                        <span className="text-emerald-400 font-extrabold text-3xl">
-                          {getPrice(price)}
-                        </span>
-                        <span className="text-slate-500 text-xs ml-1">
-                          / {selectedDuration}mo
-                        </span>
+                        <HiOutlineCheckCircle /> Current Plan
+                      </>
+                    ) : isBuying ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing…
                       </>
                     ) : (
                       <>
-                        <span className="text-slate-500 text-sm">₹</span>
-                        <span className="text-white font-extrabold text-3xl">
-                          {price}
-                        </span>
-                        <span className="text-slate-500 text-xs ml-1">
-                          / {selectedDuration}mo
-                        </span>
+                        <HiOutlineCreditCard />
+                        Get {plan.name}
                       </>
                     )}
-                  </div>
-                  <p className="text-slate-600 text-[11px] mt-1">
-                    ₹{Math.round(getPrice(price) / selectedDuration)}/month
-                    billed{" "}
-                    {selectedDuration === 1
-                      ? "monthly"
-                      : `every ${selectedDuration} months`}
-                  </p>
+                  </button>
                 </div>
-
-                <ul className="space-y-2.5 mb-6 flex-1">
-                  {dynamicFeatures.map((f, fi) => (
-                    <li key={fi} className="flex items-center gap-2.5 text-xs">
-                      {f.included ? (
-                        <HiOutlineCheckCircle className="text-emerald-400 shrink-0 text-base" />
-                      ) : (
-                        <HiOutlineXCircle className="text-slate-700 shrink-0 text-base" />
-                      )}
-                      <span
-                        className={
-                          f.included ? "text-slate-300" : "text-slate-600"
-                        }
-                      >
-                        {f.label}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => !isCurrentPlan && handlePurchase(plan.key)}
-                  disabled={isCurrentPlan || isBuying || loading}
-                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[.97] flex items-center justify-center gap-2 ${
-                    isCurrentPlan
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-default"
-                      : isBuying
-                        ? "bg-violet-600/60 text-violet-300 cursor-wait"
-                        : `bg-linear-to-r ${plan.color} text-white shadow-lg hover:opacity-90`
-                  }`}
-                >
-                  {isCurrentPlan ? (
-                    <>
-                      <HiOutlineCheckCircle /> Current Plan
-                    </>
-                  ) : isBuying ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Processing…
-                    </>
-                  ) : (
-                    <>
-                      <HiOutlineCreditCard />
-                      Get {plan.name}
-                    </>
-                  )}
-                </button>
-              </motion.div>
+              );
+            });
+            console.log(
+              "Mapped array length:",
+              mapped.length,
+              "First element type:",
+              mapped[0]?.type,
             );
-          })}
+            return mapped;
+          })()}
         </div>
 
         <motion.div

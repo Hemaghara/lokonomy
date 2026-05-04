@@ -1,85 +1,202 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../../utils/test-utils';
-import PostJob from '../PostJob';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { jobService } from '../../services';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "../../utils/test-utils";
+import PostJob from "../PostJob";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { jobService } from "../../services";
+import { toast } from "react-hot-toast";
 
-vi.mock('../../services', () => ({
-  jobService: { createJob: vi.fn().mockResolvedValue({ data: { success: true } }) },
+// Mock services
+vi.mock("../../services", () => ({
+  jobService: { createJob: vi.fn() },
 }));
 
-vi.mock('../../context/LocationContext', () => ({
-  LocationProvider: ({ children }) => <div data-testid="location-provider">{children}</div>,
-  useLocation: () => ({ availableDistricts: ['Pune', 'Ahmedabad'] }),
+vi.mock("../../context/LocationContext", () => ({
+  useLocation: () => ({ availableDistricts: ["Pune", "Ahmedabad", "Mumbai"] }),
 }));
 
-vi.mock('../../hooks/usePlanLimits', () => ({
+vi.mock("../../hooks/usePlanLimits", () => ({
   usePlanLimits: () => ({ limits: { jobsPost: 10 } }),
 }));
 
-vi.mock('react-hot-toast', () => {
-  const t = Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn(), loading: vi.fn(), dismiss: vi.fn() });
-  return { default: t, toast: t, Toaster: () => null };
-});
+// Redundant toast mock removed to use global mock from vitest.setup.js
 
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...p }) => { const f={...p};['initial','animate','exit','transition','layout','whileHover','whileTap','whileInView','layoutId'].forEach(k=>delete f[k]); return <div {...f}>{children}</div>; },
-    span: ({ children, ...p }) => { const f={...p};['initial','animate','exit','transition','layout','whileHover','whileTap'].forEach(k=>delete f[k]); return <span {...f}>{children}</span>; },
-  },
-  AnimatePresence: ({ children }) => <>{children}</>,
-}));
-
-describe('PostJob Page', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
-
-  it('renders the job posting form', () => {
-    render(<PostJob />);
-    expect(screen.getByText(/Post a Job Listing/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/e.g. Sales Executive/i)).toBeDefined();
+describe("PostJob Page", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    jobService.createJob.mockResolvedValue({ data: { success: true } });
   });
 
-  it('submits the form successfully', async () => {
+  it("renders the job posting form with remaining limits", () => {
     render(<PostJob />);
-    fireEvent.change(screen.getByPlaceholderText(/e.g. Sales Executive/i), { target: { value: 'Software Engineer' } });
-    fireEvent.change(screen.getByPlaceholderText(/e.g. MG Road, Pune/i), { target: { value: 'Ahmedabad' } });
-    fireEvent.change(screen.getByPlaceholderText(/e.g. 3/i), { target: { value: '2' } });
-    fireEvent.click(screen.getByText(/Select District/i));
-    fireEvent.click(screen.getByText('Ahmedabad'));
-    fireEvent.change(screen.getByPlaceholderText(/e\.g\. 0.2 Years/i), { target: { value: '3 Years' } });
-    fireEvent.change(screen.getByPlaceholderText(/e\.g\. 15.?000.+20.?000/i), { target: { value: '50000' } });
-    fireEvent.change(screen.getByPlaceholderText(/Detailed description/i), { target: { value: 'Job description' } });
-    fireEvent.change(screen.getByPlaceholderText(/Full Name/i), { target: { value: 'John Doe' } });
-    fireEvent.change(screen.getByPlaceholderText(/email@company.com/i), { target: { value: 'john@example.com' } });
-    fireEvent.change(screen.getByPlaceholderText(/Mobile Number/i), { target: { value: '1234567890' } });
-    const submitBtn = screen.getAllByRole('button', { name: /Publish Job Listing/i })[0];
-    fireEvent.submit(submitBtn.closest('form'));
-    await waitFor(() => {
-      expect(jobService.createJob).toHaveBeenCalledWith(expect.objectContaining({
-        position: 'Software Engineer', location: 'Ahmedabad', district: 'Ahmedabad'
-      }));
-    }, { timeout: 10000 });
+    expect(screen.getByText(/Post a Job Listing/i)).toBeInTheDocument();
+    expect(screen.getByText(/Remaining: 10 \/ 10/i)).toBeInTheDocument();
   });
 
-  it('handles plan limit errors', async () => {
-    const toast = (await import('react-hot-toast')).toast;
-    jobService.createJob.mockRejectedValueOnce({
-      response: { data: { code: 'LIMIT_REACHED', message: 'You have reached your monthly job posting limit.' } }
+  it("submits the form successfully with all fields", async () => {
+    render(<PostJob />);
+
+    // Fill Role Specifications
+    fireEvent.change(screen.getByLabelText(/Job Position/i), {
+      target: { name: "position", value: "Software Engineer" },
     });
-    render(<PostJob />);
-    fireEvent.change(screen.getByPlaceholderText(/e.g. Sales Executive/i), { target: { value: 'Dev' } });
-    fireEvent.change(screen.getByPlaceholderText(/e.g. MG Road, Pune/i), { target: { value: 'Loc' } });
-    fireEvent.change(screen.getByPlaceholderText(/e.g. 3/i), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText(/Location \/ Area/i), {
+      target: { name: "location", value: "Bopal" },
+    });
+    fireEvent.change(screen.getByLabelText(/Vacancies/i), {
+      target: { name: "vacancies", value: "2" },
+    });
+
+    // Select District
     fireEvent.click(screen.getByText(/Select District/i));
-    fireEvent.click(screen.getByText('Pune'));
-    fireEvent.change(screen.getByPlaceholderText(/e\.g\. 0.?2 Years/i), { target: { value: '1' } });
-    fireEvent.change(screen.getByPlaceholderText(/e\.g\. 15.?000.+20.?000/i), { target: { value: '1' } });
-    fireEvent.change(screen.getByPlaceholderText(/Detailed description/i), { target: { value: 'Desc' } });
-    fireEvent.change(screen.getByPlaceholderText(/Full Name/i), { target: { value: 'N' } });
-    fireEvent.change(screen.getByPlaceholderText(/email@company.com/i), { target: { value: 'e@e.com' } });
-    fireEvent.change(screen.getByPlaceholderText(/Mobile Number/i), { target: { value: '1' } });
-    const submitBtn = screen.getAllByRole('button', { name: /Publish Job Listing/i })[0];
-    fireEvent.submit(submitBtn.closest('form'));
-    await waitFor(() => { expect(toast).toHaveBeenCalled(); }, { timeout: 10000 });
+    fireEvent.click(screen.getByText("Ahmedabad"));
+
+    // Select Job Type
+    fireEvent.click(screen.getByText(/Full-time/i)); // Default value button
+    fireEvent.click(screen.getByText("Freelance"));
+
+    // Fill Requirements
+    fireEvent.change(screen.getByLabelText(/Experience/i), {
+      target: { name: "experience", value: "3 Years" },
+    });
+    fireEvent.change(screen.getByLabelText(/Monthly Salary/i), {
+      target: { name: "salary", value: "50000" },
+    });
+    fireEvent.change(screen.getByLabelText(/Required Skills/i), {
+      target: { name: "skills", value: "React, Node" },
+    });
+    fireEvent.change(screen.getByLabelText(/Job Description/i), {
+      target: { name: "description", value: "Great job" },
+    });
+
+    // Fill Contact
+    fireEvent.change(screen.getByLabelText(/Hiring Officer/i), {
+      target: { name: "posterName", value: "John Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/Official Email/i), {
+      target: { name: "posterEmail", value: "john@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Primary Contact/i), {
+      target: { name: "posterContact", value: "1234567890" },
+    });
+
+    const submitBtn = screen.getByRole("button", {
+      name: /Publish Job Listing/i,
+    });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(jobService.createJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          position: "Software Engineer",
+          district: "Ahmedabad",
+          jobType: "Freelance",
+          posterContact: "1234567890",
+        }),
+      );
+      expect(toast.success).toHaveBeenCalledWith("Job posted successfully!");
+    });
+  });
+
+  const fillRequiredFields = () => {
+    fireEvent.change(screen.getByLabelText(/Job Position/i), {
+      target: { name: "position", value: "Dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/Location \/ Area/i), {
+      target: { name: "location", value: "Loc" },
+    });
+    fireEvent.change(screen.getByLabelText(/Vacancies/i), {
+      target: { name: "vacancies", value: "1" },
+    });
+    fireEvent.click(screen.getByText(/Select District/i));
+    fireEvent.click(screen.getByText("Pune"));
+    fireEvent.change(screen.getByLabelText(/Experience/i), {
+      target: { name: "experience", value: "1" },
+    });
+    fireEvent.change(screen.getByLabelText(/Monthly Salary/i), {
+      target: { name: "salary", value: "100" },
+    });
+    fireEvent.change(screen.getByLabelText(/Required Skills/i), {
+      target: { name: "skills", value: "Skills" },
+    });
+    fireEvent.change(screen.getByLabelText(/Job Description/i), {
+      target: { name: "description", value: "Desc" },
+    });
+    fireEvent.change(screen.getByLabelText(/Hiring Officer/i), {
+      target: { name: "posterName", value: "Name" },
+    });
+    fireEvent.change(screen.getByLabelText(/Official Email/i), {
+      target: { name: "posterEmail", value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/Primary Contact/i), {
+      target: { name: "posterContact", value: "123" },
+    });
+  };
+
+  it('handles "LIMIT_REACHED" error with specialized toast', async () => {
+    jobService.createJob.mockRejectedValueOnce({
+      response: { data: { code: "LIMIT_REACHED", message: "Limit reached" } },
+    });
+
+    render(<PostJob />);
+
+    fillRequiredFields();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Publish Job Listing/i }),
+    );
+
+    await waitFor(() => {
+      // The LIMIT_REACHED toast is complex, verify toast is called
+      expect(toast).toHaveBeenCalled();
+    });
+  });
+
+  it("handles generic submission error", async () => {
+    jobService.createJob.mockRejectedValueOnce({
+      response: { data: { message: "Internal Server Error" } },
+    });
+
+    render(<PostJob />);
+    fillRequiredFields();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Publish Job Listing/i }),
+    );
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Internal Server Error");
+    });
+  });
+
+  it("validates deadline date", () => {
+    render(<PostJob />);
+    const deadlineInput = screen.getByLabelText(/Application Deadline/i);
+
+    const today = new Date().toISOString().split("T")[0];
+    expect(deadlineInput.getAttribute("min")).toBe(today);
+  });
+
+  it("updates loading state during submission", async () => {
+    jobService.createJob.mockReturnValueOnce(
+      new Promise((resolve) =>
+        setTimeout(() => resolve({ data: { success: true } }), 100),
+      ),
+    );
+
+    render(<PostJob />);
+    fillRequiredFields();
+
+    fireEvent.submit(
+      screen
+        .getByRole("button", { name: /Publish Job Listing/i })
+        .closest("form"),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Publishing.../i)).toBeInTheDocument();
+    });
+
+    const button = screen.getByText(/Publishing.../i).closest("button");
+    expect(button).toBeDisabled();
   });
 });

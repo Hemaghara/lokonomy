@@ -44,13 +44,13 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="report-modal-title" className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
               <FiFlag size={16} />
             </div>
-            <h3 className="text-lg font-black text-slate-900 tracking-tight">
+            <h3 id="report-modal-title" className="text-lg font-black text-slate-900 tracking-tight">
               Report Content
             </h3>
           </div>

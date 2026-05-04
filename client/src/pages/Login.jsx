@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { useUser } from "../context/UserContext";
@@ -45,14 +45,12 @@ const Login = () => {
   });
 
   useEffect(() => {
-    let interval;
-    if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    }
+    if (step !== "otp" || timer <= 0) return;
+    const interval = setInterval(() => {
+      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [step, timer === 0]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -102,7 +100,7 @@ const Login = () => {
               ""
             ).trim();
           }
-        } catch {
+        } catch (error) {
           console.error("Geocoding Error:", error.message);
         }
 
@@ -233,7 +231,7 @@ const Login = () => {
 
   const gpsStatusConfig = {
     idle: {
-      icon: <LocateFixed className="w-5 h-5" />,
+      // icon: <LocateFixed className="w-5 h-5" />,
       label: "GPS Authorization",
       subLabel: "Required for secure access",
       color: "text-blue-400",
@@ -241,7 +239,7 @@ const Login = () => {
       accent: "blue",
     },
     fetching: {
-      icon: <RefreshCw className="w-5 h-5 animate-spin" />,
+      // icon: <RefreshCw className="w-5 h-5 animate-spin" />,
       label: "Detecting Location",
       subLabel: "Verifying your current city...",
       color: "text-amber-400",
@@ -249,7 +247,7 @@ const Login = () => {
       accent: "amber",
     },
     granted: {
-      icon: <CheckCircle className="w-5 h-5" />,
+      // icon: <CheckCircle className="w-5 h-5" />,
       label: "Access Verified",
       subLabel: "Location successfully captured",
       color: "text-emerald-400",
@@ -257,7 +255,7 @@ const Login = () => {
       accent: "emerald",
     },
     denied: {
-      icon: <Ban className="w-5 h-5" />,
+      // icon: <Ban className="w-5 h-5" />,
       label: "GPS Access Denied",
       subLabel: "Enable location in settings",
       color: "text-rose-400",
@@ -265,7 +263,7 @@ const Login = () => {
       accent: "rose",
     },
     error: {
-      icon: <AlertTriangle className="w-5 h-5" />,
+      // icon: <AlertTriangle className="w-5 h-5" />,
       label: "Detection Failed",
       subLabel: "Tap to retry location capture",
       color: "text-orange-400",
@@ -423,7 +421,7 @@ const Login = () => {
                 <div className="space-y-4 pt-2">
                   <button
                     type="submit"
-                    disabled={loading || gpsState.status !== "granted"}
+                    disabled={loading}
                     className="w-full bg-linear-to-r from-primary to-primary-dark text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-px active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all flex items-center justify-center gap-2"
                   >
                     {loading ? (

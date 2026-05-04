@@ -84,6 +84,7 @@ describe('BookingSystem Component', () => {
     });
     await waitFor(() => {
       expect(screen.getByText(/Book New Appointment/i)).toBeInTheDocument();
+      expect(growthService.getActiveCoupons).toHaveBeenCalledWith(businessId);
     });
   });
 
@@ -113,10 +114,11 @@ describe('BookingSystem Component', () => {
 
     await waitFor(() => {
       expect(growthService.createBooking).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalledWith('Booking request sent successfully!');
     });
   });
 
-  it('allows owner to update booking status', async () => {
+  it('allows owner to update booking status (approve/reject)', async () => {
     growthService.updateBookingStatus.mockResolvedValue({ data: { success: true } });
     await act(async () => {
         render(<BookingSystem businessId={businessId} isOwner={true} ownerId={ownerId} />);
@@ -124,9 +126,169 @@ describe('BookingSystem Component', () => {
 
     await waitFor(() => screen.getByTitle('Approve'));
     
+    // Test Approve
     await act(async () => {
         fireEvent.click(screen.getByTitle('Approve'));
     });
-    expect(growthService.updateBookingStatus).toHaveBeenCalled();
+    expect(growthService.updateBookingStatus).toHaveBeenCalledWith({ bookingId: 'b1', status: 'confirmed' });
+    expect(toast.success).toHaveBeenCalledWith('Appointment Approved');
+
+    // Test Reject
+    await act(async () => {
+        fireEvent.click(screen.getByTitle('Reject'));
+    });
+    expect(growthService.updateBookingStatus).toHaveBeenCalledWith({ bookingId: 'b1', status: 'cancelled' });
+    expect(toast.success).toHaveBeenCalledWith('Appointment Cancelled');
+  });
+
+  it('shows empty state for owner when no bookings', async () => {
+    growthService.getBookings.mockResolvedValueOnce({ data: [] });
+    await act(async () => {
+        render(<BookingSystem businessId={businessId} isOwner={true} ownerId={ownerId} />);
+    });
+    await waitFor(() => {
+      expect(screen.getByText('No appointment requests yet.')).toBeInTheDocument();
+    });
+  });
+
+  it('prevents customer from booking if they have an active booking', async () => {
+    // User has pending/confirmed booking
+    await act(async () => {
+        render(<BookingSystem businessId={businessId} isOwner={false} ownerId={ownerId} />);
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Request Under Review')).toBeInTheDocument();
+      expect(screen.getByText('Only one active request allowed per business.')).toBeInTheDocument();
+    });
+
+    // Button should be disabled
+    const button = screen.getByText('Request Under Review').closest('button');
+    expect(button).toBeDisabled();
+    
+    // Simulate click just in case
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(toast.error).not.toHaveBeenCalled(); // Since it's disabled, no toast
+  });
+
+  it('allows customer to apply a coupon from available list', async () => {
+    growthService.getBookings.mockResolvedValueOnce({ data: [] });
+    growthService.validateCoupon.mockResolvedValue({ data: { code: 'SAVE10', discount: 10, discountType: 'percentage' } });
+    
+    await act(async () => {
+        render(<BookingSystem businessId={businessId} isOwner={false} ownerId={ownerId} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/SAVE10/i)).toBeInTheDocument();
+    });
+
+    await act(async () => {
+        fireEvent.click(screen.getByText(/Book New Appointment/i));
+    });
+
+    await waitFor(() => screen.getByText(/Pick from available coupons/i));
+    
+    // Open coupon list
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Pick from available coupons/i));
+    });
+    
+    // Click on the SAVE10 coupon from the dropdown list
+    await act(async () => {
+      // Multiple instances might exist (one outside modal, one inside list). Using all and clicking the one in list
+      const codes = screen.getAllByText('SAVE10');
+      fireEvent.click(codes[codes.length - 1]);
+    });
+
+    await waitFor(() => {
+      expect(growthService.validateCoupon).toHaveBeenCalledWith({ code: 'SAVE10', businessId });
+      expect(toast.success).toHaveBeenCalledWith('Coupon "SAVE10" applied!');
+    });
+    
+    // Coupon should be selected
+    expect(screen.getByText('10% discount applied')).toBeInTheDocument();
+  });
+
+  it('allows customer to apply coupon manually and then remove it', async () => {
+    growthService.getBookings.mockResolvedValueOnce({ data: [] });
+    growthService.validateCoupon.mockResolvedValue({ data: { code: 'CUSTOM20', discount: 20, discountType: 'fixed' } });
+    
+    await act(async () => {
+        render(<BookingSystem businessId={businessId} isOwner={false} ownerId={ownerId} />);
+    });
+
+    await act(async () => {
+        fireEvent.click(screen.getByText(/Book New Appointment/i));
+    });
+
+    await waitFor(() => screen.getByPlaceholderText(/Enter coupon code/i));
+    const input = screen.getByPlaceholderText(/Enter coupon code/i);
+    
+    fireEvent.change(input, { target: { value: 'custom20' } });
+    expect(input.value).toBe('CUSTOM20'); // Should uppercase
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Apply'));
+    });
+
+    await waitFor(() => {
+      expect(growthService.validateCoupon).toHaveBeenCalledWith({ code: 'CUSTOM20', businessId });
+      expect(screen.getByText('₹20 off applied')).toBeInTheDocument();
+    });
+
+    // Now remove it
+    const closeBtn = screen.getByLabelText('Remove coupon');
+    await act(async () => {
+      fireEvent.click(closeBtn);
+    });
+
+    expect(screen.queryByText('₹20 off applied')).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Enter coupon code/i)).toBeInTheDocument();
+  });
+
+  it('handles invalid coupon gracefully', async () => {
+    growthService.getBookings.mockResolvedValueOnce({ data: [] });
+    growthService.validateCoupon.mockRejectedValue({ response: { data: { message: 'Coupon expired' } } });
+    
+    await act(async () => {
+        render(<BookingSystem businessId={businessId} isOwner={false} ownerId={ownerId} />);
+    });
+
+    await act(async () => {
+        fireEvent.click(screen.getByText(/Book New Appointment/i));
+    });
+
+    await waitFor(() => screen.getByPlaceholderText(/Enter coupon code/i));
+    fireEvent.change(screen.getByPlaceholderText(/Enter coupon code/i), { target: { value: 'BADCODE' } });
+    
+    await act(async () => {
+      fireEvent.click(screen.getByText('Apply'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Coupon expired')).toBeInTheDocument();
+    });
+  });
+
+  it('closes modal when X is clicked', async () => {
+    growthService.getBookings.mockResolvedValueOnce({ data: [] });
+    await act(async () => {
+        render(<BookingSystem businessId={businessId} isOwner={false} ownerId={ownerId} />);
+    });
+    
+    await act(async () => {
+        fireEvent.click(screen.getByText(/Book New Appointment/i));
+    });
+
+    await waitFor(() => screen.getByText(/Schedule Visit/i));
+    
+    const closeBtn = screen.getByLabelText('Close');
+    await act(async () => {
+      fireEvent.click(closeBtn);
+    });
+
+    expect(screen.queryByText(/Schedule Visit/i)).not.toBeInTheDocument();
   });
 });

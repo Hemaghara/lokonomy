@@ -71,6 +71,8 @@ const AdminSettings = () => {
       </AdminLayout>
     );
 
+  if (!settings) return null;
+
   return (
     <AdminLayout>
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-8">

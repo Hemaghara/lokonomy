@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import AdminLayout from "../../layouts/AdminLayout";
 import { adminService } from "../../services";
@@ -14,6 +15,7 @@ import {
 } from "react-icons/fi";
 
 const AdminContentSchedule = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
@@ -99,7 +101,7 @@ const AdminContentSchedule = () => {
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data.scheduledStories?.length === 0 ? (
+              {!data?.scheduledStories || data.scheduledStories.length === 0 ? (
                 <div className="col-span-full py-12 text-center bg-slate-900/40 border border-dashed border-white/5 rounded-3xl text-slate-500 text-sm italic">
                   No stories scheduled for future release
                 </div>
@@ -143,7 +145,7 @@ const AdminContentSchedule = () => {
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.pinnedFeeds?.length === 0 ? (
+              {!data?.pinnedFeeds || data.pinnedFeeds.length === 0 ? (
                 <div className="col-span-full py-12 text-center bg-slate-900/40 border border-dashed border-white/5 rounded-3xl text-slate-500 text-sm italic">
                   No feed posts pinned currently
                 </div>
@@ -186,7 +188,7 @@ const AdminContentSchedule = () => {
               </h3>
             </div>
             <div className="bg-slate-900/60 border border-white/5 rounded-3xl overflow-hidden">
-              {data.expiringStories?.length === 0 ? (
+              {!data?.expiringStories || data.expiringStories.length === 0 ? (
                 <div className="py-12 text-center text-slate-500 text-sm italic">
                   No stories expiring in the next 7 days
                 </div>

@@ -134,6 +134,7 @@ const AdminAuctionDetails = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(-1)}
+              aria-label="Go back"
               className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-lg"
             >
               <FiArrowLeft size={18} />

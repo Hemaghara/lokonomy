@@ -180,7 +180,7 @@ const AdminChurnPredictor = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {data.users.map((user) => {
+              {data?.users?.map((user) => {
                 const risk = RISK_CONFIG[user.churnRisk];
                 const RiskIcon = risk.icon;
                 return (

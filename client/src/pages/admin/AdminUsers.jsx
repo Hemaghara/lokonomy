@@ -101,6 +101,7 @@ const ActionBtn = ({ onClick, icon: _Icon, color }) => {
   return (
     <button
       onClick={onClick}
+      aria-label={Icon.name || "Action"}
       className={`p-1.5 rounded-lg transition-all ${colors[color]}`}
     >
       <Icon size={15} />

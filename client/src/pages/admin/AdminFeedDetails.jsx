@@ -214,6 +214,7 @@ const AdminFeedDetails = () => {
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate(-1)}
+              aria-label="Go back"
               className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700/70 text-slate-400 hover:text-white hover:border-cyan-500/50 transition-all"
             >
               <FiArrowLeft size={16} />

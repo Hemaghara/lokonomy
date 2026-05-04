@@ -294,6 +294,7 @@ const ProductDetails = () => {
                   key={activeImage}
                   src={images[activeImage]}
                   alt={product.productName}
+                  data-testid="main-image"
                   initial={{ opacity: 0, scale: 1.03 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.97 }}
@@ -351,6 +352,7 @@ const ProductDetails = () => {
                     key={idx}
                     onMouseEnter={() => setActiveImage(idx)}
                     onClick={() => setActiveImage(idx)}
+                    aria-label={`View image ${idx + 1}`}
                     className={`aspect-square rounded-xl overflow-hidden border-2 transition-all
                       ${
                         idx === activeImage
@@ -361,7 +363,7 @@ const ProductDetails = () => {
                     <img
                       src={img}
                       className="w-full h-full object-cover"
-                      alt=""
+                      alt={`Product thumbnail ${idx + 1}`}
                     />
                   </button>
                 ))}
@@ -400,7 +402,7 @@ const ProductDetails = () => {
                   {(product.isAuction
                     ? product.currentHighestBid || product.startingPrice
                     : product.price
-                  ).toLocaleString()}
+                  )?.toLocaleString()}
                 </div>
                 <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide bg-[#111827] border border-[#1f2a3d] px-2.5 py-1 rounded-lg">
                   {product.isAuction
@@ -982,6 +984,7 @@ const ProductDetails = () => {
                             <button
                               key={num}
                               type="button"
+                              aria-label={`${num} star${num > 1 ? "s" : ""}`}
                               onClick={() =>
                                 setProductReview((prev) => ({
                                   ...prev,

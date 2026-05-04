@@ -302,6 +302,7 @@ const AdminReviews = () => {
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
                   className="p-2 bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all"
+                  aria-label="Previous Page"
                 >
                   <FiChevronLeft />
                 </button>
@@ -333,6 +334,7 @@ const AdminReviews = () => {
                   disabled={page === totalPages}
                   onClick={() => setPage((p) => p + 1)}
                   className="p-2 bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all"
+                  aria-label="Next Page"
                 >
                   <FiChevronRight />
                 </button>

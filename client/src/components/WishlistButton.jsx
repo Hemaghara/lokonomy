@@ -52,6 +52,7 @@ const WishlistButton = ({ type, id, className = "", onToggle }) => {
       whileTap={{ scale: 0.9 }}
       onClick={toggleWishlist}
       disabled={loading}
+      aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
       className={`p-2 rounded-xl transition-all duration-300 ${
         isSaved
           ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-lg shadow-rose-500/10"

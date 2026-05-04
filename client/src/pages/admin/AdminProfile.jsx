@@ -1,79 +1,91 @@
-import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
-import { adminService } from "../../services";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
-  Lock,
   Shield,
-  Save,
+  Lock,
   ArrowLeft,
+  Camera,
+  Check,
+  AlertCircle,
+  RefreshCw,
   Key,
   Eye,
   EyeOff,
+  Save,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { adminService } from "../../services";
+import { toast } from "react-hot-toast";
 
 const AdminProfile = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [admin, setAdmin] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "",
+  const [admin, setAdmin] = useState(() => {
+    const saved = localStorage.getItem("adminInfo");
+    return saved ? JSON.parse(saved) : null;
   });
 
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: admin?.name || "",
+    email: admin?.email || "",
+    role: admin?.role || "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const fetchAdminProfile = async () => {
-      try {
-        const savedAdmin = localStorage.getItem("adminInfo");
-        if (savedAdmin) {
-          const parsedAdmin = JSON.parse(savedAdmin);
-          setAdmin(parsedAdmin);
-          setFormData({
-            name: parsedAdmin.name || "",
-            email: parsedAdmin.email || "",
-            role: parsedAdmin.role || "",
-            password: "",
-            confirmPassword: "",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching admin profile:", error);
+    if (!admin) {
+      const saved = localStorage.getItem("adminInfo");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setAdmin(parsed);
+        setFormData({
+          name: parsed.name,
+          email: parsed.email,
+          role: parsed.role,
+          password: "",
+          confirmPassword: "",
+        });
       }
-    };
-    fetchAdminProfile();
+    }
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const validatePassword = (password) => {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+      return "Password must contain uppercase, lowercase, number, and special character.";
+    }
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password) {
-      if (formData.password.length < 8) {
-        toast.error("Password must be at least 8 characters long");
+      const passError = validatePassword(formData.password);
+      if (passError) {
+        toast.error(passError);
         return;
       }
-      const hasUpperCase = /[A-Z]/.test(formData.password);
-      const hasLowerCase = /[a-z]/.test(formData.password);
-      const hasNumber = /[0-9]/.test(formData.password);
-      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
-
-      if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
-        toast.error(
-          "Password must contain uppercase, lowercase, number, and special character.",
-        );
-        return;
-      }
-
       if (formData.password !== formData.confirmPassword) {
         toast.error("Passwords do not match!");
         return;
@@ -87,25 +99,31 @@ const AdminProfile = () => {
         email: formData.email,
         role: formData.role,
       };
-
       if (formData.password) {
         updateData.password = formData.password;
       }
 
-      const response = await adminService.updateProfile(updateData);
-      const updatedAdmin = { ...admin, ...response.data };
-      localStorage.setItem("adminInfo", JSON.stringify(updatedAdmin));
-      if (response.data.token) {
-        localStorage.setItem("adminToken", response.data.token);
-      }
+      const res = await adminService.updateProfile(updateData);
+      const updatedAdmin = {
+        ...admin,
+        ...res.data,
+      };
 
+      localStorage.setItem("adminInfo", JSON.stringify(updatedAdmin));
+      if (res.data.token) {
+        localStorage.setItem("adminToken", res.data.token);
+      }
       setAdmin(updatedAdmin);
       toast.success("Profile updated successfully!");
-      setFormData((prev) => ({ ...prev, password: "", confirmPassword: "" }));
-    } catch (error) {
-      const errorMsg =
-        error.response?.data?.message || "Failed to update profile";
-      toast.error(errorMsg);
+
+      setFormData((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
+    } catch (err) {
+      const message = err.response?.data?.message || "Failed to update profile";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

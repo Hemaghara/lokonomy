@@ -111,13 +111,165 @@ describe('CouponManager Component', () => {
     });
   });
 
+  it('handles coupon deletion through toast confirmation', async () => {
+    growthService.deleteCoupon.mockResolvedValue({ data: { success: true } });
+    await act(async () => {
+        render(<CouponManager businessId={businessId} />);
+    });
+
+    await waitFor(() => screen.getByText('SAVE20'));
+    
+    // Click delete on the first coupon
+    const deleteButton = screen.getAllByTitle('Delete Coupon')[0];
+    await act(async () => {
+        fireEvent.click(deleteButton);
+    });
+
+    // The toast should be called with a component callback
+    expect(toast).toHaveBeenCalled();
+    const toastCalls = toast.mock.calls.filter(call => typeof call[0] === 'function');
+    const ToastComponent = toastCalls[toastCalls.length - 1][0];
+    
+    // Render the toast content
+    let toastScreen;
+    await act(async () => {
+      toastScreen = render(<ToastComponent id="test-toast" />);
+    });
+
+    // Click "Yes, Delete"
+    await act(async () => {
+        fireEvent.click(toastScreen.getByText('Yes, Delete'));
+    });
+
+    await waitFor(() => {
+      expect(growthService.deleteCoupon).toHaveBeenCalledWith('c1');
+      expect(toast.success).toHaveBeenCalledWith('Coupon deleted successfully');
+    });
+  });
+
+  it('cancels coupon deletion through toast', async () => {
+    await act(async () => {
+        render(<CouponManager businessId={businessId} />);
+    });
+
+    await waitFor(() => screen.getByText('SAVE20'));
+    
+    // Click delete on the first coupon
+    const deleteButton = screen.getAllByTitle('Delete Coupon')[0];
+    await act(async () => {
+        fireEvent.click(deleteButton);
+    });
+
+    const toastCalls = toast.mock.calls.filter(call => typeof call[0] === 'function');
+    const ToastComponent = toastCalls[toastCalls.length - 1][0];
+    
+    let toastScreen;
+    await act(async () => {
+      toastScreen = render(<ToastComponent id="test-toast" />);
+    });
+
+    // Click "Cancel"
+    await act(async () => {
+        fireEvent.click(toastScreen.getByText('Cancel'));
+    });
+
+    // The dismiss function should be called on the toast
+    expect(toast.dismiss).toHaveBeenCalledWith('test-toast');
+    expect(growthService.deleteCoupon).not.toHaveBeenCalled();
+  });
+
+  it('verifies/redeems a coupon successfully', async () => {
+    growthService.redeemCoupon.mockResolvedValue({ data: { message: 'Coupon redeemed successfully' } });
+    await act(async () => {
+        render(<CouponManager businessId={businessId} />);
+    });
+
+    const input = screen.getByPlaceholderText(/Enter Coupon Code/i);
+    fireEvent.change(input, { target: { value: 'save20' } });
+    expect(input.value).toBe('SAVE20'); // uppercase
+
+    await act(async () => {
+        fireEvent.click(screen.getByText('Redeem'));
+    });
+
+    await waitFor(() => {
+        expect(growthService.redeemCoupon).toHaveBeenCalledWith({ code: 'SAVE20', businessId });
+        expect(toast.success).toHaveBeenCalledWith('Coupon redeemed successfully');
+    });
+  });
+
+  it('handles create coupon error gracefully', async () => {
+    growthService.createCoupon.mockRejectedValue({ response: { data: { message: 'Duplicate code' } } });
+    await act(async () => {
+        render(<CouponManager businessId={businessId} />);
+    });
+    
+    await act(async () => {
+        fireEvent.click(screen.getByText(/New Coupon/i));
+    });
+
+    await waitFor(() => screen.getByText(/Create New Coupon/i));
+
+    fireEvent.change(screen.getByPlaceholderText(/e.g. SAVE20/i), { target: { value: 'DUP' } });
+    fireEvent.change(screen.getByPlaceholderText('20'), { target: { value: '15' } });
+    fireEvent.change(screen.getByLabelText(/Expiry Date/i), { target: { value: '2027-12-31' } });
+    
+    await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Create Coupon/i }));
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Duplicate code');
+    });
+  });
+
+  it('cancels the form', async () => {
+    await act(async () => {
+        render(<CouponManager businessId={businessId} />);
+    });
+    
+    await act(async () => {
+        fireEvent.click(screen.getByText(/New Coupon/i));
+    });
+
+    await waitFor(() => screen.getByText(/Create New Coupon/i));
+
+    await act(async () => {
+        // Find the generic 'Cancel' button or the close 'X'
+        const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
+        fireEvent.click(cancelBtn);
+    });
+
+    expect(screen.queryByText(/Create New Coupon/i)).not.toBeInTheDocument();
+  });
+
   it('displays correct status labels', async () => {
+    // Modify mock data to include a disabled coupon
+    growthService.getCoupons.mockResolvedValueOnce({ 
+        data: [
+            ...mockCoupons,
+            { _id: 'c3', code: 'LIMIT', discount: 10, discountType: 'fixed', expiryDate: '2027-01-01', usageLimit: 10, usedCount: 10, status: 'disabled' },
+        ] 
+    });
+
     await act(async () => {
         render(<CouponManager businessId={businessId} />);
     });
     await waitFor(() => {
       expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Expired').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Limit Reached').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('shows empty state when no coupons exist', async () => {
+    growthService.getCoupons.mockResolvedValueOnce({ data: [] });
+    await act(async () => {
+        render(<CouponManager businessId={businessId} />);
+    });
+    
+    await waitFor(() => {
+      expect(screen.getByText('No coupons yet. Create one to attract customers!')).toBeInTheDocument();
     });
   });
 });

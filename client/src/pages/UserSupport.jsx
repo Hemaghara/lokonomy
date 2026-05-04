@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import api from "../services/api";
+import { supportService } from "../services";
 import {
   FiLifeBuoy,
   FiSend,
@@ -28,7 +28,7 @@ const UserSupport = () => {
 
   const fetchMyTickets = async () => {
     try {
-      const res = await api.get("/support/my-tickets");
+      const res = await supportService.getTickets();
       setTickets(res.data.tickets);
     } catch (error) {
       console.error("Error fetching tickets");
@@ -39,7 +39,7 @@ const UserSupport = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await api.post("/support/create", newTicket);
+      await supportService.createTicket(newTicket);
       toast.success("Ticket raised successfully!");
       setNewTicket({
         subject: "",
