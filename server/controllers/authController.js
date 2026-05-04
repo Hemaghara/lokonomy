@@ -124,9 +124,9 @@ exports.login = async (req, res) => {
     }
 
     try {
-      // Transporter moved outside for reuse
-
-      await mailService.sendMail({
+      logger.info({ to: email }, "Attempting to send OTP email...");
+      
+      const mailPromise = mailService.sendMail({
         from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your Verification Code",
@@ -139,20 +139,35 @@ exports.login = async (req, res) => {
         </div>`,
       });
 
+      // Timeout after 8 seconds to prevent Render 503
+      await Promise.race([
+        mailPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Email sending timed out")), 8000)
+        )
+      ]);
+
+      logger.info({ to: email }, "OTP email sent successfully");
       return res.json({
         success: true,
         message: "Verification code sent.",
         step: "otp",
       });
     } catch (mailErr) {
-      logger.error({ err: mailErr }, "SMTP error");
-      return res
-        .status(503)
-        .json({ success: false, message: "Failed to send OTP. Try again." });
+      logger.error({ err: mailErr.message, email }, "Email delivery failed");
+      
+      // Even if email fails, in dev or if we want to allow login, we could handle it.
+      // But for now, we tell the user.
+      return res.status(503).json({ 
+        success: false, 
+        message: mailErr.message === "Email sending timed out" 
+          ? "Email service is slow. Please try again in a moment."
+          : "Failed to send verification code. Please check your email settings." 
+      });
     }
   } catch (err) {
-    logger.error({ err }, "Login error");
-    return res.status(500).json({ success: false, message: "Server error" });
+    logger.error({ err: err.message }, "Login controller error");
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
