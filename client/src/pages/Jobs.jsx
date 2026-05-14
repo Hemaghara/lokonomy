@@ -291,45 +291,47 @@ const Jobs = () => {
             )}
           </form>
 
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-            <div className="no-sb flex items-center gap-2 overflow-x-auto shrink-0">
-              <HiOutlineFunnel className="text-slate-600 text-base shrink-0" />
-              {genderFilters.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => setGenderFilter(f.value)}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all
-                    ${
-                      genderFilter === f.value
-                        ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
-                        : "bg-[#0d1424] text-slate-500 hover:text-slate-300 border border-[#1f2a3d]"
-                    }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+          <div className="flex flex-col lg:flex-row gap-4 lg:items-center w-full">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center w-full lg:w-auto">
+              <div className="no-sb flex items-center gap-2 overflow-x-auto w-full pb-1">
+                <HiOutlineFunnel className="text-slate-600 text-base shrink-0" />
+                {genderFilters.map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setGenderFilter(f.value)}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0
+                      ${
+                        genderFilter === f.value
+                          ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
+                          : "bg-[#0d1424] text-slate-500 hover:text-white border border-[#1f2a3d]"
+                      }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden sm:block h-7 w-px bg-[#1f2a3d] shrink-0" />
+
+              <div className="no-sb flex items-center gap-2 overflow-x-auto w-full pb-1">
+                {jobTypeFilters.map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setJobTypeFilter(f.value)}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0
+                      ${
+                        jobTypeFilter === f.value
+                          ? "bg-indigo-600 text-white shadow-md"
+                          : "bg-[#0d1424] text-slate-500 hover:text-white border border-[#1f2a3d]"
+                      }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="h-px lg:h-7 w-full lg:w-px bg-[#1f2a3d] shrink-0" />
-
-            <div className="no-sb flex items-center gap-2 overflow-x-auto shrink-0">
-              {jobTypeFilters.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => setJobTypeFilter(f.value)}
-                  className={`px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all
-                    ${
-                      jobTypeFilter === f.value
-                        ? "bg-indigo-600 text-white shadow-md"
-                        : "bg-[#0d1424] text-slate-500 hover:text-slate-300 border border-[#1f2a3d]"
-                    }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="h-px lg:h-7 w-full lg:w-px bg-[#1f2a3d] shrink-0" />
+            <div className="hidden lg:block h-7 w-px bg-[#1f2a3d] shrink-0" />
 
             <div className="flex flex-wrap gap-3 flex-1 w-full">
               <div className="relative flex-1 min-w-36">

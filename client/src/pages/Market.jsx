@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion,AnimatePresence } from "framer-motion";
 import { marketService } from "../services";
 import { useLocation } from "../context/LocationContext";
 import { MARKET_CATEGORIES } from "../data/marketCategories";
@@ -469,77 +469,79 @@ const Market = () => {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            {user?.latitude && (
-              <div className="flex items-center gap-2 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-3 py-2">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-3 overflow-x-auto no-sb w-full lg:w-auto pb-1">
+              {user?.latitude && (
+                <div className="flex items-center gap-2 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-3 py-2 shrink-0">
         
-                <label
-                  htmlFor="radius"
-                  className="text-[10px] font-bold text-slate-500 uppercase tracking-tight"
-                >
-                  Radius
-                </label>
-                <select
-                  id="radius"
-                  name="radius"
-                  aria-label="Select radius"
-                  value={radius}
-                  onChange={(e) => setRadius(Number(e.target.value))}
-                  className="bg-transparent text-xs font-bold text-violet-400 outline-none cursor-pointer"
-                >
-                  <option value={5000}>5 KM</option>
-                  <option value={10000}>10 KM</option>
-                  <option value={15000}>15 KM</option>
-                  <option value={20000}>20 KM</option>
-                  <option value={25000}>25 KM</option>
-                  <option value={50000}>50 KM</option>
-                </select>
+                  <label
+                    htmlFor="radius"
+                    className="text-[10px] font-bold text-slate-500 uppercase tracking-tight"
+                  >
+                    Radius
+                  </label>
+                  <select
+                    id="radius"
+                    name="radius"
+                    aria-label="Select radius"
+                    value={radius}
+                    onChange={(e) => setRadius(Number(e.target.value))}
+                    className="bg-transparent text-xs font-bold text-violet-400 outline-none cursor-pointer"
+                  >
+                    <option value={5000}>5 KM</option>
+                    <option value={10000}>10 KM</option>
+                    <option value={15000}>15 KM</option>
+                    <option value={20000}>20 KM</option>
+                    <option value={25000}>25 KM</option>
+                    <option value={50000}>50 KM</option>
+                  </select>
+                </div>
+              )}
+              <div className="flex items-center gap-1 bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-1 shrink-0">
+                {priceTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() =>
+                      setFilter({ ...filter, priceType: type.value })
+                    }
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all
+                      ${
+                        filter.priceType === type.value
+                          ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
+                          : "text-slate-300 hover:text-white"
+                      }`}
+                  >
+                    {type.value === "sell" && (
+                      <HiOutlineTag className="text-sm" />
+                    )}
+                    {type.value === "rent" && (
+                      <HiOutlineHome className="text-sm" />
+                    )}
+                    {type.value === "All" && (
+                      <HiOutlineSquares2X2 className="text-sm" />
+                    )}
+                    {type.label}
+                  </button>
+                ))}
               </div>
-            )}
-            <div className="flex items-center gap-1 bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-1 shrink-0">
-              {priceTypes.map((type) => (
-                <button
-                  key={type.value}
-                  onClick={() =>
-                    setFilter({ ...filter, priceType: type.value })
-                  }
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all
-                    ${
-                      filter.priceType === type.value
-                        ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
-                        : "text-slate-300 hover:text-slate-300"
-                    }`}
-                >
-                  {type.value === "sell" && (
-                    <HiOutlineTag className="text-sm" />
-                  )}
-                  {type.value === "rent" && (
-                    <HiOutlineHome className="text-sm" />
-                  )}
-                  {type.value === "All" && (
-                    <HiOutlineSquares2X2 className="text-sm" />
-                  )}
-                  {type.label}
-                </button>
-              ))}
             </div>
 
-            <div className="hidden sm:block w-px h-7 bg-[#1f2a3d] shrink-0" />
+            <div className="hidden lg:block w-px h-7 bg-[#1f2a3d] shrink-0" />
 
-            <div className="no-sb flex items-center gap-2 overflow-x-auto flex-1 w-full">
+            <div className="no-sb flex items-center gap-2 overflow-x-auto w-full lg:flex-1 pb-1">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setFilter({ ...filter, category: cat })}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border shrink-0
                     ${
                       filter.category === cat
                         ? "bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-900/30"
-                        : "bg-[#0d1424] text-slate-300 border-[#1f2a3d] hover:text-slate-300 hover:border-slate-600"
+                        : "bg-[#0d1424] text-slate-300 border-[#1f2a3d] hover:text-white hover:border-slate-500"
                     }`}
                 >
                   <span
-                    className={`text-base leading-none ${filter.category === cat ? "text-white" : "text-slate-300"}`}
+                    className={`text-base leading-none ${filter.category === cat ? "text-white" : "text-slate-400"}`}
                   >
                     {getCategoryIcon(cat)}
                   </span>

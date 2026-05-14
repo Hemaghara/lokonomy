@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 require("dotenv").config();
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const validateEnv = require("./utils/validateEnv");
 validateEnv();
@@ -86,8 +88,7 @@ app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });
 
-mongoose
-  .connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, { family: 4 })
   .then(async () => {
     logger.info("MongoDB Connected");
     await setupIndexes();

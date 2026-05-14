@@ -398,7 +398,6 @@ exports.updateProfile = async (req, res) => {
       accountNumber,
     } = req.body;
     const user = await User.findById(req.user.id);
-
     if (!user) {
       logger.warn({ userId: req.user.id }, "updateProfile: User not found");
       return res
