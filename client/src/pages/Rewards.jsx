@@ -231,21 +231,22 @@ const Rewards = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#07070b] pb-20 sm:pb-16">
+    <div className="min-h-screen bg-[#07070b] pb-20 sm:pb-16 pt-20 sm:pt-24">
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-linear-to-b from-violet-600/12 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-125 h-125 bg-violet-600/8 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-violet-600/8 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-6">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-6">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
+            className="mt-2 sm:mt-4"
           >
-            <p className="text-center text-white/30 text-[11px] sm:text-xs uppercase tracking-[0.25em] font-bold mb-1">
+            <p className="text-center text-violet-400/80 text-[10px] sm:text-xs uppercase tracking-[0.3em] font-bold mb-2">
               Loyalty Program
             </p>
-            <h1 className="text-center text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-              Lokonomy{" "}
+            <h1 className="text-center text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+              Lokonomy <br className="sm:hidden" />
               <span className="text-transparent bg-clip-text bg-linear-to-r from-violet-400 via-fuchsia-400 to-violet-400">
                 Rewards
               </span>
