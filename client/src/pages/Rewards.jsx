@@ -234,7 +234,7 @@ const Rewards = () => {
     <div className="min-h-screen bg-[#07070b] pb-20 sm:pb-16 pt-20 sm:pt-24">
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-linear-to-b from-violet-600/12 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-violet-600/8 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-125 h-125 bg-violet-600/8 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-6">
           <motion.div

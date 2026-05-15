@@ -192,20 +192,20 @@ const CouponManager = ({ businessId }) => {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="bg-gray-900/50 p-6 rounded-2xl border border-gray-800 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="bg-gray-900/50 p-3 sm:p-4 md:p-6 rounded-2xl border border-gray-800 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Ticket className="text-yellow-500" size={22} /> Merchant Coupons
+          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <Ticket className="text-yellow-500" size={20} /> Merchant Coupons
           </h2>
-          <p className="text-gray-400 text-sm mt-0.5">
+          <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
             Create &amp; manage discount coupons for customers
           </p>
         </div>
         {!showForm && (
           <button
             onClick={openCreate}
-            className="bg-yellow-500 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-yellow-400 transition-all active:scale-95"
+            className="bg-yellow-500 text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-yellow-400 transition-all active:scale-95 w-full sm:w-auto justify-center text-sm"
           >
             <Plus size={16} /> New Coupon
           </button>
@@ -222,7 +222,7 @@ const CouponManager = ({ businessId }) => {
             transition={{ duration: 0.28, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="bg-gray-800/70 border border-yellow-500/25 rounded-2xl p-5">
+            <div className="bg-gray-800/70 border border-yellow-500/25 rounded-2xl p-3 sm:p-5">
               <div className="flex items-start justify-between mb-5">
                 <div>
                   <h3 className="text-white font-bold text-base flex items-center gap-2">
@@ -265,7 +265,7 @@ const CouponManager = ({ businessId }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label htmlFor="discount-value" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Discount Value
@@ -305,7 +305,7 @@ const CouponManager = ({ businessId }) => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label htmlFor="expiry-date" className="block text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1.5">
                       Expiry Date
@@ -360,7 +360,7 @@ const CouponManager = ({ businessId }) => {
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-1">
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-1">
                   <button
                     type="submit"
                     disabled={loading}
@@ -387,7 +387,7 @@ const CouponManager = ({ businessId }) => {
       </AnimatePresence>
 
       {coupons.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
           {[
             { label: "Total", value: coupons.length, color: "text-white" },
             {
@@ -405,7 +405,7 @@ const CouponManager = ({ businessId }) => {
               key={s.label}
               className="bg-gray-800/60 rounded-xl p-3 border border-gray-700/50"
             >
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+              <p className={`text-xl sm:text-2xl font-bold ${s.color}`}>{s.value}</p>
               <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
                 {s.label}
               </p>
@@ -414,23 +414,23 @@ const CouponManager = ({ businessId }) => {
         </div>
       )}
 
-      <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-        <h3 className="text-white font-bold mb-3 text-sm flex items-center gap-2">
+      <div className="bg-gray-800/50 p-3 sm:p-4 rounded-xl border border-gray-700/50">
+        <h3 className="text-white font-bold mb-3 text-xs sm:text-sm flex items-center gap-2">
           <CheckCircle size={14} className="text-green-400" /> Verify / Redeem
           Coupon
         </h3>
-        <form onSubmit={handleVerify} className="flex gap-2">
+        <form onSubmit={handleVerify} className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             placeholder="Enter Coupon Code"
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-white uppercase placeholder:normal-case placeholder:text-gray-600 focus:border-yellow-500/50 outline-none transition-all"
+            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm text-white uppercase placeholder:normal-case placeholder:text-gray-600 focus:border-yellow-500/50 outline-none transition-all"
             value={verifyCode}
             onChange={(e) => setVerifyCode(e.target.value.toUpperCase())}
           />
           <button
             type="submit"
             disabled={verifying || !verifyCode}
-            className="bg-green-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-green-500 transition-all disabled:opacity-50 active:scale-95"
+            className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-green-500 transition-all disabled:opacity-50 active:scale-95 text-sm w-full sm:w-auto"
           >
             {verifying ? "..." : "Redeem"}
           </button>
@@ -506,7 +506,7 @@ const CouponCard = ({
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: dimmed ? 0.55 : 1, y: 0 }}
-      className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 flex gap-4 items-start hover:border-gray-600/60 transition-all group"
+      className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center sm:items-start hover:border-gray-600/60 transition-all group"
     >
       <div className="bg-white p-1.5 rounded-lg shrink-0">
         <QRCodeSVG
@@ -515,8 +515,8 @@ const CouponCard = ({
         />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex-1 min-w-0 w-full sm:w-auto text-center sm:text-left">
+        <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
           <h3 className="text-white font-bold font-mono tracking-widest text-sm">
             {coupon.code}
           </h3>
@@ -558,7 +558,7 @@ const CouponCard = ({
         </div>
       </div>
 
-      <div className="flex gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+      <div className="flex gap-1.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
         <button
           onClick={onEdit}
           className="p-2 rounded-lg bg-gray-700 hover:bg-blue-600 text-gray-400 hover:text-white transition-all"
