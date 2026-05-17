@@ -3,38 +3,28 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { storyService } from "../services";
 import { useLocation } from "../context/LocationContext";
+import { useUser } from "../context/UserContext";
+import { getTimeRemaining, getIconForType, getTypeColor, formatTimeAgo } from "../utils/storyHelpers";
 import { toast } from "react-hot-toast";
+import CommentSection from "../components/CommentSection";
+import PollCard from "../components/PollCard";
+import MediaCarousel from "../components/MediaCarousel";
+import { getSocket } from "../services/socket";
 import {
   HiOutlineArrowLeft,
   HiOutlineMapPin,
   HiOutlineClock,
   HiOutlineShare,
-  HiOutlineNewspaper,
-  HiOutlineTag,
-  HiOutlineRocketLaunch,
-  HiOutlineCalendarDays,
-  HiOutlineMegaphone,
-  HiOutlineLightBulb,
-  HiOutlineSparkles,
   HiOutlineUser,
   HiOutlineChatBubbleLeftRight,
   HiOutlineCheckCircle,
+  HiOutlinePencilSquare,
+  HiOutlineBookmark,
+  HiOutlineBookmarkSlash,
+  HiOutlineHandThumbUp,
+  HiOutlineEye,
+  HiOutlineArrowRight,
 } from "react-icons/hi2";
-
-const getTimeRemaining = (expiresAt) => {
-  const now = Date.now();
-  const exp = new Date(expiresAt).getTime();
-  const diff = exp - now;
-  if (diff <= 0)
-    return { expired: true, label: "Expired", pct: 0, urgent: true };
-  const totalMs = 24 * 60 * 60 * 1000;
-  const pct = Math.max(0, Math.min(100, (diff / totalMs) * 100));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const urgent = diff < 3 * 60 * 60 * 1000;
-  const label = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  return { expired: false, label, pct, urgent };
-};
 
 const StoryExpiryStatus = ({ expiresAt }) => {
   const [info, setInfo] = useState(() => getTimeRemaining(expiresAt));
@@ -69,47 +59,12 @@ const StoryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { district } = useLocation();
+  const { user } = useUser();
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-
-  const getIconForType = (type) => {
-    switch (type) {
-      case "News":
-        return <HiOutlineNewspaper className="text-sky-400" />;
-      case "Offers":
-        return <HiOutlineTag className="text-emerald-400" />;
-      case "Promotions":
-        return <HiOutlineRocketLaunch className="text-violet-400" />;
-      case "Events":
-        return <HiOutlineCalendarDays className="text-pink-400" />;
-      case "Announcements":
-        return <HiOutlineMegaphone className="text-amber-400" />;
-      case "Tips":
-        return <HiOutlineLightBulb className="text-yellow-400" />;
-      default:
-        return <HiOutlineSparkles className="text-slate-400" />;
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "News":
-        return "bg-sky-500/10     text-sky-400     border-sky-500/20";
-      case "Offers":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "Promotions":
-        return "bg-violet-500/10  text-violet-400  border-violet-500/20";
-      case "Events":
-        return "bg-pink-500/10    text-pink-400    border-pink-500/20";
-      case "Announcements":
-        return "bg-amber-500/10   text-amber-400   border-amber-500/20";
-      case "Tips":
-        return "bg-yellow-500/10  text-yellow-400  border-yellow-500/20";
-      default:
-        return "bg-slate-500/10   text-slate-400   border-slate-500/20";
-    }
-  };
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [relatedStories, setRelatedStories] = useState([]);
 
   useEffect(() => {
     const fetchStory = async () => {
@@ -125,10 +80,54 @@ const StoryDetails = () => {
     };
     fetchStory();
   }, [id]);
+
+  // Fetch related stories
+  useEffect(() => {
+    if (id) {
+      storyService.getRelatedStories(id)
+        .then(res => setRelatedStories(res.data.data || []))
+        .catch(() => {});
+    }
+  }, [id]);
+
+  // Check bookmark status
+  useEffect(() => {
+    if (user && id) {
+      storyService.getSavedStories()
+        .then(res => {
+          const savedIds = (res.data.data || []).map(s => s._id);
+          setIsBookmarked(savedIds.includes(id));
+        })
+        .catch(() => {});
+    }
+  }, [user, id]);
+
+  // Real-time comment updates
+  useEffect(() => {
+    const socket = getSocket();
+    const handler = ({ storyId: sid, comment }) => {
+      if (sid === id && story) {
+        setStory(prev => ({
+          ...prev,
+          comments: prev.comments?.find(c => c._id === comment._id)
+            ? prev.comments
+            : [...(prev.comments || []), comment]
+        }));
+      }
+    };
+    socket.on("story_comment", handler);
+    return () => socket.off("story_comment", handler);
+  }, [id, story]);
+
   const handleShare = async () => {
     const url = window.location.href;
     try {
-      await navigator.clipboard.writeText(url);
+      if (navigator.share) {
+        await navigator.share({ title: story?.title, url });
+        await storyService.shareStory(id);
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
     } catch {
       const el = document.createElement("textarea");
       el.value = url;
@@ -142,6 +141,29 @@ const StoryDetails = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
+
+  const handleBookmark = async () => {
+    if (!user) {
+      toast.error("Please login to save stories");
+      return;
+    }
+    try {
+      const res = await storyService.toggleBookmark(id);
+      setIsBookmarked(res.data.isBookmarked);
+      toast.success(res.data.message);
+    } catch (err) {
+      toast.error("Failed to save story");
+    }
+  };
+
+  const handleContactReporter = () => {
+    if (!user) {
+      toast.error("Please login to contact reporter");
+      return;
+    }
+    navigate(`/my-chats?chatType=story_inquiry&receiverId=${story.authorId}&storyTitle=${encodeURIComponent(story.title)}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#080e1a] flex items-center justify-center">
@@ -174,6 +196,7 @@ const StoryDetails = () => {
   }
 
   const card = "bg-[#111827] border border-[#1f2a3d] rounded-2xl";
+  const isAuthor = user?.id === story.authorId?.toString();
 
   return (
     <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
@@ -195,51 +218,74 @@ const StoryDetails = () => {
             <HiOutlineArrowLeft className="text-sm" /> Back to Stories
           </Link>
 
-          <button
-            onClick={handleShare}
-            aria-label={copied ? "Copied!" : "Share"}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
-              ${
-                copied
-                  ? "bg-emerald-600/10 text-emerald-300 border-emerald-500/20"
-                  : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
+          <div className="flex items-center gap-2">
+            {/* Bookmark button */}
+            <button
+              onClick={handleBookmark}
+              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all ${
+                isBookmarked
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-amber-400"
               }`}
-          >
-            {copied ? (
-              <>
-                <HiOutlineCheckCircle className="text-base" /> Copied!
-              </>
-            ) : (
-              <>
-                <HiOutlineShare className="text-base" /> Share
-              </>
+            >
+              {isBookmarked ? (
+                <><HiOutlineBookmarkSlash className="text-base" /> Saved</>
+              ) : (
+                <><HiOutlineBookmark className="text-base" /> Save</>
+              )}
+            </button>
+
+            {/* Edit button (author only) */}
+            {isAuthor && (
+              <button
+                onClick={() => navigate(`/stories/edit/${id}`)}
+                className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-violet-400 hover:border-violet-500/30 transition-all"
+              >
+                <HiOutlinePencilSquare className="text-base" /> Edit
+              </button>
             )}
-          </button>
+
+            {/* Share button */}
+            <button
+              onClick={handleShare}
+              aria-label={copied ? "Copied!" : "Share"}
+              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
+                ${
+                  copied
+                    ? "bg-emerald-600/10 text-emerald-300 border-emerald-500/20"
+                    : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
+                }`}
+            >
+              {copied ? (
+                <><HiOutlineCheckCircle className="text-base" /> Copied!</>
+              ) : (
+                <><HiOutlineShare className="text-base" /> Share</>
+              )}
+            </button>
+          </div>
         </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left column: Media + Info cards */}
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
             className="lg:col-span-4 space-y-3"
           >
-            {story.image ? (
-              <div
-                className={`relative overflow-hidden ${card} aspect-3/4 group`}
-              >
-                <img
-                  src={story.image}
-                  alt=""
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+            {/* Media carousel or single image */}
+            {(story.media?.length > 0 || story.image) ? (
+              <div className={`relative overflow-hidden ${card} aspect-3/4 group`}>
+                <MediaCarousel
+                  media={story.media}
+                  image={story.image}
+                  className="w-full h-full"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-[#080e1a]/70 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4">
+                <div className="absolute bottom-4 left-4 z-10">
                   <span
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-sm ${getTypeColor(story.type)}`}
                   >
-                    <span className="text-sm">
-                      {getIconForType(story.type)}
-                    </span>
+                    <span className="text-sm">{getIconForType(story.type)}</span>
                     {story.type}
                   </span>
                 </div>
@@ -257,6 +303,7 @@ const StoryDetails = () => {
               </div>
             )}
 
+            {/* Location + Validity cards */}
             <div className="grid grid-cols-2 gap-3">
               <div
                 className={`${card} p-4 group hover:border-rose-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
@@ -283,15 +330,12 @@ const StoryDetails = () => {
                 <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="w-8 h-8 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 group-hover:bg-violet-500/20 transition-all duration-300">
-                    <HiOutlineClock className="text-violet-400 text-sm " />
+                    <HiOutlineClock className="text-violet-400 text-sm" />
                   </div>
                   <StoryExpiryStatus
                     expiresAt={
                       story.expiresAt ||
-                      new Date(
-                        new Date(story.createdAt).getTime() +
-                          24 * 60 * 60 * 1000,
-                      )
+                      new Date(new Date(story.createdAt).getTime() + 24 * 60 * 60 * 1000)
                     }
                   />
                 </div>
@@ -315,6 +359,7 @@ const StoryDetails = () => {
               </div>
             </div>
 
+            {/* Reporter card */}
             <div
               className={`${card} p-4 group hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
             >
@@ -336,8 +381,39 @@ const StoryDetails = () => {
                 </div>
               </div>
             </div>
+
+            {/* Engagement stats */}
+            <div className={`${card} p-4`}>
+              <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest mb-3">
+                Engagement
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-violet-400 mb-1">
+                    <HiOutlineHandThumbUp className="text-sm" />
+                  </div>
+                  <p className="text-white font-bold text-lg">{story.likes?.length || 0}</p>
+                  <p className="text-slate-600 text-[9px] uppercase tracking-wider">Likes</p>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-sky-400 mb-1">
+                    <HiOutlineEye className="text-sm" />
+                  </div>
+                  <p className="text-white font-bold text-lg">{story.views || 0}</p>
+                  <p className="text-slate-600 text-[9px] uppercase tracking-wider">Views</p>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-emerald-400 mb-1">
+                    <HiOutlineShare className="text-sm" />
+                  </div>
+                  <p className="text-white font-bold text-lg">{story.shares || 0}</p>
+                  <p className="text-slate-600 text-[9px] uppercase tracking-wider">Shares</p>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
+          {/* Right column: Content + Comments + Poll + Related */}
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
@@ -355,16 +431,22 @@ const StoryDetails = () => {
               <h1 className="text-white font-bold text-2xl md:text-3xl leading-snug mb-4">
                 {story.title}
               </h1>
-
-             
             </div>
 
+            {/* Story content */}
             <div className={`${card} p-6 relative overflow-hidden`}>
-              <div className="absolute left-0 top-6 bottom-6 w-0.5  to-transparent rounded-full" />
+              <div className="absolute left-0 top-6 bottom-6 w-0.5 to-transparent rounded-full" />
               <p className="text-slate-400 text-sm md:text-base leading-[1.9] whitespace-pre-wrap pl-5">
                 {story.content}
               </p>
             </div>
+
+            {/* Poll section */}
+            {story.poll?.question && (
+              <PollCard storyId={story._id} poll={story.poll} />
+            )}
+
+            {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <button
                 onClick={handleShare}
@@ -377,20 +459,64 @@ const StoryDetails = () => {
                   }`}
               >
                 {copied ? (
-                  <>
-                    <HiOutlineCheckCircle className="text-sm" /> Link Copied!
-                  </>
+                  <><HiOutlineCheckCircle className="text-sm" /> Link Copied!</>
                 ) : (
-                  <>
-                    <HiOutlineShare className="text-sm" /> Share Story
-                  </>
+                  <><HiOutlineShare className="text-sm" /> Share Story</>
                 )}
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 bg-[#111827] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 text-xs font-semibold py-3.5 rounded-xl transition-all">
-                <HiOutlineChatBubbleLeftRight className="text-sm" /> Contact
-                Reporter
+              <button
+                onClick={handleContactReporter}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#111827] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 text-xs font-semibold py-3.5 rounded-xl transition-all"
+              >
+                <HiOutlineChatBubbleLeftRight className="text-sm" /> Contact Reporter
               </button>
             </div>
+
+            {/* Comments section */}
+            <CommentSection
+              storyId={story._id}
+              comments={story.comments || []}
+              storyAuthorId={story.authorId}
+            />
+
+            {/* Related stories */}
+            {relatedStories.length > 0 && (
+              <div>
+                <h3 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
+                  📍 More from your area
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {relatedStories.map(rs => (
+                    <Link
+                      key={rs._id}
+                      to={`/stories/${rs._id}`}
+                      className={`${card} p-3 flex items-center gap-3 hover:border-violet-500/30 hover:bg-[#131d2e] transition-all group`}
+                    >
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#0d1424] shrink-0">
+                        {rs.image ? (
+                          <img src={rs.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-2xl opacity-20">
+                            {getIconForType(rs.type)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-200 text-xs font-semibold line-clamp-2 group-hover:text-violet-400 transition-colors">
+                          {rs.title}
+                        </p>
+                        <p className="text-slate-600 text-[10px] mt-1 flex items-center gap-1">
+                          <HiOutlineEye className="text-xs" /> {rs.views || 0}
+                          <span className="mx-1">·</span>
+                          {formatTimeAgo(rs.createdAt)}
+                        </p>
+                      </div>
+                      <HiOutlineArrowRight className="text-slate-600 group-hover:text-violet-400 transition-colors shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

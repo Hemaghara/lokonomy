@@ -7,6 +7,7 @@ import {
   jobService,
   referralService,
   subscriptionService,
+  storyService,
 } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -16,10 +17,6 @@ import {
   toggleNotifications,
   toggleAppointmentReminders,
 } from "../services/pushService";
-import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
-import { usePlanLimits } from "../hooks/usePlanLimits";
-
-
 import {
   HiOutlineArrowUpRight,
   HiOutlineTrash,
@@ -37,8 +34,15 @@ import {
   HiOutlineSparkles,
   HiOutlineClipboardDocument,
   HiOutlineGift,
+  HiOutlineChatBubbleLeftRight,
+  HiOutlineBellAlert,
+  HiOutlineNewspaper,
+  HiOutlineBookmark,
 } from "react-icons/hi2";
+
+import { usePlanLimits } from "../hooks/usePlanLimits";
 import { FiUser, FiMapPin, FiBriefcase, FiPlus } from "react-icons/fi";
+
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -51,7 +55,12 @@ const Profile = () => {
   const [referralData, setReferralData] = useState(null);
   const [referralLoading, setReferralLoading] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [jobAlerts, setJobAlerts] = useState([]);
   const { limits: planLimits } = usePlanLimits();
+  const [myStories, setMyStories] = useState([]);
+  const [savedStories, setSavedStories] = useState([]);
+  const [storiesLoading, setStoriesLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: user?.name || "",
     upiId: user?.upiId || "",
@@ -93,7 +102,11 @@ const Profile = () => {
     if (activeTab === "businesses" && user) fetchMyBusinesses();
     if (activeTab === "applications" && user) fetchAppliedJobs();
     if (activeTab === "referrals" && user) fetchReferralData();
+    if (activeTab === "alerts" && user) fetchJobAlerts();
+    if (activeTab === "mystories" && user) fetchMyStories();
+    if (activeTab === "savedstories" && user) fetchSavedStories();
   }, [activeTab, user]);
+
 
   const fetchReferralData = async () => {
     setReferralLoading(true);
@@ -128,7 +141,10 @@ const Profile = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: "Join Lokonomy!", text, url: link });
-      } catch {}
+      } catch {
+        //user cancel the share
+      
+      }
     } else {
       await navigator.clipboard.writeText(text);
       toast.success("Share text copied to clipboard!");
@@ -150,6 +166,52 @@ const Profile = () => {
       setAppliedJobs(response.data);
     } catch (err) {
       console.error("Error fetching applied jobs:", err);
+    }
+  };
+
+  const fetchJobAlerts = async () => {
+    try {
+      const res = await jobService.getUserAlerts();
+      setJobAlerts(res.data);
+    } catch (err) {
+      console.error("Error fetching job alerts:", err);
+    }
+  };
+
+  const handleDeleteAlert = async (id) => {
+    try {
+      const res = await jobService.deleteJobAlert(id);
+      if (res.data.success) {
+        toast.success("Alert deleted");
+        setJobAlerts((prev) => prev.filter((a) => a._id !== id));
+      }
+    } catch {
+      toast.error("Failed to delete alert");
+    }
+  };
+
+
+  const fetchMyStories = async () => {
+    setStoriesLoading(true);
+    try {
+      const res = await storyService.getMyStoryStats();
+      setMyStories(res.data.data?.allStories || []);
+    } catch (err) {
+      console.error("Error fetching my stories:", err);
+    } finally {
+      setStoriesLoading(false);
+    }
+  };
+
+  const fetchSavedStories = async () => {
+    setStoriesLoading(true);
+    try {
+      const res = await storyService.getSavedStories();
+      setSavedStories(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching saved stories:", err);
+    } finally {
+      setStoriesLoading(false);
     }
   };
 
@@ -190,6 +252,7 @@ const Profile = () => {
         toast.success("Profile updated successfully");
       }
     } catch (err) {
+      console.log(err);
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);
@@ -240,6 +303,7 @@ const Profile = () => {
             toast.success("Location updated successfully");
           }
         } catch (err) {
+          console.log(err);
           toast.error("Failed to update location");
         } finally {
           setLoading(false);
@@ -276,6 +340,7 @@ const Profile = () => {
       setNotificationsEnabled(newState);
       login({ ...user, notificationsEnabled: newState });
     } catch (err) {
+      console.log(err);
       toast.error("Failed to update notification settings");
     } finally {
       setLoading(false);
@@ -293,6 +358,7 @@ const Profile = () => {
         `Appointment reminders ${newState ? "enabled" : "disabled"}`,
       );
     } catch (err) {
+      console.log(err);
       toast.error("Failed to update reminder settings");
     } finally {
       setLoading(false);
@@ -323,8 +389,12 @@ const Profile = () => {
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
     { id: "membership", label: "Membership", icon: <HiOutlineSparkles /> },
     { id: "referrals", label: "Referrals", icon: <HiOutlineGift /> },
+    { id: "alerts", label: "Job Alerts", icon: <HiOutlineBellAlert /> },
+    { id: "mystories", label: "My Stories", icon: <HiOutlineNewspaper /> },
+    { id: "savedstories", label: "Saved", icon: <HiOutlineBookmark /> },
     { id: "settings", label: "Settings", icon: <HiOutlineShieldCheck /> },
   ];
+
 
   const avatarLetter = user?.name?.[0]?.toUpperCase();
   const card = "bg-[#111827] border border-[#1f2a3d] rounded-2xl";
@@ -414,7 +484,224 @@ const Profile = () => {
         </div>
 
         <AnimatePresence mode="wait">
+
+          {activeTab === "mystories" && (
+            <motion.div
+              key="mystories"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18 }}
+              className={`${card} p-6`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-white font-semibold text-base">My Stories</h2>
+                <button
+                  onClick={() => navigate("/stories/post")}
+                  className={btnPrimary}
+                >
+                  + New Story
+                </button>
+              </div>
+              <p className="text-slate-500 text-xs mb-6">
+                Stories you've published to the community.
+              </p>
+              {storiesLoading ? (
+                <div className="py-12 text-center">
+                  <div className="w-6 h-6 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto" />
+                </div>
+              ) : myStories.length === 0 ? (
+                <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-12 text-center">
+                  <p className="text-slate-500 text-xs mb-4">No stories yet.</p>
+                  <button onClick={() => navigate("/stories/post")} className={btnOutline}>
+                    Broadcast Your First Update
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {myStories.map((story) => (
+                    <div
+                      key={story._id}
+                      onClick={() => navigate(`/stories/${story._id}`)}
+                      className="bg-[#0d1424] border border-[#1f2a3d] rounded-2xl p-4 flex items-center gap-3 group cursor-pointer hover:border-violet-500/30 transition-all"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 overflow-hidden shrink-0">
+                        {story.image ? (
+                          <img src={story.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-violet-400">
+                            <HiOutlineNewspaper />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-200 text-xs font-semibold truncate group-hover:text-violet-400 transition-colors">
+                          {story.title}
+                        </p>
+                        <p className="text-slate-500 text-[10px] mt-1 flex items-center gap-2">
+                          <span>{story.type}</span>
+                          <span className="w-1 h-1 bg-slate-700 rounded-full" />
+                          <span>👁 {story.views || 0}</span>
+                          <span>❤ {story.likes?.length || 0}</span>
+                          <span>💬 {story.comments?.length || 0}</span>
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/stories/edit/${story._id}`); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-600 hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
+                        title="Edit"
+                      >
+                        <HiOutlinePencilSquare />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Saved Stories Tab */}
+          {activeTab === "savedstories" && (
+            <motion.div
+              key="savedstories"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18 }}
+              className={`${card} p-6`}
+            >
+              <h2 className="text-white font-semibold text-base mb-1">Saved Stories</h2>
+              <p className="text-slate-500 text-xs mb-6">
+                Stories you've bookmarked for later.
+              </p>
+              {storiesLoading ? (
+                <div className="py-12 text-center">
+                  <div className="w-6 h-6 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto" />
+                </div>
+              ) : savedStories.length === 0 ? (
+                <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-12 text-center">
+                  <p className="text-slate-500 text-xs mb-4">No saved stories yet.</p>
+                  <button onClick={() => navigate("/stories")} className={btnOutline}>
+                    Browse Stories
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {savedStories.map((story) => (
+                    <div
+                      key={story._id}
+                      onClick={() => navigate(`/stories/${story._id}`)}
+                      className="bg-[#0d1424] border border-[#1f2a3d] rounded-2xl p-4 flex items-center gap-3 group cursor-pointer hover:border-violet-500/30 transition-all"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 overflow-hidden shrink-0">
+                        {story.image ? (
+                          <img src={story.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-amber-400">
+                            <HiOutlineBookmark />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-200 text-xs font-semibold truncate group-hover:text-violet-400 transition-colors">
+                          {story.title}
+                        </p>
+                        <p className="text-slate-500 text-[10px] mt-1">
+                          {story.type} · {story.author}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+
+          {activeTab === "alerts" && (
+            <motion.div
+              key="alerts"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18 }}
+              className={`${card} p-6`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-white font-semibold text-base">
+                  Job Alerts
+                </h2>
+                <span className="bg-violet-600/10 text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                  {(jobAlerts?.length || 0)}/5
+                </span>
+              </div>
+              <p className="text-slate-500 text-xs mb-6">
+                Receive daily emails when new jobs match these criteria.
+              </p>
+
+              <div className="space-y-3">
+                {(jobAlerts || []).map((alert) => (
+                  <div
+                    key={alert._id}
+                    className="bg-[#0d1424] border border-[#1f2a3d] rounded-2xl p-4 flex items-center justify-between group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {alert.filters?.category && (
+                          <span className="px-2 py-0.5 bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                            {alert.filters.category}
+                          </span>
+                        )}
+                        {alert.filters?.jobType && (
+                          <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                            {alert.filters.jobType}
+                          </span>
+                        )}
+                        {alert.filters?.salaryMin && (
+                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                            ₹{alert.filters.salaryMin}+
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-200 text-xs font-semibold flex items-center gap-1.5">
+                        <FiMapPin className="text-slate-500" />
+                        {alert.filters?.district || "Any District"}
+                        {alert.filters?.taluka && (
+                          <span className="text-slate-500 text-[10px] font-normal italic">
+                            ({alert.filters.taluka})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteAlert(alert._id)}
+                      className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      title="Delete Alert"
+                    >
+                      <HiOutlineTrash />
+                    </button>
+                  </div>
+                ))}
+
+                {(jobAlerts || []).length === 0 && (
+                  <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-12 text-center">
+                    <p className="text-slate-500 text-xs mb-4">
+                      No active job alerts.
+                    </p>
+                    <button
+                      onClick={() => navigate("/jobs")}
+                      className={btnOutline}
+                    >
+                      Browse Jobs to Create Alert
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === "profile" && (
+
             <motion.div
               key="profile"
               initial={{ opacity: 0, y: 10 }}
@@ -1056,7 +1343,8 @@ const Profile = () => {
                         <div
                           className="h-full bg-indigo-500"
                           style={{
-                            width: `${Math.min(((user?.usage?.jobsPosted || 0) / (planLimits?.jobsPost || 2)) * 100, 100)}%`,
+                            width: `${Math.min(((user?.usage?.jobsPosted || 0) / (planLimits?.jobsPosted || 2)) * 100, 100)}%`,
+
                           }}
                         />
                       </div>
@@ -1270,7 +1558,10 @@ const Profile = () => {
             </motion.div>
           )}
 
+
+
           {activeTab === "settings" && (
+
             <motion.div
               key="settings"
               initial={{ opacity: 0, y: 10 }}

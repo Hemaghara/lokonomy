@@ -32,16 +32,21 @@ const ApplyJob = () => {
   const [formData, setFormData] = useState({
     candidateName: user?.name || "",
     candidateEmail: user?.email || "",
-    candidateContact: "",
-    candidateSkills: "",
-    candidateExperience: "",
-    candidateEducation: "Graduate",
-    candidateBiodata: "",
-    candidateCertificate: "",
+    candidateContact: user?.jobProfile?.contact || "",
+    candidateSkills: user?.jobProfile?.skills || "",
+    candidateExperience: user?.jobProfile?.experience || "",
+    candidateEducation: user?.jobProfile?.education || "Graduate",
+    candidateBiodata: user?.jobProfile?.biodata || "",
+    candidateCertificate: user?.jobProfile?.certificate || "",
   });
 
-  const [biodataFileName, setBiodataFileName] = useState("");
-  const [certificateFileName, setCertificateFileName] = useState("");
+  const [biodataFileName, setBiodataFileName] = useState(
+    user?.jobProfile?.biodata ? "Last uploaded biodata" : "",
+  );
+  const [certificateFileName, setCertificateFileName] = useState(
+    user?.jobProfile?.certificate ? "Last uploaded certificate" : "",
+  );
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,9 +59,25 @@ const ApplyJob = () => {
         ...prev,
         candidateName: user.name || prev.candidateName,
         candidateEmail: user.email || prev.candidateEmail,
+        candidateContact:
+          user.jobProfile?.contact || prev.candidateContact || "",
+        candidateSkills: user.jobProfile?.skills || prev.candidateSkills || "",
+        candidateExperience:
+          user.jobProfile?.experience || prev.candidateExperience || "",
+        candidateEducation:
+          user.jobProfile?.education || prev.candidateEducation || "Graduate",
+        candidateBiodata:
+          user.jobProfile?.biodata || prev.candidateBiodata || "",
+        candidateCertificate:
+          user.jobProfile?.certificate || prev.candidateCertificate || "",
       }));
+      if (user.jobProfile?.biodata && !biodataFileName)
+        setBiodataFileName("Previously uploaded PDF");
+      if (user.jobProfile?.certificate && !certificateFileName)
+        setCertificateFileName("Previously uploaded file");
     }
   }, [user]);
+
 
   const fetchJob = async () => {
     try {

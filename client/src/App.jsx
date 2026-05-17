@@ -400,6 +400,7 @@ function App() {
                       <Route path="/jobs/applied" element={<AppliedJobs />} />
                       <Route path="/jobs/:id/apply" element={<ApplyJob />} />
                       <Route path="/stories/post" element={<PostStory />} />
+                      <Route path="/stories/edit/:storyId" element={<PostStory />} />
                       <Route path="/feed/post" element={<PostFeed />} />
                       <Route path="/my-orders" element={<MyOrders />} />
                       <Route

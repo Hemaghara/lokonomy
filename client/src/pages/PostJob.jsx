@@ -163,14 +163,19 @@ const PostJob = () => {
     experience: "",
     skills: "",
     salary: "",
+    salaryMin: "",
+    salaryMax: "",
     gender: "Both",
     posterName: "",
     posterEmail: "",
     posterContact: "",
     description: "",
     jobType: "Full-time",
+    category: "Other",
     deadline: "",
+    taluka: "",
   });
+
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -259,6 +264,22 @@ const PostJob = () => {
     { value: "Freelance", label: "Freelance" },
     { value: "Contract", label: "Contract" },
   ];
+
+  const categoryOptions = [
+    { value: "IT & Software", label: "IT & Software" },
+    { value: "Retail & Sales", label: "Retail & Sales" },
+    { value: "Manufacturing", label: "Manufacturing" },
+    { value: "Healthcare", label: "Healthcare" },
+    { value: "Education", label: "Education" },
+    { value: "Hospitality", label: "Hospitality" },
+    { value: "Agriculture", label: "Agriculture" },
+    { value: "Construction", label: "Construction" },
+    { value: "Transport", label: "Transport" },
+    { value: "Banking & Finance", label: "Banking & Finance" },
+    { value: "Government", label: "Government" },
+    { value: "Other", label: "Other" },
+  ];
+
 
   return (
     <div className="min-h-screen bg-dark-bg pt-28 pb-24 px-4 relative overflow-hidden">
@@ -393,16 +414,36 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Experience" required id="experience">
+              <Field label="Experience Required" id="experience">
                 <input
                   id="experience"
-                  type="text"
                   name="experience"
-                  placeholder="e.g. 0–2 Years"
-                  className={inputCls}
-                  required
                   value={formData.experience}
                   onChange={handleChange}
+                  placeholder="e.g. 2 years, Fresher"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Job Category" required id="category">
+                <CustomDropdown
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  options={categoryOptions}
+                  placeholder="Select Category"
+                />
+              </Field>
+
+              <Field label="Location / Taluka" id="taluka">
+                <input
+                  id="taluka"
+                  name="taluka"
+                  value={formData.taluka}
+                  onChange={handleChange}
+                  placeholder="e.g. Haveli, Mulshi"
+                  className={inputCls}
                 />
               </Field>
 
@@ -418,6 +459,31 @@ const PostJob = () => {
                   onChange={handleChange}
                 />
               </Field>
+
+              <Field label="Salary Min" id="salaryMin">
+                <input
+                  id="salaryMin"
+                  name="salaryMin"
+                  type="number"
+                  value={formData.salaryMin}
+                  onChange={handleChange}
+                  placeholder="Min monthly salary"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Salary Max" id="salaryMax">
+                <input
+                  id="salaryMax"
+                  name="salaryMax"
+                  type="number"
+                  value={formData.salaryMax}
+                  onChange={handleChange}
+                  placeholder="Max monthly salary"
+                  className={inputCls}
+                />
+              </Field>
+
 
               <Field label="Gender Preference" id="gender">
                 <CustomDropdown

@@ -169,3 +169,71 @@ exports.deleteFeed = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.verifyStory = async (req, res) => {
+  try {
+    const story = await Story.findByIdAndUpdate(
+      req.params.id,
+      { $set: { isVerified: !req.body.currentState } },
+      { new: true },
+    );
+    if (!story) {
+      return res.status(404).json({ success: false, message: "Story not found" });
+    }
+    res.status(200).json({ success: true, data: story });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.featureStory = async (req, res) => {
+  try {
+    const story = await Story.findByIdAndUpdate(
+      req.params.id,
+      { $set: { isFeatured: !req.body.currentState } },
+      { new: true },
+    );
+    if (!story) {
+      return res.status(404).json({ success: false, message: "Story not found" });
+    }
+    res.status(200).json({ success: true, data: story });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.adminDeleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const story = await Story.findById(id);
+    if (!story) {
+      return res.status(404).json({ success: false, message: "Story not found" });
+    }
+
+    story.comments.pull(commentId);
+    await story.save();
+
+    res.status(200).json({ success: true, message: "Comment deleted by admin" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateStory = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    const story = await Story.findByIdAndUpdate(
+      req.params.id,
+      { $set: { title, content } },
+      { new: true },
+    );
+
+    if (!story) {
+      return res.status(404).json({ success: false, message: "Story not found" });
+    }
+
+    res.status(200).json({ success: true, data: story, message: "Story updated by admin" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

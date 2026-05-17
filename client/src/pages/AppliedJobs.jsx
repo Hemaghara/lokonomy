@@ -140,10 +140,42 @@ const AppliedJobs = () => {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-medium text-violet-400 group-hover:gap-2 transition-all">
-                      View details <HiOutlineChevronRight />
+                    <div className="flex items-center gap-4">
+
+                      {["Applied", "Under Review"].includes(app.status) && (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (
+                              window.confirm(
+                                "Are you sure you want to withdraw this application?",
+                              )
+                            ) {
+                              try {
+                                const res = await jobService.withdrawApplication(
+                                  app.jobId,
+                                );
+                                if (res.data.success) {
+                                  setApplications((prev) =>
+                                    prev.filter((a) => a.jobId !== app.jobId),
+                                  );
+                                }
+                              } catch {
+                                // toast would be nice here
+                              }
+                            }
+                          }}
+                          className="text-rose-400 hover:text-rose-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                        >
+                          Withdraw
+                        </button>
+                      )}
+                      <div className="flex items-center gap-1 text-xs font-medium text-violet-400 group-hover:gap-2 transition-all">
+                        View details <HiOutlineChevronRight />
+                      </div>
                     </div>
                   </div>
+
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -162,7 +194,7 @@ const AppliedJobs = () => {
               onClick={() => navigate("/jobs")}
               className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-violet-900/20"
             >
-              Exlpore Jobs
+              Explore Jobs
             </button>
           </div>
         )}

@@ -46,9 +46,9 @@ const reverseGeocode = async (lat, lng) => {
       const parts = data.display_name.split(",");
       const addr = data.address || {};
 
-      const district = addr.state_district || addr.county || addr.city || "";
+      const district = addr.state_district || addr.district || addr.city || addr.town || addr.county || "";
       const taluka =
-        addr.suburb || addr.town || addr.village || addr.city_district || "";
+        addr.suburb || addr.neighbourhood || addr.village || addr.city_district || "";
 
       return {
         displayAddress: parts.slice(0, 4).join(",").trim(),

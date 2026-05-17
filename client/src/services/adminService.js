@@ -78,6 +78,10 @@ export const adminService = {
   deleteFeed: (id) => adminApi.delete(`/stories-feed/feed/${id}`),
   getStoryDetails: (id) => adminApi.get(`/stories-feed/story/${id}`),
   getFeedDetails: (id) => adminApi.get(`/stories-feed/feed/${id}`),
+  verifyStory: (id, currentState) => adminApi.patch(`/stories-feed/story/${id}/verify`, { currentState }),
+  featureStory: (id, currentState) => adminApi.patch(`/stories-feed/story/${id}/feature`, { currentState }),
+  updateStory: (id, data) => adminApi.put(`/stories-feed/story/${id}`, data),
+  adminDeleteComment: (storyId, commentId) => adminApi.delete(`/stories-feed/story/${storyId}/comments/${commentId}/admin`),
   getSubscriptionTransactions: (params) =>
     adminApi.get("/subscriptions/transactions", { params }),
   getRevenueData: (period) =>

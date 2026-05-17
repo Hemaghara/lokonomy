@@ -96,12 +96,19 @@ const Jobs = () => {
   const [loading, setLoading] = useState(true);
   const [genderFilter, setGenderFilter] = useState("All");
   const [jobTypeFilter, setJobTypeFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ hasMore: false, total: 0 });
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [reportConfig, setReportConfig] = useState({
     isOpen: false,
     targetId: null,
   });
+
 
   const [selectedDistrict, setSelectedDistrict] = useState(userDistrict || "");
   const [selectedTaluka, setSelectedTaluka] = useState(userTaluka || "");
@@ -112,34 +119,88 @@ const Jobs = () => {
     else setTalukas([]);
   }, [selectedDistrict, state]);
 
-  useEffect(() => {
-    fetchJobs();
-  }, [
-    selectedDistrict,
-    selectedTaluka,
-    genderFilter,
-    jobTypeFilter,
-    search,
-    user,
-  ]);
+  const fetchJobs = useCallback(
+    async (pageNum = 1, append = false) => {
+      if (pageNum === 1) setLoading(true);
+      else setIsRefreshing(true);
 
-  const fetchJobs = async () => {
-    setLoading(true);
+      try {
+        const response = await jobService.getJobs({
+          district: selectedDistrict || undefined,
+          taluka: selectedTaluka || undefined,
+          gender: genderFilter !== "All" ? genderFilter : undefined,
+          jobType: jobTypeFilter !== "All" ? jobTypeFilter : undefined,
+          category: categoryFilter !== "All" ? categoryFilter : undefined,
+          salaryMin: salaryMin || undefined,
+          salaryMax: salaryMax || undefined,
+          search: search || undefined,
+          page: pageNum,
+          limit: 12,
+        });
+
+        const { jobs: newJobs, pagination: pg } = response.data;
+
+        if (append) {
+          setJobs((prev) => [...prev, ...newJobs]);
+        } else {
+          setJobs(newJobs);
+        }
+        setPagination(pg);
+        setPage(pageNum);
+      } catch (err) {
+        console.error("Job fetch error:", err);
+        toast.error("Failed to load jobs");
+      } finally {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [
+      selectedDistrict,
+      selectedTaluka,
+      genderFilter,
+      jobTypeFilter,
+      categoryFilter,
+      salaryMin,
+      search,
+    ],
+  );
+
+  const handleCreateAlert = async () => {
+    if (!user) {
+      toast.error("Please login to create job alerts");
+      return;
+    }
+
     try {
-      const response = await jobService.getJobs({
+      const filters = {
         district: selectedDistrict || undefined,
         taluka: selectedTaluka || undefined,
-        gender: genderFilter !== "All" ? genderFilter : undefined,
+        category: categoryFilter !== "All" ? categoryFilter : undefined,
         jobType: jobTypeFilter !== "All" ? jobTypeFilter : undefined,
-        search: search || undefined,
-      });
-      setJobs(response.data);
+        salaryMin: salaryMin || undefined,
+      };
+
+      const res = await jobService.createJobAlert(filters);
+      if (res.data.success) {
+        toast.success("Job alert created! We'll email you when new jobs match.");
+      }
     } catch (err) {
-      console.error("Job fetch error:", err);
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.message || "Failed to create alert");
     }
   };
+
+
+  useEffect(() => {
+    fetchJobs(1, false);
+  }, [fetchJobs]);
+
+  const loadMore = () => {
+    if (pagination.hasMore && !isRefreshing) {
+      fetchJobs(page + 1, true);
+    }
+  };
+
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -191,6 +252,23 @@ const Jobs = () => {
     { label: "Freelance", value: "Freelance" },
     { label: "Contract", value: "Contract" },
   ];
+
+  const categories = [
+    "All",
+    "IT & Software",
+    "Retail & Sales",
+    "Manufacturing",
+    "Healthcare",
+    "Education",
+    "Hospitality",
+    "Agriculture",
+    "Construction",
+    "Transport",
+    "Banking & Finance",
+    "Government",
+    "Other",
+  ];
+
 
   const genderColor = (gender) => {
     if (gender === "Both")
@@ -289,7 +367,16 @@ const Jobs = () => {
                 Clear
               </button>
             )}
+            <div className="flex-1" />
+            <button
+              type="button"
+              onClick={handleCreateAlert}
+              className="flex items-center gap-2 px-5 py-2.5 bg-violet-600/10 border border-violet-500/20 text-violet-400 text-xs font-bold rounded-xl hover:bg-violet-600 hover:text-white transition-all active:scale-95 whitespace-nowrap"
+            >
+              <HiOutlineRocketLaunch className="text-sm" /> Notify Me
+            </button>
           </form>
+
 
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center w-full">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center w-full lg:w-auto">
@@ -381,7 +468,49 @@ const Jobs = () => {
               </div>
             </div>
           </div>
+
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="flex-1 no-sb flex items-center gap-2 overflow-x-auto w-full pb-1">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategoryFilter(c)}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all shrink-0 uppercase tracking-wider
+                    ${
+                      categoryFilter === c
+                        ? "bg-violet-600 text-white shadow-md"
+                        : "bg-[#0d1424] text-slate-500 hover:text-white border border-[#1f2a3d]"
+                    }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 items-center shrink-0">
+              <div className="relative w-24">
+                <input
+                  type="number"
+                  placeholder="Min ₹"
+                  value={salaryMin}
+                  onChange={(e) => setSalaryMin(e.target.value)}
+                  className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-lg px-2 py-1.5 text-[11px] text-slate-200 outline-none focus:border-violet-500"
+                />
+              </div>
+              <span className="text-slate-600 text-xs">-</span>
+              <div className="relative w-24">
+                <input
+                  type="number"
+                  placeholder="Max ₹"
+                  value={salaryMax}
+                  onChange={(e) => setSalaryMax(e.target.value)}
+                  className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-lg px-2 py-1.5 text-[11px] text-slate-200 outline-none focus:border-violet-500"
+                />
+              </div>
+            </div>
+          </div>
         </div>
+
 
         <div className="min-h-64">
           {loading ? (
@@ -599,8 +728,31 @@ const Jobs = () => {
               )}
             </div>
           )}
+
+          {pagination.hasMore && (
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={isRefreshing}
+                className="bg-[#111827] border border-[#1f2a3d] hover:border-violet-500/50 text-slate-300 px-8 py-3 rounded-2xl text-sm font-semibold transition-all hover:bg-violet-500/5 disabled:opacity-50 flex items-center gap-3 group"
+              >
+                {isRefreshing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Load More Jobs
+                    <HiOutlineChevronDown className="text-lg group-hover:translate-y-0.5 transition-transform" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
 
       <ReportModal
         isOpen={reportConfig.isOpen}

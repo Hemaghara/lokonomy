@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "../context/LocationContext";
 import { useUser } from "../context/UserContext";
@@ -7,6 +7,7 @@ import { storyService } from "../services";
 import { toast } from "react-hot-toast";
 import MapPicker from "../components/MapPicker";
 import { usePlanLimits } from "../hooks/usePlanLimits";
+import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 const CustomDropdown = ({
   name,
   value,
@@ -132,7 +133,7 @@ const inputCls =
 
 const Field = ({ label, id, required, span2, children }) => (
   <div className={span2 ? "sm:col-span-2" : ""}>
-    <label 
+    <label
       htmlFor={id}
       className="block text-[11px] font-medium text-white/35 mb-2 tracking-wider uppercase"
     >
@@ -154,11 +155,14 @@ const Divider = ({ label }) => (
 );
 const PostStory = () => {
   const navigate = useNavigate();
+  const { storyId } = useParams();
+  const isEditMode = !!storyId;
   const { user } = useUser();
   const { state, availableDistricts } = useLocation();
   const { limits } = usePlanLimits();
 
   const [storyLocation, setStoryLocation] = useState(null);
+  const [loadingStory, setLoadingStory] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -169,9 +173,116 @@ const PostStory = () => {
     latitude: null,
     longitude: null,
     locationAddress: "",
+    district: "",
+    taluka: "",
     isHighlighted: false,
     highlightCategory: "Other",
   });
+
+  const [mediaFiles, setMediaFiles] = useState([]);
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollEndDate, setPollEndDate] = useState("");
+
+  const handleMediaChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (mediaFiles.length + files.length > 5) {
+      toast.error("Maximum 5 media items allowed");
+      return;
+    }
+
+    files.forEach((file) => {
+      if (file.type.startsWith("video")) {
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        video.onloadedmetadata = () => {
+          window.URL.revokeObjectURL(video.src);
+          if (video.duration > 16) {
+            toast.error(`"${file.name}" is too long (max 15s)`);
+          } else {
+            const newMedia = {
+              file,
+              preview: URL.createObjectURL(file),
+              type: "video",
+            };
+            setMediaFiles((prev) => [...prev, newMedia]);
+          }
+        };
+        video.src = URL.createObjectURL(file);
+      } else {
+        const newMedia = {
+          file,
+          preview: URL.createObjectURL(file),
+          type: "image",
+        };
+        setMediaFiles((prev) => [...prev, newMedia]);
+      }
+    });
+  };
+
+  const removeMedia = (index) => {
+    setMediaFiles((prev) => {
+      const next = [...prev];
+      URL.revokeObjectURL(next[index].preview);
+      next.splice(index, 1);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (isEditMode) {
+      setLoadingStory(true);
+      storyService
+        .getStoryById(storyId)
+        .then((res) => {
+          const s = res.data.data;
+          setFormData({
+            title: s.title || "",
+            content: s.content || "",
+            type: s.type || "News",
+            image: s.image || "",
+            latitude: s.location?.coordinates?.[1] || null,
+            longitude: s.location?.coordinates?.[0] || null,
+            locationAddress: s.locationAddress || "",
+            district: s.district || "",
+            taluka: s.taluka || "",
+            isHighlighted: s.isHighlighted || false,
+            highlightCategory: s.highlightCategory || "Other",
+          });
+          if (s.media && s.media.length > 0) {
+            setMediaFiles(s.media.map(m => ({
+              preview: m.url,
+              type: m.type || 'image',
+              isExisting: true
+            })));
+          }
+          if (s.location?.coordinates) {
+            setStoryLocation({
+              lat: s.location.coordinates[1],
+              lng: s.location.coordinates[0],
+              address: s.locationAddress || "",
+              district: s.district || "",
+              taluka: s.taluka || "",
+            });
+          }
+          if (s.poll?.question) {
+            setShowPoll(true);
+            setPollQuestion(s.poll.question);
+            setPollOptions(s.poll.options.map((o) => o.text));
+            if (s.poll.endsAt)
+              setPollEndDate(
+                new Date(s.poll.endsAt).toISOString().slice(0, 16),
+              );
+          }
+        })
+        .catch((err) => {
+          toast.error("Failed to load story for editing");
+          navigate("/stories");
+        })
+        .finally(() => setLoadingStory(false));
+    }
+  }, [storyId]);
 
   useEffect(() => {
     if (storyLocation) {
@@ -181,6 +292,8 @@ const PostStory = () => {
         longitude: storyLocation.lng,
         locationAddress: storyLocation.address,
         pincode: storyLocation.pincode,
+        district: storyLocation.district,
+        taluka: storyLocation.taluka,
       }));
     }
   }, [storyLocation]);
@@ -228,6 +341,24 @@ const PostStory = () => {
     setFormData({ ...formData, image: "" });
   };
 
+  const addPollOption = () => {
+    if (pollOptions.length < 4) setPollOptions([...pollOptions, ""]);
+  };
+
+  const removePollOption = (idx) => {
+    if (pollOptions.length > 2)
+      setPollOptions(pollOptions.filter((_, i) => i !== idx));
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!storyLocation) {
@@ -236,14 +367,49 @@ const PostStory = () => {
     }
     try {
       setLoading(true);
+      
+      const processedMedia = [];
+      for (const item of mediaFiles) {
+        if (item.file) {
+          const base64 = await fileToBase64(item.file);
+          processedMedia.push({ url: base64, type: item.type });
+        } else if (item.preview) {
+          processedMedia.push({ url: item.preview, type: item.type });
+        }
+      }
+
       const storyData = {
         ...formData,
         author: user?.name || "Anonymous",
+        media: processedMedia,
+        // For compatibility with single image logic
+        image: processedMedia[0]?.url || formData.image,
       };
-      const response = await storyService.createStory(storyData);
+
+      if (showPoll && pollQuestion.trim()) {
+        const validOptions = pollOptions.filter((o) => o.trim());
+        if (validOptions.length >= 2) {
+          storyData.poll = {
+            question: pollQuestion.trim(),
+            options: validOptions.map((o) => ({ text: o.trim() })),
+            endsAt: pollEndDate || undefined,
+          };
+        }
+      }
+
+      let response;
+      if (isEditMode) {
+        response = await storyService.updateStory(storyId, storyData);
+      } else {
+        response = await storyService.createStory(storyData);
+      }
+
       if (response.data.success) {
-        toast.success(response.data.message || "Broadcasted successfully!");
-        navigate("/stories");
+        toast.success(
+          response.data.message ||
+            (isEditMode ? "Story updated!" : "Broadcasted successfully!"),
+        );
+        navigate(isEditMode ? `/stories/${storyId}` : "/stories");
       }
     } catch (error) {
       const errorData = error.response?.data;
@@ -319,11 +485,11 @@ const PostStory = () => {
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[10px] font-semibold text-primary/70 uppercase tracking-[0.18em]">
-              Community Broadcast
+              {isEditMode ? "Edit Broadcast" : "Community Broadcast"}
             </span>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-            Share Local Update
+            {isEditMode ? "Edit Story" : "Share Local Update"}
           </h1>
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-white/30">
@@ -332,7 +498,13 @@ const PostStory = () => {
             {limits && (
               <div className="shrink-0 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                 <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
-                  Remaining: {Math.max(0, (limits.storiesPosted || 0) - (user?.usage?.storiesPosted || 0))} / {limits.storiesPosted}
+                  Remaining:{" "}
+                  {Math.max(
+                    0,
+                    (limits.storiesPosted || 0) -
+                      (user?.usage?.storiesPosted || 0),
+                  )}{" "}
+                  / {limits.storiesPosted}
                 </span>
               </div>
             )}
@@ -373,7 +545,12 @@ const PostStory = () => {
                 />
               </Field>
 
-              <Field label="Content Description" id="story-content" required span2>
+              <Field
+                label="Content Description"
+                id="story-content"
+                required
+                span2
+              >
                 <textarea
                   id="story-content"
                   name="content"
@@ -393,123 +570,196 @@ const PostStory = () => {
               <Divider label="Visual Asset" />
 
               <div className="sm:col-span-2 space-y-3">
-                {!formData.image ? (
-                  <label className="flex flex-col items-center justify-center gap-3 w-full py-8 rounded-xl border border-dashed border-white/10 cursor-pointer hover:bg-white/3 hover:border-primary/30 transition-all group">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
-                    <svg
-                      className="w-8 h-8 text-white/15 group-hover:text-primary/40 transition-colors"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 20.25h18M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <div className="text-center">
-                      <p className="text-sm text-white/30 group-hover:text-white/50 transition-colors">
-                        Click to upload an image
-                      </p>
-                      <p className="text-[11px] text-white/15 mt-1">
-                        Optional · PNG, JPG up to 10MB
-                      </p>
-                    </div>
-                  </label>
-                ) : (
-                  <AnimatePresence>
+                <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.2em] mb-2.5 block">
+                  Media Gallery (Max 5)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+                  {mediaFiles.map((m, idx) => (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.97 }}
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      className="relative rounded-xl overflow-hidden border border-white/10 group"
+                      className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group"
                     >
                       <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="w-full h-48 object-cover"
+                        src={m.preview}
+                        alt=""
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-                        >
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                          Remove Image
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(idx)}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-600/90 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                      >
+                        <HiOutlineTrash size={12} />
+                      </button>
+                      {m.type === 'video' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                          <span className="text-white text-xs font-bold uppercase tracking-widest bg-black/50 px-2 py-0.5 rounded">Video</span>
+                        </div>
+                      )}
                     </motion.div>
-                  </AnimatePresence>
-                )}
+                  ))}
+                  
+                  {mediaFiles.length < 5 && (
+                    <label className="relative aspect-square rounded-xl border-2 border-dashed border-white/10 hover:border-primary/50 bg-white/2 hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-all group">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,video/*"
+                        multiple
+                        onChange={handleMediaChange}
+                      />
+                      <HiOutlinePlus size={24} className="text-white/20 group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] text-white/20 mt-1 font-bold group-hover:text-primary/70">Add Media</span>
+                    </label>
+                  )}
+                </div>
+                <p className="text-[10px] text-white/15">
+                  Optional · Up to 5 items · Max 10MB each · Videos max 15s
+                </p>
               </div>
+
+              {!isEditMode && (
+                <>
+                  <Divider label="Community Poll (Optional)" />
+                  <div className="sm:col-span-2">
+                    <label className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/2 cursor-pointer transition-all hover:bg-white/4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">📊</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">
+                            Add a Poll
+                          </p>
+                          <p className="text-[10px] text-white/40">
+                            Let the community vote on something
+                          </p>
+                        </div>
+                      </div>
+                      <div className="relative inline-flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={showPoll}
+                          onChange={() => setShowPoll(!showPoll)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </div>
+                    </label>
+
+                    {showPoll && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mt-3 space-y-3 p-4 border border-white/10 rounded-xl bg-white/2"
+                      >
+                        <input
+                          type="text"
+                          value={pollQuestion}
+                          onChange={(e) => setPollQuestion(e.target.value)}
+                          placeholder="Ask a question..."
+                          className={inputCls}
+                          maxLength={200}
+                        />
+                        {pollOptions.map((opt, idx) => (
+                          <div key={idx} className="flex gap-2">
+                            <input
+                              type="text"
+                              value={opt}
+                              onChange={(e) => {
+                                const newOpts = [...pollOptions];
+                                newOpts[idx] = e.target.value;
+                                setPollOptions(newOpts);
+                              }}
+                              placeholder={`Option ${idx + 1}`}
+                              className={inputCls + " flex-1"}
+                              maxLength={100}
+                            />
+                            {pollOptions.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => removePollOption(idx)}
+                                className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors shrink-0"
+                              >
+                                <HiOutlineTrash className="text-sm" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-3">
+                          {pollOptions.length < 4 && (
+                            <button
+                              type="button"
+                              onClick={addPollOption}
+                              className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-semibold transition-colors"
+                            >
+                              <HiOutlinePlus className="text-sm" /> Add Option
+                            </button>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-medium text-white/30 mb-1.5 tracking-wider uppercase">
+                            Poll End Date (Optional)
+                          </label>
+                          <input
+                            type="datetime-local"
+                            value={pollEndDate}
+                            onChange={(e) => setPollEndDate(e.target.value)}
+                            className={inputCls}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </>
+              )}
 
               <Divider label="Highlight (Premium Only)" />
 
               <div className="sm:col-span-2">
-                  <label className="flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer w-full ...">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          formData.isHighlighted
-                            ? "bg-primary/20 text-primary"
-                            : "bg-white/5 text-white/30"
-                        }`}
+                <label className="flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer w-full ...">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        formData.isHighlighted
+                          ? "bg-primary/20 text-primary"
+                          : "bg-white/5 text-white/30"
+                      }`}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          Pin to Highlights
-                        </p>
-                        <p className="text-[10px] text-white/40">
-                          Permanently display on your profile
-                        </p>
-                      </div>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                        />
+                      </svg>
                     </div>
-                    <div className="relative inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        name="isHighlighted"
-                        checked={formData.isHighlighted}
-                        onChange={handleChange}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        Pin to Highlights
+                      </p>
+                      <p className="text-[10px] text-white/40">
+                        Permanently display on your profile
+                      </p>
                     </div>
-                  </label>
-
+                  </div>
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="isHighlighted"
+                      checked={formData.isHighlighted}
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </div>
+                </label>
               </div>
 
               {formData.isHighlighted && (
@@ -561,9 +811,11 @@ const PostStory = () => {
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-2">
-                      {formData.isHighlighted
-                        ? "Create Highlight"
-                        : "Broadcast Update"}
+                      {isEditMode
+                        ? "Update Story"
+                        : formData.isHighlighted
+                          ? "Create Highlight"
+                          : "Broadcast Update"}
                       <svg
                         className="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
                         fill="none"

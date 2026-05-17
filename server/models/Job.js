@@ -95,6 +95,7 @@ const jobSchema = new mongoose.Schema(
           ],
           default: "Applied",
         },
+        employerNotes: { type: String, default: "" },
         appliedAt: { type: Date, default: Date.now },
       },
     ],
@@ -106,6 +107,28 @@ const jobSchema = new mongoose.Schema(
       type: String,
       enum: ["Full-time", "Part-time", "Freelance", "Contract"],
       default: "Full-time",
+    },
+    category: {
+      type: String,
+      enum: [
+        "IT & Software",
+        "Retail & Sales",
+        "Manufacturing",
+        "Healthcare",
+        "Education",
+        "Hospitality",
+        "Agriculture",
+        "Construction",
+        "Transport",
+        "Banking & Finance",
+        "Government",
+        "Other",
+      ],
+      default: "Other",
+    },
+    taluka: {
+      type: String,
+      default: "",
     },
     deadline: {
       type: Date,
@@ -123,10 +146,20 @@ const jobSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    viewHistory: [{
+      date: { type: String, required: true }, // YYYY-MM-DD
+      count: { type: Number, default: 0 }
+    }],
   },
+
   { timestamps: true },
 );
 
 jobSchema.index({ isFlagged: 1, isSuspended: 1, status: 1 });
+jobSchema.index({ district: 1, taluka: 1, status: 1 });
+jobSchema.index(
+  { position: "text", skills: "text", description: "text" },
+  { weights: { position: 10, skills: 5, description: 1 } },
+);
 
 module.exports = mongoose.model("Job", jobSchema);

@@ -60,3 +60,11 @@ export const emitMarkRead = (chatRoom, userId) => {
   const s = getSocket();
   s.emit("markRead", { chatRoom, userId });
 };
+export const joinStoryFeed = (district) => {
+  const s = getSocket();
+  s.emit("joinStoryFeed", { district });
+};
+export const leaveStoryFeed = (district) => {
+  const s = getSocket();
+  s.emit("leaveStoryFeed", { district });
+};

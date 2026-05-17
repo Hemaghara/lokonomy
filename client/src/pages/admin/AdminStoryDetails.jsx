@@ -20,7 +20,14 @@ import {
   FiStar,
   FiCalendar,
   FiX,
+  FiEdit3,
 } from "react-icons/fi";
+import {
+  HiOutlineCheckBadge,
+  HiOutlineSparkles,
+  HiOutlineChatBubbleLeftRight,
+  HiOutlineEye,
+} from "react-icons/hi2";
 
 const FADE_UP = {
   initial: { opacity: 0, y: 16 },
@@ -165,13 +172,83 @@ const DeleteModal = ({ story, onConfirm, onCancel, loading }) => (
   </motion.div>
 );
 
+const EditModal = ({ story, onConfirm, onCancel, loading }) => {
+  const [formData, setFormData] = useState({
+    title: story?.title || "",
+    content: story?.content || "",
+  });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl"
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-violet-500/10 border border-violet-500/20 rounded-xl flex items-center justify-center">
+            <FiEdit3 size={20} className="text-violet-400" />
+          </div>
+          <h3 className="text-lg font-bold text-white">Edit Story Content</h3>
+        </div>
+        
+        <div className="space-y-4 mb-8">
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Title</label>
+            <input 
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Content</label>
+            <textarea 
+              rows={6}
+              value={formData.content}
+              onChange={(e) => setFormData(p => ({ ...p, content: e.target.value }))}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-sm font-bold hover:bg-slate-700 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(formData)}
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-500 transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50"
+          >
+            {loading ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const AdminStoryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const fetchDetails = useCallback(async () => {
     try {
@@ -188,8 +265,48 @@ const AdminStoryDetails = () => {
     fetchDetails();
   }, [fetchDetails]);
 
+  const handleToggleVerify = async () => {
+    try {
+      const res = await adminService.verifyStory(id, story.isVerified);
+      if (res.data.success) {
+        setStory(prev => ({ ...prev, isVerified: !prev.isVerified }));
+        toast.success(story.isVerified ? "Story unverified" : "Story verified");
+      }
+    } catch {
+      toast.error("Action failed");
+    }
+  };
+
+  const handleToggleFeature = async () => {
+    try {
+      const res = await adminService.featureStory(id, story.isFeatured);
+      if (res.data.success) {
+        setStory(prev => ({ ...prev, isFeatured: !prev.isFeatured }));
+        toast.success(story.isFeatured ? "Story unfeatured" : "Story featured");
+      }
+    } catch {
+      toast.error("Action failed");
+    }
+  };
+
+  const handleAdminDeleteComment = async (commentId) => {
+    if (!window.confirm("Delete this comment permanently?")) return;
+    try {
+      const res = await adminService.adminDeleteComment(id, commentId);
+      if (res.data.success) {
+        setStory(prev => ({
+          ...prev,
+          comments: prev.comments.filter(c => c._id !== commentId)
+        }));
+        toast.success("Comment deleted");
+      }
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
   const handleDelete = async () => {
-    setDeleteLoading(true);
+    setActionLoading(true);
     try {
       await adminService.deleteStory(id);
       toast.success("Story deleted successfully");
@@ -197,7 +314,23 @@ const AdminStoryDetails = () => {
     } catch {
       toast.error("Delete failed");
     } finally {
-      setDeleteLoading(false);
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdate = async (formData) => {
+    setActionLoading(true);
+    try {
+      const res = await adminService.updateStory(id, formData);
+      if (res.data.success) {
+        setStory(prev => ({ ...prev, ...formData }));
+        toast.success("Story updated successfully");
+        setShowEditModal(false);
+      }
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -237,6 +370,16 @@ const AdminStoryDetails = () => {
                     <FiStar size={9} /> Highlighted
                   </span>
                 )}
+                {story.isVerified && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ring-1 bg-sky-500/10 text-sky-400 ring-sky-500/25">
+                    <HiOutlineCheckBadge size={10} /> Verified
+                  </span>
+                )}
+                {story.isFeatured && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ring-1 bg-indigo-500/10 text-indigo-400 ring-indigo-500/25">
+                    <HiOutlineSparkles size={10} /> Featured
+                  </span>
+                )}
               </div>
               <p className="text-[10px] text-slate-500 font-bold mt-0.5 flex items-center gap-1.5">
                 <FiMapPin size={10} className="text-violet-400" />
@@ -246,19 +389,50 @@ const AdminStoryDetails = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-150 active:scale-95 shadow-sm bg-rose-600 hover:bg-rose-500 text-white shrink-0"
-          >
-            <FiTrash2 size={13} /> Delete Story
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700/70 hover:text-white hover:border-violet-500/50 transition-all"
+            >
+              <FiEdit3 size={14} />
+              Edit
+            </button>
+            <button
+              onClick={() => handleToggleVerify()}
+              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-150 active:scale-95 shadow-sm ${
+                story.isVerified
+                  ? "bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20"
+                  : "bg-slate-800 text-slate-400 border border-slate-700/70 hover:text-white"
+              }`}
+            >
+              <HiOutlineCheckBadge size={14} />
+              {story.isVerified ? "Verified" : "Verify Story"}
+            </button>
+            <button
+              onClick={() => handleToggleFeature()}
+              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-150 active:scale-95 shadow-sm ${
+                story.isFeatured
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                  : "bg-slate-800 text-slate-400 border border-slate-700/70 hover:text-white"
+              }`}
+            >
+              <HiOutlineSparkles size={14} />
+              {story.isFeatured ? "Featured" : "Feature Story"}
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-150 active:scale-95 shadow-sm bg-rose-600 hover:bg-rose-500 text-white shrink-0"
+            >
+              <FiTrash2 size={13} /> Delete
+            </button>
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+          className="grid grid-cols-2 sm:grid-cols-5 gap-2.5"
         >
           <StatTile
             icon={FiTag}
@@ -296,24 +470,43 @@ const AdminStoryDetails = () => {
             value={story.district || "—"}
             accent="cyan"
           />
+          <StatTile
+            icon={HiOutlineEye}
+            label="Views"
+            value={story.views || 0}
+            accent="indigo"
+          />
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">
-            {story.image && (
-              <motion.div {...FADE_UP} transition={{ delay: 0.12 }}>
-                <Card className="overflow-hidden">
-                  <div className="relative">
-                    <img
-                      src={story.image}
-                      alt={story.title}
-                      className="w-full max-h-96 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-slate-900/60 via-transparent to-transparent" />
-                  </div>
-                </Card>
-              </motion.div>
-            )}
+            <motion.div {...FADE_UP} transition={{ delay: 0.12 }}>
+              <Card className="p-5">
+                <SectionHead
+                  icon={FiImage}
+                  label="Media Gallery"
+                  accent="violet"
+                />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {(story.media?.length > 0 ? story.media : [{ url: story.image }]).map((m, i) => (
+                    m.url && (
+                      <div key={i} className="relative aspect-square rounded-xl overflow-hidden group">
+                        <img
+                          src={m.url}
+                          alt=""
+                          className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                        />
+                        {m.type === 'video' && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <FiArrowLeft className="rotate-180 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
 
             <motion.div {...FADE_UP} transition={{ delay: 0.15 }}>
               <Card className="p-5">
@@ -363,40 +556,56 @@ const AdminStoryDetails = () => {
             <motion.div {...FADE_UP} transition={{ delay: 0.18 }}>
               <Card className="p-5">
                 <SectionHead
-                  icon={FiInfo}
-                  label="Story Details"
-                  accent="violet"
+                  icon={HiOutlineChatBubbleLeftRight}
+                  label={`Comments Moderation (${story.comments?.length || 0})`}
+                  accent="rose"
                 />
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {[
-                    { label: "Title", value: story.title },
-                    { label: "Type", value: story.type },
-                    { label: "District", value: story.district },
-                    { label: "Taluka", value: story.taluka },
-                    { label: "Location", value: story.locationAddress },
-                    {
-                      label: "Highlighted",
-                      value: story.isHighlighted ? "Yes" : "No",
-                    },
-                    {
-                      label: "Highlight Category",
-                      value: story.highlightCategory,
-                    },
-                    { label: "Author", value: story.author },
-                  ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className="bg-slate-800/40 rounded-xl p-3 border border-slate-700/30"
-                    >
-                      <p className="text-[9px] font-black text-violet-400 uppercase tracking-widest mb-1">
-                        {label}
-                      </p>
-                      <p className="text-[11px] font-bold text-white truncate">
-                        {value || "—"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                {story.comments?.length > 0 ? (
+                  <div className="space-y-3">
+                    {story.comments.map((comment) => (
+                      <div
+                        key={comment._id}
+                        className="flex items-start gap-3 p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-slate-700/50 overflow-hidden shrink-0">
+                          {comment.userAvatar ? (
+                            <img src={comment.userAvatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-500">
+                              {comment.userName?.[0]}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[11px] font-bold text-white truncate">
+                              {comment.userName}
+                            </p>
+                            <span className="text-[9px] text-slate-600 font-medium shrink-0">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                            {comment.text}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleAdminDeleteComment(comment._id)}
+                          className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-rose-500 hover:text-white transition-all"
+                          title="Delete Comment"
+                        >
+                          <FiTrash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center bg-slate-800/20 rounded-xl border border-dashed border-slate-800">
+                    <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+                      No comments yet
+                    </p>
+                  </div>
+                )}
               </Card>
             </motion.div>
           </div>
@@ -572,7 +781,15 @@ const AdminStoryDetails = () => {
               story={story}
               onConfirm={handleDelete}
               onCancel={() => setShowDeleteModal(false)}
-              loading={deleteLoading}
+              loading={actionLoading}
+            />
+          )}
+          {showEditModal && (
+            <EditModal 
+              story={story}
+              onConfirm={handleUpdate}
+              onCancel={() => setShowEditModal(false)}
+              loading={actionLoading}
             />
           )}
         </AnimatePresence>

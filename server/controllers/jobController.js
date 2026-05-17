@@ -4,33 +4,78 @@ const Plan = require("../models/Plan");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { createNotification } = require("./notificationController");
 const logger = require("../utils/logger");
+const JobAlert = require("../models/JobAlert");
+const emailService = require("../utils/emailService");
+
+
 
 exports.getAllJobs = async (req, res) => {
   try {
-    const { district, taluka, gender, search, jobType } = req.query;
+    const {
+      district,
+      taluka,
+      gender,
+      search,
+      jobType,
+      category,
+      salaryMin,
+      salaryMax,
+      page = 1,
+      limit = 12,
+    } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
     let query = {};
     query.$or = [{ status: "Open" }, { status: { $exists: false } }];
     query.isFlagged = { $ne: true };
     query.isSuspended = { $ne: true };
 
     if (district) query.district = district;
-    if (taluka) query.location = taluka;
+    if (taluka) query.taluka = taluka;
     if (gender && gender !== "All") query.gender = gender;
+
     if (jobType && jobType !== "All") query.jobType = jobType;
+    if (category && category !== "All") query.category = category;
+    if (salaryMin) query.salaryMax = { $gte: parseInt(salaryMin) };
+    if (salaryMax) query.salaryMin = { $lte: parseInt(salaryMax) };
 
     if (search) {
-      query.$and = [
-        {
-          $or: [
-            { position: { $regex: search, $options: "i" } },
-            { location: { $regex: search, $options: "i" } },
-            { skills: { $regex: search, $options: "i" } },
-          ],
-        },
-      ];
+      query.$text = { $search: search };
     }
-    const jobs = await Job.find(query).sort({ createdAt: -1 });
-    res.json(jobs);
+
+
+    const sort = search
+      ? { score: { $meta: "textScore" } }
+      : { createdAt: -1 };
+
+    const [jobs, total] = await Promise.all([
+      Job.find(query, search ? { score: { $meta: "textScore" } } : {})
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Job.countDocuments(query),
+    ]);
+
+
+    const sanitizedJobs = jobs.map((job) => {
+      const j = job.toObject();
+      j.applicationCount = j.applications?.length || 0;
+      j.applications = (j.applications || []).map((app) => ({
+        candidateId: app.candidateId,
+      }));
+      return j;
+    });
+
+    res.json({
+      jobs: sanitizedJobs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit)),
+        hasMore: skip + jobs.length < total,
+      },
+    });
   } catch (err) {
     logger.error({ err }, "Error in getAllJobs");
     res.status(500).json({ message: err.message });
@@ -81,17 +126,30 @@ exports.createJob = async (req, res) => {
 
 exports.getJobById = async (req, res) => {
   try {
-    const job = await Job.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { views: 1 } },
-      { new: true },
-    );
+    const job = await Job.findById(req.params.id);
 
     if (!job || job.isFlagged) {
       return res
         .status(404)
         .json({ message: "Job not found or has been removed." });
     }
+
+    const viewerId = req.user?.id;
+    if (!viewerId || viewerId !== job.posterId.toString()) {
+      job.views = (job.views || 0) + 1;
+
+      const today = new Date().toISOString().split("T")[0];
+      const historyIndex = job.viewHistory.findIndex((h) => h.date === today);
+      if (historyIndex !== -1) {
+        job.viewHistory[historyIndex].count += 1;
+      } else {
+        job.viewHistory.push({ date: today, count: 1 });
+      }
+
+      await job.save();
+    }
+
+
     res.json(job);
   } catch (err) {
     logger.error({ err, jobId: req.params.id }, "Error in getJobById");
@@ -155,7 +213,26 @@ exports.applyForJob = async (req, res) => {
 
     await job.save();
 
+    try {
+      await User.findByIdAndUpdate(req.user.id, {
+        $set: {
+          jobProfile: {
+            contact: candidateContact,
+            skills: candidateSkills,
+            experience: candidateExperience,
+            education: candidateEducation,
+            biodata: biodataUrl,
+            certificate: certificateUrl,
+            updatedAt: new Date(),
+          },
+        },
+      });
+    } catch (profileErr) {
+      logger.warn({ profileErr, userId: req.user.id }, "Failed to update user job profile");
+    }
+
     const io = req.app.get("io");
+
     await createNotification({
       recipientId: job.posterId,
       type: "job_application",
@@ -259,7 +336,10 @@ exports.updateJob = async (req, res) => {
       "deadline",
       "salaryMin",
       "salaryMax",
+      "category",
+      "taluka",
     ];
+
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
@@ -343,6 +423,32 @@ exports.updateApplicationStatus = async (req, res) => {
       });
     }
 
+    // Send email notification to applicant
+    try {
+      if (application.candidateEmail) {
+        const { sendEmail } = emailService;
+        if (sendEmail) {
+
+          await sendEmail({
+            to: application.candidateEmail,
+            subject: `Application Update: ${job.position} — ${status}`,
+            html: `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px; background: #0d1117; color: #e6edf3; border-radius: 16px;">
+              <h2 style="color: #a78bfa; margin-bottom: 8px;">Application Status Update</h2>
+              <p style="color: #8b949e; margin-bottom: 24px;">Hi ${application.candidateName},</p>
+              <p>Your application for <strong style="color: #f0f6fc;">${job.position}</strong> has been updated:</p>
+              <div style="background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: center;">
+                <span style="font-size: 18px; font-weight: 700; color: ${status === 'Selected' ? '#3fb950' : status === 'Rejected' ? '#f85149' : status === 'Interview' ? '#d29922' : '#79c0ff'};">${status}</span>
+              </div>
+              <p style="color: #8b949e; font-size: 13px;">Visit Lokonomy to view the full details of your application.</p>
+              <p style="color: #484f58; font-size: 12px; margin-top: 24px;">— Team Lokonomy</p>
+            </div>`,
+          });
+        }
+      }
+    } catch (emailErr) {
+      logger.warn({ emailErr }, "Failed to send status update email");
+    }
+
     logger.info(
       { jobId: job._id, applicantId, status },
       "Application status updated",
@@ -387,3 +493,152 @@ exports.getAppliedJobs = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.withdrawApplication = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    const appIndex = job.applications.findIndex(
+      (app) => app.candidateId?.toString() === req.user.id,
+    );
+    if (appIndex === -1) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No application found" });
+    }
+
+    const appStatus = job.applications[appIndex].applicationStatus;
+    if (!["Applied", "Under Review"].includes(appStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot withdraw. Application is already "${appStatus}".`,
+      });
+    }
+
+    job.applications.splice(appIndex, 1);
+    await job.save();
+
+    logger.info(
+      { jobId: job._id, userId: req.user.id },
+      "Application withdrawn",
+    );
+    res.json({ success: true, message: "Application withdrawn successfully" });
+  } catch (err) {
+    logger.error(
+      { err, jobId: req.params.id },
+      "Error in withdrawApplication",
+    );
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getSimilarJobs = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    const similar = await Job.find({
+      _id: { $ne: job._id },
+      status: "Open",
+      isFlagged: { $ne: true },
+      isSuspended: { $ne: true },
+      $or: [
+        { district: job.district },
+        { education: job.education },
+        { category: job.category },
+        { position: { $regex: job.position.split(" ")[0], $options: "i" } },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select(
+        "position location district salary gender jobType category vacancies views createdAt deadline",
+      );
+
+    res.json(similar);
+  } catch (err) {
+    logger.error({ err, jobId: req.params.id }, "Error in getSimilarJobs");
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateApplicationNotes = async (req, res) => {
+  try {
+    const { id, applicantId } = req.params;
+    const { notes } = req.body;
+
+    const job = await Job.findById(id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (job.posterId.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const application = job.applications.id(applicantId);
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    application.employerNotes = notes;
+    await job.save();
+
+    logger.info(
+      { jobId: job._id, applicantId },
+      "Application notes updated",
+    );
+    res.json({ success: true, message: "Notes updated successfully" });
+  } catch (err) {
+    logger.error(
+      { err, jobId: req.params.id },
+      "Error in updateApplicationNotes",
+    );
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+exports.createJobAlert = async (req, res) => {
+  try {
+    const { category, district, taluka, jobType, salaryMin } = req.body;
+    
+    
+    const existingCount = await JobAlert.countDocuments({ userId: req.user.id });
+    if (existingCount >= 5) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "You can only have up to 5 job alerts. Please delete an old one." 
+      });
+    }
+
+    const alert = new JobAlert({
+      userId: req.user.id,
+      filters: { category, district, taluka, jobType, salaryMin }
+    });
+
+    await alert.save();
+    res.status(201).json({ success: true, message: "Job alert created successfully", alert });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getUserAlerts = async (req, res) => {
+  try {
+    const alerts = await JobAlert.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    res.json(alerts);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.deleteJobAlert = async (req, res) => {
+  try {
+    const alert = await JobAlert.findOneAndDelete({ _id: req.params.alertId, userId: req.user.id });
+    if (!alert) return res.status(404).json({ message: "Alert not found" });
+    res.json({ success: true, message: "Alert deleted" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+

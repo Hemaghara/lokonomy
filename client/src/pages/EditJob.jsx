@@ -169,8 +169,13 @@ const EditJob = () => {
     status: "Open",
     description: "",
     jobType: "Full-time",
+    category: "Other",
     deadline: "",
+    salaryMin: "",
+    salaryMax: "",
+    taluka: "",
   });
+
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -194,10 +199,15 @@ const EditJob = () => {
           status: job.status || "Open",
           description: job.description || "",
           jobType: job.jobType || "Full-time",
+          category: job.category || "Other",
           deadline: job.deadline
             ? new Date(job.deadline).toISOString().split("T")[0]
             : "",
+          salaryMin: job.salaryMin || "",
+          salaryMax: job.salaryMax || "",
+          taluka: job.taluka || "",
         });
+
       } catch (err) {
         console.error("Error fetching job:", err);
         toast.error("Failed to load job details");
@@ -253,6 +263,22 @@ const EditJob = () => {
     { value: "Freelance", label: "Freelance" },
     { value: "Contract", label: "Contract" },
   ];
+
+  const categoryOptions = [
+    { value: "IT & Software", label: "IT & Software" },
+    { value: "Retail & Sales", label: "Retail & Sales" },
+    { value: "Manufacturing", label: "Manufacturing" },
+    { value: "Healthcare", label: "Healthcare" },
+    { value: "Education", label: "Education" },
+    { value: "Hospitality", label: "Hospitality" },
+    { value: "Agriculture", label: "Agriculture" },
+    { value: "Construction", label: "Construction" },
+    { value: "Transport", label: "Transport" },
+    { value: "Banking & Finance", label: "Banking & Finance" },
+    { value: "Government", label: "Government" },
+    { value: "Other", label: "Other" },
+  ];
+
 
   const statusOptions = [
     { value: "Open", label: "Open — Accepting Applications" },
@@ -409,20 +435,42 @@ const EditJob = () => {
                 />
               </Field>
 
-              <Field label="Experience" required>
+              <Field label="Experience Required" id="experience">
                 <input
-                  type="text"
+                  id="experience"
                   name="experience"
-                  placeholder="e.g. 0–2 Years"
-                  className={inputCls}
-                  required
                   value={formData.experience}
                   onChange={handleChange}
+                  placeholder="e.g. 2 years, Fresher"
+                  className={inputCls}
                 />
               </Field>
 
-              <Field label="Monthly Salary (₹)" required>
+              <Field label="Job Category" required id="category">
+                <CustomDropdown
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  options={categoryOptions}
+                  placeholder="Select Category"
+                />
+              </Field>
+
+              <Field label="Location / Taluka" id="taluka">
                 <input
+                  id="taluka"
+                  name="taluka"
+                  value={formData.taluka}
+                  onChange={handleChange}
+                  placeholder="e.g. Haveli, Mulshi"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Monthly Salary (₹)" required id="salary">
+                <input
+                  id="salary"
                   type="text"
                   name="salary"
                   placeholder="e.g. 15,000 – 20,000"
@@ -432,6 +480,31 @@ const EditJob = () => {
                   onChange={handleChange}
                 />
               </Field>
+
+              <Field label="Salary Min" id="salaryMin">
+                <input
+                  id="salaryMin"
+                  name="salaryMin"
+                  type="number"
+                  value={formData.salaryMin}
+                  onChange={handleChange}
+                  placeholder="Min monthly salary"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Salary Max" id="salaryMax">
+                <input
+                  id="salaryMax"
+                  name="salaryMax"
+                  type="number"
+                  value={formData.salaryMax}
+                  onChange={handleChange}
+                  placeholder="Max monthly salary"
+                  className={inputCls}
+                />
+              </Field>
+
 
               <Field label="Gender Preference">
                 <CustomDropdown

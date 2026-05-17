@@ -39,6 +39,9 @@ const JobDetails = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [similarJobs, setSimilarJobs] = useState([]);
+  const [withdrawing, setWithdrawing] = useState(false);
+
 
   const isOwner = user && job && user._id === job.posterId;
   const hasApplied =
@@ -58,12 +61,38 @@ const JobDetails = () => {
       if (user) {
         recommendationService.trackInteraction("view", "job", id);
       }
+      // Fetch similar jobs
+      const simResponse = await jobService.getSimilarJobs(id);
+      setSimilarJobs(simResponse.data);
     } catch (err) {
       console.error("Error fetching job:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleWithdraw = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to withdraw your application? This action cannot be undone.",
+      )
+    )
+      return;
+
+    try {
+      setWithdrawing(true);
+      const res = await jobService.withdrawApplication(id);
+      if (res.data.success) {
+        toast.success("Application withdrawn successfully");
+        fetchJobDetails(); // Refresh to show "Apply Now" again
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to withdraw application");
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
 
   const handleApplyClick = () => {
     if (!user) {
@@ -84,6 +113,7 @@ const JobDetails = () => {
         navigate("/jobs");
       }
     } catch (err) {
+      console.log(err);
       toast.error("Failed to delete job listing");
     }
   };
@@ -375,13 +405,32 @@ const JobDetails = () => {
                   <HiOutlineArrowRight className="text-sm" />
                 </button>
               ) : hasApplied ? (
-                <button
-                  disabled
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold py-3 rounded-xl mb-3 cursor-not-allowed"
-                >
-                  <HiOutlineCheckCircle className="text-sm" /> Applied
-                  Successfully
-                </button>
+                <div className="space-y-3">
+                  <button
+                    disabled
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold py-3 rounded-xl cursor-not-allowed"
+                  >
+                    <HiOutlineCheckCircle className="text-sm" /> Applied
+                    Successfully
+                  </button>
+                  {["Applied", "Under Review"].includes(
+                    job.applications?.find((a) => a.candidateId === user._id)
+                      ?.applicationStatus,
+                  ) && (
+                    <button
+                      onClick={handleWithdraw}
+                      disabled={withdrawing}
+                      className="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold py-3 rounded-xl transition-all disabled:opacity-50"
+                    >
+                      {withdrawing ? (
+                        <div className="w-3.5 h-3.5 border-2 border-rose-500/20 border-t-rose-500 rounded-full animate-spin" />
+                      ) : (
+                        <HiOutlineTrash className="text-sm" />
+                      )}
+                      Withdraw Application
+                    </button>
+                  )}
+                </div>
               ) : job.isSuspended ? (
                 <button
                   disabled
@@ -450,7 +499,65 @@ const JobDetails = () => {
             </div>
           </motion.div>
         </div>
+
+        {similarJobs.length > 0 && (
+          <div className="mt-16 border-t border-[#1f2a3d] pt-12">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-white font-bold text-xl mb-1">
+                  Similar Opportunities
+                </h3>
+                <p className="text-slate-500 text-sm">
+                  You might also be interested in these roles
+                </p>
+              </div>
+              <Link
+                to="/jobs"
+                className="text-violet-400 hover:text-violet-300 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors"
+              >
+                View All <HiOutlineArrowRight />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {similarJobs.map((simJob) => (
+                <Link
+                  key={simJob._id}
+                  to={`/jobs/${simJob._id}`}
+                  className={card + " p-5 hover:border-violet-500/50 transition-all group"}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-[#0d1424] border border-[#1f2a3d] rounded-xl flex items-center justify-center shrink-0 group-hover:border-violet-500/30 transition-all">
+                      <HiOutlineBriefcase className="text-violet-400 text-xl" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-white font-bold text-sm truncate leading-tight mb-0.5 group-hover:text-violet-400 transition-colors">
+                        {simJob.position}
+                      </h4>
+                      <p className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                        {simJob.category || "General"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 mb-3">
+                    <HiOutlineMapPin className="text-rose-400 shrink-0" size={12} />
+                    <span className="truncate">{simJob.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#1f2a3d]/50">
+                    <span className="text-emerald-400 font-bold text-xs">
+                      {simJob.salary}
+                    </span>
+                    <span className="text-slate-600 text-[10px] font-medium">
+                      {simJob.views} views
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
 
       <ReportModal
         isOpen={showReport}

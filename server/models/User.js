@@ -83,6 +83,12 @@ const userSchema = new mongoose.Schema({
       ref: "Business",
     },
   ],
+  savedStories: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Story",
+    },
+  ],
   pushSubscriptions: [
     {
       endpoint: String,
@@ -155,7 +161,17 @@ const userSchema = new mongoose.Schema({
     },
   ],
   refreshToken: { type: String, default: null },
+  jobProfile: {
+    contact: String,
+    skills: String,
+    experience: String,
+    education: String,
+    biodata: String,
+    certificate: String,
+    updatedAt: { type: Date, default: Date.now },
+  },
 });
+
 
 userSchema.index({ status: 1 });
 userSchema.index({ "subscription.status": 1, "subscription.plan": 1 });

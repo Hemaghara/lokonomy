@@ -23,10 +23,22 @@ import {
   HiOutlineEye,
   HiOutlinePencilSquare,
   HiOutlineArrowPath,
-  HiOutlineChartBarSquare,
   HiOutlineSparkles,
 } from "react-icons/hi2";
 import { FiPlus } from "react-icons/fi";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+
 
 const STATUS_STYLES = {
   Applied: "bg-violet-500/10 text-violet-400 border-violet-500/20",
@@ -122,6 +134,32 @@ const JobDashboard = () => {
     }
   };
 
+  const handleUpdateAppNotes = async (jobId, applicantId, notes) => {
+    try {
+      const res = await jobService.updateApplicationNotes(
+        jobId,
+        applicantId,
+        notes,
+      );
+      if (res.data.success) {
+        setMyJobs((prev) =>
+          prev.map((j) => {
+            if (j._id !== jobId) return j;
+            return {
+              ...j,
+              applications: j.applications.map((a) =>
+                a._id === applicantId ? { ...a, employerNotes: notes } : a,
+              ),
+            };
+          }),
+        );
+      }
+    } catch {
+      toast.error("Failed to save notes");
+    }
+  };
+
+
   const handleBulkUpdateStatus = async (jobId, newStatus) => {
     if (
       !window.confirm(
@@ -149,11 +187,11 @@ const JobDashboard = () => {
     }
   };
 
-  const totalApplicants = myJobs.reduce(
-    (s, j) => s + (j.applications?.length || 0),
-    0,
-  );
-  const totalVacancies = myJobs.reduce((s, j) => s + (j.vacancies || 0), 0);
+  const totalApplicants = myJobs.reduce((acc, job) => acc + (job.applications?.length || 0), 0);
+  const totalVacancies = myJobs.reduce((acc, job) => acc + (job.vacancies || 0), 0);
+  const totalViews = myJobs.reduce((acc, job) => acc + (job.views || 0), 0);
+  const avgConversion = totalViews > 0 ? ((totalApplicants / totalViews) * 100).toFixed(1) : 0;
+
   const openJobs = myJobs.filter((j) => (j.status || "Open") === "Open").length;
   const closedJobs = myJobs.filter((j) => j.status === "Closed").length;
 
@@ -178,13 +216,57 @@ const JobDashboard = () => {
     }[filter] || myJobs;
 
   const timeAgo = (date) => {
-    if (!date) return "";
-    const s = Math.floor((Date.now() - new Date(date)) / 1000);
-    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-    if (s < 2592000) return `${Math.floor(s / 86400)}d ago`;
-    return new Date(date).toLocaleDateString();
+    if (!date) return "N/A";
+    const now = new Date();
+    const then = new Date(date);
+    const diff = now - then;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return "just now";
   };
+
+  // --- ANALYTICS DATA ---
+  const allApplications = myJobs.flatMap((j) => (j.applications || []).map(a => ({...a, jobPosition: j.position})));
+  
+  // 1. Trend Data (last 14 days)
+  const trendData = [...Array(14)].map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (13 - i));
+    const dateStr = d.toISOString().split("T")[0];
+    
+    // Count apps
+    const appsCount = allApplications.filter(a => a.appliedAt && a.appliedAt.split("T")[0] === dateStr).length;
+    
+    // Count views
+    const viewsCount = myJobs.reduce((acc, job) => {
+      const history = (job.viewHistory || []).find(h => h.date === dateStr);
+      return acc + (history ? history.count : 0);
+    }, 0);
+
+    return { 
+      name: d.toLocaleDateString("en-US", { day: "numeric", month: "short" }), 
+      apps: appsCount,
+      views: viewsCount
+    };
+  });
+
+
+  // 2. Status Breakdown
+  const statusCounts = allApplications.reduce((acc, app) => {
+    const s = app.applicationStatus || "Applied";
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+
+  const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+  const PIE_COLORS = ["#8b5cf6", "#f59e0b", "#0ea5e9", "#10b981", "#ef4444"];
+
 
   if (loading)
     return (
@@ -226,13 +308,21 @@ const JobDashboard = () => {
       val: "text-sky-400",
     },
     {
-      label: "Open Vacancies",
-      value: totalVacancies,
+      label: "Total Views",
+      value: totalViews,
+      icon: <HiOutlineEye />,
+      badge: "bg-violet-500/10 border-violet-500/20 text-violet-400",
+      val: "text-violet-400",
+    },
+    {
+      label: "Conversion Rate",
+      value: `${avgConversion}%`,
       icon: <HiOutlineChartBarSquare />,
-      badge: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-      val: "text-amber-400",
+      badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+      val: "text-emerald-400",
     },
   ];
+
 
   const FILTERS = [
     { id: "all", label: "All" },
@@ -318,6 +408,144 @@ const JobDashboard = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Analytics Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
+        >
+          {/* Trend Chart */}
+          <div className="lg:col-span-2 bg-[#080f1c] border border-white/5 rounded-3xl p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <HiOutlineChartBarSquare size={120} />
+            </div>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-white font-bold text-base flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                  Application Trends
+                </h3>
+                <p className="text-slate-500 text-[11px] mt-0.5">
+                  Total candidates over the last 14 days
+                </p>
+              </div>
+              <div className="bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                Live Insights
+              </div>
+            </div>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#64748b", fontSize: 10 }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#64748b", fontSize: 10 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "#0f172a", 
+                      border: "1px solid #334155", 
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      color: "#fff"
+                    }}
+                    itemStyle={{ color: "#a78bfa" }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="views" 
+                    stroke="#0ea5e9" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorViews)" 
+                    name="Daily Views"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="apps" 
+                    stroke="#8b5cf6" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorApps)" 
+                    name="Applications"
+                  />
+                </AreaChart>
+
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Status Pie Chart */}
+          <div className="bg-[#080f1c] border border-white/5 rounded-3xl p-6">
+            <h3 className="text-white font-bold text-base mb-1">
+              Candidate Pipeline
+            </h3>
+            <p className="text-slate-500 text-[11px] mb-6">
+              Current status distribution
+            </p>
+            <div className="h-48 w-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={75}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "#0f172a", 
+                      border: "1px solid #334155", 
+                      borderRadius: "12px",
+                      fontSize: "12px"
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold text-white leading-none">{totalApplicants}</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Total</span>
+              </div>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              {statusData.map((s, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white/2.5 p-2 rounded-xl border border-white/5">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="text-[10px] text-slate-400 font-medium truncate">{s.name}</span>
+                  <span className="text-[10px] text-white font-bold ml-auto">{s.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
 
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_310px] gap-6 items-start">
           <motion.div
@@ -797,8 +1025,30 @@ const JobDashboard = () => {
                                                   Email
                                                 </a>
                                               </div>
+
+                                              <div className="mt-4 pt-4 border-t border-white/4">
+                                                <p className="text-[9px] text-slate-600 font-bold uppercase tracking-[0.12em] mb-2 flex items-center gap-1">
+                                                  <HiOutlinePencilSquare className="text-amber-400" />{" "}
+                                                  Private Hiring Notes
+                                                </p>
+                                                <textarea
+                                                  defaultValue={
+                                                    app.employerNotes || ""
+                                                  }
+                                                  onBlur={(e) =>
+                                                    handleUpdateAppNotes(
+                                                      job._id,
+                                                      app._id,
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                  placeholder="Add internal notes about this candidate (only visible to you)..."
+                                                  className="w-full bg-black/20 border border-white/5 rounded-xl px-3 py-2.5 text-xs text-slate-300 placeholder:text-slate-700 outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-all resize-none min-h-20"
+                                                />
+                                              </div>
                                             </div>
                                           </motion.div>
+
                                         )}
                                       </AnimatePresence>
                                     </div>

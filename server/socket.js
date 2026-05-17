@@ -80,6 +80,26 @@ const initSocket = (server) => {
       );
     });
 
+    socket.on("joinStoryFeed", ({ district }) => {
+      if (district) {
+        socket.join(`stories_${district}`);
+        logger.debug(
+          { socketId: socket.id, district },
+          "[Socket] Joined story feed room",
+        );
+      }
+    });
+
+    socket.on("leaveStoryFeed", ({ district }) => {
+      if (district) {
+        socket.leave(`stories_${district}`);
+        logger.debug(
+          { socketId: socket.id, district },
+          "[Socket] Left story feed room",
+        );
+      }
+    });
+
     socket.on("sendMessage", async (data) => {
       try {
         const {

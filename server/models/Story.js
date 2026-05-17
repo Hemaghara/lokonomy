@@ -18,6 +18,11 @@ const storySchema = new mongoose.Schema({
   image: {
     type: String,
   },
+  media: [{
+    url: String,
+    type: { type: String, enum: ['image', 'video'], default: 'image' },
+    thumbnail: String,
+  }],
   district: {
     type: String,
   },
@@ -62,6 +67,21 @@ const storySchema = new mongoose.Schema({
   shares: {
     type: Number,
     default: 0,
+  },
+  comments: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    userName: { type: String, required: true },
+    userAvatar: String,
+    text: { type: String, required: true, maxlength: 500 },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  poll: {
+    question: String,
+    options: [{
+      text: String,
+      votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+    }],
+    endsAt: Date
   },
   isVerified: {
     type: Boolean,
