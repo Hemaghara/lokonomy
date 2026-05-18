@@ -5,6 +5,9 @@ const nodemailer = require("nodemailer");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { serializeUser } = require("../utils/userSerializer");
 const logger = require("../utils/logger");
+const { Resend } = require("resend");
+
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 let transporter;
 const getTransporter = () => {
@@ -99,18 +102,21 @@ exports.login = async (req, res) => {
     });
 
     const mailService = getTransporter();
-    const isEmailConfigured = !!mailService && !process.env.EMAIL_USER.includes("your-email");
+    const isResendConfigured = !!resendClient;
+    const isGmailConfigured = !!mailService && !process.env.EMAIL_USER.includes("your-email");
+    const isEmailConfigured = isResendConfigured || isGmailConfigured;
 
     if (!isEmailConfigured) {
       if (process.env.NODE_ENV === "production") {
         logger.error({
+          resendApiKey: !!process.env.RESEND_API_KEY,
           emailUser: !!process.env.EMAIL_USER,
           emailPass: !!process.env.EMAIL_PASS
         }, "Email configuration missing in production!");
         
         return res.status(503).json({
           success: false,
-          message: "Email service is not configured. Please set EMAIL_USER and EMAIL_PASS in Render settings.",
+          message: "Email service is not configured. Please set RESEND_API_KEY or EMAIL_USER/EMAIL_PASS in Render settings.",
         });
       }
       logger.warn(
@@ -125,27 +131,49 @@ exports.login = async (req, res) => {
       });
     }
 
-    logger.info({ to: email }, "Attempting to send OTP email in background...");
-    
-    mailService.sendMail({
-      from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Your Verification Code",
-      text: `Hello ${user.name},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
-      html: `<div style="font-family:sans-serif;padding:20px">
-        <h3>Verification Code</h3>
-        <p>Hello <b>${user.name}</b>,</p>
-        <p>Your login OTP is:</p>
-        <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
-        <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
-      </div>`,
-    })
-    .then(() => {
-      logger.info({ to: email }, "OTP email sent successfully in the background");
-    })
-    .catch((mailErr) => {
-      logger.error({ err: mailErr.message, email }, "Email delivery failed in the background");
-    });
+    if (isResendConfigured) {
+      logger.info({ to: email }, "Attempting to send OTP email instantly via Resend...");
+      resendClient.emails.send({
+        from: process.env.RESEND_FROM || "Lokonomy <onboarding@resend.dev>",
+        to: email,
+        subject: "Your Verification Code",
+        text: `Hello ${user.name},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
+        html: `<div style="font-family:sans-serif;padding:20px">
+          <h3>Verification Code</h3>
+          <p>Hello <b>${user.name}</b>,</p>
+          <p>Your login OTP is:</p>
+          <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
+          <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
+        </div>`,
+      })
+      .then(() => {
+        logger.info({ to: email }, "OTP email sent instantly via Resend in the background");
+      })
+      .catch((err) => {
+        logger.error({ err: err.message, email }, "Resend delivery failed in the background");
+      });
+    } else {
+      logger.info({ to: email }, "Attempting to send OTP email via Gmail SMTP...");
+      mailService.sendMail({
+        from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Your Verification Code",
+        text: `Hello ${user.name},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
+        html: `<div style="font-family:sans-serif;padding:20px">
+          <h3>Verification Code</h3>
+          <p>Hello <b>${user.name}</b>,</p>
+          <p>Your login OTP is:</p>
+          <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
+          <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
+        </div>`,
+      })
+      .then(() => {
+        logger.info({ to: email }, "OTP email sent successfully via Gmail SMTP in the background");
+      })
+      .catch((mailErr) => {
+        logger.error({ err: mailErr.message, email }, "Gmail SMTP delivery failed in the background");
+      });
+    }
 
     return res.json({
       success: true,
