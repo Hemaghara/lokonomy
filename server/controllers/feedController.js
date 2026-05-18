@@ -1,7 +1,6 @@
 const Feed = require("../models/Feed");
 const User = require("../models/User");
 
-// Ensure MongoDB indexes are properly synchronized and self-heal conflicts
 Feed.createIndexes().catch((err) => {
   if (err.codeName === "IndexOptionsConflict") {
     Feed.collection.dropIndex("location_2dsphere").then(() => {
@@ -18,7 +17,7 @@ exports.getAllFeeds = async (req, res, next) => {
   try {
     const { lat, lng, radius = 5000, district, type, search, page = 1, limit = 9 } = req.query;
 
-    // Use $and to isolate different filter boundaries and protect scheduled feeds
+    
     let query = {
       $and: [
         {
