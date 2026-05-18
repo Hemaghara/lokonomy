@@ -103,7 +103,6 @@ const MyOrders = () => {
   return (
     <div className="min-h-screen bg-[#080e1a] pt-24 pb-20">
       <div className="max-w-4xl mx-auto px-4">
-        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

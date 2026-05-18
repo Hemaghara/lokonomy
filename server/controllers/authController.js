@@ -13,6 +13,7 @@ const getTransporter = () => {
       return null;
     }
     transporter = nodemailer.createTransport({
+      pool: true,
       service: "gmail",
       auth: { 
         user: process.env.EMAIL_USER, 
@@ -123,38 +124,32 @@ exports.login = async (req, res) => {
       });
     }
 
-    try {
-      logger.info({ to: email }, "Attempting to send OTP email...");
-      
-      const mailPromise = mailService.sendMail({
-        from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Your Verification Code",
-        html: `<div style="font-family:sans-serif;padding:20px">
-          <h3>Verification Code</h3>
-          <p>Hello <b>${user.name}</b>,</p>
-          <p>Your login OTP is:</p>
-          <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
-          <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
-        </div>`,
-      });
+    logger.info({ to: email }, "Attempting to send OTP email in background...");
+    
+    mailService.sendMail({
+      from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Verification Code",
+      html: `<div style="font-family:sans-serif;padding:20px">
+        <h3>Verification Code</h3>
+        <p>Hello <b>${user.name}</b>,</p>
+        <p>Your login OTP is:</p>
+        <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
+        <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
+      </div>`,
+    })
+    .then(() => {
+      logger.info({ to: email }, "OTP email sent successfully in the background");
+    })
+    .catch((mailErr) => {
+      logger.error({ err: mailErr.message, email }, "Email delivery failed in the background");
+    });
 
-      await mailPromise;
-
-      logger.info({ to: email }, "OTP email sent successfully");
-      return res.json({
-        success: true,
-        message: "Verification code sent.",
-        step: "otp",
-      });
-    } catch (mailErr) {
-      logger.error({ err: mailErr.message, email }, "Email delivery failed");
-      
-      return res.status(503).json({ 
-        success: false, 
-        message: "Failed to send verification code. Please check your email settings or try again later." 
-      });
-    }
+    return res.json({
+      success: true,
+      message: "Verification code sent.",
+      step: "otp",
+    });
   } catch (err) {
     logger.error({ err: err.message }, "Login controller error");
     return res.status(500).json({ success: false, message: "Internal server error" });

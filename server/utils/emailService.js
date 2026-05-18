@@ -2,6 +2,7 @@ const nodemailer = require("nodemailer");
 const logger = require("./logger");
 
 const transporter = nodemailer.createTransport({
+  pool: true,
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
   secure: process.env.SMTP_PORT == 465,
