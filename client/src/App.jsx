@@ -402,6 +402,7 @@ function App() {
                       <Route path="/stories/post" element={<PostStory />} />
                       <Route path="/stories/edit/:storyId" element={<PostStory />} />
                       <Route path="/feed/post" element={<PostFeed />} />
+                      <Route path="/feed/edit/:id" element={<PostFeed />} />
                       <Route path="/my-orders" element={<MyOrders />} />
                       <Route
                         path="/sales-management"

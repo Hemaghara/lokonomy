@@ -31,6 +31,9 @@ const Feed = () => {
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [reportConfig, setReportConfig] = useState({ isOpen: false, targetId: null });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const feedCategories = [
     "All",
@@ -42,15 +45,22 @@ const Feed = () => {
   ];
 
   useEffect(() => {
-    fetchFeeds();
+    fetchFeeds(true);
   }, [district, filter, searchQuery, radius, user?.latitude]);
 
-  const fetchFeeds = async () => {
-    setLoading(true);
+  const fetchFeeds = async (reset = false) => {
+    if (reset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     try {
+      const nextPage = reset ? 1 : page;
       const params = {
         type: filter,
         search: searchQuery,
+        page: nextPage,
+        limit: 9,
       };
 
       if (user?.latitude && user?.longitude) {
@@ -62,11 +72,22 @@ const Feed = () => {
       }
 
       const response = await feedService.getFeeds(params);
-      setFeeds(response.data.data || []);
+      const newItems = response.data.data || [];
+      
+      if (reset) {
+        setFeeds(newItems);
+        setPage(2);
+      } else {
+        setFeeds((prev) => [...prev, ...newItems]);
+        setPage((prev) => prev + 1);
+      }
+
+      setHasMore(nextPage < (response.data.totalPages || 1));
     } catch (err) {
       console.error("Feed fetch error:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -325,6 +346,25 @@ const Feed = () => {
                   </p>
                 </motion.div>
               )}
+            </div>
+          )}
+
+          {hasMore && feeds.length > 0 && !loading && (
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={() => fetchFeeds(false)}
+                disabled={loadingMore}
+                className="flex items-center gap-2 bg-[#111827] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-emerald-500/30 hover:text-emerald-400 text-slate-300 text-xs font-bold px-6 py-3.5 rounded-xl transition-all duration-200"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin shrink-0" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More Feeds"
+                )}
+              </button>
             </div>
           )}
         </div>

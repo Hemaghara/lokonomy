@@ -20,6 +20,9 @@ import {
   HiOutlineFunnel,
   HiOutlineCalendarDays,
   HiOutlineBuildingStorefront,
+  HiOutlinePencilSquare,
+  HiOutlineHeart,
+  HiHeart,
 } from "react-icons/hi2";
 
 const FeedDetails = () => {
@@ -30,6 +33,68 @@ const FeedDetails = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [liking, setLiking] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error("Please login to comment");
+      return;
+    }
+    if (!commentText.trim()) return;
+    try {
+      setPostingComment(true);
+      const res = await feedService.addComment(id, commentText);
+      if (res.data.success) {
+        toast.success("Comment posted successfully");
+        setComments((prev) => [...prev, res.data.data]);
+        setCommentText("");
+      }
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      toast.error(err.response?.data?.message || "Failed to add comment");
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      const res = await feedService.deleteComment(id, commentId);
+      if (res.data.success) {
+        toast.success("Comment deleted successfully");
+        setComments((prev) => prev.filter((c) => c._id !== commentId));
+      }
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      toast.error("Failed to delete comment");
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+      toast.error("Please login to like this post");
+      return;
+    }
+    if (liking) return;
+    try {
+      setLiking(true);
+      const res = await feedService.toggleLikeFeed(id);
+      setIsLiked(res.data.isLiked);
+      setLikesCount(res.data.likesCount);
+    } catch (err) {
+      console.error("Error liking feed:", err);
+      toast.error("Failed to like post");
+    } finally {
+      setLiking(false);
+    }
+  };
 
   const getIconForType = (type) => {
     switch (type) {
@@ -87,7 +152,11 @@ const FeedDetails = () => {
       try {
         setLoading(true);
         const response = await feedService.getFeedById(id);
-        setFeed(response.data.data);
+        const data = response.data.data;
+        setFeed(data);
+        setLikesCount(data.likes?.length || 0);
+        setIsLiked(data.likes?.includes(user?.id) || false);
+        setComments(data.comments || []);
       } catch (err) {
         console.error("Error fetching feed details:", err);
         toast.error("Failed to load feed details");
@@ -96,7 +165,7 @@ const FeedDetails = () => {
       }
     };
     fetchFeed();
-  }, [id]);
+  }, [id, user?.id]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -213,19 +282,46 @@ const FeedDetails = () => {
           </Link>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleLike}
+              disabled={liking}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all duration-300 active:scale-95 disabled:opacity-55
+                ${
+                  isLiked
+                    ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20"
+                    : "bg-[#111827] text-slate-300 border-[#1f2a3d] hover:text-white"
+                }`}
+            >
+              {isLiked ? (
+                <HiHeart className="text-sm text-rose-500 animate-pulse" />
+              ) : (
+                <HiOutlineHeart className="text-sm" />
+              )}
+              <span>{likesCount}</span>
+            </button>
+
             {isOwner && (
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all disabled:opacity-50"
-              >
-                <HiOutlineTrash className="text-sm" />
-                {deleting ? "Deleting…" : "Delete"}
-              </button>
+              <>
+                <Link
+                  to={`/feed/edit/${feed._id}`}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 transition-all duration-300 active:scale-95"
+                >
+                  <HiOutlinePencilSquare className="text-sm" />
+                  Edit
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 transition-all disabled:opacity-50 duration-300 active:scale-95"
+                >
+                  <HiOutlineTrash className="text-sm" />
+                  {deleting ? "Deleting…" : "Delete"}
+                </button>
+              </>
             )}
             <button
               onClick={handleShare}
-              className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all
+              className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all duration-300 active:scale-95
                 ${
                   copied
                     ? "bg-emerald-600/20 text-emerald-300 border-emerald-500/30"
@@ -234,11 +330,11 @@ const FeedDetails = () => {
             >
               {copied ? (
                 <>
-                  <HiOutlineCheckCircle className="text-base" /> Copied!
+                  <HiOutlineCheckCircle className="text-sm text-emerald-400" /> Copied!
                 </>
               ) : (
                 <>
-                  <HiOutlineShare className="text-base" /> Share
+                  <HiOutlineShare className="text-sm" /> Share
                 </>
               )}
             </button>
@@ -465,6 +561,103 @@ const FeedDetails = () => {
               >
                 <HiOutlineArrowLeft className="text-sm" /> Browse More Feeds
               </button>
+            </div>
+
+            {/* Premium Comments Section */}
+            <div className={`${card} p-6 mt-6 relative overflow-hidden`}>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/20 via-sky-500/20 to-transparent" />
+              <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+                <span className="text-emerald-400">💬</span> Comments ({comments.length})
+              </h3>
+
+              {/* Add Comment Form */}
+              {user ? (
+                <form onSubmit={handleAddComment} className="mb-8">
+                  <div className="flex gap-3 items-start">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0 cursor-default">
+                      {user.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <textarea
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Write a supportive comment, ask a question, or say thanks..."
+                        rows={3}
+                        maxLength={500}
+                        className="w-full bg-[#111827] text-white text-sm rounded-xl border border-[#1f2a3d] focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/25 p-3 placeholder-slate-600 transition-all duration-300 resize-none"
+                      />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500">
+                          {500 - commentText.length} characters left
+                        </span>
+                        <button
+                          type="submit"
+                          disabled={postingComment || !commentText.trim()}
+                          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all duration-200 active:scale-95 shadow-md shadow-emerald-950/20"
+                        >
+                          {postingComment ? "Posting..." : "Post Comment"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div className="bg-[#111827]/40 border border-[#1f2a3d] rounded-xl p-4 text-center mb-8">
+                  <p className="text-slate-500 text-xs mb-2">You must be logged in to participate in the local discussion.</p>
+                  <Link to="/login" className="inline-block text-emerald-400 hover:text-emerald-300 text-xs font-bold">
+                    Login / Sign Up
+                  </Link>
+                </div>
+              )}
+
+              {/* Comments Thread */}
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {comments.length > 0 ? (
+                  comments.map((comment) => {
+                    const isCommentAuthor = comment.user === user?.id || feed.authorId === user?.id;
+                    return (
+                      <div key={comment._id} className="flex gap-3 items-start border-b border-[#1f2a3d]/40 pb-4 last:border-0 last:pb-0 group/comment">
+                        <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-semibold text-xs shrink-0">
+                          {comment.userName?.[0]?.toUpperCase() || "U"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center gap-2 mb-1">
+                            <span className="text-slate-200 text-xs font-bold truncate">
+                              {comment.userName}
+                            </span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[10px] text-slate-500">
+                                {new Date(comment.createdAt).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                              {isCommentAuthor && (
+                                <button
+                                  onClick={() => handleDeleteComment(comment._id)}
+                                  className="text-slate-500 hover:text-red-400 p-0.5 rounded transition-colors"
+                                  title="Delete Comment"
+                                >
+                                  <HiOutlineTrash className="text-xs" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-slate-400 text-xs leading-relaxed whitespace-pre-wrap">
+                            {comment.text}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-6 text-center text-slate-600 text-xs">
+                    No comments yet. Share your thoughts to kickstart the conversation!
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>

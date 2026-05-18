@@ -51,8 +51,17 @@ const feedSchema = new mongoose.Schema({
     default: Date.now,
   },
   scheduledAt: { type: Date, default: null },
+  expiresAt: { type: Date, default: null },
   isPinned: { type: Boolean, default: false },
   pinnedAt: { type: Date, default: null },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
+  comments: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    userName: { type: String, required: true },
+    userAvatar: String,
+    text: { type: String, required: true, maxlength: 500 },
+    createdAt: { type: Date, default: Date.now }
+  }],
 });
 
 feedSchema.index({ location: "2dsphere" });

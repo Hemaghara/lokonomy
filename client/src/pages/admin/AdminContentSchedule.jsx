@@ -157,10 +157,10 @@ const AdminContentSchedule = () => {
                   >
                     <div className="min-w-0">
                       <p className="text-xs text-white line-clamp-2 mb-3">
-                        "{f.caption}"
+                        "{f.title}"
                       </p>
                       <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">
-                        By {f.author?.name || "User"} · Pinned{" "}
+                        By {f.authorId?.name || f.author || "User"} · Pinned{" "}
                         {new Date(f.pinnedAt).toLocaleDateString()}
                       </p>
                     </div>

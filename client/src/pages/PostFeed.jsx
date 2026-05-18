@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "../context/LocationContext";
 import { useUser } from "../context/UserContext";
@@ -156,6 +156,8 @@ const Divider = ({ label }) => (
 
 const PostFeed = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const { user } = useUser();
   const { state } = useLocation();
 
@@ -171,7 +173,49 @@ const PostFeed = () => {
     locationAddress: "",
     eventDate: "",
     eventTime: "",
+    scheduledAt: "",
+    expiresAt: "",
   });
+
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchFeedDetails = async () => {
+        try {
+          setLoading(true);
+          const response = await feedService.getFeedById(id);
+          const feed = response.data.data;
+          
+          setFormData({
+            title: feed.title || "",
+            content: feed.content || "",
+            type: feed.type || "Information",
+            image: feed.image || "",
+            latitude: feed.location?.coordinates[1] || null,
+            longitude: feed.location?.coordinates[0] || null,
+            locationAddress: feed.locationAddress || "",
+            eventDate: feed.eventDate || "",
+            eventTime: feed.eventTime || "",
+            scheduledAt: feed.scheduledAt ? new Date(feed.scheduledAt).toISOString().slice(0, 16) : "",
+            expiresAt: feed.expiresAt ? new Date(feed.expiresAt).toISOString().split("T")[0] : "",
+          });
+          
+          if (feed.location) {
+            setFeedLocation({
+              lat: feed.location.coordinates[1],
+              lng: feed.location.coordinates[0],
+              address: feed.locationAddress,
+            });
+          }
+        } catch (err) {
+          console.error("Error loading feed details:", err);
+          toast.error("Failed to load feed details for editing");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchFeedDetails();
+    }
+  }, [id, isEditMode]);
 
   useEffect(() => {
     if (feedLocation) {
@@ -224,14 +268,21 @@ const PostFeed = () => {
         ...formData,
         author: user?.name || "Anonymous",
       };
-      const response = await feedService.createFeed(feedData);
+      
+      let response;
+      if (isEditMode) {
+        response = await feedService.updateFeed(id, feedData);
+      } else {
+        response = await feedService.createFeed(feedData);
+      }
+
       if (response.data.success) {
-        toast.success(response.data.message || "Feed posted successfully!");
+        toast.success(response.data.message || (isEditMode ? "Feed updated successfully!" : "Feed posted successfully!"));
         navigate("/feed");
       }
     } catch (error) {
-      console.error("Error posting feed:", error);
-      toast.error(error.response?.data?.message || "Post failed");
+      console.error("Error posting/updating feed:", error);
+      toast.error(error.response?.data?.message || "Operation failed");
     } finally {
       setLoading(false);
     }
@@ -254,14 +305,14 @@ const PostFeed = () => {
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-emerald-500/8 border border-emerald-500/15">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-semibold text-emerald-500/70 uppercase tracking-[0.18em]">
-              Community Contribution
+              {isEditMode ? "Modify Post" : "Community Contribution"}
             </span>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-            Create a New Feed
+            {isEditMode ? "Edit Feed Post" : "Create a New Feed"}
           </h1>
           <p className="text-sm text-white/30">
-            Share sales, offers, or news with your local community.
+            {isEditMode ? "Update your post details below." : "Share sales, offers, or news with your local community."}
           </p>
         </motion.div>
 
@@ -336,6 +387,30 @@ const PostFeed = () => {
                   </Field>
                 </>
               )}
+
+              <Divider label="Release Scheduling & Expiration" />
+
+              <Field label="Scheduled Release (Optional)" id="scheduledAt">
+                <input
+                  id="scheduledAt"
+                  type="datetime-local"
+                  name="scheduledAt"
+                  className={inputCls}
+                  value={formData.scheduledAt}
+                  onChange={handleChange}
+                />
+              </Field>
+
+              <Field label="Expiration Date (Optional)" id="expiresAt">
+                <input
+                  id="expiresAt"
+                  type="date"
+                  name="expiresAt"
+                  className={inputCls}
+                  value={formData.expiresAt}
+                  onChange={handleChange}
+                />
+              </Field>
 
               <Divider label="Location Details" />
               <div className="sm:col-span-2">
@@ -423,7 +498,7 @@ const PostFeed = () => {
                   disabled={loading}
                   className="w-full relative overflow-hidden bg-emerald-600 text-white font-semibold text-sm py-3.5 rounded-xl transition-all duration-200 hover:bg-emerald-500 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-900/20 group"
                 >
-                  {loading ? "Posting..." : "Post to Feed"}
+                  {loading ? (isEditMode ? "Saving..." : "Posting...") : (isEditMode ? "Save Changes" : "Post to Feed")}
                 </button>
               </div>
             </div>

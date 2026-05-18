@@ -25,14 +25,14 @@ exports.getScheduledContent = async (req, res) => {
           .limit(20)
           .lean(),
         Feed.find({ isPinned: true })
-          .select("caption author isPinned pinnedAt createdAt")
-          .populate("author", "name email")
+          .select("title author authorId isPinned pinnedAt createdAt")
+          .populate("authorId", "name email")
           .sort({ pinnedAt: -1 })
           .limit(20)
           .lean(),
         Feed.find({ scheduledAt: { $gte: now } })
-          .select("caption author scheduledAt")
-          .populate("author", "name email")
+          .select("title author authorId scheduledAt")
+          .populate("authorId", "name email")
           .sort({ scheduledAt: 1 })
           .limit(20)
           .lean(),
