@@ -139,13 +139,7 @@ exports.login = async (req, res) => {
         </div>`,
       });
 
-      // Timeout after 8 seconds to prevent Render 503
-      await Promise.race([
-        mailPromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Email sending timed out")), 8000)
-        )
-      ]);
+      await mailPromise;
 
       logger.info({ to: email }, "OTP email sent successfully");
       return res.json({
@@ -156,13 +150,9 @@ exports.login = async (req, res) => {
     } catch (mailErr) {
       logger.error({ err: mailErr.message, email }, "Email delivery failed");
       
-      // Even if email fails, in dev or if we want to allow login, we could handle it.
-      // But for now, we tell the user.
       return res.status(503).json({ 
         success: false, 
-        message: mailErr.message === "Email sending timed out" 
-          ? "Email service is slow. Please try again in a moment."
-          : "Failed to send verification code. Please check your email settings." 
+        message: "Failed to send verification code. Please check your email settings or try again later." 
       });
     }
   } catch (err) {

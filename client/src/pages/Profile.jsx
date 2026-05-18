@@ -51,6 +51,9 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [myBusinesses, setMyBusinesses] = useState([]);
+  const [businessPage, setBusinessPage] = useState(1);
+  const [storyPage, setStoryPage] = useState(1);
+  const [applicationPage, setApplicationPage] = useState(1);
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [referralData, setReferralData] = useState(null);
   const [referralLoading, setReferralLoading] = useState(false);
@@ -519,7 +522,7 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {myStories.map((story) => (
+                  {myStories.slice((storyPage - 1) * 5, storyPage * 5).map((story) => (
                     <div
                       key={story._id}
                       onClick={() => navigate(`/stories/${story._id}`)}
@@ -555,6 +558,28 @@ const Profile = () => {
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {myStories.length > 5 && (
+                <div className="flex items-center justify-between mt-6">
+                  <button
+                    onClick={() => setStoryPage(p => Math.max(1, p - 1))}
+                    disabled={storyPage === 1}
+                    className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold text-xs hover:bg-violet-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-slate-400 text-xs font-medium">
+                    Page {storyPage} of {Math.ceil(myStories.length / 5)}
+                  </span>
+                  <button
+                    onClick={() => setStoryPage(p => p + 1)}
+                    disabled={storyPage >= Math.ceil(myStories.length / 5)}
+                    className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold text-xs hover:bg-violet-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Next
+                  </button>
                 </div>
               )}
             </motion.div>
@@ -1011,7 +1036,7 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                {myBusinesses.map((biz) => (
+                {myBusinesses.slice((businessPage - 1) * 5, businessPage * 5).map((biz) => (
                   <div
                     key={biz._id}
                     className={`${card} p-4 flex items-center justify-between hover:border-violet-500/30 hover:bg-[#131d2e] transition-all`}
@@ -1077,6 +1102,28 @@ const Profile = () => {
                   </div>
                 )}
               </div>
+
+              {myBusinesses.length > 5 && (
+                <div className="flex items-center justify-between mt-6">
+                  <button
+                    onClick={() => setBusinessPage(p => Math.max(1, p - 1))}
+                    disabled={businessPage === 1}
+                    className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold text-xs hover:bg-violet-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-slate-400 text-xs font-medium">
+                    Page {businessPage} of {Math.ceil(myBusinesses.length / 5)}
+                  </span>
+                  <button
+                    onClick={() => setBusinessPage(p => p + 1)}
+                    disabled={businessPage >= Math.ceil(myBusinesses.length / 5)}
+                    className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold text-xs hover:bg-violet-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -1153,7 +1200,7 @@ const Profile = () => {
 
                 <div className="space-y-3">
                   {appliedJobs.length > 0 ? (
-                    appliedJobs.map((app) => (
+                    appliedJobs.slice((applicationPage - 1) * 5, applicationPage * 5).map((app) => (
                       <div
                         key={app.jobId}
                         className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-violet-500/20 transition-all"
@@ -1237,6 +1284,28 @@ const Profile = () => {
                   )}
                 </div>
               </div>
+
+              {appliedJobs.length > 5 && (
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setApplicationPage(p => Math.max(1, p - 1))}
+                    disabled={applicationPage === 1}
+                    className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold text-xs hover:bg-violet-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-slate-400 text-xs font-medium">
+                    Page {applicationPage} of {Math.ceil(appliedJobs.length / 5)}
+                  </span>
+                  <button
+                    onClick={() => setApplicationPage(p => p + 1)}
+                    disabled={applicationPage >= Math.ceil(appliedJobs.length / 5)}
+                    className="px-4 py-2 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold text-xs hover:bg-violet-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 

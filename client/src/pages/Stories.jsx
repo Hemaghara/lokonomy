@@ -38,6 +38,10 @@ const Stories = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [filter, setFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("latest");
+  const [radius, setRadius] = useState(10000);
 
   const storyCategories = [
     "All", "News", "Offers", "Promotions", "Events", "Announcements", "Tips",
