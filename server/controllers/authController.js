@@ -15,6 +15,7 @@ const getTransporter = () => {
     transporter = nodemailer.createTransport({
       pool: true,
       service: "gmail",
+      family: 4, // Force IPv4 to prevent Render IPv6 DNS latency and spam-filter delay
       auth: { 
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS 
@@ -130,6 +131,7 @@ exports.login = async (req, res) => {
       from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Verification Code",
+      text: `Hello ${user.name},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
       html: `<div style="font-family:sans-serif;padding:20px">
         <h3>Verification Code</h3>
         <p>Hello <b>${user.name}</b>,</p>
