@@ -58,6 +58,7 @@ const AIGuide = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [query, setQuery] = useState("");
+  const [chatBoxOpen, setChatBoxOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -73,6 +74,17 @@ const AIGuide = () => {
   const navigate = useNavigate();
   const routeLocation = useRouteLocation();
   const scrollRef = useRef(null);
+
+  // Hide AIGuide FAB when ChatBox is open (prevents overlap on mobile)
+  useEffect(() => {
+    const handleChatBoxVisibility = (e) => {
+      setChatBoxOpen(e.detail.visible);
+    };
+    window.addEventListener("chatbox-visibility", handleChatBoxVisibility);
+    return () => {
+      window.removeEventListener("chatbox-visibility", handleChatBoxVisibility);
+    };
+  }, []);
 
   const handleAutoLocate = () => {
     if (!navigator.geolocation) return;
@@ -244,6 +256,8 @@ const AIGuide = () => {
       handleSend(action.query);
     }
   };
+
+  if (chatBoxOpen) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-9999 font-inter">

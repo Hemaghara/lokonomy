@@ -16,6 +16,14 @@ import {
   HiOutlineXMark,
   HiOutlineChatBubbleLeftRight,
   HiOutlineCheckCircle,
+  HiOutlineCog6Tooth,
+  HiOutlineArrowsPointingOut,
+  HiOutlineMagnifyingGlass,
+  HiOutlineShoppingBag,
+  HiOutlineBriefcase,
+  HiOutlineNewspaper,
+  HiOutlineBuildingStorefront,
+  HiOutlineMapPin,
 } from "react-icons/hi2";
 
 const ChatBox = ({
@@ -200,6 +208,11 @@ const ChatBox = ({
     }, 2000);
   };
 
+  const handleSuggestionClick = (text) => {
+    setNewMessage(text);
+    inputRef.current?.focus();
+  };
+
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString("en-IN", {
       hour: "2-digit",
@@ -230,12 +243,34 @@ const ChatBox = ({
     return groups;
   }, {});
 
+  // Suggestion chips config
+  const suggestionChips = isBusinessInquiry
+    ? [
+        { icon: <HiOutlineMagnifyingGlass className="text-xs" />, label: "Services Offered" },
+        { icon: <HiOutlineShoppingBag className="text-xs" />, label: "Pricing Info" },
+        { icon: <HiOutlineBriefcase className="text-xs" />, label: "Business Hours" },
+        { icon: <HiOutlineNewspaper className="text-xs" />, label: "Latest Offers" },
+      ]
+    : [
+        { icon: <HiOutlineMagnifyingGlass className="text-xs" />, label: "Product Details" },
+        { icon: <HiOutlineShoppingBag className="text-xs" />, label: "Availability" },
+        { icon: <HiOutlineBriefcase className="text-xs" />, label: "Delivery Info" },
+        { icon: <HiOutlineNewspaper className="text-xs" />, label: "Best Price" },
+      ];
+
+  // Notify AIGuide to hide when ChatBox is open
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("chatbox-visibility", { detail: { visible: true } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("chatbox-visibility", { detail: { visible: false } }));
+    };
+  }, []);
+
   if (!user || !chatRoom) return null;
 
-  const headerColorClass =
-    isSeller || isBusinessOwner
-      ? "bg-linear-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20"
-      : "bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-500/20";
+  const welcomeMessage = isBusinessInquiry
+    ? `Hi! I'm here to help you connect with ${businessName || "this business"}. Ask about services, pricing, availability, or anything else. How can I help you today?`
+    : `Hi! Start a conversation about ${productName || "this product"}. Ask about details, pricing, delivery, or make an offer. How can I help?`;
 
   return (
     <motion.div
@@ -243,85 +278,163 @@ const ChatBox = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
-      className="fixed bottom-4 right-4 w-95 max-w-[calc(100vw-2rem)] h-130 max-h-[calc(100vh-6rem)] z-50 flex flex-col rounded-2xl overflow-hidden shadow-2xl shadow-black/40"
+      className="fixed z-[9999] flex flex-col overflow-hidden shadow-2xl shadow-black/60 inset-0 rounded-none sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[400px] sm:max-w-[calc(100vw-2rem)] sm:h-[580px] sm:max-h-[calc(100vh-6rem)] sm:rounded-2xl"
       style={{
-        background: "linear-gradient(145deg, #0d1321, #121a2e)",
-        border: "1px solid rgba(99, 102, 241, 0.12)",
+        background: "linear-gradient(165deg, #0a0f1e 0%, #0d1529 40%, #111d35 100%)",
+        border: "1px solid rgba(99, 102, 241, 0.1)",
       }}
     >
+      {/* ─── Header ─── */}
       <div
-        className="flex items-center justify-between px-4 py-3 shrink-0"
+        className="flex items-center justify-between px-4 py-3.5 shrink-0 relative"
         style={{
-          background:
-            "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+          background: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.06) 100%)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg ${headerColorClass}`}
-          >
-            {displayName?.charAt(0)?.toUpperCase() || "?"}
+          {/* Avatar */}
+          <div className="relative">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg"
+              style={{
+                background: isBusinessInquiry
+                  ? "linear-gradient(135deg, #7c3aed, #6366f1)"
+                  : "linear-gradient(135deg, #6366f1, #4f46e5)",
+              }}
+            >
+              {isBusinessInquiry ? (
+                <HiOutlineBuildingStorefront className="text-lg" />
+              ) : (
+                displayName?.charAt(0)?.toUpperCase() || "?"
+              )}
+            </div>
+            {/* Online dot */}
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0d1529]" />
           </div>
+
           <div className="min-w-0">
-            <p className="text-white font-semibold text-sm truncate">
+            <p className="text-white font-bold text-sm truncate leading-tight">
               {displayName}
             </p>
-            {isBusinessInquiry && !isBusinessOwner && (
-              <span className="text-[10px] text-violet-400/80 font-medium">
-                Business Inquiry
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block" />
+              <span className="text-[10px] text-emerald-400/80 font-semibold uppercase tracking-wider">
+                {isBusinessInquiry ? "Business" : "Online"}
               </span>
-            )}
+            </div>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all"
-          aria-label="Close chat"
-        >
-          <HiOutlineXMark className="text-base" />
-        </button>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all"
+            aria-label="Settings"
+          >
+            <HiOutlineCog6Tooth className="text-sm" />
+          </button>
+          <button
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all hidden sm:flex"
+            aria-label="Expand"
+          >
+            <HiOutlineArrowsPointingOut className="text-sm" />
+          </button>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/5 hover:border-red-500/30 flex items-center justify-center text-slate-500 hover:text-red-400 transition-all"
+            aria-label="Close chat"
+          >
+            <HiOutlineXMark className="text-base" />
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 scrollbar-thin">
+      {/* ─── Messages Area ─── */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 scrollbar-thin relative">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2">
-            <div className="w-7 h-7 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
-            <span className="text-slate-600 text-[10px] font-medium uppercase tracking-widest">
+          <div className="flex flex-col items-center justify-center h-full gap-3">
+            <div className="w-8 h-8 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
+            <span className="text-slate-600 text-[10px] font-semibold uppercase tracking-[0.2em]">
               Loading messages…
             </span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
-            <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/10 flex items-center justify-center">
-              <HiOutlineChatBubbleLeftRight className="text-2xl text-violet-400" />
-            </div>
-            <div>
-              <p className="text-slate-400 text-sm font-medium">
-                {isSeller || isBusinessOwner
-                  ? "No messages yet"
-                  : "Start the conversation"}
-              </p>
-              <p className="text-slate-600 text-xs mt-1">
-                {isSeller || isBusinessOwner ? (
-                  <>
-                    Waiting for inquiries about{" "}
-                    <span className="text-violet-400">
-                      {isBusinessInquiry ? businessName : productName}
-                    </span>
-                  </>
+          /* ─── Empty State: Welcome Message ─── */
+          <div className="flex flex-col h-full">
+            {/* Welcome bubble */}
+            <div className="flex items-start gap-2.5 mb-4 mt-2">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                style={{
+                  background: isBusinessInquiry
+                    ? "linear-gradient(135deg, #7c3aed, #6366f1)"
+                    : "linear-gradient(135deg, #6366f1, #4f46e5)",
+                }}
+              >
+                {isBusinessInquiry ? (
+                  <HiOutlineBuildingStorefront className="text-sm text-white" />
                 ) : (
-                  <>
-                    Send a message to{" "}
-                    <span className="text-violet-400">
-                      {isBusinessInquiry ? businessName : productName}
-                    </span>
-                  </>
+                  <HiOutlineChatBubbleLeftRight className="text-sm text-white" />
                 )}
-              </p>
+              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                className="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-md relative"
+                style={{
+                  background: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%)",
+                  border: "1px solid rgba(99,102,241,0.15)",
+                }}
+              >
+                <p className="text-slate-200 text-[13px] leading-relaxed">
+                  {welcomeMessage}
+                </p>
+              </motion.div>
             </div>
+
+            {/* Spacer to push chips down */}
+            <div className="flex-1" />
+
+            {/* Suggestion Chips */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+              className="flex flex-wrap gap-2 pb-2"
+            >
+              {suggestionChips.map((chip, i) => (
+                <motion.button
+                  key={chip.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.6 + i * 0.08 }}
+                  onClick={() => handleSuggestionClick(chip.label)}
+                  className="group flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-semibold transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+                  style={{
+                    background: "rgba(99, 102, 241, 0.06)",
+                    border: "1px solid rgba(99, 102, 241, 0.15)",
+                    color: "rgba(165, 160, 255, 0.9)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(99, 102, 241, 0.14)";
+                    e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.35)";
+                    e.currentTarget.style.color = "#c4b5fd";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(99, 102, 241, 0.06)";
+                    e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.15)";
+                    e.currentTarget.style.color = "rgba(165, 160, 255, 0.9)";
+                  }}
+                >
+                  {chip.icon}
+                  {chip.label}
+                </motion.button>
+              ))}
+            </motion.div>
           </div>
         ) : (
+          /* ─── Messages ─── */
           Object.entries(groupedMessages).map(([date, msgs]) => (
             <div key={date}>
               <div className="flex items-center justify-center my-3">
@@ -340,21 +453,50 @@ const ChatBox = ({
                     transition={{ duration: 0.15 }}
                     className={`flex mb-1.5 ${isMine ? "justify-end" : "justify-start"}`}
                   >
+                    {/* Other user avatar (for received messages) */}
+                    {!isMine && (
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[10px] shrink-0 mr-2 mt-auto mb-1"
+                        style={{
+                          background: isBusinessInquiry
+                            ? "linear-gradient(135deg, #7c3aed, #6366f1)"
+                            : "linear-gradient(135deg, #6366f1, #4f46e5)",
+                        }}
+                      >
+                        {isBusinessInquiry ? (
+                          <HiOutlineBuildingStorefront className="text-xs" />
+                        ) : (
+                          (msg.senderName?.[0] || "?").toUpperCase()
+                        )}
+                      </div>
+                    )}
                     <div
-                      className={`max-w-[75%] px-3.5 py-2 rounded-2xl relative group ${
+                      className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl relative group ${
                         isMine
-                          ? isSeller || isBusinessOwner
-                            ? "bg-linear-to-br from-emerald-600 to-teal-600 text-white rounded-br-md shadow-lg shadow-emerald-900/20"
-                            : "bg-linear-to-br from-violet-600 to-indigo-600 text-white rounded-br-md shadow-lg shadow-violet-900/20"
-                          : "bg-white/6 text-slate-200 rounded-bl-md border border-white/4"
+                          ? "rounded-br-md shadow-lg"
+                          : "rounded-bl-md border border-white/4"
                       }`}
+                      style={
+                        isMine
+                          ? {
+                              background: isSeller || isBusinessOwner
+                                ? "linear-gradient(135deg, #059669, #0d9488)"
+                                : "linear-gradient(135deg, #7c3aed, #6366f1)",
+                              boxShadow: isSeller || isBusinessOwner
+                                ? "0 4px 16px rgba(5,150,105,0.2)"
+                                : "0 4px 16px rgba(99,102,241,0.2)",
+                            }
+                          : {
+                              background: "rgba(255,255,255,0.04)",
+                            }
+                      }
                     >
                       {!isMine && (
                         <p className="text-[10px] font-semibold text-violet-400 mb-0.5">
                           {msg.senderName}
                         </p>
                       )}
-                      <p className="text-[13px] leading-relaxed wrap-break-words">
+                      <p className="text-[13px] leading-relaxed wrap-break-words text-white">
                         {msg.message}
                       </p>
                       <div
@@ -415,40 +557,89 @@ const ChatBox = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <form
-        onSubmit={handleSend}
-        className="px-3 py-3 shrink-0"
+      {/* ─── Input Area ─── */}
+      <div
+        className="shrink-0"
         style={{
-          background: "rgba(13, 19, 33, 0.8)",
+          background: "linear-gradient(180deg, rgba(10,15,30,0.6) 0%, rgba(10,15,30,0.95) 100%)",
           borderTop: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        <div className="flex items-center gap-2 bg-white/4 border border-white/6 rounded-xl px-3 py-1.5 focus-within:border-violet-500/30 transition-colors">
-          <input
-            ref={inputRef}
-            type="text"
-            value={newMessage}
-            onChange={handleTyping}
-            placeholder={
-              isSeller || isBusinessOwner
-                ? "Reply to customer…"
-                : "Ask about the business…"
-            }
-            className="flex-1 bg-transparent text-sm text-white placeholder-slate-600 outline-none py-1.5"
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || sending}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all active:scale-[0.98] shrink-0 disabled:opacity-30 ${
-              isSeller || isBusinessOwner
-                ? "bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
-                : "bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500"
-            }`}
+        {/* Suggestion chips when messages exist */}
+        {messages.length > 0 && (
+          <div className="px-3 pt-2 pb-0 flex gap-1.5 overflow-x-auto scrollbar-hide">
+            {suggestionChips.slice(0, 3).map((chip) => (
+              <button
+                key={chip.label}
+                onClick={() => handleSuggestionClick(chip.label)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium whitespace-nowrap shrink-0 transition-all"
+                style={{
+                  background: "rgba(99, 102, 241, 0.06)",
+                  border: "1px solid rgba(99, 102, 241, 0.1)",
+                  color: "rgba(165, 160, 255, 0.7)",
+                }}
+              >
+                {chip.icon}
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={handleSend} className="px-3 py-2.5">
+          <div
+            className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all duration-300 focus-within:shadow-lg"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(99,102,241,0.1)",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "rgba(99,102,241,0.3)";
+              e.currentTarget.style.boxShadow = "0 0 20px rgba(99,102,241,0.08)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "rgba(99,102,241,0.1)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           >
-            <HiOutlinePaperAirplane className="text-sm -rotate-90" />
-          </button>
+            <input
+              ref={inputRef}
+              type="text"
+              value={newMessage}
+              onChange={handleTyping}
+              placeholder={
+                isSeller || isBusinessOwner
+                  ? "Reply to customer…"
+                  : "Ask about businesses, jobs…"
+              }
+              className="flex-1 min-w-0 bg-transparent text-sm text-white placeholder-slate-600 outline-none py-2"
+            />
+            <button
+              type="submit"
+              disabled={!newMessage.trim() || sending}
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-white transition-all duration-300 active:scale-[0.93] shrink-0 disabled:opacity-20"
+              style={{
+                background: (!newMessage.trim() || sending)
+                  ? "rgba(99,102,241,0.15)"
+                  : "linear-gradient(135deg, #7c3aed, #6366f1)",
+                boxShadow: (!newMessage.trim() || sending)
+                  ? "none"
+                  : "0 4px 12px rgba(99,102,241,0.3)",
+              }}
+            >
+              <HiOutlinePaperAirplane className="text-sm rotate-[-35deg]" />
+            </button>
+          </div>
+        </form>
+
+        {/* Powered by footer */}
+        <div className="flex items-center justify-center gap-1.5 pb-3 pt-0.5">
+          <span className="text-[10px] text-slate-600 font-medium flex items-center gap-1">
+            <span className="text-xs">✨</span>
+            Powered by <span className="text-violet-400/70 font-semibold">Lokonomy Intelligence</span>
+          </span>
         </div>
-      </form>
+      </div>
     </motion.div>
   );
 };
