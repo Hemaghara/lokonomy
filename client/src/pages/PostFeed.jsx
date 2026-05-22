@@ -345,9 +345,15 @@ const PostFeed = () => {
                   placeholder="e.g. Mega Sale at Central Plaza"
                   className={inputCls}
                   required
+                  maxLength={100}
                   value={formData.title}
                   onChange={handleChange}
                 />
+                <div className="flex justify-end items-center mt-1.5 px-1">
+                  <span className={`text-[10px] font-medium ${formData.title.length >= 100 ? 'text-red-400' : 'text-white/30'}`}>
+                    {formData.title.length}/100
+                  </span>
+                </div>
               </Field>
 
               <Field label="Description" required span2 id="content">
@@ -357,9 +363,15 @@ const PostFeed = () => {
                   placeholder="Share the details..."
                   className={`${inputCls} min-h-36 resize-none leading-relaxed`}
                   required
+                  maxLength={5000}
                   value={formData.content}
                   onChange={handleChange}
                 />
+                <div className="flex justify-end items-center mt-1.5 px-1">
+                  <span className={`text-[10px] font-medium ${formData.content.length >= 5000 ? 'text-red-400' : 'text-white/30'}`}>
+                    {formData.content.length}/5000
+                  </span>
+                </div>
               </Field>
               {formData.type === "Event" && (
                 <>

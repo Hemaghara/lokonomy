@@ -100,6 +100,47 @@ const initSocket = (server) => {
       }
     });
 
+    // Feed room events for real-time feed updates
+    socket.on("joinFeedRoom", ({ feedId }) => {
+      if (feedId) {
+        socket.join(`feed_${feedId}`);
+        logger.debug(
+          { socketId: socket.id, feedId },
+          "[Socket] Joined feed room",
+        );
+      }
+    });
+
+    socket.on("leaveFeedRoom", ({ feedId }) => {
+      if (feedId) {
+        socket.leave(`feed_${feedId}`);
+        logger.debug(
+          { socketId: socket.id, feedId },
+          "[Socket] Left feed room",
+        );
+      }
+    });
+
+    socket.on("joinFeedDistrict", ({ district }) => {
+      if (district) {
+        socket.join(`feeds_${district}`);
+        logger.debug(
+          { socketId: socket.id, district },
+          "[Socket] Joined feeds district room",
+        );
+      }
+    });
+
+    socket.on("leaveFeedDistrict", ({ district }) => {
+      if (district) {
+        socket.leave(`feeds_${district}`);
+        logger.debug(
+          { socketId: socket.id, district },
+          "[Socket] Left feeds district room",
+        );
+      }
+    });
+
     socket.on("sendMessage", async (data) => {
       try {
         const {

@@ -5,10 +5,12 @@ const feedSchema = new mongoose.Schema({
     type: String,
     required: [true, "Title is required"],
     trim: true,
+    maxlength: [100, "Title must be under 100 characters"],
   },
   content: {
     type: String,
     required: [true, "Content is required"],
+    maxlength: [5000, "Content must be under 5000 characters"],
   },
   type: {
     type: String,
@@ -55,15 +57,21 @@ const feedSchema = new mongoose.Schema({
   isPinned: { type: Boolean, default: false },
   pinnedAt: { type: Date, default: null },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
-  comments: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    userName: { type: String, required: true },
-    userAvatar: String,
-    text: { type: String, required: true, maxlength: 500 },
-    createdAt: { type: Date, default: Date.now }
-  }],
+  commentCount: { type: Number, default: 0 },
+  // New fields for enhanced features
+  viewCount: { type: Number, default: 0 },
+  tags: [{ type: String, trim: true, lowercase: true }],
+  status: {
+    type: String,
+    enum: ["active", "pending", "flagged"],
+    default: "active",
+  },
+  bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
 });
 
 feedSchema.index({ location: "2dsphere" });
+feedSchema.index({ title: "text", content: "text" });
+feedSchema.index({ status: 1, createdAt: -1 });
+feedSchema.index({ authorId: 1 });
 
 module.exports = mongoose.model("Feed", feedSchema);

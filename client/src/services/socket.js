@@ -68,3 +68,21 @@ export const leaveStoryFeed = (district) => {
   const s = getSocket();
   s.emit("leaveStoryFeed", { district });
 };
+
+// Feed real-time room helpers
+export const joinFeedRoom = (feedId) => {
+  const s = getSocket();
+  s.emit("joinFeedRoom", { feedId });
+};
+export const leaveFeedRoom = (feedId) => {
+  const s = getSocket();
+  s.emit("leaveFeedRoom", { feedId });
+};
+export const joinFeedDistrict = (district) => {
+  const s = getSocket();
+  s.emit("joinFeedDistrict", { district });
+};
+export const leaveFeedDistrict = (district) => {
+  const s = getSocket();
+  s.emit("leaveFeedDistrict", { district });
+};
