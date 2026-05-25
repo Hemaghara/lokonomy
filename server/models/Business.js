@@ -85,6 +85,17 @@ const businessSchema = new mongoose.Schema({
       count: { type: Number, default: 0 },
     },
   ],
+  // Live business status fields
+  isOwnerOnline: { type: Boolean, default: false },
+  activeVisitors: { type: Number, default: 0 },
+  lastOwnerActivity: { type: Date, default: null },
+  // Auto-response chatbot settings
+  autoResponseEnabled: { type: Boolean, default: false },
+  awayMessage: { type: String, default: "Thanks for your message! We'll get back to you soon." },
+  autoResponses: [{
+    trigger: { type: String },
+    response: { type: String },
+  }],
   createdAt: { type: Date, default: Date.now },
 });
 

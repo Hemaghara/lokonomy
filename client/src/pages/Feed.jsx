@@ -436,14 +436,12 @@ const Feed = () => {
     };
   }, [hasMore, loadingMore, loading, page]);
 
-  // --- Scroll to top visibility ---
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 600);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // --- Close sort dropdown on outside click ---
   useEffect(() => {
     const handler = (e) => {
       if (sortRef.current && !sortRef.current.contains(e.target)) {
@@ -454,7 +452,6 @@ const Feed = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // --- Socket: Real-time new feed notifications ---
   useEffect(() => {
     if (!district) return;
     const socket = getSocket();
@@ -472,7 +469,6 @@ const Feed = () => {
     };
   }, [district]);
 
-  // --- Quick like from listing ---
   const handleQuickLike = useCallback(async (feedId) => {
     if (!user) {
       toast.error("Please login to like posts");
@@ -546,7 +542,6 @@ const Feed = () => {
       `}</style>
 
       <div className="feed-font max-w-6xl mx-auto px-4">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -575,7 +570,6 @@ const Feed = () => {
           </button>
         </motion.div>
 
-        {/* New feeds banner */}
         <AnimatePresence>
           {newFeedsBanner && (
             <motion.div
@@ -595,7 +589,6 @@ const Feed = () => {
           )}
         </AnimatePresence>
 
-        {/* Trending Section */}
         {trendingFeeds.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -615,10 +608,8 @@ const Feed = () => {
           </motion.div>
         )}
 
-        {/* Search, Filter, and Sort Controls */}
         <div className={`${card} p-4 mb-6 flex flex-col gap-4`}>
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
             <div className="relative flex-1">
               <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-base pointer-events-none" />
               <input
@@ -631,7 +622,6 @@ const Feed = () => {
               />
             </div>
 
-            {/* Sort Dropdown */}
             <div ref={sortRef} className="relative">
               <button
                 onClick={() => setShowSortMenu((prev) => !prev)}
@@ -670,7 +660,6 @@ const Feed = () => {
             </div>
           </div>
 
-          {/* Radius */}
           <div className="flex flex-wrap items-center gap-4">
             {user?.latitude && (
               <div className="flex items-center gap-2 bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-3 py-2">
@@ -697,7 +686,6 @@ const Feed = () => {
             )}
           </div>
 
-          {/* Category Filter Pills with fade gradient */}
           <div className="relative filter-fade-r">
             <div ref={filterScrollRef} className="no-sb flex items-center gap-2 overflow-x-auto">
               {feedCategories.map((cat) => (
@@ -722,7 +710,6 @@ const Feed = () => {
           </div>
         </div>
 
-        {/* Feed Grid */}
         <div className="min-h-64">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -764,7 +751,6 @@ const Feed = () => {
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
           {hasMore && feeds.length > 0 && !loading && (
             <div ref={sentinelRef} className="flex justify-center mt-10 py-6">
               {loadingMore && (
@@ -778,7 +764,6 @@ const Feed = () => {
         </div>
       </div>
 
-      {/* Scroll to top button */}
       <AnimatePresence>
         {showScrollTop && (
           <motion.button

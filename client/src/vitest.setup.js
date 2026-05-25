@@ -196,27 +196,35 @@ vi.mock("./services", async (importOriginal) => {
 });
 
 // Global mock for socket service
-vi.mock("./services/socket", () => ({
-  connectSocket: vi.fn().mockReturnValue({
+vi.mock("./services/socket", () => {
+  const socketInstance = {
     on: vi.fn(),
     off: vi.fn(),
     emit: vi.fn(),
     disconnect: vi.fn(),
+    connect: vi.fn(),
+    connected: false,
     joinRoom: vi.fn(),
     leaveRoom: vi.fn(),
-  }),
-  getSocket: vi.fn().mockReturnValue({
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    disconnect: vi.fn(),
+  };
+  return {
+    connectSocket: vi.fn().mockReturnValue(socketInstance),
+    getSocket: vi.fn().mockReturnValue(socketInstance),
+    disconnectSocket: vi.fn(),
     joinRoom: vi.fn(),
     leaveRoom: vi.fn(),
-  }),
-  disconnectSocket: vi.fn(),
-  joinRoom: vi.fn(),
-  leaveRoom: vi.fn(),
-}));
+    sendMessage: vi.fn(),
+    emitTyping: vi.fn(),
+    emitStopTyping: vi.fn(),
+    emitMarkRead: vi.fn(),
+    joinStoryFeed: vi.fn(),
+    leaveStoryFeed: vi.fn(),
+    joinFeedRoom: vi.fn(),
+    leaveFeedRoom: vi.fn(),
+    joinFeedDistrict: vi.fn(),
+    leaveFeedDistrict: vi.fn(),
+  };
+});
 
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();

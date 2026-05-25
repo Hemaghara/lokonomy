@@ -146,7 +146,8 @@ describe("Services Page", () => {
   });
 
   it("shows empty state and expand radius button", async () => {
-    businessService.getBusinesses.mockResolvedValueOnce({ data: [] });
+    // Mock ALL calls to return empty (sortBy change from coords triggers a second fetch)
+    businessService.getBusinesses.mockResolvedValue({ data: [] });
 
     // Set coords to show "Expand Radius"
     sessionStorage.setItem(
@@ -165,6 +166,27 @@ describe("Services Page", () => {
     expect(businessService.getBusinesses).toHaveBeenCalled();
 
     sessionStorage.removeItem("lokonomy_user_coords");
+    // Restore default mock for subsequent tests
+    businessService.getBusinesses.mockResolvedValue({
+      data: [
+        {
+          _id: "b1",
+          businessName: "Premium Spa",
+          subCategory: "Beauty",
+          rating: 4.8,
+          locationAddress: "Downtown",
+          logo: "spa.jpg",
+          description: "Relaxing spa services.",
+        },
+        {
+          _id: "b2",
+          businessName: "Local Salon",
+          subCategory: "Hair",
+          rating: 4.2,
+          locationAddress: "Uptown",
+        },
+      ],
+    });
   });
 
   it("handles comparison mode selection", async () => {

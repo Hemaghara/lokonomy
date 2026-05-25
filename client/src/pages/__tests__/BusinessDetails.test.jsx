@@ -65,6 +65,11 @@ vi.mock("../../services", () => ({
   storyService: {
     getHighlights: vi.fn().mockResolvedValue({ data: { data: [] } }),
   },
+  wishlistService: {
+    checkWishlistStatus: vi.fn().mockResolvedValue({ data: { isWishlisted: false } }),
+    getWishlist: vi.fn().mockResolvedValue({ data: [] }),
+    toggleWishlist: vi.fn().mockResolvedValue({ data: { isWishlisted: false } }),
+  },
 }));
 
 vi.mock('react-hot-toast', () => ({

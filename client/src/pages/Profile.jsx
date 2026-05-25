@@ -8,6 +8,8 @@ import {
   referralService,
   subscriptionService,
   storyService,
+  subscriptionBoxService,
+  influencerService,
 } from "../services";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -63,6 +65,8 @@ const Profile = () => {
   const [myStories, setMyStories] = useState([]);
   const [savedStories, setSavedStories] = useState([]);
   const [storiesLoading, setStoriesLoading] = useState(false);
+  const [mySubscriptions, setMySubscriptions] = useState([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -108,6 +112,7 @@ const Profile = () => {
     if (activeTab === "alerts" && user) fetchJobAlerts();
     if (activeTab === "mystories" && user) fetchMyStories();
     if (activeTab === "savedstories" && user) fetchSavedStories();
+    if (activeTab === "subscriptions" && user) fetchMySubscriptions();
   }, [activeTab, user]);
 
 
@@ -145,7 +150,6 @@ const Profile = () => {
       try {
         await navigator.share({ title: "Join Lokonomy!", text, url: link });
       } catch {
-        //user cancel the share
       
       }
     } else {
@@ -215,6 +219,51 @@ const Profile = () => {
       console.error("Error fetching saved stories:", err);
     } finally {
       setStoriesLoading(false);
+    }
+  };
+
+  const fetchMySubscriptions = async () => {
+    setSubscriptionsLoading(true);
+    try {
+      const res = await subscriptionBoxService.getMySubscriptions();
+      setMySubscriptions(res.data.subscriptions || []);
+    } catch (err) {
+      console.error("Error fetching subscriptions:", err);
+      toast.error("Failed to load subscriptions");
+    } finally {
+      setSubscriptionsLoading(false);
+    }
+  };
+
+  const handleUnsubscribe = async (boxId) => {
+    if (!window.confirm("Are you sure you want to unsubscribe from this crate?")) return;
+    try {
+      setLoading(true);
+      const res = await subscriptionBoxService.unsubscribeFromBox(boxId);
+      if (res.data.success) {
+        toast.success("Unsubscribed successfully");
+        fetchMySubscriptions();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to unsubscribe");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshInfluencerStatus = async () => {
+    try {
+      setLoading(true);
+      const res = await influencerService.updateStatus();
+      if (res.data.success) {
+        login({ ...user, ...res.data.influencerStats });
+        toast.success("Influencer status synced!");
+      }
+    } catch (err) {
+      console.error("Error syncing status:", err);
+      toast.error("Failed to sync influencer status");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -389,6 +438,7 @@ const Profile = () => {
       icon: <HiOutlineUserGroup />,
     },
     { id: "orders", label: "Orders", icon: <HiOutlineShoppingBag /> },
+    { id: "subscriptions", label: "My Subscriptions", icon: <HiOutlineGift /> },
     { id: "sales", label: "Sales", icon: <HiOutlineCurrencyRupee /> },
     { id: "membership", label: "Membership", icon: <HiOutlineSparkles /> },
     { id: "referrals", label: "Referrals", icon: <HiOutlineGift /> },
@@ -585,7 +635,6 @@ const Profile = () => {
             </motion.div>
           )}
 
-          {/* Saved Stories Tab */}
           {activeTab === "savedstories" && (
             <motion.div
               key="savedstories"
@@ -726,7 +775,6 @@ const Profile = () => {
           )}
 
           {activeTab === "profile" && (
-
             <motion.div
               key="profile"
               initial={{ opacity: 0, y: 10 }}
@@ -735,6 +783,40 @@ const Profile = () => {
               transition={{ duration: 0.18 }}
               className={`${card} p-6`}
             >
+              <div className="mb-6 p-5 rounded-2xl bg-linear-to-br from-violet-600/10 to-indigo-700/10 border border-violet-500/20 shadow-lg shadow-violet-950/20">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-300 font-bold text-lg select-none">
+                      ✨
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-sm">Local Influencer Status</h3>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        Tier: <span className="text-violet-400 font-bold uppercase tracking-wider">{user?.influencerBadge && user?.influencerBadge !== "none" ? user.influencerBadge.replace("_", " ") : "None"}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={refreshInfluencerStatus}
+                    disabled={loading}
+                    className="text-[10px] text-violet-400 hover:text-violet-300 bg-violet-600/10 hover:bg-violet-600/20 border border-violet-500/20 px-3 py-1.5 rounded-lg font-bold transition-all disabled:opacity-50"
+                  >
+                    Sync Status
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-3 text-center">
+                    <p className="text-white font-bold text-lg">{user?.reviewCount || 0}</p>
+                    <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-0.5">Reviews Written</p>
+                  </div>
+                  <div className="bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-3 text-center">
+                    <p className="text-white font-bold text-lg">{user?.helpfulVotes || 0}</p>
+                    <p className="text-slate-500 text-[10px] uppercase tracking-wider mt-0.5">Helpful Votes</p>
+                  </div>
+                </div>
+              </div>
+
               <h2 className="text-white font-semibold text-base mb-1">
                 Personal Information
               </h2>
@@ -1477,6 +1559,81 @@ const Profile = () => {
                   Sell Product
                 </button>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === "subscriptions" && (
+            <motion.div
+              key="subscriptions"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.18 }}
+              className={`${card} p-6`}
+            >
+              <h2 className="text-white font-semibold text-base mb-1">My Subscriptions</h2>
+              <p className="text-slate-500 text-xs mb-6">
+                Manage your recurring subscriptions to neighborhood crates.
+              </p>
+
+              {subscriptionsLoading ? (
+                <div className="py-12 text-center">
+                  <div className="w-6 h-6 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto" />
+                </div>
+              ) : mySubscriptions.length === 0 ? (
+                <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-12 text-center">
+                  <p className="text-slate-500 text-xs mb-4">You are not subscribed to any crates yet.</p>
+                  <button onClick={() => navigate("/subscription-boxes")} className={btnOutline}>
+                    Browse Local Crates
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {mySubscriptions.map((sub) => (
+                    <div
+                      key={sub._id}
+                      className="bg-[#0d1424] border border-[#1f2a3d] rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-violet-500/30 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-[#0d1424] border border-[#1f2a3d] overflow-hidden shrink-0 flex items-center justify-center">
+                          {sub.businessId?.logo ? (
+                            <img src={sub.businessId.logo} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <HiOutlineBuildingOffice2 className="text-slate-600 text-lg" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-slate-200 font-semibold text-sm">
+                            {sub.name}
+                          </h4>
+                          <p className="text-violet-400 text-xs font-bold mt-0.5">
+                            ₹{sub.price} / {sub.frequency}
+                          </p>
+                          <p className="text-slate-500 text-[10px] mt-0.5">
+                            By {sub.businessId?.businessName || "Unknown Business"} · {sub.businessId?.district || "Local District"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+                        <div className="flex flex-wrap gap-1 mb-1">
+                          {sub.items?.map((item, idx) => (
+                            <span key={idx} className="px-2 py-0.5 bg-[#1a2540] text-slate-400 rounded text-[9px] font-semibold border border-[#1f2a3d]">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleUnsubscribe(sub._id)}
+                          className="w-full sm:w-auto text-[10px] font-bold text-red-400 hover:text-red-300 bg-red-950/20 hover:bg-red-950/30 border border-red-900/40 hover:border-red-900/60 px-3 py-1.5 rounded-lg transition-all text-center"
+                        >
+                          Unsubscribe
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 

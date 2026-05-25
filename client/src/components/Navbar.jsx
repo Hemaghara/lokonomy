@@ -30,6 +30,10 @@ import {
   Star,
   UserCheck,
   User as UserIcon,
+  Trophy,
+  Clock,
+  Scale,
+  HelpCircle,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -39,6 +43,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [impersonating, setImpersonating] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
   useEffect(() => {
     const checkImpersonation = () => {
@@ -134,6 +139,129 @@ const Navbar = () => {
       path: "/events-map",
       icon: <MapIcon className="w-5 h-5 md:w-4 md:h-4 text-white" />,
     },
+    {
+      name: "Leaderboard",
+      path: "/leaderboard",
+      icon: <Trophy className="w-5 h-5 md:w-4 md:h-4 text-white" />,
+    },
+    {
+      name: "Groups",
+      path: "/groups",
+      icon: <UserCheck className="w-5 h-5 md:w-4 md:h-4 text-white" />,
+    },
+    {
+      name: "Subscriptions",
+      path: "/subscription-boxes",
+      icon: <Package className="w-5 h-5 md:w-4 md:h-4 text-white" />,
+    },
+  ];
+
+  const primaryLinks = [
+    {
+      name: "Home",
+      path: "/home",
+      icon: <Home className="w-4 h-4" />,
+    },
+    {
+      name: "Explore",
+      path: "/explore",
+      icon: <Compass className="w-4 h-4" />,
+    },
+    {
+      name: "Market",
+      path: "/market",
+      icon: <ShoppingBag className="w-4 h-4" />,
+    },
+  ];
+
+  const browseLinks = [
+    {
+      name: "Jobs",
+      path: "/jobs",
+      description: "Find local work & hire talent",
+      icon: <Briefcase className="w-4 h-4 text-blue-400" />,
+    },
+    {
+      name: "Stories",
+      path: "/stories",
+      description: "Daily behind-the-scenes updates",
+      icon: <Library className="w-4 h-4 text-indigo-400" />,
+    },
+    {
+      name: "Feed",
+      path: "/feed",
+      description: "Community updates & posts",
+      icon: <LayoutGrid className="w-4 h-4 text-purple-400" />,
+    },
+    {
+      name: "Map",
+      path: "/events-map",
+      description: "Discover local events visually",
+      icon: <MapIcon className="w-4 h-4 text-emerald-400" />,
+    },
+    {
+      name: "Leaderboard",
+      path: "/leaderboard",
+      description: "Top businesses & influencers",
+      icon: <Trophy className="w-4 h-4 text-amber-400" />,
+    },
+    {
+      name: "Groups",
+      path: "/groups",
+      description: "Connect with neighborhood areas",
+      icon: <UserCheck className="w-4 h-4 text-teal-400" />,
+    },
+    {
+      name: "Subscriptions",
+      path: "/subscription-boxes",
+      description: "Curated recurring bakery & farm crates",
+      icon: <Package className="w-4 h-4 text-rose-400" />,
+    },
+  ];
+
+  const activityLinks = [
+    {
+      name: "My Orders",
+      path: "/my-orders",
+      description: "Track purchases & deliveries",
+      icon: <Package className="w-4 h-4 text-blue-400" />,
+    },
+    {
+      name: "Pre-Orders",
+      path: "/preorders",
+      description: "Scheduled custom requests & holds",
+      icon: <Clock className="w-4 h-4 text-amber-400" />,
+    },
+    {
+      name: "Flash Sales",
+      path: "/flash-sales",
+      description: "Claim time-limited local deals",
+      icon: <Zap className="w-4 h-4 text-yellow-400" />,
+    },
+    {
+      name: "Compare Prices",
+      path: "/price-comparison",
+      description: "Find the best local product rates",
+      icon: <Scale className="w-4 h-4 text-fuchsia-400" />,
+    },
+    {
+      name: "My Claims",
+      path: "/my-claims",
+      description: "Lokonomy Guarantee dispute status",
+      icon: <Scale className="w-4 h-4 text-violet-400" />,
+    },
+    {
+      name: "Sell Hub",
+      path: "/sales-management",
+      description: "Manage catalog & sales dashboard",
+      icon: <Tag className="w-4 h-4 text-emerald-400" />,
+    },
+    {
+      name: "Wishlist",
+      path: "/wishlist",
+      description: "Saved products & favorite shops",
+      icon: <Heart className="w-4 h-4 text-rose-400" />,
+    },
   ];
 
   return (
@@ -146,13 +274,12 @@ const Navbar = () => {
             exit={{ height: 0, opacity: 0 }}
             className="fixed top-0 left-0 right-0 z-70 bg-linear-to-r from-rose-600 via-rose-500 to-rose-600 border-b border-rose-400/30 overflow-hidden"
           >
-            <div className="max-w-425 mx-auto px-4 md:px-10 h-10 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center justify-between">
               <div className="flex items-center gap-2 text-white">
                 <UserCheck className="w-4 h-4 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest">
                   Impersonating:{" "}
-                  <span className="underline">{impersonating.name}</span> (
-                  {impersonating.email})
+                  <span className="underline">{impersonating.name}</span> ({impersonating.email})
                 </span>
               </div>
               <button
@@ -174,7 +301,7 @@ const Navbar = () => {
             : "bg-transparent py-4 md:py-8"
         }`}
       >
-        <div className="max-w-425 mx-auto px-4 md:px-10 flex items-center gap-0 h-14 md:h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-14 md:h-16">
           <Link
             to="/home"
             className="flex items-center gap-2.5 group shrink-0 mr-12 h-10"
@@ -198,9 +325,9 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden lg:flex items-center flex-1 ml-4 py-1">
-            <div className="flex items-center gap-1 bg-white/3 p-1 rounded-2xl border border-white/5 backdrop-blur-xl group/hub hover:border-white/10 transition-colors overflow-hidden">
+            <div className="flex items-center gap-1 bg-white/3 p-1 rounded-2xl border border-white/5 backdrop-blur-xl group/hub hover:border-white/10 transition-colors">
               <div className="flex items-center gap-0.5 px-1 pr-1.5 border-r border-white/5">
-                {navLinks.map((link) => (
+                {primaryLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
@@ -209,51 +336,107 @@ const Navbar = () => {
                     <div className="w-4 h-4 text-white/30 group-hover:text-primary transition-all group-hover:scale-110">
                       {link.icon}
                     </div>
-                    <span className="hidden xl:block whitespace-nowrap">
+                    <span className="whitespace-nowrap">
                       {link.name}
                     </span>
                     <span className="absolute bottom-1 left-4 right-4 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                   </Link>
                 ))}
+
+                {/* Browse Dropdown */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => setActiveDropdown("browse")}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <button className="relative px-4 py-2 text-[12px] font-bold text-white/70 hover:text-white transition-all duration-500 rounded-xl hover:bg-white/5 cursor-pointer flex items-center gap-2">
+                    <Compass className="w-4 h-4 text-white/30" />
+                    <span>Browse</span>
+                    <ChevronRight className="w-3.5 h-3.5 rotate-90 text-white/30 transition-transform duration-300" />
+                  </button>
+                  <AnimatePresence>
+                    {activeDropdown === "browse" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 15 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-80 bg-[#0d0d14]/95 border border-white/10 rounded-2xl p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 flex flex-col gap-1"
+                      >
+                        {browseLinks.map((sublink) => (
+                          <Link
+                            key={sublink.path}
+                            to={sublink.path}
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-all group/item"
+                          >
+                            <div className="w-9 h-9 bg-white/3 rounded-lg flex items-center justify-center group-hover/item:scale-105 transition-transform shrink-0">
+                              {sublink.icon}
+                            </div>
+                            <div className="flex flex-col text-left">
+                              <span className="text-xs font-bold text-white group-hover/item:text-primary transition-colors">
+                                {sublink.name}
+                              </span>
+                              <span className="text-[9px] text-slate-400 mt-0.5 leading-tight">
+                                {sublink.description}
+                              </span>
+                            </div>
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
-              <div className="flex items-center gap-0.5 pl-1.5 pr-1.5 border-r border-white/5 flex-nowrap">
-                {[
-                  {
-                    name: "My Orders",
-                    path: "/my-orders",
-                    icon: <Package className="w-4 h-4" />,
-                    color: "text-blue-400",
-                  },
-                  {
-                    name: "Sell Hub",
-                    path: "/sales-management",
-                    icon: <Tag className="w-4 h-4" />,
-                    color: "text-emerald-400",
-                  },
-                  {
-                    name: "Wishlist",
-                    path: "/wishlist",
-                    icon: <Heart className="w-4 h-4" />,
-                    color: "text-rose-400",
-                  },
-                ].map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="px-3.5 py-2 text-[11px] font-black text-white/30 hover:text-white uppercase tracking-[0.15em] hover:bg-white/5 rounded-xl transition-all flex items-center gap-2.5 shrink-0 group/item"
+              {user && (
+                <div className="flex items-center gap-0.5 pl-1.5 pr-1.5 border-r border-white/5">
+                  {/* Activity Dropdown */}
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setActiveDropdown("activity")}
+                    onMouseLeave={() => setActiveDropdown(null)}
                   >
-                    <div
-                      className={`${item.color} opacity-40 group-hover/item:opacity-100 group-hover/item:scale-110 transition-all duration-500`}
-                    >
-                      {item.icon}
-                    </div>
-                    <span className="hidden b-xl:block whitespace-nowrap font-bold">
-                      {item.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+                    <button className="relative px-4 py-2 text-[12px] font-bold text-white/70 hover:text-white transition-all duration-500 rounded-xl hover:bg-white/5 cursor-pointer flex items-center gap-2">
+                      <LayoutGrid className="w-4 h-4 text-white/30" />
+                      <span>Activity</span>
+                      <ChevronRight className="w-3.5 h-3.5 rotate-90 text-white/30 transition-transform duration-300" />
+                    </button>
+                    <AnimatePresence>
+                      {activeDropdown === "activity" && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 15 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-80 bg-[#0d0d14]/95 border border-white/10 rounded-2xl p-3 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 flex flex-col gap-1"
+                        >
+                          {activityLinks.map((sublink) => (
+                            <Link
+                              key={sublink.path}
+                              to={sublink.path}
+                              onClick={() => setActiveDropdown(null)}
+                              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-all group/item"
+                            >
+                              <div className="w-9 h-9 bg-white/3 rounded-lg flex items-center justify-center group-hover/item:scale-105 transition-transform shrink-0">
+                                {sublink.icon}
+                              </div>
+                              <div className="flex flex-col text-left">
+                                <span className="text-xs font-bold text-white group-hover/item:text-primary transition-colors">
+                                  {sublink.name}
+                                </span>
+                                <span className="text-[9px] text-slate-400 mt-0.5 leading-tight">
+                                  {sublink.description}
+                                </span>
+                              </div>
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center pl-1.5 pr-2">
                 <Link
@@ -262,7 +445,7 @@ const Navbar = () => {
                   onClick={() => setUnreadCount(0)}
                 >
                   <MessageCircle className="w-4 h-4 text-violet-400 opacity-40 group-hover/chat:opacity-100 group-hover/chat:scale-110 transition-all duration-500" />
-                  <span className="hidden b-xl:block whitespace-nowrap font-bold">
+                  <span className="hidden xl:block whitespace-nowrap font-bold">
                     Inbox
                   </span>
                   {unreadCount > 0 && (
@@ -294,7 +477,7 @@ const Navbar = () => {
                     className="flex items-center gap-2.5 px-4 py-2.5 bg-[#facc15] hover:bg-white text-[10px] font-black text-black uppercase tracking-[0.2em] rounded-xl hover:scale-105 transition-all shadow-xl shadow-yellow-500/10 active:scale-95"
                   >
                     <Crown className="w-3.5 h-3.5 fill-black" />
-                    <span className="hidden b-xl:block">Upgrade</span>
+                    <span className="hidden xl:block">Upgrade</span>
                   </Link>
                 </div>
 
@@ -335,7 +518,11 @@ const Navbar = () => {
                   aria-label="Toggle menu"
                   className="lg:hidden w-11 h-11 flex items-center justify-center bg-white/5 rounded-xl border border-white/8 transition-all active:scale-90"
                 >
-                  <Menu className="w-5 h-5 text-white/70" />
+                  {isOpen ? (
+                    <X className="w-5 h-5 text-white/70" />
+                  ) : (
+                    <Menu className="w-5 h-5 text-white/70" />
+                  )}
                 </button>
               </>
             ) : (
@@ -495,25 +682,55 @@ const Navbar = () => {
                       name: "My Orders",
                       path: "/my-orders",
                       icon: <Package className="w-4 h-4" />,
-                      color: "blue",
+                      colorClass: "text-blue-400",
                     },
                     {
-                      name: "My Wishlist",
-                      path: "/wishlist",
-                      icon: <Heart className="w-4 h-4" />,
-                      color: "rose",
+                      name: "Pre-Orders",
+                      path: "/preorders",
+                      icon: <Clock className="w-4 h-4" />,
+                      colorClass: "text-amber-400",
+                    },
+                    {
+                      name: "Flash Sales",
+                      path: "/flash-sales",
+                      icon: <Zap className="w-4 h-4" />,
+                      colorClass: "text-yellow-400",
+                    },
+                    {
+                      name: "Compare Prices",
+                      path: "/price-comparison",
+                      icon: <Scale className="w-4 h-4" />,
+                      colorClass: "text-fuchsia-400",
+                    },
+                    {
+                      name: "My Claims",
+                      path: "/my-claims",
+                      icon: <Scale className="w-4 h-4" />,
+                      colorClass: "text-violet-400",
                     },
                     {
                       name: "Sell Hub",
                       path: "/sales-management",
                       icon: <Tag className="w-4 h-4" />,
-                      color: "emerald",
+                      colorClass: "text-emerald-400",
+                    },
+                    {
+                      name: "My Wishlist",
+                      path: "/wishlist",
+                      icon: <Heart className="w-4 h-4" />,
+                      colorClass: "text-rose-400",
                     },
                     {
                       name: "My Profile",
                       path: "/profile",
                       icon: <UserIcon className="w-4 h-4" />,
-                      color: "primary",
+                      colorClass: "text-violet-400",
+                    },
+                    {
+                      name: "Help & Support",
+                      path: "/support",
+                      icon: <HelpCircle className="w-4 h-4" />,
+                      colorClass: "text-slate-400",
                     },
                   ].map((item, i) => (
                     <Link
@@ -523,7 +740,7 @@ const Navbar = () => {
                       className="flex flex-col gap-3 p-4 bg-white/5 border border-white/8 rounded-2xl hover:bg-white/10 transition-all group"
                     >
                       <div
-                        className={`w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center text-white/40 group-hover:scale-110 transition-transform`}
+                        className={`w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center ${item.colorClass} group-hover:scale-110 transition-transform`}
                       >
                         {item.icon}
                       </div>

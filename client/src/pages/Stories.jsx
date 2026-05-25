@@ -237,7 +237,6 @@ const Stories = () => {
         </motion.div>
 
         <div className={`${card} p-4 mb-6 flex flex-col gap-4`}>
-          {/* Search */}
           <div className="relative">
             <HiOutlineMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-base pointer-events-none" />
             <input
@@ -399,7 +398,6 @@ const Stories = () => {
         targetId={reportConfig.targetId}
       />
 
-      {/* Floating Actions */}
       <div className="fixed bottom-24 right-6 flex flex-col gap-3 z-40">
         <motion.button
           whileHover={{ scale: 1.05 }}

@@ -54,6 +54,39 @@ const orderSchema = new mongoose.Schema({
   transactionId: {
     type: String,
   },
+  quantity: {
+    type: Number,
+    default: 1,
+    min: 1,
+  },
+  commissionRate: {
+    type: Number,
+    default: 0,
+  },
+  commissionAmount: {
+    type: Number,
+    default: 0,
+  },
+  sellerPayout: {
+    type: Number,
+    default: 0,
+  },
+  tracking: {
+    currentLocation: {
+      lat: { type: Number, default: 23.0225 },
+      lng: { type: Number, default: 72.5714 },
+    },
+    estimatedDelivery: { type: Date },
+    status: { type: String, default: "pending" },
+    updates: [
+      {
+        status: { type: String },
+        location: { type: String },
+        timestamp: { type: Date, default: Date.now },
+        note: { type: String },
+      },
+    ],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

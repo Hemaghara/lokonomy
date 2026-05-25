@@ -81,7 +81,6 @@ const StoryDetails = () => {
     fetchStory();
   }, [id]);
 
-  // Fetch related stories
   useEffect(() => {
     if (id) {
       storyService.getRelatedStories(id)
@@ -90,7 +89,6 @@ const StoryDetails = () => {
     }
   }, [id]);
 
-  // Check bookmark status
   useEffect(() => {
     if (user && id) {
       storyService.getSavedStories()
@@ -102,7 +100,6 @@ const StoryDetails = () => {
     }
   }, [user, id]);
 
-  // Real-time comment updates
   useEffect(() => {
     const socket = getSocket();
     const handler = ({ storyId: sid, comment }) => {
@@ -219,7 +216,6 @@ const StoryDetails = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            {/* Bookmark button */}
             <button
               onClick={handleBookmark}
               className={`flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-xl border transition-all ${
@@ -235,7 +231,6 @@ const StoryDetails = () => {
               )}
             </button>
 
-            {/* Edit button (author only) */}
             {isAuthor && (
               <button
                 onClick={() => navigate(`/stories/edit/${id}`)}
@@ -245,7 +240,6 @@ const StoryDetails = () => {
               </button>
             )}
 
-            {/* Share button */}
             <button
               onClick={handleShare}
               aria-label={copied ? "Copied!" : "Share"}
@@ -266,14 +260,12 @@ const StoryDetails = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left column: Media + Info cards */}
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35 }}
             className="lg:col-span-4 space-y-3"
           >
-            {/* Media carousel or single image */}
             {(story.media?.length > 0 || story.image) ? (
               <div className={`relative overflow-hidden ${card} aspect-3/4 group`}>
                 <MediaCarousel
@@ -303,7 +295,6 @@ const StoryDetails = () => {
               </div>
             )}
 
-            {/* Location + Validity cards */}
             <div className="grid grid-cols-2 gap-3">
               <div
                 className={`${card} p-4 group hover:border-rose-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
@@ -359,7 +350,6 @@ const StoryDetails = () => {
               </div>
             </div>
 
-            {/* Reporter card */}
             <div
               className={`${card} p-4 group hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 relative overflow-hidden cursor-default`}
             >
@@ -382,7 +372,6 @@ const StoryDetails = () => {
               </div>
             </div>
 
-            {/* Engagement stats */}
             <div className={`${card} p-4`}>
               <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest mb-3">
                 Engagement
@@ -413,7 +402,6 @@ const StoryDetails = () => {
             </div>
           </motion.div>
 
-          {/* Right column: Content + Comments + Poll + Related */}
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
@@ -433,7 +421,6 @@ const StoryDetails = () => {
               </h1>
             </div>
 
-            {/* Story content */}
             <div className={`${card} p-6 relative overflow-hidden`}>
               <div className="absolute left-0 top-6 bottom-6 w-0.5 to-transparent rounded-full" />
               <p className="text-slate-400 text-sm md:text-base leading-[1.9] whitespace-pre-wrap pl-5">
@@ -441,12 +428,10 @@ const StoryDetails = () => {
               </p>
             </div>
 
-            {/* Poll section */}
             {story.poll?.question && (
               <PollCard storyId={story._id} poll={story.poll} />
             )}
 
-            {/* Action buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <button
                 onClick={handleShare}
@@ -472,14 +457,12 @@ const StoryDetails = () => {
               </button>
             </div>
 
-            {/* Comments section */}
             <CommentSection
               storyId={story._id}
               comments={story.comments || []}
               storyAuthorId={story.authorId}
             />
 
-            {/* Related stories */}
             {relatedStories.length > 0 && (
               <div>
                 <h3 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">

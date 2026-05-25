@@ -43,8 +43,9 @@ const mockData = {
     pinnedFeeds: [
       {
         _id: "f1",
+        title: "Welcome to the community guidelines update",
         caption: "Welcome to the community guidelines update",
-        author: { name: "Admin Team" },
+        author: "Admin Team",
         pinnedAt: new Date().toISOString(),
       },
     ],

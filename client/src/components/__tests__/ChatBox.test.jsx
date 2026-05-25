@@ -136,9 +136,8 @@ describe("ChatBox Component", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("No messages yet")).toBeInTheDocument();
       expect(
-        screen.getByText(/Waiting for inquiries about/),
+        screen.getByText(/I'm here to help you connect with Test Business/i),
       ).toBeInTheDocument();
     });
   });

@@ -176,7 +176,6 @@ const EditBusiness = () => {
   const [loading, setLoading] = useState(false);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [fetching, setFetching] = useState(true);
-  // shopLocation: { lat, lng, address } | null
   const [shopLocation, setShopLocation] = useState(null);
 
   const daysOfWeek = [

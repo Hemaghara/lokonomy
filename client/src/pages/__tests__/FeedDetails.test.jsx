@@ -1,12 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '../../utils/test-utils';
 import FeedDetails from '../FeedDetails';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { feedService } from '../../services';
 import { toast } from 'react-hot-toast';
 import { useUser } from '../../context/UserContext';
-
-// Mock react-router-dom
+// ...
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -42,6 +41,8 @@ vi.mock('../../services', () => ({
   feedService: {
     getFeedById: vi.fn(),
     deleteFeed: vi.fn(),
+    getRelatedFeeds: vi.fn().mockResolvedValue({ data: { data: [] } }),
+    getComments: vi.fn().mockResolvedValue({ data: { data: [], totalPages: 0, totalCount: 0 } }),
   },
 }));
 
@@ -63,15 +64,20 @@ describe('FeedDetails Page', () => {
     feedService.getFeedById.mockResolvedValue({ data: { data: mockFeed } });
     feedService.deleteFeed.mockResolvedValue({ data: { success: true } });
     
-    // Mock clipboard
-    if (!navigator.clipboard) {
-      Object.assign(navigator, { clipboard: {} });
-    }
-    navigator.clipboard.writeText = vi.fn().mockResolvedValue(undefined);
+    // Mock clipboard using vi.stubGlobal
+    vi.stubGlobal('navigator', {
+      clipboard: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
     
     // Mock window.confirm and document.execCommand
     vi.stubGlobal('confirm', vi.fn(() => true));
     document.execCommand = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('shows loading state initially', () => {
@@ -142,7 +148,7 @@ describe('FeedDetails Page', () => {
     render(<FeedDetails />);
     await waitFor(() => screen.getByText('Special Sale'));
 
-    const shareBtn = screen.getAllByRole('button', { name: /Share/i })[0];
+    const shareBtn = screen.getByRole('button', { name: /Copy link to clipboard/i });
     fireEvent.click(shareBtn);
 
     await waitFor(() => {

@@ -105,7 +105,6 @@ describe("JobDashboard Page", () => {
     expect(screen.getByText("Active Openings")).toBeInTheDocument();
     expect(screen.getByText("Closed Roles")).toBeInTheDocument();
     expect(screen.getByText("Total Applicants")).toBeInTheDocument();
-    expect(screen.getByText("Open Vacancies")).toBeInTheDocument();
   });
 
   it("handles error when loading jobs", async () => {

@@ -60,6 +60,17 @@ const productSchema = new mongoose.Schema({
     },
   ],
   currentHighestBid: { type: Number, default: 0 },
+  isPreOrderEnabled: { type: Boolean, default: false },
+  preOrderLeadTimeDays: { type: Number, default: 0 },
+  maxPreOrders: { type: Number, default: 0 },
+  isBulkEnabled: { type: Boolean, default: false },
+  minOrderQuantity: { type: Number, default: 1 },
+  bulkPricing: [
+    {
+      minQuantity: { type: Number, required: true },
+      pricePerUnit: { type: Number, required: true },
+    }
+  ],
   createdAt: { type: Date, default: Date.now },
 });
 

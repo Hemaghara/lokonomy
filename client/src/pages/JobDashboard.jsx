@@ -24,6 +24,7 @@ import {
   HiOutlinePencilSquare,
   HiOutlineArrowPath,
   HiOutlineSparkles,
+  HiOutlineChartBarSquare,
 } from "react-icons/hi2";
 import { FiPlus } from "react-icons/fi";
 import {
@@ -180,7 +181,7 @@ const JobDashboard = () => {
       toast.success(
         `Successfully updated ${job.applications.length} applicants`,
       );
-      fetchMyJobs(); // Refresh to get all updates
+      fetchMyJobs();
     } catch {
       toast.error("Bulk update failed for some applicants");
       fetchMyJobs();
@@ -231,19 +232,15 @@ const JobDashboard = () => {
     return "just now";
   };
 
-  // --- ANALYTICS DATA ---
   const allApplications = myJobs.flatMap((j) => (j.applications || []).map(a => ({...a, jobPosition: j.position})));
   
-  // 1. Trend Data (last 14 days)
   const trendData = [...Array(14)].map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (13 - i));
     const dateStr = d.toISOString().split("T")[0];
     
-    // Count apps
     const appsCount = allApplications.filter(a => a.appliedAt && a.appliedAt.split("T")[0] === dateStr).length;
     
-    // Count views
     const viewsCount = myJobs.reduce((acc, job) => {
       const history = (job.viewHistory || []).find(h => h.date === dateStr);
       return acc + (history ? history.count : 0);
@@ -257,7 +254,6 @@ const JobDashboard = () => {
   });
 
 
-  // 2. Status Breakdown
   const statusCounts = allApplications.reduce((acc, app) => {
     const s = app.applicationStatus || "Applied";
     acc[s] = (acc[s] || 0) + 1;
@@ -409,14 +405,12 @@ const JobDashboard = () => {
           ))}
         </motion.div>
 
-        {/* Analytics Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10"
         >
-          {/* Trend Chart */}
           <div className="lg:col-span-2 bg-[#080f1c] border border-white/5 rounded-3xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <HiOutlineChartBarSquare size={120} />
@@ -495,7 +489,6 @@ const JobDashboard = () => {
             </div>
           </div>
 
-          {/* Status Pie Chart */}
           <div className="bg-[#080f1c] border border-white/5 rounded-3xl p-6">
             <h3 className="text-white font-bold text-base mb-1">
               Candidate Pipeline

@@ -382,7 +382,6 @@ const PostStory = () => {
         ...formData,
         author: user?.name || "Anonymous",
         media: processedMedia,
-        // For compatibility with single image logic
         image: processedMedia[0]?.url || formData.image,
       };
 

@@ -113,7 +113,6 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
     index: true,
-    default: null,
   },
   referredBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -161,6 +160,23 @@ const userSchema = new mongoose.Schema({
     },
   ],
   refreshToken: { type: String, default: null },
+  influencerBadge: {
+    type: String,
+    enum: ["none", "rising_star", "influencer", "ambassador"],
+    default: "none",
+  },
+  reviewCount: {
+    type: Number,
+    default: 0,
+  },
+  helpfulVotes: {
+    type: Number,
+    default: 0,
+  },
+  influencerSince: {
+    type: Date,
+    default: null,
+  },
   jobProfile: {
     contact: String,
     skills: String,

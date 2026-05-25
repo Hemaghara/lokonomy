@@ -74,7 +74,6 @@ const Register = () => {
         let district = "";
         let taluka = "";
 
-        // Set granted immediately so the UI updates without waiting for network
         setGpsState({
           status: "granted",
           latitude,
@@ -86,7 +85,6 @@ const Register = () => {
         });
         toast.success("Location captured successfully!", { id: "gps-toast" });
 
-        // Enrich with reverse-geocoding (best-effort, does not block UI)
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en`,

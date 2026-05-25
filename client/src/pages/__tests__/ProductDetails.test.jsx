@@ -230,7 +230,7 @@ describe("ProductDetails Page", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByPlaceholderText(/Ask about the business/i),
+        screen.getByPlaceholderText(/Ask about businesses/i),
       ).toBeDefined();
     });
   });

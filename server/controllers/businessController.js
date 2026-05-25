@@ -16,6 +16,11 @@ exports.getAllBusinesses = async (req, res) => {
       category,
       subcategory,
       search,
+      openNow,
+      verified,
+      trending,
+      hasOffers,
+      sortBy,
     } = req.query;
 
     let query = {};
@@ -43,9 +48,94 @@ exports.getAllBusinesses = async (req, res) => {
         { description: { $regex: search, $options: "i" } },
       ];
     }
-    const sortOpts = lat && lng ? {} : { createdAt: -1 };
-    const businesses = await Business.find(query).sort(sortOpts);
-    res.json(businesses);
+
+    if (verified === "true") {
+      query.verificationStatus = "verified";
+    }
+
+    let sortOpts = lat && lng ? {} : { createdAt: -1 };
+    if (sortBy === "rating") sortOpts = { rating: -1 };
+    else if (sortBy === "trending") sortOpts = { visits: -1 };
+    else if (sortBy === "newest") sortOpts = { createdAt: -1 };
+
+    let businesses = await Business.find(query).sort(sortOpts);
+
+    if (openNow === "true") {
+      const now = new Date();
+      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const currentDay = days[now.getDay()];
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+      businesses = businesses.filter((biz) => {
+        if (!biz.businessHours) return false;
+        const dayHours = biz.businessHours.get ? biz.businessHours.get(currentDay) : biz.businessHours[currentDay];
+        if (!dayHours || !dayHours.isOpen) return false;
+        return currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
+      });
+    }
+
+    const now = new Date();
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const currentDay = days[now.getDay()];
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    const Coupon = require("../models/Coupon");
+
+    let businessIdsWithOffers = null;
+    if (hasOffers === "true") {
+      const activeCoupons = await Coupon.find({
+        status: "active",
+        expiryDate: { $gt: now },
+      }).distinct("businessId");
+      businessIdsWithOffers = new Set(activeCoupons.map((id) => id.toString()));
+      businesses = businesses.filter((biz) =>
+        businessIdsWithOffers.has(biz._id.toString())
+      );
+    } else {
+      const activeCoupons = await Coupon.find({
+        status: "active",
+        expiryDate: { $gt: now },
+      }).distinct("businessId");
+      businessIdsWithOffers = new Set(activeCoupons.map((id) => id.toString()));
+    }
+
+    const PromotedListing = require("../models/PromotedListing");
+    const activePromotions = await PromotedListing.find({
+      status: "active",
+      type: "search_boost",
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    });
+
+    const promoMap = new Map(activePromotions.map((p) => [p.businessId.toString(), p._id.toString()]));
+
+    const enriched = businesses.map((biz) => {
+      const bizObj = biz.toObject ? biz.toObject() : { ...biz };
+      if (biz.businessHours) {
+        const dayHours = biz.businessHours.get ? biz.businessHours.get(currentDay) : biz.businessHours[currentDay];
+        bizObj.isOpenNow = dayHours && dayHours.isOpen && currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
+      } else {
+        bizObj.isOpenNow = false;
+      }
+      bizObj.hasActiveOffers = businessIdsWithOffers ? businessIdsWithOffers.has(biz._id.toString()) : false;
+      
+      if (promoMap.has(biz._id.toString())) {
+        bizObj.isPromoted = true;
+        bizObj.promotionId = promoMap.get(biz._id.toString());
+      } else {
+        bizObj.isPromoted = false;
+      }
+      return bizObj;
+    });
+
+    // Sort promoted listings first
+    enriched.sort((a, b) => {
+      if (a.isPromoted && !b.isPromoted) return -1;
+      if (!a.isPromoted && b.isPromoted) return 1;
+      return 0;
+    });
+
+    res.json(enriched);
   } catch (err) {
     logger.error({ err }, "Error fetching businesses");
     res.status(500).json({ message: err.message });
@@ -119,7 +209,42 @@ exports.getBusinessById = async (req, res) => {
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
-    res.json(business);
+
+    const now = new Date();
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const currentDay = days[now.getDay()];
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    const userIds = business.reviews.map(r => r.userId).filter(Boolean);
+    const users = await User.find({ _id: { $in: userIds } }).select("influencerBadge");
+    const userMap = new Map(users.map(u => [u._id.toString(), u.influencerBadge || "none"]));
+
+    const bizObj = business.toObject ? business.toObject() : { ...business };
+    bizObj.reviews = bizObj.reviews.map(rev => ({
+      ...rev,
+      influencerBadge: rev.userId ? (userMap.get(rev.userId.toString()) || "none") : "none"
+    }));
+
+    if (business.businessHours) {
+      const dayHours = business.businessHours.get ? business.businessHours.get(currentDay) : business.businessHours[currentDay];
+      bizObj.isOpenNow = dayHours && dayHours.isOpen && currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
+    } else {
+      bizObj.isOpenNow = false;
+    }
+
+    const Coupon = require("../models/Coupon");
+    const activeCoupon = await Coupon.findOne({
+      businessId: business._id,
+      status: "active",
+      expiryDate: { $gt: now },
+    });
+    bizObj.hasActiveOffers = !!activeCoupon;
+
+    // Check if the owner has platinum plan to display guarantee badge
+    const owner = await User.findById(business.ownerId).select("subscription");
+    bizObj.ownerPlan = owner?.subscription?.plan || "free";
+
+    res.json(bizObj);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -253,7 +378,7 @@ exports.updateBusiness = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Business not found" });
     }
-    if (business.ownerId !== req.user.id) {
+    if (business.ownerId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to edit this business",
@@ -319,7 +444,7 @@ exports.deleteBusiness = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Business not found" });
     }
-    if (business.ownerId !== req.user.id) {
+    if (business.ownerId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to delete this business",

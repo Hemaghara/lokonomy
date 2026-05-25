@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import AdminStoryDetails from "../../../pages/admin/AdminStoryDetails";
@@ -174,7 +174,7 @@ describe("AdminStoryDetails Component", () => {
       expect(screen.getAllByText("Test Story Title")[0]).toBeInTheDocument();
     });
 
-    const deleteBtn = screen.getByRole("button", { name: /Delete Story/i });
+    const deleteBtn = screen.getByRole("button", { name: /^Delete$/i });
     fireEvent.click(deleteBtn);
 
     await waitFor(() => {
@@ -200,14 +200,15 @@ describe("AdminStoryDetails Component", () => {
       expect(screen.getAllByText("Test Story Title")[0]).toBeInTheDocument();
     });
 
-    const deleteBtn = screen.getByRole("button", { name: /Delete Story/i });
+    const deleteBtn = screen.getByRole("button", { name: /^Delete$/i });
     fireEvent.click(deleteBtn);
 
     await waitFor(() => {
       expect(screen.getByText("Delete Story?")).toBeInTheDocument();
     });
 
-    const confirmBtn = screen.getByRole("button", { name: "Delete" });
+    const modal = screen.getByText("Delete Story?").closest(".bg-slate-900");
+    const confirmBtn = within(modal).getByRole("button", { name: "Delete" });
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {
@@ -226,14 +227,15 @@ describe("AdminStoryDetails Component", () => {
       expect(screen.getAllByText("Test Story Title")[0]).toBeInTheDocument();
     });
 
-    const deleteBtn = screen.getByRole("button", { name: /Delete Story/i });
+    const deleteBtn = screen.getByRole("button", { name: /^Delete$/i });
     fireEvent.click(deleteBtn);
 
     await waitFor(() => {
       expect(screen.getByText("Delete Story?")).toBeInTheDocument();
     });
 
-    const confirmBtn = screen.getByRole("button", { name: "Delete" });
+    const modal = screen.getByText("Delete Story?").closest(".bg-slate-900");
+    const confirmBtn = within(modal).getByRole("button", { name: "Delete" });
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {

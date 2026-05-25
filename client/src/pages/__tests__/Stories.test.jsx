@@ -27,6 +27,9 @@ vi.mock("../../services", () => ({
         ],
       },
     }),
+    getSavedStories: vi.fn().mockResolvedValue({
+      data: { data: [] },
+    }),
     likeStory: vi.fn().mockResolvedValue({
       data: {
         data: {
@@ -37,6 +40,9 @@ vi.mock("../../services", () => ({
       },
     }),
     shareStory: vi.fn().mockResolvedValue({ success: true }),
+    toggleBookmark: vi.fn().mockResolvedValue({
+      data: { isBookmarked: true, message: "Bookmarked successfully" },
+    }),
   },
 }));
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { marketService, orderService } from "../services";
 import { useUser } from "../context/UserContext";
@@ -21,11 +21,15 @@ const Checkout = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useUser();
+  const [searchParams] = useSearchParams();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOrdering, setIsOrdering] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const initialQty = parseInt(searchParams.get("qty")) || 1;
+  const [quantity, setQuantity] = useState(initialQty);
 
   const [orderForm, setOrderForm] = useState({
     shippingAddress: "",
@@ -38,16 +42,35 @@ const Checkout = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
 
+  const getPriceForQuantity = (qty) => {
+    if (!product) return 0;
+    if (product.activeFlashSale) {
+      return product.activeFlashSale.salePrice;
+    }
+    if (product.isBulkEnabled && product.bulkPricing && product.bulkPricing.length > 0) {
+      const sortedTiers = [...product.bulkPricing].sort((a, b) => b.minQuantity - a.minQuantity);
+      const matchingTier = sortedTiers.find(t => qty >= t.minQuantity);
+      if (matchingTier) return matchingTier.pricePerUnit;
+    }
+    return product.price;
+  };
+
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     try {
       setIsValidating(true);
-      const res = await api.post("/admin/coupons/validate", {
+      const res = await api.post("/growth/coupons/validate", {
         code: couponCode,
-        planType: user?.plan || "free",
+        sellerId: product.sellerId?._id || product.sellerId,
       });
-      setAppliedCoupon(res.data.coupon);
-      toast.success("Coupon applied!");
+      if (res.data.success) {
+        setAppliedCoupon({
+          code: res.data.code,
+          discount: res.data.discount,
+          discountType: res.data.discountType,
+        });
+        toast.success("Coupon applied!");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Invalid coupon");
       setAppliedCoupon(null);
@@ -56,14 +79,16 @@ const Checkout = () => {
     }
   };
 
-  const calculateDiscountedPrice = () => {
-    if (!appliedCoupon) return product.price;
+  const calculateTotalPrice = () => {
+    if (!product) return 0;
+    const baseUnit = getPriceForQuantity(quantity);
+    const baseTotal = baseUnit * quantity;
+    if (!appliedCoupon) return baseTotal;
+    const discount = appliedCoupon.discount || 0;
     if (appliedCoupon.discountType === "percentage") {
-      return (
-        product.price - (product.price * appliedCoupon.discountValue) / 100
-      );
+      return baseTotal - (baseTotal * discount) / 100;
     }
-    return Math.max(0, product.price - appliedCoupon.discountValue);
+    return Math.max(0, baseTotal - discount);
   };
 
   useEffect(() => {
@@ -119,8 +144,8 @@ const Checkout = () => {
     try {
       await orderService.createOrder({
         productId: product._id,
-        appliedCoupon: appliedCoupon?._id,
-        finalAmount: calculateDiscountedPrice(),
+        appliedCoupon: appliedCoupon?.code,
+        quantity: quantity,
         ...orderForm,
       });
       toast.success("Order placed successfully!");
@@ -220,9 +245,17 @@ const Checkout = () => {
             <h3 className="text-white font-semibold text-sm line-clamp-1 mb-1">
               {product.productName}
             </h3>
-            <div className="flex items-center gap-1 text-emerald-400 font-bold text-lg">
-              <HiOutlineCurrencyRupee />
-              {product.price.toLocaleString()}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5 text-emerald-400 font-bold text-lg">
+                <HiOutlineCurrencyRupee />
+                {getPriceForQuantity(quantity).toLocaleString()}
+              </div>
+              {getPriceForQuantity(quantity) < product.price && (
+                <div className="flex items-center gap-0.5 text-slate-500 line-through text-xs font-semibold">
+                  <HiOutlineCurrencyRupee />
+                  {product.price.toLocaleString()}
+                </div>
+              )}
             </div>
           </div>
           <div className="shrink-0 text-right hidden sm:block">
@@ -506,18 +539,30 @@ const Checkout = () => {
 
             <div className="space-y-2 text-sm text-slate-400 mb-5">
               <div className="flex justify-between">
-                <span>Product Price</span>
+                <span>Unit Price</span>
                 <span className="text-slate-200 font-medium">
-                  ₹{product.price.toLocaleString()}
+                  ₹{getPriceForQuantity(quantity).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Quantity</span>
+                <span className="text-slate-200 font-medium">
+                  {quantity}
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-[#1f2a3d]/50 pt-2">
+                <span>Subtotal</span>
+                <span className="text-slate-200 font-medium">
+                  ₹{(getPriceForQuantity(quantity) * quantity).toLocaleString()}
                 </span>
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between text-emerald-400">
-                  <span>Discount</span>
+                  <span>Discount ({appliedCoupon.code})</span>
                   <span>
                     -₹
                     {(
-                      product.price - calculateDiscountedPrice()
+                      (getPriceForQuantity(quantity) * quantity) - calculateTotalPrice()
                     ).toLocaleString()}
                   </span>
                 </div>
@@ -526,7 +571,7 @@ const Checkout = () => {
                 <span className="text-slate-200">Total Payable</span>
                 <span className="text-emerald-400 flex items-center gap-0.5">
                   <HiOutlineCurrencyRupee />
-                  {calculateDiscountedPrice().toLocaleString()}
+                  {calculateTotalPrice().toLocaleString()}
                 </span>
               </div>
             </div>
@@ -544,7 +589,7 @@ const Checkout = () => {
               ) : (
                 <>
                   <HiOutlineCheckCircle className="text-lg" />
-                  Confirm Order (₹{calculateDiscountedPrice().toLocaleString()})
+                  Confirm Order (₹{calculateTotalPrice().toLocaleString()})
                 </>
               )}
             </button>

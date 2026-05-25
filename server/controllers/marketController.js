@@ -158,8 +158,39 @@ exports.getProductById = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    const FlashSale = require("../models/FlashSale");
+    const now = new Date();
+    // Fetch scheduled/active sales to update their statuses based on current time
+    const pendingSales = await FlashSale.find({
+      productId: product._id,
+      status: { $in: ["scheduled", "active"] },
+    });
+
+    for (let sale of pendingSales) {
+      let newStatus = sale.status;
+      if (sale.status === "scheduled" && now >= sale.startTime && now < sale.endTime) {
+        newStatus = "active";
+      } else if ((sale.status === "scheduled" || sale.status === "active") && now >= sale.endTime) {
+        newStatus = "ended";
+      } else if (sale.status === "active" && sale.soldCount >= sale.maxQuantity) {
+        newStatus = "ended";
+      }
+      if (newStatus !== sale.status) {
+        sale.status = newStatus;
+        await sale.save();
+      }
+    }
+
+    const activeFlashSale = await FlashSale.findOne({
+      productId: product._id,
+      status: "active",
+      startTime: { $lte: now },
+      endTime: { $gte: now },
+    });
+
     const productObj = product.toObject();
     productObj.isSold = productObj.isSold === true;
+    productObj.activeFlashSale = activeFlashSale || null;
 
     res.json(productObj);
   } catch (err) {

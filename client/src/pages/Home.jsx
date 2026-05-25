@@ -209,7 +209,6 @@ const Home = () => {
         <meta name="description" content="Lokonomy is the all-in-one platform to discover, connect, and grow with the businesses and people right in your neighborhood." />
       </Helmet>
       <style>{`
-        /* Grid background — multi-layer gradient, not doable in Tailwind */
         .lk-grid-bg {
           background-image:
             linear-gradient(rgba(79,110,247,0.04) 1px, transparent 1px),
@@ -217,7 +216,6 @@ const Home = () => {
           background-size: 48px 48px;
         }
 
-        /* Noise texture — SVG data-URI, not doable in Tailwind */
         .lk-noise {
           position: fixed; inset: 0; pointer-events: none; z-index: 0;
           opacity: 0.025;
@@ -226,7 +224,6 @@ const Home = () => {
           background-size: 128px;
         }
 
-        /* Orb — filter:blur large values, not safely in Tailwind */
         .lk-orb {
           position: fixed;
           border-radius: 50%;
@@ -235,7 +232,6 @@ const Home = () => {
           z-index: 0;
         }
 
-        /* Step connector line — ::after pseudo element */
         .lk-step-line::after {
           content: '';
           position: absolute;
@@ -246,7 +242,6 @@ const Home = () => {
           background: linear-gradient(90deg, rgba(79,110,247,0.4), transparent);
         }
 
-        /* Webkit gradient text */
         .lk-accent-text {
           background: linear-gradient(135deg, #4f6ef7, #a78bfa);
           -webkit-background-clip: text;
@@ -387,6 +382,121 @@ const Home = () => {
             ))}
           </div>
         </section>
+
+        <section className="px-4 py-20 max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="bg-[#0d1120] border border-[rgba(79,110,247,0.2)] rounded-[32px] overflow-hidden relative"
+          >
+
+            <div className="absolute inset-0 pointer-events-none" style={{
+              backgroundImage: "radial-gradient(rgba(79,110,247,0.06) 1px, transparent 1px)",
+              backgroundSize: "24px 24px"
+            }} />
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-[#4f6ef7] to-transparent opacity-60" />
+
+            <div className="relative z-10 p-[clamp(24px,6vw,64px)]">
+              <div className="text-center mb-12">
+                <Pill><Sparkles size={11} /> Why Lokonomy?</Pill>
+                <h2
+                  className="text-white font-black tracking-[-0.02em] mt-3"
+                  style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)" }}
+                >
+                  Google Maps vs{" "}
+                  <span className="lk-accent-text">Lokonomy</span>
+                </h2>
+                <p className="text-white/40 text-[0.9rem] max-w-120 mx-auto mt-2.5">
+                  Google Maps tells customers WHERE you are. Lokonomy helps you actually
+                  SELL, CHAT, POST, HIRE, and BUILD a loyal customer base — all from one platform.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto -mx-4 px-4">
+                <table className="w-full min-w-[600px]">
+                  <thead>
+                    <tr>
+                      <th className="text-left text-[10px] font-black text-white/30 uppercase tracking-[0.15em] pb-4 pl-4 w-[45%]">Feature</th>
+                      <th className="text-center text-[10px] font-black uppercase tracking-[0.15em] pb-4 w-[22%]">
+                        <span className="text-white/30">Google Maps</span>
+                      </th>
+                      <th className="text-center text-[10px] font-black uppercase tracking-[0.15em] pb-4 w-[33%]">
+                        <span className="lk-accent-text">Lokonomy</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { feature: "Find a Business Near Me", google: true, loko: true, desc: "Geo + smart search" },
+                      { feature: "Sell Products Online", google: false, loko: true, desc: "Full marketplace + Razorpay" },
+                      { feature: "Chat with Customers", google: false, loko: true, desc: "Real-time messaging" },
+                      { feature: "Post Daily Offers & Stories", google: false, loko: true, desc: "Stories + Feed system" },
+                      { feature: "Hire Employees Locally", google: false, loko: true, desc: "Job board + applications" },
+                      { feature: "Verified Trust Badge (KYC)", google: false, loko: true, desc: "Document verification" },
+                      { feature: "Customer Loyalty & Rewards", google: false, loko: true, desc: "Points + referrals" },
+                      { feature: "Run Promotions & Coupons", google: false, loko: true, desc: "QR coupons + campaigns" },
+                      { feature: "Business Analytics", google: false, loko: true, desc: "Visits, orders, trends" },
+                      { feature: "Book Appointments", google: false, loko: true, desc: "Service bookings" },
+                      { feature: "Discover Local Events", google: false, loko: true, desc: "Interactive events map" },
+                      { feature: "Compare Businesses", google: false, loko: true, desc: "Side-by-side comparison" },
+                    ].map((row, idx) => (
+                      <motion.tr
+                        key={row.feature}
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.3, delay: idx * 0.04 }}
+                        className="border-t border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                      >
+                        <td className="py-3.5 pl-4 text-[0.82rem] text-white/70 font-semibold">
+                          {row.feature}
+                        </td>
+                        <td className="py-3.5 text-center">
+                          {row.google ? (
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">✓</span>
+                          ) : (
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500/10 text-rose-400 text-sm">✕</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 text-center">
+                          <div className="inline-flex items-center gap-2">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">✓</span>
+                            <span className="text-[10px] text-white/30 font-medium hidden sm:inline">{row.desc}</span>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-10 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6"
+              >
+                <div>
+                  <p className="text-white/50 text-sm font-medium">
+                    <span className="text-white font-bold">Google Maps is a MAP.</span>{" "}
+                    Lokonomy is a{" "}
+                    <span className="lk-accent-text font-bold">Local Economy Operating System.</span>
+                  </p>
+                </div>
+                <Link
+                  to="/register"
+                  className="bg-linear-to-br from-[#4f6ef7] to-[#7c3aed] text-white py-3 px-7 rounded-[14px] font-extrabold text-[12px] tracking-[0.05em] uppercase inline-flex items-center gap-2 shadow-[0_8px_32px_rgba(79,110,247,0.3)] hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 shrink-0"
+                >
+                  Start Free — No Credit Card <ArrowRight size={15} />
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        </section>
+
         {hasRecommendations && (
           <section className="px-4 py-20 max-w-6xl mx-auto">
 
@@ -419,7 +529,7 @@ const Home = () => {
                 See all <ArrowRight size={15} />
               </motion.button>
             </div>
-            <motion.div 
+            <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -445,7 +555,7 @@ const Home = () => {
                           hidden: { opacity: 0, y: 20 },
                           visible: { opacity: 1, y: 0 }
                         }}
-                        whileHover={{ 
+                        whileHover={{
                           y: -10,
                           boxShadow: "0 20px 40px rgba(79, 110, 247, 0.15)"
                         }}
@@ -581,7 +691,7 @@ const Home = () => {
             <div className="text-center py-20 bg-white/2 border border-white/5 rounded-3xl">
               <Calendar className="mx-auto text-white/10 mb-4" size={48} />
               <p className="text-white/30 text-sm font-medium">No events scheduled recently near you.</p>
-              <button 
+              <button
                 onClick={() => navigate("/feed/post")}
                 className="mt-4 text-purple-400 font-bold text-xs hover:text-purple-300 transition-colors"
               >

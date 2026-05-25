@@ -84,12 +84,13 @@ const STAT_COLORS = {
 
 const MiniChart = ({ data, color, height = 40 }) => {
   const chartData = data.map((val, i) => ({ val, i }));
+  const gradId = `grad-${color.replace("#", "")}`;
   return (
     <div style={{ width: "80px", height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData}>
           <defs>
-            <linearGradient id={`grad-${color}`} x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.3} />
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
@@ -99,7 +100,7 @@ const MiniChart = ({ data, color, height = 40 }) => {
             dataKey="val"
             stroke={color}
             strokeWidth={2}
-            fill={`url(#grad-${color})`}
+            fill={`url(#${gradId})`}
             isAnimationActive={true}
           />
         </AreaChart>
@@ -250,7 +251,7 @@ const AdminDashboard = () => {
       const mixedActivities = [];
 
       if (response.data.recentUsers) {
-        response.data.recentUsers.slice(0, 3).forEach((u) => {
+        response.data.recentUsers.forEach((u) => {
           mixedActivities.push({
             id: `user-${u._id}`,
             type: "registration",
@@ -263,7 +264,7 @@ const AdminDashboard = () => {
       }
 
       if (response.data.recentBusinesses) {
-        response.data.recentBusinesses.slice(0, 3).forEach((b) => {
+        response.data.recentBusinesses.forEach((b) => {
           mixedActivities.push({
             id: `biz-${b._id}`,
             type: "business",
@@ -285,7 +286,6 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchStats(dateRange);
     fetchOnlineTrend();
 
     const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
@@ -304,6 +304,10 @@ const AdminDashboard = () => {
       socket.off("onlineUsersCount");
       socket.off("newActivity");
     };
+  }, []);
+
+  useEffect(() => {
+    fetchStats(dateRange);
   }, [dateRange, fetchStats]);
 
   const handleDateChange = (e) => {
@@ -353,6 +357,7 @@ const AdminDashboard = () => {
       icon: FiDollarSign,
       color: "emerald",
       trend: stats?.stats.trends?.revenue || "+0%",
+      path: "/admin/subscriptions",
     },
     {
       label: "Total Users",
@@ -500,9 +505,9 @@ const AdminDashboard = () => {
                     >
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="w-11 h-11 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-black text-base shrink-0 overflow-hidden group-hover:border-indigo-500 transition-all duration-300">
-                          {user.profileImage ? (
+                          {user.profilePic ? (
                             <img
-                              src={user.profileImage}
+                              src={user.profilePic}
                               alt={user.name}
                               className="w-full h-full object-cover"
                             />

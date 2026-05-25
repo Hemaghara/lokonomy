@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { marketService, chatService } from "../services";
+import { marketService, chatService, preOrderService } from "../services";
 import { getSocket } from "../services/socket";
 import recommendationService from "../services/recommendationService";
 import { toast } from "react-hot-toast";
@@ -52,6 +52,50 @@ const ProductDetails = () => {
   const [bidAmount, setBidAmount] = useState("");
   const [submittingBid, setSubmittingBid] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showPreOrderForm, setShowPreOrderForm] = useState(false);
+  const [preOrderQty, setPreOrderQty] = useState(1);
+  const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [preOrderNotes, setPreOrderNotes] = useState("");
+  const [submittingPreOrder, setSubmittingPreOrder] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!product || !product.activeFlashSale) return;
+    const calculateTimeLeft = () => {
+      const difference = new Date(product.activeFlashSale.endTime) - new Date();
+      if (difference <= 0) {
+        setTimeLeft("Ended");
+        return;
+      }
+      const hrs = Math.floor(difference / (1000 * 60 * 60));
+      const mins = Math.floor((difference / 1000 / 60) % 60);
+      const secs = Math.floor((difference / 1000) % 60);
+      setTimeLeft(`${hrs}h ${mins}m ${secs}s`);
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [product]);
+
+  useEffect(() => {
+    if (product) {
+      setQuantity(product.minOrderQuantity || 1);
+      setPreOrderQty(product.minOrderQuantity || 1);
+    }
+  }, [product]);
+
+  const getMinPickupDateString = () => {
+    if (!product) return "";
+    const leadTimeDays = product.preOrderLeadTimeDays || 0;
+    const minDate = new Date(Date.now() + leadTimeDays * 24 * 60 * 60 * 1000);
+    const yyyy = minDate.getFullYear();
+    const mm = String(minDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(minDate.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   const isSeller =
     user &&
@@ -202,6 +246,48 @@ const ProductDetails = () => {
       }
     } finally {
       setSubmittingProduct(false);
+    }
+  };
+
+  const getPriceForQuantity = (qty) => {
+    if (!product) return 0;
+    if (product.activeFlashSale) {
+      return product.activeFlashSale.salePrice;
+    }
+    if (product.isBulkEnabled && product.bulkPricing && product.bulkPricing.length > 0) {
+      const sortedTiers = [...product.bulkPricing].sort((a, b) => b.minQuantity - a.minQuantity);
+      const matchingTier = sortedTiers.find(t => qty >= t.minQuantity);
+      if (matchingTier) return matchingTier.pricePerUnit;
+    }
+    return product.price;
+  };
+
+  const handlePreOrder = async (e) => {
+    e.preventDefault();
+    if (!user) return toast.error("Please login to pre-order");
+    if (isSeller) return toast.error("You cannot pre-order your own product");
+    if (!pickupDate || !pickupTime) return toast.error("Please select pickup date and time");
+
+    setSubmittingPreOrder(true);
+    try {
+      const res = await preOrderService.createPreOrder({
+        productId: product._id,
+        quantity: preOrderQty,
+        pickupDate,
+        pickupTime,
+        notes: preOrderNotes,
+      });
+
+      toast.success("Pre-order requested successfully!");
+      setShowPreOrderForm(false);
+      setPreOrderQty(1);
+      setPickupDate("");
+      setPickupTime("");
+      setPreOrderNotes("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit pre-order");
+    } finally {
+      setSubmittingPreOrder(false);
     }
   };
 
@@ -396,23 +482,91 @@ const ProductDetails = () => {
                 {product.productName}
               </h1>
 
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 text-white font-bold text-2xl">
-                  <HiOutlineCurrencyRupee className="text-emerald-400 text-2xl" />
-                  {(product.isAuction
-                    ? product.currentHighestBid || product.startingPrice
-                    : product.price
-                  )?.toLocaleString()}
-                </div>
-                <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide bg-[#111827] border border-[#1f2a3d] px-2.5 py-1 rounded-lg">
-                  {product.isAuction
-                    ? "Current Bid"
-                    : product.priceType === "sell"
-                      ? "Purchase Price"
-                      : "Rental Price"}
-                </span>
+              <div className="flex items-center flex-wrap gap-3">
+                {product.activeFlashSale ? (
+                  <>
+                    <div className="flex items-center gap-1 text-yellow-400 font-black text-3xl">
+                      <HiOutlineCurrencyRupee className="text-2xl" />
+                      {product.activeFlashSale.salePrice.toLocaleString()}
+                    </div>
+                    <span className="text-slate-500 line-through text-lg font-bold">
+                      ₹{product.price.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-black text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
+                      {Math.round(((product.price - product.activeFlashSale.salePrice) / product.price) * 100)}% OFF Deal
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1 text-white font-bold text-2xl">
+                      <HiOutlineCurrencyRupee className="text-emerald-400 text-2xl" />
+                      {(product.isAuction
+                        ? product.currentHighestBid || product.startingPrice
+                        : product.price
+                      )?.toLocaleString()}
+                    </div>
+                    <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide bg-[#111827] border border-[#1f2a3d] px-2.5 py-1 rounded-lg">
+                      {product.isAuction
+                        ? "Current Bid"
+                        : product.priceType === "sell"
+                          ? "Purchase Price"
+                          : "Rental Price"}
+                    </span>
+                  </>
+                )}
+                {product.isBulkEnabled && (
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+                    🏷️ Bulk Pricing
+                  </span>
+                )}
+                {product.isPreOrderEnabled && (
+                  <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-lg">
+                    ⏰ Pre-Order Ready
+                  </span>
+                )}
               </div>
             </div>
+
+            {product.activeFlashSale && (
+              <div className={`${card} p-5 space-y-4 border-yellow-500/20 bg-yellow-500/5`}>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg animate-pulse">⚡</span>
+                    <div>
+                      <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">
+                        Active Flash Sale
+                      </p>
+                      <p className="text-slate-400 text-xs mt-1">
+                        Limited time deal — grab it before it's gone!
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-[#0d1424] border border-[#1f2a3d] px-4 py-2.5 rounded-xl text-center shrink-0">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">
+                      Ends In
+                    </p>
+                    <span className="text-yellow-400 font-extrabold text-sm font-mono tracking-wide">
+                      {timeLeft}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-medium">Claimed / Sold Count</span>
+                    <span className="text-white font-bold">
+                      {product.activeFlashSale.soldCount} / {product.activeFlashSale.maxQuantity} items
+                    </span>
+                  </div>
+                  <div className="w-full bg-[#0d1424] h-2 rounded-full overflow-hidden border border-[#1f2a3d]">
+                    <div 
+                      className="bg-linear-to-r from-yellow-500 to-amber-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (product.activeFlashSale.soldCount / product.activeFlashSale.maxQuantity) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {product.isAuction && (
               <div
@@ -548,14 +702,99 @@ const ProductDetails = () => {
               )}
 
               {user && !isSeller && !product.isSold && !product.isAuction && (
-                <button
-                  onClick={() =>
-                    navigate(`/market/product/${product._id}/checkout`)
-                  }
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[.98] text-white text-sm font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-900/30"
-                >
-                  <HiOutlineShoppingBag className="text-lg" /> Buy Now
-                </button>
+                <div className="space-y-3">
+                  {product.isBulkEnabled && (
+                    <div className="space-y-3">
+                      {product.bulkPricing && product.bulkPricing.length > 0 && (
+                        <div className="bg-[#111827] border border-[#1f2a3d] rounded-xl p-4 space-y-3">
+                          <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">
+                            📦 Wholesale/Bulk Pricing Tiers
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {product.bulkPricing.map((tier, idx) => {
+                              const isActive = quantity >= tier.minQuantity;
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className={`p-2.5 rounded-lg border flex flex-col gap-0.5 transition-all ${
+                                    isActive
+                                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-sm"
+                                      : "bg-[#0d1424] border-[#1f2a3d] text-slate-400"
+                                  }`}
+                                >
+                                  <span className="font-bold text-[10px] uppercase tracking-wider">
+                                    Qty {tier.minQuantity}+
+                                  </span>
+                                  <span className="text-sm font-black mt-0.5">
+                                    ₹{tier.pricePerUnit.toLocaleString()} / unit
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-slate-300 text-xs font-semibold">Bulk Price Unit</p>
+                            <p className="text-slate-500 text-[10px]">Price drops for higher volumes</p>
+                          </div>
+                          <div className="flex items-center gap-0.5 text-emerald-400 font-bold text-xl">
+                            <HiOutlineCurrencyRupee />
+                            {getPriceForQuantity(quantity).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center text-[11px] pt-1 border-t border-emerald-500/10">
+                          <span className="text-slate-400">Total subtotal:</span>
+                          <span className="text-emerald-400 font-bold">₹{(getPriceForQuantity(quantity) * quantity).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between p-3.5 bg-[#111827] border border-[#1f2a3d] rounded-xl">
+                    <span className="text-slate-400 text-xs font-semibold">Select Quantity</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        disabled={quantity <= (product.minOrderQuantity || 1)}
+                        onClick={() => setQuantity(prev => Math.max(product.minOrderQuantity || 1, prev - 1))}
+                        className="w-8 h-8 rounded-lg bg-[#0d1424] hover:bg-slate-800 text-white font-bold flex items-center justify-center disabled:opacity-40 transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className="text-white font-bold text-sm min-w-[20px] text-center">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(prev => prev + 1)}
+                        className="w-8 h-8 rounded-lg bg-[#0d1424] hover:bg-slate-800 text-white font-bold flex items-center justify-center transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      navigate(`/market/product/${product._id}/checkout?qty=${quantity}`)
+                    }
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[.98] text-white text-sm font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-900/30"
+                  >
+                    <HiOutlineShoppingBag className="text-lg" /> Buy Now (₹{(getPriceForQuantity(quantity) * quantity).toLocaleString()})
+                  </button>
+
+                  {product.isPreOrderEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPreOrderForm(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:scale-[.98] text-white text-sm font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-900/30"
+                    >
+                      <span className="text-lg">⏰</span> Pre-Order Request
+                    </button>
+                  )}
+                </div>
               )}
 
               {isSeller && (
@@ -1046,7 +1285,137 @@ const ProductDetails = () => {
         targetType="product"
         targetId={product._id}
       />
-      
+      <AnimatePresence>
+        {showPreOrderForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#111827] border border-[#1f2a3d] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl"
+            >
+              <div className="p-6 border-b border-[#1f2a3d] flex justify-between items-center bg-[#0d1424]">
+                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                  <span>⏰</span> Request Pre-Order
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowPreOrderForm(false)}
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handlePreOrder} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Select Quantity
+                  </label>
+                  <div className="flex items-center justify-between p-3.5 bg-[#0d1424] border border-[#1f2a3d] rounded-xl">
+                    <span className="text-slate-400 text-xs font-semibold">Quantity</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        disabled={preOrderQty <= (product.minOrderQuantity || 1)}
+                        onClick={() => setPreOrderQty(prev => Math.max(product.minOrderQuantity || 1, prev - 1))}
+                        className="w-8 h-8 rounded-lg bg-[#111827] hover:bg-slate-800 text-white font-bold flex items-center justify-center disabled:opacity-40 transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className="text-white font-bold text-sm min-w-[20px] text-center">{preOrderQty}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPreOrderQty(prev => prev + 1)}
+                        className="w-8 h-8 rounded-lg bg-[#111827] hover:bg-slate-800 text-white font-bold flex items-center justify-center transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Pickup Date (Min lead time: {product.preOrderLeadTimeDays} days)
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    min={getMinPickupDateString()}
+                    value={pickupDate}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                    className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-violet-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Pickup Time
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                    className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-violet-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Special Notes
+                  </label>
+                  <textarea
+                    value={preOrderNotes}
+                    onChange={(e) => setPreOrderNotes(e.target.value)}
+                    placeholder="Provide any instructions, customizations, or details..."
+                    rows={3}
+                    className="w-full bg-[#0d1424] border border-[#1f2a3d] rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-violet-500 transition-all resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-[#1f2a3d] space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Total Price:</span>
+                    <span className="text-emerald-400 font-bold">
+                      ₹{(getPriceForQuantity(preOrderQty) * preOrderQty).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-normal">
+                    * Placing a pre-order request does not charge you immediately. The seller will review your request and confirm.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPreOrderForm(false)}
+                    className="flex-1 py-3 bg-[#0d1424] hover:bg-slate-800 border border-[#1f2a3d] text-slate-300 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingPreOrder}
+                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submittingPreOrder ? (
+                      <>
+                        <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Request"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {showChat && product && user && (
           <ChatBox

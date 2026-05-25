@@ -1,143 +1,278 @@
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const User = require("../models/User");
+const Plan = require("../models/Plan");
+const Commission = require("../models/Commission");
 const { awardPoints } = require("./rewardsController");
 const { createNotification } = require("./notificationController");
 const logger = require("../utils/logger");
 
-exports.createOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+const DEFAULT_COMMISSION_RATES = {
+  free: 5,
+  silver: 4,
+  gold: 3,
+  platinum: 2,
+};
 
+async function getCommissionRate(sellerId) {
   try {
-    const {
-      productId,
-      paymentMethod,
-      shippingAddress,
-      contactNumber,
-      transactionId,
-    } = req.body;
-
-    if (!productId || !paymentMethod || !shippingAddress || !contactNumber) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({
-        success: false,
-        message:
-          "Missing required fields (productId, paymentMethod, shippingAddress, contactNumber).",
-      });
+    const seller = await User.findById(sellerId);
+    if (!seller) return DEFAULT_COMMISSION_RATES.free;
+    const planSlug = seller.subscription?.plan || "free";
+    const planDoc = await Plan.findOne({ slug: planSlug });
+    if (planDoc?.limits?.commissionRate !== undefined) {
+      return planDoc.limits.commissionRate;
     }
+    return DEFAULT_COMMISSION_RATES[planSlug] || DEFAULT_COMMISSION_RATES.free;
+  } catch (err) {
+    logger.error({ err }, "Error getting commission rate");
+    return DEFAULT_COMMISSION_RATES.free;
+  }
+}
 
-    const product = await Product.findOneAndUpdate(
-      { _id: productId, isSold: false, isFlagged: { $ne: true } },
-      { $set: { isSold: true } },
-      { new: false, session },
-    );
+exports.createOrder = async (req, res) => {
+  const maxRetries = 3;
+  let retryCount = 0;
 
-    if (!product) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({
-        success: false,
-        message: "Product not available or already sold.",
-      });
-    }
-
-    if (!product.sellerId) {
-      await Product.findByIdAndUpdate(
-        productId,
-        { $set: { isSold: false } },
-        { session },
-      );
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid product listing." });
-    }
-
-    if (product.sellerId.toString() === req.user.id) {
-      await Product.findByIdAndUpdate(
-        productId,
-        { $set: { isSold: false } },
-        { session },
-      );
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json({ success: false, message: "Cannot purchase your own product." });
-    }
-
-    const existingOrder = await Order.findOne({
-      product: productId,
-      buyer: req.user.id,
-    }).session(session);
-    if (existingOrder) {
-      await Product.findByIdAndUpdate(
-        productId,
-        { $set: { isSold: false } },
-        { session },
-      );
-      await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(400)
-        .json({ success: false, message: "Already ordered this product." });
-    }
-
-    const newOrder = new Order({
-      product: productId,
-      buyer: req.user.id,
-      seller: product.sellerId,
-      price: product.price,
-      paymentMethod,
-      shippingAddress,
-      contactNumber,
-      transactionId,
-      paymentStatus: "completed",
-    });
-
-    const savedOrder = await newOrder.save({ session });
-    await session.commitTransaction();
-    session.endSession();
+  while (retryCount < maxRetries) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
     try {
-      await awardPoints(
-        req.user.id,
-        "making_order",
-        `Order for ${product.productName || product.name}`,
-      );
-      const { sendPushNotification } = require("../utils/pushService");
-      await sendPushNotification(product.sellerId, {
-        title: "New Order",
-        body: `New order for ${product.productName || product.name}`,
-        data: { url: "/sales" },
-      });
-      const io = req.app.get("io");
-      await createNotification({
-        recipientId: product.sellerId,
-        type: "order",
-        title: "New Order",
-        message: `Order for ${product.productName || product.name} - ₹${product.price}`,
-        actionUrl: "/sales-management",
-        metadata: { orderId: savedOrder._id },
-        io,
-      });
-    } catch (sideEffectErr) {
-      logger.error(
-        { err: sideEffectErr },
-        "Post-order side effects failed (non-critical)",
-      );
-    }
+      const {
+        productId,
+        paymentMethod,
+        shippingAddress,
+        contactNumber,
+        transactionId,
+        quantity = 1,
+        appliedCoupon,
+      } = req.body;
 
-    return res.status(201).json({ success: true, order: savedOrder });
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    logger.error({ err }, "Order creation error");
-    return res.status(500).json({ success: false, message: "Server error" });
+      if (!productId || !paymentMethod || !shippingAddress || !contactNumber) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          success: false,
+          message:
+            "Missing required fields (productId, paymentMethod, shippingAddress, contactNumber).",
+        });
+      }
+
+      const product = await Product.findOne({
+        _id: productId,
+        isSold: false,
+        isFlagged: { $ne: true }
+      }).session(session);
+
+      if (!product) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          success: false,
+          message: "Product not available or already sold.",
+        });
+      }
+
+      if (!product.sellerId) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid product listing." });
+      }
+
+      if (product.sellerId.toString() === req.user.id) {
+        await session.abortTransaction();
+        session.endSession();
+        return res
+          .status(400)
+          .json({ success: false, message: "Cannot purchase your own product." });
+      }
+
+      const FlashSale = require("../models/FlashSale");
+      const now = new Date();
+      const activeFlashSale = await FlashSale.findOne({
+        productId,
+        status: "active",
+        startTime: { $lte: now },
+        endTime: { $gte: now },
+      }).session(session);
+
+      const isMultiUnit = product.isBulkEnabled || product.isPreOrderEnabled || !!activeFlashSale;
+
+      if (!isMultiUnit) {
+        const existingOrder = await Order.findOne({
+          product: productId,
+          buyer: req.user.id,
+        }).session(session);
+        if (existingOrder) {
+          await session.abortTransaction();
+          session.endSession();
+          return res
+            .status(400)
+            .json({ success: false, message: "Already ordered this product." });
+        }
+      }
+
+      let pricePerUnit = product.price;
+
+      if (activeFlashSale) {
+        if (activeFlashSale.soldCount + quantity > activeFlashSale.maxQuantity) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({
+            success: false,
+            message: `Only ${activeFlashSale.maxQuantity - activeFlashSale.soldCount} items available at flash sale price.`
+          });
+        }
+        pricePerUnit = activeFlashSale.salePrice;
+        activeFlashSale.soldCount += quantity;
+        if (activeFlashSale.soldCount >= activeFlashSale.maxQuantity) {
+          activeFlashSale.status = "ended";
+        }
+        await activeFlashSale.save({ session });
+      } else if (product.isBulkEnabled && product.bulkPricing && product.bulkPricing.length > 0) {
+        if (quantity < (product.minOrderQuantity || 1)) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({
+            success: false,
+            message: `Quantity must be at least min order quantity of ${product.minOrderQuantity || 1}`,
+          });
+        }
+        const sortedTiers = [...product.bulkPricing].sort((a, b) => b.minQuantity - a.minQuantity);
+        const matchingTier = sortedTiers.find(tier => quantity >= tier.minQuantity);
+        if (matchingTier) {
+          pricePerUnit = matchingTier.pricePerUnit;
+        }
+      }
+
+      if (!isMultiUnit) {
+        product.isSold = true;
+        await product.save({ session });
+      }
+
+      let orderAmount = pricePerUnit * quantity;
+
+      let couponDoc = null;
+      if (appliedCoupon) {
+        const Coupon = require("../models/Coupon");
+        const Business = require("../models/Business");
+        const biz = await Business.findOne({ ownerId: product.sellerId });
+        const query = { code: appliedCoupon.toUpperCase() };
+        if (biz) {
+          query.businessId = biz._id;
+        }
+        couponDoc = await Coupon.findOne(query);
+        if (couponDoc && couponDoc.status === "active" && new Date(couponDoc.expiryDate) >= new Date() && couponDoc.usedBy.indexOf(req.user.id) === -1) {
+          if (couponDoc.discountType === "percentage") {
+            orderAmount = orderAmount - (orderAmount * couponDoc.discount) / 100;
+          } else {
+            orderAmount = Math.max(0, orderAmount - couponDoc.discount);
+          }
+          
+          couponDoc.usedCount += 1;
+          couponDoc.usedBy.push(req.user.id);
+          if (couponDoc.usedCount >= couponDoc.usageLimit) {
+            couponDoc.status = "disabled";
+          }
+          await couponDoc.save({ session });
+        }
+      }
+
+      const commissionRate = await getCommissionRate(product.sellerId);
+      const commissionAmount = Math.round((orderAmount * commissionRate) / 100 * 100) / 100;
+      const sellerPayout = Math.round((orderAmount - commissionAmount) * 100) / 100;
+
+      const newOrder = new Order({
+        product: productId,
+        buyer: req.user.id,
+        seller: product.sellerId,
+        price: orderAmount,
+        paymentMethod,
+        shippingAddress,
+        contactNumber,
+        transactionId,
+        paymentStatus: "completed",
+        quantity,
+        commissionRate,
+        commissionAmount,
+        sellerPayout,
+      });
+
+      const savedOrder = await newOrder.save({ session });
+
+      const commission = new Commission({
+        orderId: savedOrder._id,
+        sellerId: product.sellerId,
+        buyerId: req.user.id,
+        orderAmount,
+        commissionRate,
+        commissionAmount,
+        sellerPayout,
+        sellerPlan: (await User.findById(product.sellerId))?.subscription?.plan || "free",
+        status: "pending",
+      });
+      await commission.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      try {
+        await awardPoints(
+          req.user.id,
+          "making_order",
+          `Order for ${product.productName || product.name}`,
+        );
+        const { sendPushNotification } = require("../utils/pushService");
+        await sendPushNotification(product.sellerId, {
+          title: "New Order",
+          body: `New order for ${product.productName || product.name}`,
+          data: { url: "/sales" },
+        });
+        const io = req.app.get("io");
+        await createNotification({
+          recipientId: product.sellerId,
+          type: "order",
+          title: "New Order",
+          message: `Order for ${product.productName || product.name} - ₹${product.price}`,
+          actionUrl: "/sales-management",
+          metadata: { orderId: savedOrder._id },
+          io,
+        });
+      } catch (sideEffectErr) {
+        logger.error(
+          { err: sideEffectErr },
+          "Post-order side effects failed (non-critical)",
+        );
+      }
+
+      return res.status(201).json({ success: true, order: savedOrder });
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+
+      const isConflict = err.name === "MongoServerError" && 
+        (err.code === 112 || err.code === 24 || err.message.includes("WriteConflict") || err.message.includes("LockTimeout"));
+        
+      if (isConflict) {
+        retryCount++;
+        logger.warn(`Write conflict/catalog change error (code ${err.code}) encountered during order creation. Retrying transaction (${retryCount}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 80 + 20));
+        continue;
+      }
+
+      logger.error({ err }, "Order creation error");
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
   }
+
+  return res.status(400).json({
+    success: false,
+    message: "Product is currently being purchased or has already been sold. Please try again."
+  });
 };
 
 exports.getBuyerOrders = async (req, res) => {
@@ -224,11 +359,17 @@ exports.getSellerDashboardStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
     const orders = await Order.find({ seller: sellerId });
+    const deliveredOrders = orders.filter((o) => o.orderStatus === "delivered");
+    const grossEarnings = deliveredOrders.reduce((acc, curr) => acc + curr.price, 0);
+    const totalCommission = deliveredOrders.reduce((acc, curr) => acc + (curr.commissionAmount || 0), 0);
+    const netEarnings = grossEarnings - totalCommission;
+
     const stats = {
       totalOrders: orders.length,
-      totalEarnings: orders
-        .filter((o) => o.orderStatus === "delivered")
-        .reduce((acc, curr) => acc + curr.price, 0),
+      totalEarnings: netEarnings,
+      grossEarnings,
+      totalCommission,
+      netEarnings,
       statusCounts: {
         pending: 0,
         preparing: 0,
@@ -252,7 +393,7 @@ exports.getSellerDashboardStats = async (req, res) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split("T")[0];
-      last7Days.push({ date: dateStr, amount: 0 });
+      last7Days.push({ date: dateStr, gross: 0, commission: 0, net: 0 });
     }
 
     orders.forEach((o) => {
@@ -260,12 +401,17 @@ exports.getSellerDashboardStats = async (req, res) => {
         const dateStr = new Date(o.createdAt).toISOString().split("T")[0];
         const day = last7Days.find((d) => d.date === dateStr);
         if (day) {
-          day.amount += o.price;
+          day.gross += o.price;
+          day.commission += o.commissionAmount || 0;
+          day.net += o.sellerPayout || o.price;
         }
       }
     });
 
     stats.dailySales = last7Days;
+
+    const currentRate = await getCommissionRate(sellerId);
+    stats.currentCommissionRate = currentRate;
 
     res.status(200).json({ success: true, stats });
   } catch (err) {
@@ -273,6 +419,59 @@ exports.getSellerDashboardStats = async (req, res) => {
       { err, userId: req.user.id },
       "Error in getSellerDashboardStats",
     );
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.updateTracking = async (req, res) => {
+  try {
+    const { lat, lng, status, note, estimatedDelivery } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (order.seller.toString() !== req.user.id && req.user.role !== "admin" && req.user.role !== "superadmin") {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (!order.tracking) {
+      order.tracking = {
+        currentLocation: { lat: 23.0225, lng: 72.5714 },
+        status: order.orderStatus || "pending",
+        updates: []
+      };
+    }
+
+    if (lat !== undefined && lng !== undefined) {
+      order.tracking.currentLocation = { lat: parseFloat(lat), lng: parseFloat(lng) };
+    }
+    if (estimatedDelivery !== undefined) {
+      order.tracking.estimatedDelivery = estimatedDelivery;
+    }
+    if (status) {
+      order.tracking.status = status;
+      order.tracking.updates.push({
+        status,
+        location: note || `Package status updated to ${status}`,
+        timestamp: new Date(),
+        note: note || ""
+      });
+    }
+
+    await order.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`user_${order.buyer}`).emit("orderTrackingUpdate", {
+        orderId: order._id,
+        tracking: order.tracking
+      });
+    }
+
+    res.json({ success: true, tracking: order.tracking });
+  } catch (err) {
+    logger.error({ err }, "Error updating order tracking");
     res.status(500).json({ success: false, message: err.message });
   }
 };

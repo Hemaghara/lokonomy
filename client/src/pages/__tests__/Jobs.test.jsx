@@ -38,7 +38,7 @@ vi.mock("../../data/locations", async (importOriginal) => {
   };
 });
 
-const mockToast = vi.hoisted(() => ({
+var mockToast = vi.hoisted(() => ({
   success: vi.fn(),
   error: vi.fn(),
 }));
@@ -85,7 +85,7 @@ const mockJobs = [
 describe("Jobs Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    jobService.getJobs.mockResolvedValue({ data: mockJobs });
+    jobService.getJobs.mockResolvedValue({ data: { jobs: mockJobs, pagination: { hasMore: false, total: 2 } } });
     jobService.deleteJob.mockResolvedValue({ data: { success: true } });
     window.confirm = vi.fn(() => true);
 
@@ -229,7 +229,7 @@ describe("Jobs Page", () => {
   });
 
   it("shows empty state when no jobs found", async () => {
-    jobService.getJobs.mockResolvedValueOnce({ data: [] });
+    jobService.getJobs.mockResolvedValueOnce({ data: { jobs: [], pagination: { hasMore: false, total: 0 } } });
     render(<Jobs />);
 
     await waitFor(() => {
@@ -240,12 +240,15 @@ describe("Jobs Page", () => {
   it("handles job deletion by poster", async () => {
     localStorage.setItem("lokonomy_user", JSON.stringify({ _id: "u1" }));
     jobService.getJobs.mockResolvedValue({
-      data: [
-        {
-          ...mockJobs[0],
-          posterId: "u1",
-        },
-      ],
+      data: {
+        jobs: [
+          {
+            ...mockJobs[0],
+            posterId: "u1",
+          },
+        ],
+        pagination: { hasMore: false, total: 1 }
+      }
     });
 
     render(<Jobs />);

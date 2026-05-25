@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { businessService } from "../services";
+import { businessService, influencerService } from "../services";
+import { getSocket } from "../services/socket";
 import recommendationService from "../services/recommendationService";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
@@ -64,9 +65,49 @@ const BusinessDetails = () => {
   const [showChat, setShowChat] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
+  const [liveStatus, setLiveStatus] = useState({
+    isOwnerOnline: false,
+    activeVisitors: 0,
+  });
+
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchBusinessDetails();
+  }, [id]);
+
+  useEffect(() => {
+    if (business) {
+      setLiveStatus({
+        isOwnerOnline: business.isOwnerOnline || false,
+        activeVisitors: business.activeVisitors || 0,
+      });
+    }
+  }, [business]);
+
+  useEffect(() => {
+    if (!id) return;
+    const socket = getSocket();
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    socket.emit("joinBusinessPage", { businessId: id });
+
+    const handleStatusUpdate = (data) => {
+      if (data.businessId === id) {
+        setLiveStatus({
+          isOwnerOnline: data.isOwnerOnline,
+          activeVisitors: data.activeVisitors,
+        });
+      }
+    };
+
+    socket.on("businessStatusUpdate", handleStatusUpdate);
+
+    return () => {
+      socket.emit("leaveBusinessPage", { businessId: id });
+      socket.off("businessStatusUpdate", handleStatusUpdate);
+    };
   }, [id]);
 
   const incrementVisits = async (businessData) => {
@@ -123,6 +164,22 @@ const BusinessDetails = () => {
       toast.success("Review submitted successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to submit review");
+    }
+  };
+
+  const handleHelpfulVote = async (reviewerId, reviewId) => {
+    if (!user) {
+      return toast.error("Please login to vote a review as helpful");
+    }
+    if (reviewerId === user.id) {
+      return toast.error("You cannot vote your own review as helpful");
+    }
+    try {
+      await influencerService.voteHelpful(reviewerId, business._id, reviewId);
+      toast.success("Review voted helpful!");
+      fetchBusinessDetails();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit helpful vote");
     }
   };
 
@@ -236,6 +293,35 @@ const BusinessDetails = () => {
                     <HiOutlineCheckBadge className="text-sm" /> Verified
                   </span>
                 )}
+                {business.ownerPlan === "platinum" && (
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 bg-violet-500/20 border border-violet-500/40 text-violet-300 rounded-lg text-[10px] font-semibold shadow-lg shadow-violet-950/20">
+                    💎 Lokonomy Guarantee
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition-all ${
+                  business.isOpenNow 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                    : "bg-slate-500/10 border-slate-500/20 text-slate-400"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${business.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-slate-500"}`} />
+                  {business.isOpenNow ? "Open Now" : "Closed"}
+                </span>
+                
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full text-[11px] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                  {liveStatus.activeVisitors} online
+                </span>
+
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition-all ${
+                  liveStatus.isOwnerOnline 
+                    ? "bg-sky-500/10 border-sky-500/20 text-sky-400" 
+                    : "bg-slate-500/10 border-slate-500/20 text-slate-400"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${liveStatus.isOwnerOnline ? "bg-sky-500 animate-pulse" : "bg-slate-500"}`} />
+                  {liveStatus.isOwnerOnline ? "Owner Online" : "Owner Offline"}
+                </span>
               </div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex items-center gap-0.5">
@@ -722,9 +808,22 @@ const BusinessDetails = () => {
                               {review.userName?.[0]?.toUpperCase()}
                             </div>
                             <div>
-                              <p className="text-slate-200 font-semibold text-sm">
-                                {review.userName}
-                              </p>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-slate-200 font-semibold text-sm">
+                                  {review.userName}
+                                </p>
+                                {review.influencerBadge && review.influencerBadge !== "none" && (
+                                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border
+                                    ${review.influencerBadge === "ambassador" 
+                                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
+                                      : review.influencerBadge === "influencer" 
+                                        ? "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20" 
+                                        : "bg-sky-500/10 text-sky-400 border-sky-500/20"}`}
+                                  >
+                                    ✨ {review.influencerBadge.replace("_", " ")}
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex items-center gap-0.5 mt-0.5">
                                 {[...Array(5)].map((_, idx) => (
                                   <HiStar
@@ -743,6 +842,17 @@ const BusinessDetails = () => {
                         <p className="text-slate-400 text-sm leading-relaxed pl-13 border-t border-[#1f2a3d] pt-3 mt-1">
                           {review.comment}
                         </p>
+                        {review.userId && review.userId !== user?.id && (
+                          <div className="flex justify-end mt-3 pt-2 border-t border-[#1f2a3d]/20">
+                            <button
+                              type="button"
+                              onClick={() => handleHelpfulVote(review.userId, review._id)}
+                              className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-violet-400 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              👍 Helpful
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     ))
                   ) : (

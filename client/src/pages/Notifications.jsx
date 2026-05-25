@@ -304,7 +304,6 @@ const Notifications = () => {
                       {getCategoryIcon(notif.type)}
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <p
@@ -350,7 +349,6 @@ const Notifications = () => {
           )}
         </div>
 
-        {/* Load More */}
         {page < totalPages && !loading && (
           <div className="flex justify-center mt-8">
             <button

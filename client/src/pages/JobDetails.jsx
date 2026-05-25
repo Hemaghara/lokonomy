@@ -61,7 +61,6 @@ const JobDetails = () => {
       if (user) {
         recommendationService.trackInteraction("view", "job", id);
       }
-      // Fetch similar jobs
       const simResponse = await jobService.getSimilarJobs(id);
       setSimilarJobs(simResponse.data);
     } catch (err) {
@@ -84,7 +83,7 @@ const JobDetails = () => {
       const res = await jobService.withdrawApplication(id);
       if (res.data.success) {
         toast.success("Application withdrawn successfully");
-        fetchJobDetails(); // Refresh to show "Apply Now" again
+        fetchJobDetails();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to withdraw application");

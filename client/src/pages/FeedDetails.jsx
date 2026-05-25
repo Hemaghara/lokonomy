@@ -410,7 +410,6 @@ const FeedDetails = () => {
       `}</style>
 
       <div className="fd max-w-5xl mx-auto px-4">
-        {/* Top navigation & actions */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

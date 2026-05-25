@@ -8,13 +8,22 @@ const { createNotification } = require("./notificationController");
 const logger = require("../utils/logger");
 
 const DEFAULT_FREE_LIMITS = {
-  productsUpload: 3,
-  storiesPost: 5,
-  jobsPost: 2,
-  analytics: false,
+  productsUpload: 10,
+  storiesPost: 15,
+  jobsPost: 5,
+  analytics: true,
   featuredListings: false,
   prioritySupport: false,
   chatMessaging: true,
+  couponsPerMonth: 0,
+  bookingEnabled: false,
+  customUrl: false,
+  removeBranding: false,
+  aiInsights: "none",
+  autoResponder: false,
+  promotedListings: false,
+  guaranteeBadge: false,
+  commissionRate: 5,
 };
 
 async function getLimitsForUser(user) {
@@ -184,10 +193,18 @@ exports.deleteCoupon = async (req, res) => {
 
 exports.validateCoupon = async (req, res) => {
   try {
-    const { code, businessId } = req.body;
+    const { code, businessId, sellerId } = req.body;
     const userId = req.user.id;
 
-    const coupon = await Coupon.findOne({ code, businessId });
+    let targetBusinessId = businessId;
+    if (!targetBusinessId && sellerId) {
+      const biz = await Business.findOne({ ownerId: sellerId });
+      if (biz) {
+        targetBusinessId = biz._id;
+      }
+    }
+
+    const coupon = await Coupon.findOne({ code, businessId: targetBusinessId });
     if (!coupon)
       return res.status(404).json({ message: "Invalid coupon code" });
 
@@ -230,10 +247,18 @@ exports.validateCoupon = async (req, res) => {
 
 exports.redeemCoupon = async (req, res) => {
   try {
-    const { code, businessId } = req.body;
+    const { code, businessId, sellerId } = req.body;
     const userId = req.user.id;
 
-    const coupon = await Coupon.findOne({ code, businessId });
+    let targetBusinessId = businessId;
+    if (!targetBusinessId && sellerId) {
+      const biz = await Business.findOne({ ownerId: sellerId });
+      if (biz) {
+        targetBusinessId = biz._id;
+      }
+    }
+
+    const coupon = await Coupon.findOne({ code, businessId: targetBusinessId });
     if (!coupon)
       return res.status(404).json({ message: "Invalid coupon code" });
 

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { businessService } from "../services";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { businessService, promotedService } from "../services";
 import WishlistButton from "../components/WishlistButton";
 import BusinessMapView from "../components/BusinessMapView";
 import { FaSearch, FaThLarge, FaMapMarkedAlt } from "react-icons/fa";
@@ -48,9 +48,29 @@ const Services = () => {
   const [viewMode, setViewMode] = useState("list");
   const [isCompareMode, setIsCompareMode] = useState(false);
   const { selectedIds, toggleSelection } = useComparison();
+  const [searchParams] = useSearchParams();
+
+  const [openNow, setOpenNow] = useState(false);
+  const [verified, setVerified] = useState(() => searchParams.get("verified") === "true");
+  const [hasOffers, setHasOffers] = useState(false);
+  const [trending, setTrending] = useState(false);
+  const [sortBy, setSortBy] = useState("newest");
+
+  const filteredListings = listings.filter(
+    (item) =>
+      item.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  useEffect(() => {
+    if (coords && sortBy === "newest") {
+      setSortBy("distance");
+    }
+  }, [coords]);
 
   useEffect(() => {
   }, [selectedIds]);
+
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
@@ -64,6 +84,12 @@ const Services = () => {
         if (category) params.category = category;
         if (subcategory) params.subcategory = subcategory;
 
+        if (openNow) params.openNow = "true";
+        if (verified) params.verified = "true";
+        if (hasOffers) params.hasOffers = "true";
+        if (trending) params.trending = "true";
+        if (sortBy) params.sortBy = sortBy;
+
         const response = await businessService.getBusinesses(params);
         setListings(response.data);
       } catch (err) {
@@ -74,19 +100,23 @@ const Services = () => {
     };
 
     fetchBusinesses();
-  }, [category, subcategory, coords, radius]);
+  }, [category, subcategory, coords, radius, openNow, verified, hasOffers, trending, sortBy]);
+
+  const trackedImpressions = useRef(new Set());
+  useEffect(() => {
+    filteredListings.forEach((shop) => {
+      if (shop.isPromoted && shop.promotionId && !trackedImpressions.current.has(shop.promotionId)) {
+        trackedImpressions.current.add(shop.promotionId);
+        promotedService.trackImpression(shop.promotionId).catch((err) => console.error("Impression error:", err));
+      }
+    });
+  }, [filteredListings]);
 
   useEffect(() => {
     if (!coords && geoStatus === "idle") {
       requestGPS();
     }
   }, []);
-
-  const filteredListings = listings.filter(
-    (item) =>
-      item.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
 
   const radiusOptions = [
     { label: "1 km", value: 1000 },
@@ -151,11 +181,10 @@ const Services = () => {
                   <button
                     key={opt.value}
                     onClick={() => setRadius(opt.value)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                      radius === opt.value
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${radius === opt.value
                         ? "bg-primary text-white"
                         : "text-text-dim hover:text-white"
-                    }`}
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -166,21 +195,19 @@ const Services = () => {
             <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                  viewMode === "list"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${viewMode === "list"
                     ? "bg-primary text-white shadow-md"
                     : "text-text-dim hover:text-white"
-                }`}
+                  }`}
               >
                 <FaThLarge className="text-[10px]" /> List
               </button>
               <button
                 onClick={() => setViewMode("map")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                  viewMode === "map"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${viewMode === "map"
                     ? "bg-primary text-white shadow-md"
                     : "text-text-dim hover:text-white"
-                }`}
+                  }`}
               >
                 <FaMapMarkedAlt className="text-[10px]" /> Map
               </button>
@@ -188,11 +215,10 @@ const Services = () => {
 
             <button
               onClick={() => setIsCompareMode(!isCompareMode)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest border ${
-                isCompareMode
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest border ${isCompareMode
                   ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
                   : "bg-white/5 text-text-dim border-white/10 hover:border-white/30"
-              }`}
+                }`}
             >
               <FaChartBar className={isCompareMode ? "animate-pulse" : ""} />
               {isCompareMode ? "Close Selection" : "Compare Mode"}
@@ -217,6 +243,63 @@ const Services = () => {
             </div>
           </div>
         </div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-[#1a2133]/50 backdrop-blur-md border border-white/5 rounded-2xl p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider mr-2">Filters:</span>
+            <button
+              onClick={() => setOpenNow(!openNow)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${openNow
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                  : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
+                }`}
+            >
+              Open Now 🟢
+            </button>
+            <button
+              onClick={() => setVerified(!verified)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${verified
+                  ? "bg-primary/10 text-primary border-primary/20"
+                  : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
+                }`}
+            >
+              Verified ✓
+            </button>
+            <button
+              onClick={() => setHasOffers(!hasOffers)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${hasOffers
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
+                }`}
+            >
+              Has Offers 🏷️
+            </button>
+            <button
+              onClick={() => setTrending(!trending)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${trending
+                  ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                  : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
+                }`}
+            >
+              Trending 🔥
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Sort By:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-[#111827] border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-primary cursor-pointer select-option-dark"
+            >
+              {coords && <option value="distance">Distance</option>}
+              <option value="rating">Rating</option>
+              <option value="trending">Trending</option>
+              <option value="newest">Newest</option>
+            </select>
+          </div>
+        </div>
+
         {geoStatus === "denied" && (
           <div className="mb-8 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex items-center gap-3">
             <p className="text-amber-400 text-sm">
@@ -293,16 +376,20 @@ const Services = () => {
                   {filteredListings.map((shop) => (
                     <div
                       key={shop._id}
-                      className={`group relative bg-[#1a2133] border ${
-                        selectedIds.includes(shop._id)
+                      className={`group relative bg-[#1a2133] border ${selectedIds.includes(shop._id)
                           ? "border-primary shadow-2xl shadow-primary/20 scale-[1.01]"
                           : "border-white/5"
-                      } rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 flex flex-col cursor-pointer`}
-                      onClick={() => navigate(`/business/${shop._id}`)}
+                        } rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 flex flex-col cursor-pointer`}
+                      onClick={() => {
+                        if (shop.isPromoted && shop.promotionId) {
+                          promotedService.trackClick(shop.promotionId).catch((err) => console.error("Click error:", err));
+                        }
+                        navigate(`/business/${shop._id}`);
+                      }}
                     >
                       <div className="absolute top-4 right-4 z-10">
                         <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
-                        aria-label="Rating"
+                          aria-label="Rating"
                         >
                           <span className="text-xs">
                             <HiStar />
@@ -336,6 +423,28 @@ const Services = () => {
                           <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">
                             {shop.subCategory}
                           </div>
+
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
+                            {shop.isPromoted && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full text-[10px] font-semibold">
+                                ✨ Promoted
+                              </span>
+                            )}
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${shop.isOpenNow
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                : "bg-slate-500/10 border-slate-500/20 text-slate-400"
+                              }`}>
+                              <span className={`w-1 h-1 rounded-full ${shop.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-slate-500"}`} />
+                              {shop.isOpenNow ? "Open Now" : "Closed"}
+                            </span>
+
+                            {shop.hasActiveOffers && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-semibold animate-bounce">
+                                🏷️ Offer Available
+                              </span>
+                            )}
+                          </div>
+
                           <p className="text-text-dim text-sm leading-relaxed line-clamp-2">
                             {shop.description ||
                               "A verified local provider specializing in professional services."}
@@ -371,13 +480,12 @@ const Services = () => {
                               navigate(`/business/${shop._id}`);
                             }
                           }}
-                          className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg ${
-                            isCompareMode
+                          className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg ${isCompareMode
                               ? selectedIds.includes(shop._id)
                                 ? "bg-primary text-white shadow-primary/40"
                                 : "bg-[#252a3d] text-white border border-white/10 hover:border-primary"
                               : "bg-white/5 hover:bg-primary text-white group-hover:shadow-primary/20"
-                          }`}
+                            }`}
                         >
                           {isCompareMode
                             ? selectedIds.includes(shop._id)
@@ -403,7 +511,7 @@ const Services = () => {
         </div>
       </div>
 
-      
+
     </div>
   );
 };

@@ -3,13 +3,22 @@ const Plan = require("../models/Plan");
 const Settings = require("../models/Settings");
 
 const DEFAULT_FREE_LIMITS = {
-  productsUploaded: 3,
-  storiesPosted: 5,
-  jobsPosted: 2,
-  analytics: false,
+  productsUploaded: 10,
+  storiesPosted: 15,
+  jobsPosted: 5,
+  analytics: true,
   featuredListings: false,
   prioritySupport: false,
   chatMessaging: true,
+  couponsPerMonth: 0,
+  bookingEnabled: false,
+  customUrl: false,
+  removeBranding: false,
+  aiInsights: "none",
+  autoResponder: false,
+  promotedListings: false,
+  guaranteeBadge: false,
+  commissionRate: 5,
 };
 
 let planCache = null;

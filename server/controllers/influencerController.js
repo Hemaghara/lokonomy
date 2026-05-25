@@ -1,0 +1,122 @@
+const User = require("../models/User");
+const Business = require("../models/Business");
+const logger = require("../utils/logger");
+
+// Helper to determine the influencer tier based on review count and helpful votes
+const getInfluencerTier = (reviewsCount, helpfulCount) => {
+  if (reviewsCount >= 30 && helpfulCount >= 50) return "ambassador";
+  if (reviewsCount >= 15 && helpfulCount >= 20) return "influencer";
+  if (reviewsCount >= 5 && helpfulCount >= 5) return "rising_star";
+  return "none";
+};
+
+// Calculate and update a user's influencer status
+exports.updateInfluencerStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Find all businesses and count reviews left by this user
+    const businesses = await Business.find({ "reviews.userId": userId });
+    
+    let reviewCount = 0;
+    businesses.forEach(biz => {
+      biz.reviews.forEach(rev => {
+        if (rev.userId && rev.userId.toString() === userId) {
+          reviewCount++;
+        }
+      });
+    });
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const currentHelpful = user.helpfulVotes || 0;
+    const newTier = getInfluencerTier(reviewCount, currentHelpful);
+    const oldTier = user.influencerBadge || "none";
+
+    user.reviewCount = reviewCount;
+    user.influencerBadge = newTier;
+    
+    if (newTier !== "none" && oldTier === "none") {
+      user.influencerSince = new Date();
+    } else if (newTier === "none") {
+      user.influencerSince = null;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Influencer status updated",
+      influencerStats: {
+        reviewCount,
+        helpfulVotes: currentHelpful,
+        influencerBadge: newTier,
+        influencerSince: user.influencerSince
+      }
+    });
+
+  } catch (err) {
+    logger.error({ err }, "Error updating influencer status");
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Cast a helpful vote on a user's review (to grow their influencer ranking)
+exports.voteHelpfulReview = async (req, res) => {
+  try {
+    const { reviewerId, businessId, reviewId } = req.body;
+    if (!reviewerId || !businessId) {
+      return res.status(400).json({ success: false, message: "ReviewerId and businessId are required" });
+    }
+
+    if (reviewerId.toString() === req.user.id) {
+      return res.status(400).json({ success: false, message: "You cannot vote your own review as helpful" });
+    }
+
+    // Increment reviewer's helpful votes
+    const reviewer = await User.findById(reviewerId);
+    if (!reviewer) {
+      return res.status(404).json({ success: false, message: "Reviewer not found" });
+    }
+
+    reviewer.helpfulVotes = (reviewer.helpfulVotes || 0) + 1;
+    
+    // Check if they upgrade tier
+    const updatedTier = getInfluencerTier(reviewer.reviewCount || 0, reviewer.helpfulVotes);
+    reviewer.influencerBadge = updatedTier;
+    await reviewer.save();
+
+    res.json({
+      success: true,
+      message: "Voted review as helpful successfully",
+      reviewerBadge: updatedTier,
+      helpfulVotes: reviewer.helpfulVotes
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Get top influencers in local district
+exports.getLocalInfluencers = async (req, res) => {
+  try {
+    const { district } = req.query;
+    const filter = { influencerBadge: { $ne: "none" } };
+    if (district) {
+      filter.district = district;
+    }
+
+    const influencers = await User.find(filter)
+      .select("name district taluka influencerBadge reviewCount helpfulVotes influencerSince")
+      .sort({ helpfulVotes: -1, reviewCount: -1 })
+      .limit(10);
+
+    res.json({ success: true, influencers });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

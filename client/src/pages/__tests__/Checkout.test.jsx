@@ -99,7 +99,9 @@ describe("Checkout Page", () => {
     vi.spyOn(api, 'post').mockResolvedValueOnce({
       data: {
         success: true,
-        coupon: { _id: "c1", discountType: "percentage", discountValue: 10 },
+        code: "SAVE10",
+        discount: 10,
+        discountType: "percentage",
       },
     });
 

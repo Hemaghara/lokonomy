@@ -27,6 +27,31 @@ exports.getOnlineTrend = async (req, res) => {
 exports.getDashboardStats = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+    const now = new Date();
+
+    let currentPeriodStart, currentPeriodEnd, prevPeriodStart, prevPeriodEnd;
+
+    if (startDate || endDate) {
+      currentPeriodStart = startDate ? new Date(startDate) : new Date(0);
+      currentPeriodEnd = endDate ? new Date(endDate) : new Date();
+      currentPeriodEnd.setHours(23, 59, 59, 999);
+
+      const duration = currentPeriodEnd.getTime() - currentPeriodStart.getTime();
+      prevPeriodStart = new Date(currentPeriodStart.getTime() - duration);
+      prevPeriodEnd = new Date(currentPeriodStart.getTime() - 1);
+    } else {
+      currentPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      currentPeriodEnd = now;
+
+      // Previous month
+      prevPeriodStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      prevPeriodEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    }
+
+    const totalQuery = {};
+    if (endDate) {
+      totalQuery.createdAt = { $lte: currentPeriodEnd };
+    }
 
     const [
       totalUsers,
@@ -37,10 +62,10 @@ exports.getDashboardStats = async (req, res) => {
       pendingReports,
       pendingVerifications,
     ] = await Promise.all([
-      User.countDocuments(),
-      Business.countDocuments(),
-      Product.countDocuments(),
-      Job.countDocuments(),
+      User.countDocuments(totalQuery),
+      Business.countDocuments(totalQuery),
+      Product.countDocuments(totalQuery),
+      Job.countDocuments(totalQuery),
       SupportTicket.countDocuments({
         status: { $in: ["open", "in_progress"] },
       }),
@@ -48,8 +73,13 @@ exports.getDashboardStats = async (req, res) => {
       Business.countDocuments({ verificationStatus: "pending" }),
     ]);
 
+    const revenueMatch = { status: "success" };
+    if (endDate) {
+      revenueMatch.createdAt = { $lte: currentPeriodEnd };
+    }
+
     const revenueAgg = await SubscriptionTransaction.aggregate([
-      { $match: { status: "success" } },
+      { $match: revenueMatch },
       {
         $group: {
           _id: null,
@@ -73,26 +103,23 @@ exports.getDashboardStats = async (req, res) => {
     };
 
     let userQuery = {};
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-
-      userQuery.createdAt = {
-        $gte: start,
-        $lte: end,
-      };
+    if (startDate || endDate) {
+      userQuery.createdAt = {};
+      if (startDate) {
+        userQuery.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        userQuery.createdAt.$lte = end;
+      }
     }
 
-    const recentLimit = startDate && endDate ? 50 : 5;
+    const recentLimit = startDate || endDate ? 50 : 5;
     const [recentUsers, recentBusinesses] = await Promise.all([
       User.find(userQuery).sort({ createdAt: -1 }).limit(recentLimit),
       Business.find(userQuery).sort({ createdAt: -1 }).limit(recentLimit),
     ]);
-
-    const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     const [
       currUsers,
@@ -103,24 +130,57 @@ exports.getDashboardStats = async (req, res) => {
       prevProducts,
       currJobs,
       prevJobs,
+      currRevenueAgg,
+      prevRevenueAgg,
     ] = await Promise.all([
-      User.countDocuments({ createdAt: { $gte: currentMonthStart } }),
+      User.countDocuments({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
       User.countDocuments({
-        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+        createdAt: { $gte: prevPeriodStart, $lte: prevPeriodEnd },
       }),
-      Business.countDocuments({ createdAt: { $gte: currentMonthStart } }),
+      Business.countDocuments({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
       Business.countDocuments({
-        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+        createdAt: { $gte: prevPeriodStart, $lte: prevPeriodEnd },
       }),
-      Product.countDocuments({ createdAt: { $gte: currentMonthStart } }),
+      Product.countDocuments({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
       Product.countDocuments({
-        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+        createdAt: { $gte: prevPeriodStart, $lte: prevPeriodEnd },
       }),
-      Job.countDocuments({ createdAt: { $gte: currentMonthStart } }),
+      Job.countDocuments({ createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd } }),
       Job.countDocuments({
-        createdAt: { $gte: prevMonthStart, $lt: currentMonthStart },
+        createdAt: { $gte: prevPeriodStart, $lte: prevPeriodEnd },
       }),
+      SubscriptionTransaction.aggregate([
+        {
+          $match: {
+            status: "success",
+            createdAt: { $gte: currentPeriodStart, $lte: currentPeriodEnd },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+          },
+        },
+      ]),
+      SubscriptionTransaction.aggregate([
+        {
+          $match: {
+            status: "success",
+            createdAt: { $gte: prevPeriodStart, $lte: prevPeriodEnd },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$amount" },
+          },
+        },
+      ]),
     ]);
+
+    const currRevenue = currRevenueAgg[0]?.total || 0;
+    const prevRevenue = prevRevenueAgg[0]?.total || 0;
 
     const calculateTrend = (curr, prev) => {
       if (prev === 0) return curr > 0 ? "+100%" : "0%";
@@ -133,7 +193,7 @@ exports.getDashboardStats = async (req, res) => {
       businesses: calculateTrend(currBiz, prevBiz),
       products: calculateTrend(currProducts, prevProducts),
       jobs: calculateTrend(currJobs, prevJobs),
-      revenue: "+15.4%",
+      revenue: calculateTrend(currRevenue, prevRevenue),
     };
 
     res.json({

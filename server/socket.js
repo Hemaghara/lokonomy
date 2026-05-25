@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const Message = require("./models/Message");
+const Business = require("./models/Business");
 const OnlineStatus = require("./models/OnlineStatus");
 const { createNotification } = require("./controllers/notificationController");
 const logger = require("./utils/logger");
@@ -40,8 +41,8 @@ const initSocket = (server) => {
         typeof data === "object"
           ? !!data.isAdmin
           : userId === "admin" ||
-            userId.includes("admin") ||
-            userId.startsWith("admin_");
+          userId.includes("admin") ||
+          userId.startsWith("admin_");
 
       if (!onlineUsers.has(userId)) {
         onlineUsers.set(userId, { socketIds: new Set(), isAdmin: isAdmin });
@@ -62,6 +63,23 @@ const initSocket = (server) => {
       );
 
       emitOnlineCount();
+
+
+      if (!isAdmin) {
+        Business.updateMany(
+          { ownerId: userId },
+          { $set: { isOwnerOnline: true, lastOwnerActivity: new Date() } }
+        ).then(async () => {
+          const businesses = await Business.find({ ownerId: userId }, "_id activeVisitors");
+          businesses.forEach(biz => {
+            io.to(`business_${biz._id}`).emit("businessStatusUpdate", {
+              businessId: biz._id.toString(),
+              activeVisitors: biz.activeVisitors || 0,
+              isOwnerOnline: true,
+            });
+          });
+        }).catch(err => logger.error({ err }, "[Socket] Error updating business online status"));
+      }
     });
 
     socket.on("joinRoom", ({ chatRoom }) => {
@@ -90,6 +108,47 @@ const initSocket = (server) => {
       }
     });
 
+
+    socket.on("joinBusinessPage", ({ businessId }) => {
+      if (businessId) {
+        socket.join(`business_${businessId}`);
+        Business.findByIdAndUpdate(businessId, { $inc: { activeVisitors: 1 } })
+          .then(biz => {
+            if (biz) {
+              io.to(`business_${businessId}`).emit("businessStatusUpdate", {
+                businessId,
+                activeVisitors: (biz.activeVisitors || 0) + 1,
+                isOwnerOnline: biz.isOwnerOnline,
+              });
+            }
+          })
+          .catch(err => logger.error({ err }, "[Socket] Error tracking business visitor"));
+
+        if (!socket._visitingBusinesses) socket._visitingBusinesses = new Set();
+        socket._visitingBusinesses.add(businessId);
+        logger.debug({ socketId: socket.id, businessId }, "[Socket] Joined business page");
+      }
+    });
+
+    socket.on("leaveBusinessPage", ({ businessId }) => {
+      if (businessId) {
+        socket.leave(`business_${businessId}`);
+        Business.findByIdAndUpdate(businessId, { $inc: { activeVisitors: -1 } })
+          .then(biz => {
+            if (biz) {
+              io.to(`business_${businessId}`).emit("businessStatusUpdate", {
+                businessId,
+                activeVisitors: Math.max(0, (biz.activeVisitors || 1) - 1),
+                isOwnerOnline: biz.isOwnerOnline,
+              });
+            }
+          })
+          .catch(err => logger.error({ err }, "[Socket] Error tracking business visitor leave"));
+        if (socket._visitingBusinesses) socket._visitingBusinesses.delete(businessId);
+        logger.debug({ socketId: socket.id, businessId }, "[Socket] Left business page");
+      }
+    });
+
     socket.on("leaveStoryFeed", ({ district }) => {
       if (district) {
         socket.leave(`stories_${district}`);
@@ -100,7 +159,7 @@ const initSocket = (server) => {
       }
     });
 
-    // Feed room events for real-time feed updates
+
     socket.on("joinFeedRoom", ({ feedId }) => {
       if (feedId) {
         socket.join(`feed_${feedId}`);
@@ -206,6 +265,65 @@ const initSocket = (server) => {
           metadata: { chatRoom, senderId },
           io,
         });
+
+        // Chatbot Auto-Response Logic
+        const receiverStr = receiverId.toString();
+        const isReceiverOnline = onlineUsers.has(receiverStr) && onlineUsers.get(receiverStr).socketIds.size > 0;
+        
+        if (!isReceiverOnline) {
+          const business = businessId 
+            ? await Business.findById(businessId)
+            : await Business.findOne({ ownerId: receiverId, autoResponseEnabled: true });
+            
+          if (business && business.autoResponseEnabled) {
+            const incomingText = message.toLowerCase();
+            let autoResponseText = "";
+            
+            if (business.autoResponses && business.autoResponses.length > 0) {
+              const matched = business.autoResponses.find(r => 
+                r.trigger && incomingText.includes(r.trigger.toLowerCase())
+              );
+              if (matched) {
+                autoResponseText = matched.response;
+              }
+            }
+            
+            if (!autoResponseText) {
+              autoResponseText = business.awayMessage || "Thank you for contacting us! We are currently away and will get back to you as soon as possible.";
+            }
+
+            setTimeout(async () => {
+              try {
+                const botMessage = new Message({
+                  chatRoom,
+                  chatType: chatType || "business_inquiry",
+                  productId: productId || null,
+                  businessId: business._id,
+                  senderId: receiverId,
+                  receiverId: senderId,
+                  senderName: `${business.businessName} (Auto-Response)`,
+                  message: autoResponseText,
+                });
+                
+                const savedBotMsg = await botMessage.save();
+                io.to(chatRoom).emit("receiveMessage", savedBotMsg);
+                
+                const senderData = onlineUsers.get(senderId.toString());
+                if (senderData && senderData.socketIds) {
+                  senderData.socketIds.forEach((socketId) => {
+                    io.to(socketId).emit("newMessageNotification", {
+                      chatRoom,
+                      message: savedBotMsg,
+                    });
+                  });
+                }
+              } catch (err) {
+                logger.error({ err }, "[Socket] Error sending chatbot auto-response");
+              }
+            }, 1000);
+          }
+        }
+
       } catch (err) {
         logger.error({ err }, "[Socket] Error saving message");
         socket.emit("messageError", { error: "Failed to send message" });
@@ -242,6 +360,7 @@ const initSocket = (server) => {
 
     socket.on("disconnect", () => {
       let regularUserCompletelyOffline = false;
+      let disconnectedUserId = null;
       for (const [userId, data] of onlineUsers.entries()) {
         if (data.socketIds.has(socket.id)) {
           data.socketIds.delete(socket.id);
@@ -249,6 +368,7 @@ const initSocket = (server) => {
             if (!data.isAdmin) {
               regularUserCompletelyOffline = true;
             }
+            disconnectedUserId = userId;
             onlineUsers.delete(userId);
           }
           break;
@@ -258,6 +378,40 @@ const initSocket = (server) => {
         emitOnlineCount();
       }
       logger.debug({ socketId: socket.id }, "[Socket] Socket disconnected");
+
+
+      if (socket._visitingBusinesses && socket._visitingBusinesses.size > 0) {
+        for (const bizId of socket._visitingBusinesses) {
+          Business.findByIdAndUpdate(bizId, { $inc: { activeVisitors: -1 } })
+            .then(biz => {
+              if (biz) {
+                io.to(`business_${bizId}`).emit("businessStatusUpdate", {
+                  businessId: bizId,
+                  activeVisitors: Math.max(0, (biz.activeVisitors || 1) - 1),
+                  isOwnerOnline: biz.isOwnerOnline,
+                });
+              }
+            })
+            .catch(err => logger.error({ err }, "[Socket] Error cleaning up business visitor on disconnect"));
+        }
+      }
+
+
+      if (disconnectedUserId && regularUserCompletelyOffline) {
+        Business.updateMany(
+          { ownerId: disconnectedUserId },
+          { $set: { isOwnerOnline: false } }
+        ).then(async () => {
+          const businesses = await Business.find({ ownerId: disconnectedUserId }, "_id activeVisitors");
+          businesses.forEach(biz => {
+            io.to(`business_${biz._id}`).emit("businessStatusUpdate", {
+              businessId: biz._id.toString(),
+              activeVisitors: biz.activeVisitors || 0,
+              isOwnerOnline: false,
+            });
+          });
+        }).catch(err => logger.error({ err }, "[Socket] Error updating business offline status"));
+      }
     });
   });
 

@@ -29,12 +29,13 @@ const PLANS_CONFIG = [
     badgeColor: "bg-slate-500/10 text-slate-300 border-slate-500/30",
     prices: { 3: 199, 6: 349, 12: 599 },
     features: [
-      { label: "20 Product Listings", included: true },
-      { label: "50 Stories per Month", included: true },
-      { label: "Basic Analytics", included: false },
-      { label: "Featured Listings", included: false },
-      { label: "Priority Support", included: false },
+      { label: "50 Product Listings", included: true },
+      { label: "100 Stories per Month", included: true },
+      { label: "5 Job Posts", included: true },
+      { label: "Basic Analytics", included: true },
       { label: "Chat Messaging", included: true },
+      { label: "2 Coupons / Month", included: true },
+      { label: "Transaction Commission (4%)", included: true },
     ],
   },
   {
@@ -48,12 +49,16 @@ const PLANS_CONFIG = [
     badge: "Most Popular",
     prices: { 3: 399, 6: 699, 12: 1199 },
     features: [
-      { label: "100 Product Listings", included: true },
-      { label: "200 Stories per Month", included: true },
+      { label: "200 Product Listings", included: true },
+      { label: "500 Stories per Month", included: true },
+      { label: "15 Job Posts", included: true },
       { label: "Advanced Analytics", included: true },
-      { label: "Featured Listings", included: false },
-      { label: "Priority Support", included: false },
       { label: "Chat Messaging", included: true },
+      { label: "10 Coupons / Month", included: true },
+      { label: "Lower Commission (3%)", included: true },
+      { label: "Booking System", included: true },
+      { label: "Basic AI Insights", included: true },
+      { label: "Auto-Responder Bot", included: true },
     ],
   },
   {
@@ -69,10 +74,16 @@ const PLANS_CONFIG = [
     features: [
       { label: "Unlimited Product Listings", included: true },
       { label: "Unlimited Stories", included: true },
+      { label: "Unlimited Job Posts", included: true },
       { label: "Advanced Analytics", included: true },
-      { label: "Featured Listings", included: true },
-      { label: "Priority Support", included: true },
       { label: "Chat Messaging", included: true },
+      { label: "Unlimited Coupons", included: true },
+      { label: "Lowest Commission (2%)", included: true },
+      { label: "Booking System", included: true },
+      { label: "Advanced AI Insights", included: true },
+      { label: "Auto-Responder Bot", included: true },
+      { label: "Promoted Listings & Ads", included: true },
+      { label: "Guarantee Badge", included: true },
     ],
   },
 ];
@@ -529,14 +540,22 @@ const UpgradePlan = () => {
                 ? dynamicData.prices[selectedDuration]
                 : plan.prices[selectedDuration];
 
-              const dynamicFeatures = dynamicData.limits
+              const dynamicFeatures = (dynamicData.limits && dynamicData.limits.productsUploaded > 0)
                 ? [
                     {
-                      label: `${dynamicData.limits.productsUploaded === 1e308 ? "Unlimited" : dynamicData.limits.productsUploaded} Product Listings`,
+                      label: `${dynamicData.limits.productsUploaded >= 999999 ? "Unlimited" : dynamicData.limits.productsUploaded} Product Listings`,
                       included: true,
                     },
                     {
-                      label: `${dynamicData.limits.storiesPosted === 1e308 ? "Unlimited" : dynamicData.limits.storiesPosted} Stories`,
+                      label: `${dynamicData.limits.storiesPosted >= 999999 ? "Unlimited" : dynamicData.limits.storiesPosted} Stories`,
+                      included: true,
+                    },
+                    {
+                      label: `${dynamicData.limits.jobsPosted >= 999999 ? "Unlimited" : dynamicData.limits.jobsPosted} Job Posts`,
+                      included: true,
+                    },
+                    {
+                      label: `Transaction Commission (${dynamicData.limits.commissionRate}%)`,
                       included: true,
                     },
                     {
@@ -555,7 +574,31 @@ const UpgradePlan = () => {
                       label: "Chat Messaging",
                       included: dynamicData.limits.chatMessaging,
                     },
-                  ]
+                    {
+                      label: `${dynamicData.limits.couponsPerMonth >= 999999 ? "Unlimited" : dynamicData.limits.couponsPerMonth} Coupons / Month`,
+                      included: dynamicData.limits.couponsPerMonth > 0,
+                    },
+                    {
+                      label: "Booking System",
+                      included: dynamicData.limits.bookingEnabled,
+                    },
+                    {
+                      label: "AI Sales Insights",
+                      included: dynamicData.limits.aiInsights !== "none",
+                    },
+                    {
+                      label: "Auto-Responder Bot",
+                      included: dynamicData.limits.autoResponder,
+                    },
+                    {
+                      label: "Promoted Listings & Ads",
+                      included: dynamicData.limits.promotedListings,
+                    },
+                    {
+                      label: "Lokonomy Guarantee Badge",
+                      included: dynamicData.limits.guaranteeBadge,
+                    },
+                  ].filter(f => f.included || plan.key === "platinum" || (plan.key === "gold" && !["Promoted Listings & Ads", "Lokonomy Guarantee Badge", "Priority Support"].includes(f.label)))
                 : plan.features;
 
               const isCurrentTier = currentPlan === plan.key && isActive;
@@ -564,7 +607,7 @@ const UpgradePlan = () => {
               const isBuying = loading && selectedPlan === plan.key;
 
               return (
-                <div
+                <motion.div
                   key={plan.key}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -575,23 +618,21 @@ const UpgradePlan = () => {
                   ${isCurrentPlan ? "ring-2 ring-emerald-500/50" : ""}
                 `}
                 >
-                  {plan.badge && !isCurrentPlan && (
+                  {isCurrentPlan ? (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      ✓ Active Plan
+                    </div>
+                  ) : isCurrentTier ? (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/30">
+                      Good Plan
+                    </div>
+                  ) : plan.badge ? (
                     <div
                       className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold border ${plan.badgeColor}`}
                     >
                       {plan.badge}
                     </div>
-                  )}
-                  {isCurrentPlan && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                      ✓ Active Plan
-                    </div>
-                  )}
-                  {!isCurrentPlan && isCurrentTier && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/30">
-                      Good Plan
-                    </div>
-                  )}
+                  ) : null}
 
                   <div className="mb-5">
                     <div
@@ -687,7 +728,7 @@ const UpgradePlan = () => {
                       </>
                     )}
                   </button>
-                </div>
+                </motion.div>
               );
             });
             console.log(
@@ -749,18 +790,38 @@ const UpgradePlan = () => {
                 {[
                   [
                     "Product Listings",
-                    dynamicPlans.free?.limits?.productsUploaded || "3",
-                    dynamicPlans.silver?.limits?.productsUploaded || "20",
-                    dynamicPlans.gold?.limits?.productsUploaded || "100",
-                    dynamicPlans.platinum?.limits?.productsUploaded ||
-                      "Unlimited",
+                    dynamicPlans.free?.limits?.productsUploaded || "10",
+                    dynamicPlans.silver?.limits?.productsUploaded || "50",
+                    dynamicPlans.gold?.limits?.productsUploaded || "200",
+                    dynamicPlans.platinum?.limits?.productsUploaded || "Unlimited",
                   ],
                   [
                     "Stories / Month",
-                    dynamicPlans.free?.limits?.storiesPosted || "5",
-                    dynamicPlans.silver?.limits?.storiesPosted || "50",
-                    dynamicPlans.gold?.limits?.storiesPosted || "200",
+                    dynamicPlans.free?.limits?.storiesPosted || "15",
+                    dynamicPlans.silver?.limits?.storiesPosted || "100",
+                    dynamicPlans.gold?.limits?.storiesPosted || "500",
                     dynamicPlans.platinum?.limits?.storiesPosted || "Unlimited",
+                  ],
+                  [
+                    "Job Posts / Month",
+                    dynamicPlans.free?.limits?.jobsPosted || "5",
+                    dynamicPlans.silver?.limits?.jobsPosted || "5",
+                    dynamicPlans.gold?.limits?.jobsPosted || "15",
+                    dynamicPlans.platinum?.limits?.jobsPosted || "Unlimited",
+                  ],
+                  [
+                    "Transaction Commission",
+                    dynamicPlans.free?.limits?.commissionRate ? `${dynamicPlans.free.limits.commissionRate}%` : "5%",
+                    dynamicPlans.silver?.limits?.commissionRate ? `${dynamicPlans.silver.limits.commissionRate}%` : "4%",
+                    dynamicPlans.gold?.limits?.commissionRate ? `${dynamicPlans.gold.limits.commissionRate}%` : "3%",
+                    dynamicPlans.platinum?.limits?.commissionRate ? `${dynamicPlans.platinum.limits.commissionRate}%` : "2%",
+                  ],
+                  [
+                    "Chat Messaging",
+                    dynamicPlans.free?.limits?.chatMessaging ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.chatMessaging ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.chatMessaging ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.chatMessaging ? "✓" : "✗",
                   ],
                   [
                     "Analytics Dashboard",
@@ -770,25 +831,60 @@ const UpgradePlan = () => {
                     dynamicPlans.platinum?.limits?.analytics ? "✓" : "✗",
                   ],
                   [
-                    "Featured Listings",
-                    dynamicPlans.free?.limits?.featuredListings ? "✓" : "✗",
-                    dynamicPlans.silver?.limits?.featuredListings ? "✓" : "✗",
-                    dynamicPlans.gold?.limits?.featuredListings ? "✓" : "✗",
-                    dynamicPlans.platinum?.limits?.featuredListings ? "✓" : "✗",
+                    "Coupons / Month",
+                    dynamicPlans.free?.limits?.couponsPerMonth !== undefined ? (dynamicPlans.free?.limits?.couponsPerMonth === 0 ? "✗" : dynamicPlans.free?.limits?.couponsPerMonth) : "✗",
+                    dynamicPlans.silver?.limits?.couponsPerMonth || "2",
+                    dynamicPlans.gold?.limits?.couponsPerMonth || "10",
+                    dynamicPlans.platinum?.limits?.couponsPerMonth >= 999999 ? "Unlimited" : (dynamicPlans.platinum?.limits?.couponsPerMonth || "Unlimited"),
                   ],
                   [
-                    "Priority Support",
-                    dynamicPlans.free?.limits?.prioritySupport ? "✓" : "✗",
-                    dynamicPlans.silver?.limits?.prioritySupport ? "✓" : "✗",
-                    dynamicPlans.gold?.limits?.prioritySupport ? "✓" : "✗",
-                    dynamicPlans.platinum?.limits?.prioritySupport ? "✓" : "✗",
+                    "Booking System",
+                    dynamicPlans.free?.limits?.bookingEnabled ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.bookingEnabled ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.bookingEnabled ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.bookingEnabled ? "✓" : "✗",
                   ],
                   [
-                    "Chat Messaging",
-                    dynamicPlans.free?.limits?.chatMessaging ? "✓" : "✗",
-                    dynamicPlans.silver?.limits?.chatMessaging ? "✓" : "✗",
-                    dynamicPlans.gold?.limits?.chatMessaging ? "✓" : "✗",
-                    dynamicPlans.platinum?.limits?.chatMessaging ? "✓" : "✗",
+                    "Custom URL / Domain",
+                    dynamicPlans.free?.limits?.customUrl ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.customUrl ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.customUrl ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.customUrl ? "✓" : "✗",
+                  ],
+                  [
+                    "Remove Branding",
+                    dynamicPlans.free?.limits?.removeBranding ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.removeBranding ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.removeBranding ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.removeBranding ? "✓" : "✗",
+                  ],
+                  [
+                    "AI Sales Insights",
+                    dynamicPlans.free?.limits?.aiInsights === "none" ? "✗" : (dynamicPlans.free?.limits?.aiInsights || "✗"),
+                    dynamicPlans.silver?.limits?.aiInsights === "none" ? "✗" : (dynamicPlans.silver?.limits?.aiInsights || "✗"),
+                    dynamicPlans.gold?.limits?.aiInsights === "none" ? "✗" : (dynamicPlans.gold?.limits?.aiInsights || "Basic"),
+                    dynamicPlans.platinum?.limits?.aiInsights === "none" ? "✗" : (dynamicPlans.platinum?.limits?.aiInsights || "Advanced"),
+                  ],
+                  [
+                    "Auto-Responder Bot",
+                    dynamicPlans.free?.limits?.autoResponder ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.autoResponder ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.autoResponder ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.autoResponder ? "✓" : "✗",
+                  ],
+                  [
+                    "Promoted Listings & Ads",
+                    dynamicPlans.free?.limits?.promotedListings ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.promotedListings ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.promotedListings ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.promotedListings ? "✓" : "✗",
+                  ],
+                  [
+                    "Lokonomy Guarantee",
+                    dynamicPlans.free?.limits?.guaranteeBadge ? "✓" : "✗",
+                    dynamicPlans.silver?.limits?.guaranteeBadge ? "✓" : "✗",
+                    dynamicPlans.gold?.limits?.guaranteeBadge ? "✓" : "✗",
+                    dynamicPlans.platinum?.limits?.guaranteeBadge ? "✓" : "✗",
                   ],
                 ].map(([feature, free, silver, gold, platinum], i) => {
                   const formatVal = (v) => {

@@ -248,7 +248,6 @@ const Login = () => {
 
   const gpsStatusConfig = {
     idle: {
-      // icon: <LocateFixed className="w-5 h-5" />,
       label: "GPS Authorization",
       subLabel: "Required for secure access",
       color: "text-blue-400",
@@ -256,7 +255,6 @@ const Login = () => {
       accent: "blue",
     },
     fetching: {
-      // icon: <RefreshCw className="w-5 h-5 animate-spin" />,
       label: "Detecting Location",
       subLabel: "Verifying your current city...",
       color: "text-amber-400",
@@ -264,7 +262,6 @@ const Login = () => {
       accent: "amber",
     },
     granted: {
-      // icon: <CheckCircle className="w-5 h-5" />,
       label: "Access Verified",
       subLabel: "Location successfully captured",
       color: "text-emerald-400",
@@ -272,7 +269,6 @@ const Login = () => {
       accent: "emerald",
     },
     denied: {
-      // icon: <Ban className="w-5 h-5" />,
       label: "GPS Access Denied",
       subLabel: "Enable location in settings",
       color: "text-rose-400",
@@ -280,7 +276,6 @@ const Login = () => {
       accent: "rose",
     },
     error: {
-      // icon: <AlertTriangle className="w-5 h-5" />,
       label: "Detection Failed",
       subLabel: "Tap to retry location capture",
       color: "text-orange-400",

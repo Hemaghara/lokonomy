@@ -51,6 +51,8 @@ vi.mock("../../services", async (importOriginal) => {
         data: {
           stats: {
             totalEarnings: 5000,
+            netEarnings: 5000,
+            grossEarnings: 5000,
             totalOrders: 10,
             statusCounts: {
               pending: 2,
@@ -59,7 +61,7 @@ vi.mock("../../services", async (importOriginal) => {
               shipped: 3,
               delivered: 4,
             },
-            dailySales: [{ date: new Date().toISOString(), amount: 500 }],
+            dailySales: [{ date: new Date().toISOString(), gross: 500, amount: 500 }],
           },
         },
       }),
@@ -79,6 +81,65 @@ vi.mock("../../services", async (importOriginal) => {
         ],
       }),
       deleteProduct: vi.fn().mockResolvedValue({ data: { success: true } }),
+    },
+    businessService: {
+      getMyBusinesses: vi.fn().mockResolvedValue({
+        data: [
+          {
+            _id: "b1",
+            autoResponseEnabled: false,
+            awayMessage: "Away message",
+            autoResponses: [],
+          }
+        ]
+      }),
+      updateBusiness: vi.fn().mockResolvedValue({
+        data: {
+          success: true,
+          business: {
+            _id: "b1",
+            autoResponseEnabled: false,
+            awayMessage: "Away message",
+            autoResponses: [],
+          }
+        }
+      }),
+    },
+    aiInsightsService: {
+      getAIInsights: vi.fn().mockResolvedValue({
+        data: {
+          success: true,
+          insights: [
+            {
+              _id: "in1",
+              insightText: "Sell more stuff",
+              recommendation: "Lower prices"
+            }
+          ]
+        }
+      }),
+    },
+    subscriptionBoxService: {
+      getSellerBoxes: vi.fn().mockResolvedValue({
+        data: {
+          success: true,
+          boxes: [
+            {
+              _id: "box1",
+              name: "Snack Box",
+              description: "Yummy snacks",
+              price: 500,
+              frequency: "monthly",
+              items: "Chips, Cookies"
+            }
+          ]
+        }
+      }),
+      createBox: vi.fn().mockResolvedValue({
+        data: {
+          success: true,
+        }
+      }),
     },
   };
 });
@@ -102,10 +163,10 @@ describe("SellerOrders Page", () => {
     render(<SellerOrders />);
 
     await waitFor(() => {
-      expect(screen.getByText("₹5,000")).toBeInTheDocument();
+      expect(screen.getAllByText("₹5,000")[0]).toBeInTheDocument();
       expect(screen.getByText("10")).toBeInTheDocument();
       // Chart labels
-      expect(screen.getByText("Sales")).toBeInTheDocument();
+      expect(screen.getByText("Daily Revenue")).toBeInTheDocument();
     });
   });
 

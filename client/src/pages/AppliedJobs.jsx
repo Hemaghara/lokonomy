@@ -161,7 +161,6 @@ const AppliedJobs = () => {
                                   );
                                 }
                               } catch {
-                                // toast would be nice here
                               }
                             }
                           }}

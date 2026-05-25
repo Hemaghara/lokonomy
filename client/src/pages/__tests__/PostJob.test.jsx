@@ -178,18 +178,14 @@ describe("PostJob Page", () => {
 
   it("updates loading state during submission", async () => {
     jobService.createJob.mockReturnValueOnce(
-      new Promise((resolve) =>
-        setTimeout(() => resolve({ data: { success: true } }), 100),
-      ),
+      new Promise(() => {})
     );
 
     render(<PostJob />);
     fillRequiredFields();
 
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: /Publish Job Listing/i })
-        .closest("form"),
+    fireEvent.click(
+      screen.getByRole("button", { name: /Publish Job Listing/i }),
     );
 
     await waitFor(() => {

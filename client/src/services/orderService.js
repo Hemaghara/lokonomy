@@ -7,4 +7,7 @@ export const orderService = {
   getSellerStats: () => api.get("/orders/seller/stats"),
   updateOrderStatus: (id, orderStatus) =>
     api.patch(`/orders/${id}/status`, { orderStatus }),
+  updateOrderTracking: (id, trackingData) =>
+    api.patch(`/orders/${id}/tracking`, trackingData),
 };
+

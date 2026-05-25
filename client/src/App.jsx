@@ -45,8 +45,16 @@ const MyChats = lazy(() => import("./pages/MyChats"));
 const UpgradePlan = lazy(() => import("./pages/UpgradePlan"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Rewards = lazy(() => import("./pages/Rewards"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const EventsMap = lazy(() => import("./pages/EventsMap"));
 const CompareBusinesses = lazy(() => import("./pages/CompareBusinesses"));
+const PromoteBusiness = lazy(() => import("./pages/PromoteBusiness"));
+const PreOrders = lazy(() => import("./pages/PreOrders"));
+const MyClaims = lazy(() => import("./pages/MyClaims"));
+const Groups = lazy(() => import("./pages/Groups"));
+const SubscriptionBoxes = lazy(() => import("./pages/SubscriptionBoxes"));
+const FlashSales = lazy(() => import("./pages/FlashSales"));
+const PriceComparison = lazy(() => import("./pages/PriceComparison"));
 const UserSupport = lazy(() => import("./pages/UserSupport"));
 const BusinessVerification = lazy(() => import("./pages/BusinessVerification"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -382,6 +390,9 @@ function App() {
                     <Route path="/feed/:id" element={<FeedDetails />} />
                     <Route path="/events-map" element={<EventsMap />} />
                     <Route path="/compare" element={<CompareBusinesses />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="/flash-sales" element={<FlashSales />} />
+                    <Route path="/price-comparison" element={<PriceComparison />} />
                     <Route element={<ProtectedRoute />}>
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/job-dashboard" element={<JobDashboard />} />
@@ -420,6 +431,26 @@ function App() {
                       <Route
                         path="/notifications"
                         element={<Notifications />}
+                      />
+                      <Route
+                        path="/promote"
+                        element={<PromoteBusiness />}
+                      />
+                      <Route
+                        path="/preorders"
+                        element={<PreOrders />}
+                      />
+                      <Route
+                        path="/my-claims"
+                        element={<MyClaims />}
+                      />
+                      <Route
+                        path="/groups"
+                        element={<Groups />}
+                      />
+                      <Route
+                        path="/subscription-boxes"
+                        element={<SubscriptionBoxes />}
                       />
                     </Route>
                   </Route>

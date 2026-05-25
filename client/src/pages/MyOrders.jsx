@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { orderService } from "../services";
+import { orderService, guaranteeService } from "../services";
 import { toast } from "react-hot-toast";
 import {
   HiOutlineShoppingBag,
@@ -14,12 +14,22 @@ import {
   HiOutlineCurrencyRupee,
   HiOutlineTag,
   HiOutlineInbox,
+  HiOutlineChevronDown,
+  HiOutlineChevronUp,
+  HiOutlineExclamationTriangle,
+  HiOutlineCheck,
 } from "react-icons/hi2";
 
 const MyOrders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [activeTrackingId, setActiveTrackingId] = useState(null);
+  const [disputeOrder, setDisputeOrder] = useState(null);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [disputeEvidence, setDisputeEvidence] = useState("");
+  const [submittingDispute, setSubmittingDispute] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -37,6 +47,31 @@ const MyOrders = () => {
       setLoading(false);
     }
   };
+
+  const handleFileDispute = async (e) => {
+    e.preventDefault();
+    if (!disputeOrder || !disputeReason) return;
+    setSubmittingDispute(true);
+    try {
+      const res = await guaranteeService.fileClaim({
+        orderId: disputeOrder._id,
+        reason: disputeReason,
+        evidence: disputeEvidence,
+      });
+      if (res.data.success) {
+        toast.success("Dispute filed under Lokonomy Guarantee!");
+        setDisputeOrder(null);
+        setDisputeReason("");
+        setDisputeEvidence("");
+        fetchOrders();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit dispute claim");
+    } finally {
+      setSubmittingDispute(false);
+    }
+  };
+
 
   const statusMap = {
     pending: {
@@ -227,6 +262,22 @@ const MyOrders = () => {
                               >
                                 <HiOutlinePhone /> Contact Seller
                               </a>
+                              {order.tracking && (
+                                <button
+                                  onClick={() => setActiveTrackingId(activeTrackingId === order._id ? null : order._id)}
+                                  className="bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 text-indigo-400 hover:text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2"
+                                >
+                                  <HiOutlineTruck /> {activeTrackingId === order._id ? "Hide Track" : "Track Route"}
+                                </button>
+                              )}
+                              {["shipped", "delivered"].includes(order.orderStatus) && (
+                                <button
+                                  onClick={() => setDisputeOrder(order)}
+                                  className="bg-amber-600/10 hover:bg-amber-600 border border-amber-500/20 text-amber-400 hover:text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all flex items-center gap-2"
+                                >
+                                  <HiOutlineExclamationTriangle /> Guarantee Dispute
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -257,6 +308,83 @@ const MyOrders = () => {
                           </div>
                         </div>
                       </div>
+
+                      {activeTrackingId === order._id && order.tracking && (
+                        <div className="border-t border-[#1f2a3d] bg-[#080e1a] p-6 space-y-6">
+                          <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                            <HiOutlineTruck className="text-indigo-400 animate-bounce" /> Live Delivery Route Tracking
+                          </h4>
+                          
+                          <div className="relative h-44 bg-[#0d1424] border border-[#1f2a3d] rounded-2xl overflow-hidden flex items-center justify-center">
+                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2a3d_1px,transparent_1px),linear-gradient(to_bottom,#1f2a3d_1px,transparent_1px)] bg-[size:16px_16px] opacity-20" />
+                            <svg className="w-full h-full absolute inset-0 text-indigo-500/30" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M 50 120 Q 150 40, 250 120 T 450 80" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                              <circle cx="50" cy="120" r="4" fill="#6366f1" />
+                              <circle cx="450" cy="80" r="4" fill="#10b981" />
+                            </svg>
+                            <div 
+                              className="absolute w-4 h-4 bg-indigo-500 rounded-full border border-white flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.8)] animate-pulse"
+                              style={{ left: "55%", top: "45%" }}
+                            >
+                              <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                            </div>
+                            <div className="absolute top-3 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg border border-white/5 text-[9px] font-black text-slate-400">
+                              CURRENT POSITION: {order.tracking.currentLocation?.lat || "19.0760"}° N, {order.tracking.currentLocation?.lng || "72.8777"}° E
+                            </div>
+                            <div className="absolute bottom-3 right-4 bg-emerald-500/15 border border-emerald-500/25 px-3 py-1 rounded-lg text-[9px] font-black text-emerald-400">
+                              EST DELIVERY: {order.tracking.estimatedDelivery ? new Date(order.tracking.estimatedDelivery).toLocaleDateString() : "Pending"}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between relative max-w-md mx-auto">
+                            <div className="absolute h-0.5 bg-[#1f2a3d] left-4 right-4 top-1/2 -translate-y-1/2" />
+                            <div 
+                              className="absolute h-0.5 bg-linear-to-r from-violet-500 to-indigo-500 left-4 top-1/2 -translate-y-1/2 transition-all duration-500" 
+                              style={{ 
+                                width: order.orderStatus === "delivered" ? "92%" : 
+                                       order.orderStatus === "out_for_delivery" ? "68%" :
+                                       order.orderStatus === "shipped" ? "42%" : "12%" 
+                              }}
+                            />
+                            {[
+                              { label: "Preparing", step: "preparing" },
+                              { label: "Shipped", step: "shipped" },
+                              { label: "Out for Delivery", step: "out_for_delivery" },
+                              { label: "Delivered", step: "delivered" }
+                            ].map((s, idx) => {
+                              const steps = ["preparing", "processing", "shipped", "out_for_delivery", "delivered"];
+                              const currentIdx = steps.indexOf(order.orderStatus);
+                              const stepIdx = steps.indexOf(s.step);
+                              const isCompleted = currentIdx >= stepIdx;
+                              return (
+                                <div key={idx} className="relative z-10 flex flex-col items-center gap-1.5 bg-[#080e1a] px-2">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center border text-[10px] font-black transition-all ${
+                                    isCompleted ? "bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-900/40" : "bg-[#0d1424] border-[#1f2a3d] text-slate-500"
+                                  }`}>
+                                    {isCompleted ? <HiOutlineCheck className="text-[10px]" /> : idx + 1}
+                                  </div>
+                                  <span className={`text-[9px] font-bold uppercase tracking-wider ${isCompleted ? "text-violet-400" : "text-slate-500"}`}>{s.label}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="space-y-3 mt-4">
+                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Activity Logs</p>
+                            <div className="space-y-2 max-h-36 overflow-y-auto pr-2">
+                              {order.tracking.updates?.slice().reverse().map((upd, idx) => (
+                                <div key={idx} className="bg-[#0d1424] border border-[#1f2a3d] p-3 rounded-xl flex justify-between gap-3 text-xs">
+                                  <div>
+                                    <p className="text-white font-semibold leading-relaxed">{upd.note}</p>
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-400 mt-1 block">{upd.status.replace(/_/g, ' ')}</span>
+                                  </div>
+                                  <span className="text-slate-500 text-[10px] font-semibold">{new Date(upd.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(upd.timestamp).toLocaleDateString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -264,6 +392,62 @@ const MyOrders = () => {
             </div>
           )}
         </AnimatePresence>
+
+        {disputeOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-[#111827] border border-[#1f2a3d] p-6 rounded-[2.5rem] w-full max-w-md relative shadow-2xl"
+            >
+              <h3 className="text-white font-black text-xl mb-4 flex items-center gap-2">
+                <HiOutlineExclamationTriangle className="text-amber-500" /> Lokonomy Guarantee Dispute
+              </h3>
+              <p className="text-slate-500 text-xs mb-4">
+                You are raising a claim for order #{disputeOrder._id.slice(-6).toUpperCase()}. Lokonomy mediators will investigate the dispute under the Guarantee Program.
+              </p>
+              <form onSubmit={handleFileDispute} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Reason for Dispute</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Describe why you are raising the dispute (e.g. item never arrived, defective or wrong item received)..."
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    className="w-full bg-[#080e1a] border border-[#1f2a3d] text-xs text-white rounded-2xl p-3 outline-hidden focus:border-violet-500 resize-none"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Evidence Details</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Provide additional context or links to screenshot evidence..."
+                    value={disputeEvidence}
+                    onChange={(e) => setDisputeEvidence(e.target.value)}
+                    className="w-full bg-[#080e1a] border border-[#1f2a3d] text-xs text-white rounded-2xl p-3 outline-hidden focus:border-violet-500 resize-none"
+                  />
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setDisputeOrder(null)}
+                    className="flex-1 py-3 bg-[#0d1424] hover:bg-black border border-[#1f2a3d] text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingDispute}
+                    className="flex-1 py-3 bg-linear-to-r from-violet-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-violet-900/30 flex justify-center items-center"
+                  >
+                    {submittingDispute ? "Filing Claim..." : "File Dispute"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );

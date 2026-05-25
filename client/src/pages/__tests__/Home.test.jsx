@@ -201,7 +201,7 @@ describe("Home Page", () => {
   it("renders footer with platform links", () => {
     render(<Home />);
 
-    expect(screen.getByText("Lokonomy")).toBeInTheDocument();
+    expect(screen.getAllByText("Lokonomy").length).toBeGreaterThan(0);
     expect(screen.getByText("Marketplace")).toBeInTheDocument();
     expect(screen.getByText("Job Board")).toBeInTheDocument();
   });
