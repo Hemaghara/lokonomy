@@ -29,6 +29,10 @@ const validateRegister = (req, res, next) => {
   if (password && password.length < 8)
     errors.push("Password must be at least 8 characters");
   if (password && password.length > 128) errors.push("Password too long");
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (password && !passwordRegex.test(password)) {
+    errors.push("Password must include uppercase, lowercase, number, and special character");
+  }
 
   if (errors.length > 0) {
     return res.status(400).json({ success: false, message: errors[0], errors });

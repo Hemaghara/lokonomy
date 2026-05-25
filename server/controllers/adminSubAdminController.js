@@ -136,6 +136,15 @@ exports.getActivityLogs = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!password || !passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
+      });
+    }
+
     const subAdmin = await Admin.findById(req.params.id);
 
     if (!subAdmin) {

@@ -127,7 +127,7 @@ const checkStoryLimit = async (req, res, next) => {
       return res.status(403).json({
         success: false,
         code: "LIMIT_REACHED",
-        message: `Limit Reached: You've hit your monthly qouta of ${limits.storiesPosted} stories. Upgrade to a premium plan to share more updates!`,
+        message: `Limit Reached: You've hit your monthly quota of ${limits.storiesPosted} stories. Upgrade to a premium plan to share more updates!`,
         used,
         limit: limits.storiesPosted,
         currentPlan: plan,

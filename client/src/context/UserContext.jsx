@@ -15,7 +15,7 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     if (user && (user.id || user._id)) {
-      connectSocket({ userId: user.id || user._id, isAdmin: false });
+      connectSocket({ userId: user.id || user._id, isAdmin: false, token: user.token });
     }
 
     return () => {
@@ -52,7 +52,7 @@ export const UserProvider = ({ children }) => {
     if (userData.taluka) setTaluka(userData.taluka);
 
     if (userData.id || userData._id) {
-      connectSocket({ userId: userData.id || userData._id, isAdmin: false });
+      connectSocket({ userId: userData.id || userData._id, isAdmin: false, token: userData.token });
     }
   };
 

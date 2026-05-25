@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    select: false,
   },
   district: {
     type: String,
@@ -34,8 +35,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  otp: { type: String },
-  otpExpires: { type: Date },
+  otp: { type: String, select: false },
+  otpExpires: { type: Date, select: false },
   upiId: { type: String, default: null },
   paymentQrCode: { type: String, default: null },
   bankName: { type: String, default: null },
@@ -159,7 +160,7 @@ const userSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  refreshToken: { type: String, default: null },
+  refreshToken: { type: String, default: null, select: false },
   influencerBadge: {
     type: String,
     enum: ["none", "rising_star", "influencer", "ambassador"],

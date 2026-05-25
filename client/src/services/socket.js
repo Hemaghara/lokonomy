@@ -7,20 +7,26 @@ const SOCKET_URL = import.meta.env.MODE === "development"
 
 let socket = null;
 
-export const getSocket = () => {
+export const getSocket = (token) => {
   if (!socket) {
     socket = io(SOCKET_URL, {
       autoConnect: false,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      auth: { token },
     });
+  } else if (token) {
+    socket.auth = { token };
   }
   return socket;
 };
 
 export const connectSocket = (userData) => {
-  const s = getSocket();
+  const token = userData?.token || (typeof userData === "string" ? null : userData?.token);
+  const s = getSocket(token);
+  s.off("connect");
+
   if (!s.connected) {
     s.connect();
     s.on("connect", () => {

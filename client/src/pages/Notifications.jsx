@@ -142,7 +142,7 @@ const Notifications = () => {
 
   useEffect(() => {
     if (!user) return;
-    const socket = connectSocket(user.id);
+    const socket = connectSocket({ userId: user.id || user._id, isAdmin: false, token: user.token });
     const handleNew = (notification) => {
       if (activeFilter === "all" || activeFilter === notification.type) {
         setNotifications((prev) => [notification, ...prev]);

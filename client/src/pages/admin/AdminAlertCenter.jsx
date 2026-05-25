@@ -118,9 +118,11 @@ const AdminAlertCenter = () => {
   useEffect(() => {
     fetchAlerts();
     const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
+    const adminToken = localStorage.getItem("adminToken");
     const socket = connectSocket({
       userId: adminInfo._id || "admin",
       isAdmin: true,
+      token: adminToken,
     });
     socket.on("newAlert", () => fetchAlerts());
     const interval = setInterval(fetchAlerts, 60000);

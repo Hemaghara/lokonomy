@@ -89,10 +89,12 @@ exports.login = async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 300000);
+    const crypto = require("crypto");
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
     await User.findByIdAndUpdate(user._id, {
       $set: {
-        otp,
+        otp: otpHash,
         otpExpires,
         latitude: user.latitude,
         longitude: user.longitude,
@@ -190,9 +192,16 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
     logger.info({ email }, "Verify OTP Attempt");
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+otp +otpExpires");
 
-    if (!user || user.otp !== otp || new Date() > user.otpExpires) {
+    const crypto = require("crypto");
+    const incomingHash = crypto.createHash("sha256").update(otp || "").digest("hex");
+
+    const isOtpValid = user && user.otp &&
+      crypto.timingSafeEqual(Buffer.from(user.otp), Buffer.from(incomingHash)) &&
+      new Date() <= user.otpExpires;
+
+    if (!isOtpValid) {
       logger.warn({ email }, "OTP verification failed: Invalid or expired OTP");
       return res
         .status(400)
@@ -222,7 +231,7 @@ exports.verifyOtp = async (req, res) => {
     );
     const refreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET,
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" },
     );
 
@@ -250,7 +259,7 @@ exports.refresh = async (req, res) => {
         .json({ success: false, message: "Refresh token required" });
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.user.id);
 
     if (!user || user.refreshToken !== refreshToken) {
@@ -266,7 +275,7 @@ exports.refresh = async (req, res) => {
     );
     const newRefreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET,
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" },
     );
 
@@ -366,7 +375,7 @@ exports.register = async (req, res) => {
     );
     const refreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET,
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: "7d" },
     );
 
@@ -390,7 +399,7 @@ exports.register = async (req, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Registration error");
-    res.status(501).json({ success: false, message: "Registration failed" });
+    res.status(500).json({ success: false, message: "Registration failed" });
   }
 };
 
@@ -438,8 +447,8 @@ exports.updateProfile = async (req, res) => {
 
     if (paymentQrCode !== undefined) {
       if (paymentQrCode && paymentQrCode.startsWith("data:image")) {
-        const res = await uploadMedia(paymentQrCode, "payments");
-        user.paymentQrCode = res.secure_url;
+        const uploadResult = await uploadMedia(paymentQrCode, "payments");
+        user.paymentQrCode = uploadResult.secure_url;
       } else {
         user.paymentQrCode = paymentQrCode;
       }

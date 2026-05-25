@@ -294,7 +294,8 @@ const AdminDashboard = () => {
       adminInfo._id ||
       "admin_" + Math.random().toString(36).substr(2, 9);
 
-    const socket = connectSocket({ userId: adminId, isAdmin: true });
+    const adminToken = localStorage.getItem("adminToken");
+    const socket = connectSocket({ userId: adminId, isAdmin: true, token: adminToken });
     socket.on("onlineUsersCount", (count) => setOnlineCount(count));
     socket.on("newActivity", (activity) => {
       setActivities((prev) => [activity, ...prev].slice(0, 10));

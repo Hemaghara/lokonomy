@@ -14,7 +14,8 @@ validateEnv();
 
 const logger = require("./utils/logger");
 const globalErrorHandler = require("./middleware/globalErrorHandler");
-const sanitizeMiddleware = require("./middleware/sanitize");
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
 const { apiLimiter, authLimiter } = require("./middleware/rateLimiter");
 const setupIndexes = require("./utils/setupIndexes");
 const initSocket = require("./socket");
@@ -35,13 +36,7 @@ const PORT = process.env.PORT || 5000;
 const io = initSocket(server);
 app.set("io", io);
 
-app.use((req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  next();
-});
+app.use(helmet());
 
 const allowedOrigins = [
   process.env.APP_URL,
@@ -56,7 +51,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+      if (allowedOrigins.includes(origin) || origin.endsWith(".lokonomy.vercel.app")) {
         callback(null, true);
       } else {
         callback(new Error("CORS policy violation"));
@@ -67,16 +62,23 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
-app.use(sanitizeMiddleware);
+// Route-specific parser limits for base64 / file upload paths
+const largePayload = express.json({ limit: "10mb" });
+const largeUrlencoded = express.urlencoded({ limit: "10mb", extended: true });
+
+app.use("/api/auth", authLimiter, largePayload, largeUrlencoded, require("./routes/auth"));
+app.use("/api/market", largePayload, largeUrlencoded, require("./routes/market"));
+app.use("/api/stories", largePayload, largeUrlencoded, require("./routes/stories"));
+
+// Global body parser limits for other routes
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ limit: "1mb", extended: true }));
+
+app.use(mongoSanitize());
 app.use("/api/", apiLimiter);
 
-app.use("/api/auth", authLimiter, require("./routes/auth"));
 app.use("/api/businesses", require("./routes/businesses"));
-app.use("/api/market", require("./routes/market"));
 app.use("/api/jobs", require("./routes/jobs"));
-app.use("/api/stories", require("./routes/stories"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/feeds", require("./routes/feeds"));
 app.use("/api/chat", require("./routes/chat"));

@@ -16,7 +16,7 @@ module.exports = function (req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "lokonomy_secret_key_123");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Support both user and admin payload structures
     if (decoded.user) {

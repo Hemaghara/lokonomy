@@ -17,7 +17,7 @@ exports.impersonateUser = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, impersonatedBy: req.admin._id, isImpersonation: true },
-      process.env.JWT_SECRET || "lokonomy_secret_key_123",
+      process.env.JWT_SECRET,
       { expiresIn: "30m" },
     );
 
@@ -54,7 +54,7 @@ exports.verifyImpersonation = async (req, res) => {
 
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "lokonomy_secret_key_123",
+      process.env.JWT_SECRET,
     );
     if (!decoded.isImpersonation) {
       return res.status(400).json({ message: "Not an impersonation token." });

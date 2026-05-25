@@ -5,12 +5,52 @@ const OnlineStatus = require("./models/OnlineStatus");
 const { createNotification } = require("./controllers/notificationController");
 const logger = require("./utils/logger");
 
+const jwt = require("jsonwebtoken");
+
 const initSocket = (server) => {
+  const allowedOrigins = [
+    process.env.APP_URL,
+    "https://lokonomy.vercel.app",
+    "https://lokonomy.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:3000",
+  ].filter(Boolean);
+
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("CORS policy violation"));
+        }
+      },
       methods: ["GET", "POST"],
+      credentials: true,
     },
+  });
+
+  // JWT Connection Authentication Middleware for WebSockets
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error("Authentication required"));
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.userId = decoded.user?.id || decoded.id;
+      socket.isAdmin = false;
+      return next();
+    } catch (err) {
+      try {
+        const decodedAdmin = jwt.verify(token, process.env.JWT_ADMIN_SECRET || process.env.JWT_SECRET);
+        socket.userId = decodedAdmin.id;
+        socket.isAdmin = true;
+        return next();
+      } catch (err2) {
+        return next(new Error("Invalid token"));
+      }
+    }
   });
 
   const onlineUsers = new Map();
@@ -36,13 +76,9 @@ const initSocket = (server) => {
     socket.emit("onlineUsersCount", currentCount);
 
     socket.on("registerUser", (data) => {
-      const userId = typeof data === "string" ? data : data.userId;
-      const isAdmin =
-        typeof data === "object"
-          ? !!data.isAdmin
-          : userId === "admin" ||
-          userId.includes("admin") ||
-          userId.startsWith("admin_");
+      // Use socket.userId & socket.isAdmin from connection verification to prevent identity spoofing
+      const userId = socket.userId;
+      const isAdmin = socket.isAdmin;
 
       if (!onlineUsers.has(userId)) {
         onlineUsers.set(userId, { socketIds: new Set(), isAdmin: isAdmin });
@@ -112,12 +148,12 @@ const initSocket = (server) => {
     socket.on("joinBusinessPage", ({ businessId }) => {
       if (businessId) {
         socket.join(`business_${businessId}`);
-        Business.findByIdAndUpdate(businessId, { $inc: { activeVisitors: 1 } })
+        Business.findByIdAndUpdate(businessId, { $inc: { activeVisitors: 1 } }, { new: true })
           .then(biz => {
             if (biz) {
               io.to(`business_${businessId}`).emit("businessStatusUpdate", {
                 businessId,
-                activeVisitors: (biz.activeVisitors || 0) + 1,
+                activeVisitors: biz.activeVisitors || 0,
                 isOwnerOnline: biz.isOwnerOnline,
               });
             }
@@ -133,12 +169,16 @@ const initSocket = (server) => {
     socket.on("leaveBusinessPage", ({ businessId }) => {
       if (businessId) {
         socket.leave(`business_${businessId}`);
-        Business.findByIdAndUpdate(businessId, { $inc: { activeVisitors: -1 } })
+        Business.findOneAndUpdate(
+          { _id: businessId, activeVisitors: { $gt: 0 } },
+          { $inc: { activeVisitors: -1 } },
+          { new: true }
+        )
           .then(biz => {
             if (biz) {
               io.to(`business_${businessId}`).emit("businessStatusUpdate", {
                 businessId,
-                activeVisitors: Math.max(0, (biz.activeVisitors || 1) - 1),
+                activeVisitors: biz.activeVisitors || 0,
                 isOwnerOnline: biz.isOwnerOnline,
               });
             }
@@ -382,12 +422,16 @@ const initSocket = (server) => {
 
       if (socket._visitingBusinesses && socket._visitingBusinesses.size > 0) {
         for (const bizId of socket._visitingBusinesses) {
-          Business.findByIdAndUpdate(bizId, { $inc: { activeVisitors: -1 } })
+          Business.findOneAndUpdate(
+            { _id: bizId, activeVisitors: { $gt: 0 } },
+            { $inc: { activeVisitors: -1 } },
+            { new: true }
+          )
             .then(biz => {
               if (biz) {
                 io.to(`business_${bizId}`).emit("businessStatusUpdate", {
                   businessId: bizId,
-                  activeVisitors: Math.max(0, (biz.activeVisitors || 1) - 1),
+                  activeVisitors: biz.activeVisitors || 0,
                   isOwnerOnline: biz.isOwnerOnline,
                 });
               }

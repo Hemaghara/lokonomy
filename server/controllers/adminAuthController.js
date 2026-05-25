@@ -2,8 +2,8 @@ const Admin = require("../models/Admin");
 const jwt = require("jsonwebtoken");
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "lokonomy_secret_key_123", {
-    expiresIn: "30d",
+  return jwt.sign({ id }, process.env.JWT_ADMIN_SECRET, {
+    expiresIn: "8h",
   });
 };
 
