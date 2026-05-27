@@ -46,7 +46,8 @@ async function getSettings() {
 
 const checkFeature = (featureName) => async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+
+    const user = req.userDoc || await User.findById(req.user.id);
     if (!user)
       return res
         .status(404)
@@ -74,27 +75,35 @@ const checkFeature = (featureName) => async (req, res, next) => {
   }
 };
 
-const checkProductLimit = async (req, res, next) => {
+
+const checkUsageLimit = (limitType) => async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user)
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+
+    const user = req.userDoc || await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
     const plan = getActivePlan(user);
     const planDoc = await getPlanBySlug(plan);
     const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
 
-    const used = user.usage?.productsUploaded || 0;
+    const limitValue = limits[limitType];
+    const used = user.usage?.[limitType] || 0;
 
-    if (limits.productsUploaded < 999999 && used >= limits.productsUploaded) {
+    const messages = {
+      productsUploaded: `Plan Limit Reached: You've already listed ${limitValue} products on your ${plan} plan. Upgrade your membership to keep growing your store!`,
+      storiesPosted: `Limit Reached: You've hit your monthly quota of ${limitValue} stories. Upgrade to a premium plan to share more updates!`,
+      jobsPosted: `Quota Exhausted: You've posted ${limitValue} jobs. Upgrade your plan to continue hiring the best talent!`,
+    };
+
+    if (limitValue < 999999 && used >= limitValue) {
       return res.status(403).json({
         success: false,
         code: "LIMIT_REACHED",
-        message: `Plan Limit Reached: You've already listed ${limits.productsUploaded} products on your ${plan} plan. Upgrade your membership to keep growing your store!`,
+        message: messages[limitType] || `Limit reached for ${limitType}`,
         used,
-        limit: limits.productsUploaded,
+        limit: limitValue,
         currentPlan: plan,
       });
     }
@@ -109,75 +118,9 @@ const checkProductLimit = async (req, res, next) => {
   }
 };
 
-const checkStoryLimit = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user)
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-
-    const plan = getActivePlan(user);
-    const planDoc = await getPlanBySlug(plan);
-    const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
-
-    const used = user.usage?.storiesPosted || 0;
-
-    if (limits.storiesPosted < 999999 && used >= limits.storiesPosted) {
-      return res.status(403).json({
-        success: false,
-        code: "LIMIT_REACHED",
-        message: `Limit Reached: You've hit your monthly quota of ${limits.storiesPosted} stories. Upgrade to a premium plan to share more updates!`,
-        used,
-        limit: limits.storiesPosted,
-        currentPlan: plan,
-      });
-    }
-
-    req.userPlan = plan;
-    req.planLimits = limits;
-    next();
-  } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Subscription check failed" });
-  }
-};
-
-const checkJobLimit = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user)
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-
-    const plan = getActivePlan(user);
-    const planDoc = await getPlanBySlug(plan);
-    const limits = planDoc?.limits || DEFAULT_FREE_LIMITS;
-
-    const used = user.usage?.jobsPosted || 0;
-
-    if (limits.jobsPosted < 999999 && used >= limits.jobsPosted) {
-      return res.status(403).json({
-        success: false,
-        code: "LIMIT_REACHED",
-        message: `Quota Exhausted: You've posted ${limits.jobsPosted} jobs. Upgrade your plan to continue hiring the best talent!`,
-        used,
-        limit: limits.jobsPosted,
-        currentPlan: plan,
-      });
-    }
-
-    req.userPlan = plan;
-    req.planLimits = limits;
-    next();
-  } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Subscription check failed" });
-  }
-};
+const checkProductLimit = checkUsageLimit("productsUploaded");
+const checkStoryLimit = checkUsageLimit("storiesPosted");
+const checkJobLimit = checkUsageLimit("jobsPosted");
 
 const getActivePlan = (user) => {
   const sub = user.subscription;

@@ -1,5 +1,6 @@
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
+const logger = require("./logger");
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ const uploadToCloudinary = async (file, folder) => {
     const result = await cloudinary.uploader.upload(file, options);
     return result.secure_url;
   } catch (error) {
-    console.error("Cloudinary upload error:", error);
+    logger.error({ err: error }, "Cloudinary upload error");
     throw new Error("Failed to upload to Cloudinary");
   }
 };

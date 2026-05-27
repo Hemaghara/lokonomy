@@ -98,16 +98,16 @@ describe("AdminAnalytics Component", () => {
       expect(adminService.getJobTrends).toHaveBeenCalledWith("monthly");
       expect(adminService.getRevenueTrends).toHaveBeenCalledWith("monthly");
       expect(adminService.getRegionStats).toHaveBeenCalled();
+
+      // Check KPI cards
+      expect(screen.getByText("1,000", { selector: 'p' })).toBeInTheDocument(); // Total Users
+      expect(screen.getByText("200", { selector: 'p' })).toBeInTheDocument(); // Total Businesses
+      expect(screen.getByText("50", { selector: 'p' })).toBeInTheDocument(); // Total Jobs
+      expect(screen.getByText("₹50,000")).toBeInTheDocument(); // Total Revenue
+
+      // Check charts rendered
+      expect(screen.getAllByTestId("recharts-container").length).toBe(5); // Regions, Users, Biz, Jobs, Rev
     });
-
-    // Check KPI cards
-    expect(screen.getByText("1,000", { selector: 'p' })).toBeInTheDocument(); // Total Users
-    expect(screen.getByText("200", { selector: 'p' })).toBeInTheDocument(); // Total Businesses
-    expect(screen.getByText("50", { selector: 'p' })).toBeInTheDocument(); // Total Jobs
-    expect(screen.getByText("₹50,000")).toBeInTheDocument(); // Total Revenue
-
-    // Check charts rendered
-    expect(screen.getAllByTestId("recharts-container").length).toBe(5); // Regions, Users, Biz, Jobs, Rev
   });
 
   it("handles period filtering for user growth", async () => {

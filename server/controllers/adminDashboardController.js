@@ -43,7 +43,6 @@ exports.getDashboardStats = async (req, res) => {
       currentPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
       currentPeriodEnd = now;
 
-      // Previous month
       prevPeriodStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       prevPeriodEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
     }

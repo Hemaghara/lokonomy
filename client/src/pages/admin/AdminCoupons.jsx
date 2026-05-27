@@ -187,7 +187,7 @@ const AdminCoupons = () => {
                     {coupon.code}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {coupon.businessId?.name || "Global"}
+                    {coupon.businessId?.businessName || "Global"}
                   </p>
                 </div>
                 <span

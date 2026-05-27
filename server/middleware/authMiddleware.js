@@ -27,8 +27,6 @@ module.exports = async function (req, res, next) {
         return res.status(401).json({ message: "Token is not valid" });
       }
     }
-    
-    // Support both user payload { user: { id } } and admin payload { id }
     if (decoded.user) {
       req.user = decoded.user;
     } else if (decoded.id) {
@@ -42,14 +40,19 @@ module.exports = async function (req, res, next) {
       if (!admin) {
         return res.status(401).json({ message: "Not authorized, admin not found" });
       }
+      req.userDoc = admin;
     } else {
-      const user = await User.findById(req.user.id).select("status");
-      if (user && user.status && user.status !== "active") {
-        return res.status(403).json({ 
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(401).json({ message: "User not found, authorization denied" });
+      }
+      if (user.status && user.status !== "active") {
+        return res.status(403).json({
           message: "Your account is " + user.status + ". Access denied.",
           status: user.status
         });
       }
+      req.userDoc = user;
     }
 
     next();

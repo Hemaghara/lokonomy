@@ -1,5 +1,6 @@
 const AdminActivityLog = require("../models/AdminActivityLog");
 const Admin = require("../models/Admin");
+const logger = require("../utils/logger");
 
 exports.getAuditLogs = async (req, res) => {
   try {
@@ -58,6 +59,6 @@ exports.logAction = async (adminId, action, details, ipAddress) => {
       ipAddress,
     });
   } catch (err) {
-    console.error("Failed to log admin action:", err.message);
+    logger.error({ err }, "Failed to log admin action");
   }
 };

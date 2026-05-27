@@ -16,10 +16,28 @@ exports.getLeaderboard = async (req, res) => {
     if (district) query.district = district;
     if (category) query.category = category;
 
-    const entries = await Leaderboard.find(query)
-      .sort({ rank: 1 })
-      .limit(parseInt(limit))
-      .populate("businessId", "businessName logo rating verified verificationStatus");
+    let entries;
+    const isFiltered = district && category;
+
+    if (isFiltered) {
+      entries = await Leaderboard.find(query)
+        .sort({ rank: 1 })
+        .limit(parseInt(limit))
+        .populate("businessId", "businessName logo rating verified verificationStatus");
+    } else {
+      entries = await Leaderboard.find(query)
+        .sort({ score: -1 })
+        .limit(parseInt(limit))
+        .populate("businessId", "businessName logo rating verified verificationStatus");
+
+      entries = entries.map((entry, idx) => {
+        const obj = entry.toObject ? entry.toObject() : entry;
+        return {
+          ...obj,
+          rank: idx + 1,
+        };
+      });
+    }
 
 
     const distinctDistricts = await Leaderboard.distinct("district", {

@@ -28,6 +28,8 @@ const startJobDeadlineCron = require("./cron/jobDeadlineCheck");
 const startJobAlertsCron = require("./cron/jobAlertCheck");
 const startLeaderboardCron = require("./cron/leaderboardCron");
 const startSmartNotificationsCron = require("./cron/smartNotificationCron");
+const allowedOrigins = require("./config/corsOrigins");
+const Business = require("./models/Business");
 
 
 const app = express();
@@ -38,20 +40,10 @@ app.set("io", io);
 
 app.use(helmet());
 
-const allowedOrigins = [
-  process.env.APP_URL,
-  "https://lokonomy.vercel.app",
-  "https://lokonomy.onrender.com",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:3000",
-].filter(Boolean);
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || origin.endsWith(".lokonomy.vercel.app")) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("CORS policy violation"));
@@ -62,7 +54,8 @@ app.use(
   }),
 );
 
-// Route-specific parser limits for base64 / file upload paths
+const maintenanceCheck = require("./middleware/maintenanceCheck");
+
 const largePayload = express.json({ limit: "10mb" });
 const largeUrlencoded = express.urlencoded({ limit: "10mb", extended: true });
 
@@ -70,13 +63,12 @@ app.use("/api/auth", authLimiter, largePayload, largeUrlencoded, require("./rout
 app.use("/api/market", largePayload, largeUrlencoded, require("./routes/market"));
 app.use("/api/stories", largePayload, largeUrlencoded, require("./routes/stories"));
 
-// Global body parser limits for other routes
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ limit: "1mb", extended: true }));
-
 app.use(mongoSanitize());
 app.use("/api/", apiLimiter);
-
+app.use("/api/", maintenanceCheck);
+app.use("/api/ai", require("./routes/ai")); // Bug #2: server-side AI endpoints
 app.use("/api/businesses", require("./routes/businesses"));
 app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/orders", require("./routes/orders"));
@@ -115,6 +107,15 @@ if (process.env.NODE_ENV !== "test") {
     .then(async () => {
       logger.info("MongoDB Connected");
       await setupIndexes();
+
+
+      try {
+        await Business.updateMany({}, { $set: { activeVisitors: 0, isOwnerOnline: false } });
+        logger.info("Reset all business activeVisitors and isOwnerOnline on startup");
+      } catch (resetErr) {
+        logger.error({ err: resetErr }, "Failed to reset business visitor counters on startup");
+      }
+
       startSubscriptionCron();
       startBookingRemindersCron();
       startScheduledNotificationsCron();

@@ -193,7 +193,6 @@ function App() {
                   </Route>
 
                   <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin/register" element={<AdminRegister />} />
                   <Route
                     element={
                       <AdminErrorBoundary>
@@ -201,6 +200,7 @@ function App() {
                       </AdminErrorBoundary>
                     }
                   >
+                    <Route path="/admin/register" element={<AdminRegister />} />
                     <Route
                       path="/admin/dashboard"
                       element={<AdminDashboard />}

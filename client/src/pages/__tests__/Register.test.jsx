@@ -57,10 +57,10 @@ describe("Register Page", () => {
       target: { value: "jsmith@example.com" },
     });
     fireEvent.change(screen.getByLabelText(/Create Password/i), {
-      target: { value: "secure123" },
+      target: { value: "Secure123!" },
     });
     fireEvent.change(screen.getByLabelText(/Confirm Password/i), {
-      target: { value: "secure123" },
+      target: { value: "Secure123!" },
     });
 
     // GPS Section
@@ -154,7 +154,7 @@ describe("Register Page", () => {
     fireEvent.click(submitBtn);
 
     expect(toast.error).toHaveBeenCalledWith(
-      "Password must be at least 6 characters.",
+      "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
     );
   });
 
@@ -175,7 +175,7 @@ describe("Register Page", () => {
     fireEvent.click(screen.getByRole("button", { name: /Allow GPS/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/GPS Required/i)).toBeInTheDocument();
+      expect(screen.getByText(/GPS Denied/i)).toBeInTheDocument();
       expect(toast.error).toHaveBeenCalledWith(
         expect.stringContaining("Location access denied"),
       );

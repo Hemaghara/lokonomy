@@ -17,6 +17,11 @@ const generateBusinessChatRoom = (businessId, userId, ownerId) => {
 const getMessages = async (req, res) => {
   try {
     const { productId, buyerId, sellerId } = req.params;
+    
+    if (req.user.id !== buyerId && req.user.id !== sellerId && !req.user.isAdmin) {
+      return res.status(403).json({ success: false, message: "Unauthorized to view this conversation" });
+    }
+
     const chatRoom = generateChatRoom(productId, buyerId, sellerId);
 
     const messages = await Message.find({ chatRoom })
@@ -33,6 +38,11 @@ const getMessages = async (req, res) => {
 const getBusinessMessages = async (req, res) => {
   try {
     const { businessId, userId, ownerId } = req.params;
+
+    if (req.user.id !== userId && req.user.id !== ownerId && !req.user.isAdmin) {
+      return res.status(403).json({ success: false, message: "Unauthorized to view this conversation" });
+    }
+
     const chatRoom = generateBusinessChatRoom(businessId, userId, ownerId);
 
     const messages = await Message.find({ chatRoom })

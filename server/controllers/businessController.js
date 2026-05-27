@@ -118,7 +118,7 @@ exports.getAllBusinesses = async (req, res) => {
         bizObj.isOpenNow = false;
       }
       bizObj.hasActiveOffers = businessIdsWithOffers ? businessIdsWithOffers.has(biz._id.toString()) : false;
-      
+
       if (promoMap.has(biz._id.toString())) {
         bizObj.isPromoted = true;
         bizObj.promotionId = promoMap.get(biz._id.toString());
@@ -128,7 +128,7 @@ exports.getAllBusinesses = async (req, res) => {
       return bizObj;
     });
 
-    // Sort promoted listings first
+
     enriched.sort((a, b) => {
       if (a.isPromoted && !b.isPromoted) return -1;
       if (!a.isPromoted && b.isPromoted) return 1;
@@ -240,7 +240,6 @@ exports.getBusinessById = async (req, res) => {
     });
     bizObj.hasActiveOffers = !!activeCoupon;
 
-    // Check if the owner has platinum plan to display guarantee badge
     const owner = await User.findById(business.ownerId).select("subscription");
     bizObj.ownerPlan = owner?.subscription?.plan || "free";
 

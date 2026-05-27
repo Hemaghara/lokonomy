@@ -376,32 +376,40 @@ exports.toggleLikeFeed = async (req, res, next) => {
         .json({ success: false, message: "Feed not found" });
     }
 
-    if (!feed.likes) {
-      feed.likes = [];
-    }
+    const isLiked = feed.likes && feed.likes.some((id) => id.toString() === req.user.id);
+    let updatedFeed;
 
-    const isLiked = feed.likes.includes(req.user.id);
     if (isLiked) {
-      feed.likes = feed.likes.filter((id) => id.toString() !== req.user.id);
+      updatedFeed = await Feed.findByIdAndUpdate(
+        req.params.id,
+        { $pull: { likes: req.user.id } },
+        { new: true }
+      );
     } else {
-      feed.likes.push(req.user.id);
+      updatedFeed = await Feed.findByIdAndUpdate(
+        req.params.id,
+        { $addToSet: { likes: req.user.id } },
+        { new: true }
+      );
     }
 
-    await feed.save();
+    if (!updatedFeed) {
+      return res.status(404).json({ success: false, message: "Feed not found" });
+    }
 
     try {
       const io = req.app.get("io");
       if (io) {
-        io.to(`feed_${feed._id}`).emit("feed_like", {
-          feedId: feed._id,
-          likesCount: feed.likes.length,
+        io.to(`feed_${updatedFeed._id}`).emit("feed_like", {
+          feedId: updatedFeed._id,
+          likesCount: updatedFeed.likes.length,
           isLiked: !isLiked,
           userId: req.user.id,
         });
-        if (feed.district) {
-          io.to(`feeds_${feed.district}`).emit("feed_like_update", {
-            feedId: feed._id,
-            likesCount: feed.likes.length,
+        if (updatedFeed.district) {
+          io.to(`feeds_${updatedFeed.district}`).emit("feed_like_update", {
+            feedId: updatedFeed._id,
+            likesCount: updatedFeed.likes.length,
           });
         }
       }
@@ -411,7 +419,7 @@ exports.toggleLikeFeed = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      likesCount: feed.likes.length,
+      likesCount: updatedFeed.likes.length,
       isLiked: !isLiked,
     });
   } catch (error) {
@@ -558,23 +566,31 @@ exports.toggleBookmark = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Feed not found" });
     }
 
-    if (!feed.bookmarks) {
-      feed.bookmarks = [];
-    }
+    const isBookmarked = feed.bookmarks && feed.bookmarks.some(id => id.toString() === req.user.id);
+    let updatedFeed;
 
-    const isBookmarked = feed.bookmarks.some(id => id.toString() === req.user.id);
     if (isBookmarked) {
-      feed.bookmarks = feed.bookmarks.filter(id => id.toString() !== req.user.id);
+      updatedFeed = await Feed.findByIdAndUpdate(
+        req.params.id,
+        { $pull: { bookmarks: req.user.id } },
+        { new: true }
+      );
     } else {
-      feed.bookmarks.push(req.user.id);
+      updatedFeed = await Feed.findByIdAndUpdate(
+        req.params.id,
+        { $addToSet: { bookmarks: req.user.id } },
+        { new: true }
+      );
     }
 
-    await feed.save();
+    if (!updatedFeed) {
+      return res.status(404).json({ success: false, message: "Feed not found" });
+    }
 
     res.status(200).json({
       success: true,
       isBookmarked: !isBookmarked,
-      bookmarksCount: feed.bookmarks.length,
+      bookmarksCount: updatedFeed.bookmarks.length,
     });
   } catch (error) {
     logger.error({ err: error, feedId: req.params.id }, "Error toggling bookmark");

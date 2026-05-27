@@ -122,7 +122,6 @@ exports.reauthAdmin = async (req, res) => {
       return res.status(400).json({ message: "Password is required" });
     }
 
-    // req.admin is set by protectAdmin middleware (already authenticated)
     const admin = await Admin.findById(req.admin._id);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });

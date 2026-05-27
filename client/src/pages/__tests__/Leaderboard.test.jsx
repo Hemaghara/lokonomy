@@ -126,16 +126,16 @@ describe("Leaderboard Page", () => {
       expect(screen.queryByText(/Fetching standings.../i)).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText("Glow Salon")).toBeInTheDocument();
-    expect(screen.getByText("Ocean Cafe")).toBeInTheDocument();
-    expect(screen.getByText("Fresh Veggies")).toBeInTheDocument();
+    expect(screen.getAllByText("Glow Salon")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Ocean Cafe")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Fresh Veggies")[0]).toBeInTheDocument();
     expect(screen.getByText("Electro Store")).toBeInTheDocument();
   });
 
   it("toggles the metrics breakdown panel when details is clicked", async () => {
     render(<Leaderboard />);
 
-    await waitFor(() => screen.getByText("Glow Salon"));
+    await waitFor(() => screen.getAllByText("Glow Salon")[0]);
 
     // Verify Glow Salon detail expandable is not initially shown
     expect(screen.queryByText("Metric Breakdown")).not.toBeInTheDocument();
@@ -147,9 +147,9 @@ describe("Leaderboard Page", () => {
     const metricsBtn = screen.getAllByRole("button", { name: /Metrics/i })[1];
     fireEvent.click(metricsBtn);
 
-    expect(screen.getByText("Metric Breakdown")).toBeInTheDocument();
+    expect(screen.getAllByText("Metric Breakdown")[0]).toBeInTheDocument();
     expect(screen.getByText("Orders (40%)")).toBeInTheDocument();
-    expect(screen.getByText("150")).toBeInTheDocument();
+    expect(screen.getAllByText("150")[0]).toBeInTheDocument();
   });
 
   it("shares/copies ranking to clipboard", async () => {
@@ -161,7 +161,7 @@ describe("Leaderboard Page", () => {
 
     render(<Leaderboard />);
 
-    await waitFor(() => screen.getByText("Glow Salon"));
+    await waitFor(() => screen.getAllByText("Glow Salon")[0]);
 
     // Find the first share button
     const shareBtns = screen.getAllByTitle("Share ranking");
@@ -173,7 +173,7 @@ describe("Leaderboard Page", () => {
   it("switches tabs to local influencers", async () => {
     render(<Leaderboard />);
 
-    await waitFor(() => screen.getByText("Glow Salon"));
+    await waitFor(() => screen.getAllByText("Glow Salon")[0]);
 
     const influencerTab = screen.getByRole("button", { name: /Local Influencers/i });
     fireEvent.click(influencerTab);
@@ -197,7 +197,7 @@ describe("Leaderboard Page", () => {
 
     render(<Leaderboard />);
 
-    await waitFor(() => screen.getByText("Glow Salon"));
+    await waitFor(() => screen.getAllByText("Glow Salon")[0]);
 
     const recalcBtn = screen.getByRole("button", { name: /Recalculate Leaderboard/i });
     expect(recalcBtn).toBeInTheDocument();
@@ -214,7 +214,7 @@ describe("Leaderboard Page", () => {
 
     render(<Leaderboard />);
 
-    await waitFor(() => screen.getByText("Glow Salon"));
+    await waitFor(() => screen.getAllByText("Glow Salon")[0]);
 
     expect(screen.queryByRole("button", { name: /Recalculate Leaderboard/i })).not.toBeInTheDocument();
   });

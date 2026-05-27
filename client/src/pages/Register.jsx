@@ -146,8 +146,8 @@ const Register = () => {
     }
 
     setLoading(true);
-    if (gpsState.status !== "granted") {
-      toast.error("GPS location is required to create a profile.");
+    if (gpsState.status !== "granted" && (!gpsState.district.trim() || !gpsState.taluka.trim())) {
+      toast.error("Please enter District and Taluka manually.");
       setLoading(false);
       return;
     }
@@ -157,15 +157,15 @@ const Register = () => {
         name: formData.username,
         email: formData.email,
         password: formData.password,
-        locationPermission: "granted",
+        locationPermission: gpsState.status === "granted" ? "granted" : "denied",
+        district: gpsState.district ? gpsState.district.trim() : null,
+        taluka: gpsState.taluka ? gpsState.taluka.trim() : null,
       };
 
       if (gpsState.status === "granted" && gpsState.latitude) {
         payload.latitude = gpsState.latitude;
         payload.longitude = gpsState.longitude;
         payload.locationName = gpsState.locationName;
-        payload.district = gpsState.district;
-        payload.taluka = gpsState.taluka;
       }
 
       if (refCode && refValidated) {
@@ -182,6 +182,9 @@ const Register = () => {
         login(userData);
         toast.success("Account created successfully!");
         navigate("/home");
+      } else if (response.data.step === "otp") {
+        toast.success(response.data.message || "Registration successful! Verification code sent.");
+        navigate("/", { state: { email: formData.email, step: "otp" } });
       } else {
         toast.error(response.data.message || "Registration Failed");
       }
@@ -199,8 +202,8 @@ const Register = () => {
   const gpsStatusConfig = {
     idle: {
       icon: <MapPin />,
-      label: "Enable GPS Location",
-      sublabel: "Share your location for personalized local services",
+      label: "Enable GPS Location (Optional)",
+      sublabel: "Share your location for personalized local services, or enter location details manually.",
       color: "text-primary",
       bg: "bg-primary/10 border-primary/30",
     },
@@ -220,15 +223,15 @@ const Register = () => {
     },
     denied: {
       icon: <Ban />,
-      label: "GPS Required",
-      sublabel: "Please allow location access in your browser settings",
+      label: "GPS Denied (Optional)",
+      sublabel: "Location access denied. Please enter District and Taluka manually below.",
       color: "text-rose-400",
       bg: "bg-rose-500/10 border-rose-500/30",
     },
     error: {
       icon: <AlertTriangle />,
-      label: "Location Unavailable",
-      sublabel: "GPS is mandatory for account security",
+      label: "Location Unavailable (Optional)",
+      sublabel: "Could not fetch GPS. Please enter District and Taluka manually below.",
       color: "text-orange-400",
       bg: "bg-orange-500/10 border-orange-500/30",
     },
@@ -288,6 +291,7 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="John Doe"
                 required
+                aria-label="Full Name"
               />
             </div>
             <div className="space-y-2">
@@ -303,6 +307,7 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="john@example.com"
                 required
+                aria-label="Email Address"
               />
             </div>
           </div>
@@ -321,6 +326,7 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                aria-label="Create Password"
               />
             </div>
             <div className="space-y-2">
@@ -336,6 +342,7 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                aria-label="Confirm Password"
               />
             </div>
           </div>
@@ -391,6 +398,7 @@ const Register = () => {
                     <button
                       type="button"
                       onClick={fetchGpsLocation}
+                      aria-label="Allow GPS location access"
                       className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/80 transition-all whitespace-nowrap"
                     >
                       Allow GPS
@@ -402,6 +410,7 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={fetchGpsLocation}
+                    aria-label="Enable GPS location access in settings"
                     className="px-4 py-2 bg-white/10 text-text-dim text-xs font-medium rounded-lg hover:bg-white/15 transition-all whitespace-nowrap"
                   >
                     Enable GPS
@@ -412,6 +421,7 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={fetchGpsLocation}
+                    aria-label="Refresh GPS location"
                     className="px-3 py-2 bg-green-500/20 text-green-400 text-xs font-medium rounded-lg hover:bg-green-500/30 transition-all whitespace-nowrap"
                   >
                     Refresh
@@ -421,10 +431,54 @@ const Register = () => {
             </div>
           </div>
 
+          <AnimatePresence>
+            {gpsState.status !== "granted" && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6 border border-border bg-dark-bg p-5 rounded-xl space-y-0"
+              >
+                <div className="space-y-2">
+                  <label htmlFor="district" className="text-sm font-medium text-text-dim">
+                    District
+                  </label>
+                  <input
+                    id="district"
+                    type="text"
+                    name="district"
+                    className="w-full bg-card-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"
+                    value={gpsState.district}
+                    onChange={(e) => setGpsState((prev) => ({ ...prev, district: e.target.value }))}
+                    placeholder="Enter District (e.g. Surat)"
+                    required
+                    aria-label="District"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="taluka" className="text-sm font-medium text-text-dim">
+                    Taluka
+                  </label>
+                  <input
+                    id="taluka"
+                    type="text"
+                    name="taluka"
+                    className="w-full bg-card-bg border border-border p-3.5 rounded-lg text-sm text-white focus:border-primary outline-none transition-all"
+                    value={gpsState.taluka}
+                    onChange={(e) => setGpsState((prev) => ({ ...prev, taluka: e.target.value }))}
+                    placeholder="Enter Taluka"
+                    required
+                    aria-label="Taluka"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <button
             type="submit"
             className="btn-primary w-full py-4 text-base font-bold mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading || gpsState.status !== "granted"}
+            disabled={loading}
           >
             {loading ? "Creating Profile..." : "Register Citizen Node"}
           </button>

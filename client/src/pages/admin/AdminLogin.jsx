@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 
@@ -10,13 +10,23 @@ const AdminLogin = () => {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  useState(() => {
+  useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (token) {
       navigate("/admin/dashboard", { replace: true });
     }
-  }, []);
+  }, [navigate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("expired") === "true") {
+      toast.error("Session expired. Please login again.");
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

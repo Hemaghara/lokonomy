@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
 const { uploadMedia } = require("../utils/uploadMedia");
@@ -8,6 +9,18 @@ const logger = require("../utils/logger");
 const { Resend } = require("resend");
 
 const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+
+let DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
+(async () => {
+  try {
+    DUMMY_HASH = await bcrypt.hash("dummy_password_for_timing_attack_prevention", 10);
+  } catch (e) {
+    logger.warn("Could not pre-compute dummy hash, using fallback");
+  }
+})();
+
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 let transporter;
 const getTransporter = () => {
@@ -18,14 +31,70 @@ const getTransporter = () => {
     transporter = nodemailer.createTransport({
       pool: true,
       service: "gmail",
-      family: 4, // Force IPv4 to prevent Render IPv6 DNS latency and spam-filter delay
-      auth: { 
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS 
+      family: 4,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       },
     });
   }
   return transporter;
+};
+
+
+const sendOtpEmail = async (email, userName, otp) => {
+  const mailService = getTransporter();
+  const isResendConfigured = !!resendClient;
+  const isGmailConfigured = !!mailService && !process.env.EMAIL_USER.includes("your-email");
+  const isEmailConfigured = isResendConfigured || isGmailConfigured;
+
+  if (!isEmailConfigured) {
+    if (process.env.NODE_ENV === "production") {
+      logger.error({
+        resendApiKey: !!process.env.RESEND_API_KEY,
+        emailUser: !!process.env.EMAIL_USER,
+        emailPass: !!process.env.EMAIL_PASS
+      }, "Email configuration missing in production!");
+      return { success: false, production: true };
+    }
+    logger.warn("Dev mode: OTP logged server-side only");
+    logger.info({ otp }, "DEV OTP (never send to client in prod)");
+    return { success: true, devMode: true };
+  }
+
+  const emailContent = {
+    subject: "Your Verification Code",
+    text: `Hello ${userName},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
+    html: `<div style="font-family:sans-serif;padding:20px">
+      <h3>Verification Code</h3>
+      <p>Hello <b>${userName}</b>,</p>
+      <p>Your login OTP is:</p>
+      <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
+      <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
+    </div>`,
+  };
+
+  if (isResendConfigured) {
+    logger.info({ to: email }, "Attempting to send OTP email via Resend...");
+    resendClient.emails.send({
+      from: process.env.RESEND_FROM || "Lokonomy <onboarding@resend.dev>",
+      to: email,
+      ...emailContent,
+    })
+      .then(() => logger.info({ to: email }, "OTP email sent via Resend"))
+      .catch((err) => logger.error({ err: err.message, email }, "Resend delivery failed"));
+  } else {
+    logger.info({ to: email }, "Attempting to send OTP email via Gmail SMTP...");
+    mailService.sendMail({
+      from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+      to: email,
+      ...emailContent,
+    })
+      .then(() => logger.info({ to: email }, "OTP email sent via Gmail SMTP"))
+      .catch((mailErr) => logger.error({ err: mailErr.message, email }, "Gmail SMTP delivery failed"));
+  }
+
+  return { success: true };
 };
 
 exports.login = async (req, res) => {
@@ -45,24 +114,24 @@ exports.login = async (req, res) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  const normalizedEmail = email.toLowerCase().trim();
+  if (!emailRegex.test(normalizedEmail)) {
     return res
       .status(400)
       .json({ success: false, message: "Invalid email format" });
   }
 
   try {
-    const user = await User.findOne({ email }).select(
+    const user = await User.findOne({ email: normalizedEmail }).select(
       "+password +otp +otpExpires",
     );
 
-    const dummyHash = "$2a$10$dummy.hash.to.prevent.timing.attacks.xxx";
     const isMatch = user
       ? await bcrypt.compare(password, user.password)
-      : await bcrypt.compare(password, dummyHash);
+      : await bcrypt.compare(password, DUMMY_HASH);
 
     if (!user || !isMatch) {
-      logger.warn({ email }, "Login failed: Invalid credentials");
+      logger.warn({ email: normalizedEmail }, "Login failed: Invalid credentials");
       return res
         .status(401)
         .json({ success: false, message: "Invalid email or password" });
@@ -79,17 +148,22 @@ exports.login = async (req, res) => {
     }
 
     if (locationPermission === "granted" && latitude && longitude) {
-      user.latitude = parseFloat(latitude);
-      user.longitude = parseFloat(longitude);
-      user.locationName = locationName || null;
-      user.locationPermission = "granted";
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        user.latitude = lat;
+        user.longitude = lng;
+        user.locationName = locationName || null;
+        user.locationPermission = "granted";
+      } else {
+        logger.warn({ latitude, longitude }, "Invalid coordinates received during login");
+      }
     } else if (locationPermission === "denied") {
       user.locationPermission = "denied";
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 300000);
-    const crypto = require("crypto");
     const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
     await User.findByIdAndUpdate(user._id, {
@@ -103,83 +177,18 @@ exports.login = async (req, res) => {
       },
     });
 
-    const mailService = getTransporter();
-    const isResendConfigured = !!resendClient;
-    const isGmailConfigured = !!mailService && !process.env.EMAIL_USER.includes("your-email");
-    const isEmailConfigured = isResendConfigured || isGmailConfigured;
+    const emailResult = await sendOtpEmail(normalizedEmail, user.name, otp);
 
-    if (!isEmailConfigured) {
-      if (process.env.NODE_ENV === "production") {
-        logger.error({
-          resendApiKey: !!process.env.RESEND_API_KEY,
-          emailUser: !!process.env.EMAIL_USER,
-          emailPass: !!process.env.EMAIL_PASS
-        }, "Email configuration missing in production!");
-        
-        return res.status(503).json({
-          success: false,
-          message: "Email service is not configured. Please set RESEND_API_KEY or EMAIL_USER/EMAIL_PASS in Render settings.",
-        });
-      }
-      logger.warn(
-        { userId: user._id },
-        "Dev mode: OTP logged server-side only",
-      );
-      logger.info({ otp }, "DEV OTP (never send to client in prod)");
-      return res.json({
-        success: true,
-        message: "OTP sent (dev mode)",
-        step: "otp",
-      });
-    }
-
-    if (isResendConfigured) {
-      logger.info({ to: email }, "Attempting to send OTP email instantly via Resend...");
-      resendClient.emails.send({
-        from: process.env.RESEND_FROM || "Lokonomy <onboarding@resend.dev>",
-        to: email,
-        subject: "Your Verification Code",
-        text: `Hello ${user.name},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
-        html: `<div style="font-family:sans-serif;padding:20px">
-          <h3>Verification Code</h3>
-          <p>Hello <b>${user.name}</b>,</p>
-          <p>Your login OTP is:</p>
-          <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
-          <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
-        </div>`,
-      })
-      .then(() => {
-        logger.info({ to: email }, "OTP email sent instantly via Resend in the background");
-      })
-      .catch((err) => {
-        logger.error({ err: err.message, email }, "Resend delivery failed in the background");
-      });
-    } else {
-      logger.info({ to: email }, "Attempting to send OTP email via Gmail SMTP...");
-      mailService.sendMail({
-        from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Your Verification Code",
-        text: `Hello ${user.name},\n\nYour login OTP is: ${otp}\n\nValid for 5 minutes. Do not share this code.`,
-        html: `<div style="font-family:sans-serif;padding:20px">
-          <h3>Verification Code</h3>
-          <p>Hello <b>${user.name}</b>,</p>
-          <p>Your login OTP is:</p>
-          <div style="background:#f4f4f4;padding:15px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:5px">${otp}</div>
-          <p style="font-size:12px;color:#888">Valid for 5 minutes. Do not share this code.</p>
-        </div>`,
-      })
-      .then(() => {
-        logger.info({ to: email }, "OTP email sent successfully via Gmail SMTP in the background");
-      })
-      .catch((mailErr) => {
-        logger.error({ err: mailErr.message, email }, "Gmail SMTP delivery failed in the background");
+    if (!emailResult.success && emailResult.production) {
+      return res.status(503).json({
+        success: false,
+        message: "Email service is not configured. Please set RESEND_API_KEY or EMAIL_USER/EMAIL_PASS in Render settings.",
       });
     }
 
     return res.json({
       success: true,
-      message: "Verification code sent.",
+      message: emailResult.devMode ? "OTP sent (dev mode)" : "Verification code sent.",
       step: "otp",
     });
   } catch (err) {
@@ -191,10 +200,10 @@ exports.login = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    logger.info({ email }, "Verify OTP Attempt");
-    const user = await User.findOne({ email }).select("+otp +otpExpires");
+    const normalizedEmail = email ? email.toLowerCase().trim() : "";
+    logger.info({ email: normalizedEmail }, "Verify OTP Attempt");
+    const user = await User.findOne({ email: normalizedEmail }).select("+otp +otpExpires");
 
-    const crypto = require("crypto");
     const incomingHash = crypto.createHash("sha256").update(otp || "").digest("hex");
 
     const isOtpValid = user && user.otp &&
@@ -202,7 +211,7 @@ exports.verifyOtp = async (req, res) => {
       new Date() <= user.otpExpires;
 
     if (!isOtpValid) {
-      logger.warn({ email }, "OTP verification failed: Invalid or expired OTP");
+      logger.warn({ email: normalizedEmail }, "OTP verification failed: Invalid or expired OTP");
       return res
         .status(400)
         .json({ success: false, message: "Invalid or expired OTP" });
@@ -210,7 +219,7 @@ exports.verifyOtp = async (req, res) => {
 
     if (user.status && user.status !== "active") {
       logger.warn(
-        { email, status: user.status },
+        { email: normalizedEmail, status: user.status },
         "Access denied for inactive user during OTP verification",
       );
       return res.status(403).json({
@@ -227,12 +236,12 @@ exports.verifyOtp = async (req, res) => {
     const accessToken = jwt.sign(
       { user: { id: user.id } },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "7d" },
     );
     const refreshToken = jwt.sign(
       { user: { id: user.id } },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     user.refreshToken = refreshToken;
@@ -271,12 +280,12 @@ exports.refresh = async (req, res) => {
     const newAccessToken = jwt.sign(
       { user: { id: user.id } },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "7d" },
     );
     const newRefreshToken = jwt.sign(
       { user: { id: user.id } },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "30d" },
     );
 
     user.refreshToken = newRefreshToken;
@@ -292,6 +301,16 @@ exports.refresh = async (req, res) => {
     res
       .status(403)
       .json({ success: false, message: "Invalid or expired token" });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { refreshToken: null });
+    res.json({ success: true, message: "Logged out successfully" });
+  } catch (err) {
+    logger.error({ err }, "Logout error");
+    res.status(500).json({ success: false, message: "Logout failed" });
   }
 };
 
@@ -324,13 +343,24 @@ exports.register = async (req, res) => {
       longitude,
       locationName,
       locationPermission,
+      district,
+      taluka,
       referralCode: incomingReferralCode,
     } = req.body;
 
-    let user = await User.findOne({ email });
+    const normalizedEmail = email ? email.toLowerCase().trim() : "";
+
+    if (!password || !PASSWORD_REGEX.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters with uppercase, lowercase, number, and special character (@$!%*?&)",
+      });
+    }
+
+    let user = await User.findOne({ email: normalizedEmail });
     if (user) {
-      logger.warn({ email }, "Registration failed: User already exists");
-      return res.status(400).json({ message: "User already exists" });
+      logger.warn({ email: normalizedEmail }, "Registration failed: User already exists");
+      return res.status(400).json({ success: false, message: "User already exists" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -338,18 +368,25 @@ exports.register = async (req, res) => {
 
     const userData = {
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       locationPermission: locationPermission || "not_asked",
+      district: district || null,
+      taluka: taluka || null,
     };
+
+
     if (locationPermission === "granted" && latitude && longitude) {
-      userData.latitude = parseFloat(latitude);
-      userData.longitude = parseFloat(longitude);
-      userData.locationName = locationName || null;
-      logger.debug(
-        { name, latitude, longitude },
-        "Location saved during registration",
-      );
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        userData.latitude = lat;
+        userData.longitude = lng;
+        userData.locationName = locationName || null;
+        logger.debug({ name, latitude: lat, longitude: lng }, "Location saved during registration");
+      } else {
+        logger.warn({ latitude, longitude }, "Invalid coordinates during registration, skipping");
+      }
     }
 
     let referrerUser = null;
@@ -365,22 +402,18 @@ exports.register = async (req, res) => {
     user = new User(userData);
     await user.save();
 
-    const suffix = user._id.toString().slice(-4).toUpperCase();
-    user.referralCode = `LOKO-${suffix}`;
 
-    const accessToken = jwt.sign(
-      { user: { id: user.id } },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" },
-    );
-    const refreshToken = jwt.sign(
-      { user: { id: user.id } },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    user.refreshToken = refreshToken;
+    user.referralCode = `LOKO-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
     await user.save();
+
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 300000);
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    await User.findByIdAndUpdate(user._id, {
+      $set: { otp: otpHash, otpExpires },
+    });
 
     if (referrerUser) {
       await User.findByIdAndUpdate(referrerUser._id, {
@@ -388,14 +421,19 @@ exports.register = async (req, res) => {
       });
     }
 
-    logger.info({ userId: user._id, email }, "User registered successfully");
+    const emailResult = await sendOtpEmail(normalizedEmail, name, otp);
+
+    if (!emailResult.success && emailResult.production) {
+      logger.error({ email: normalizedEmail }, "Registration succeeded but OTP email failed");
+    }
+
+    logger.info({ userId: user._id, email: normalizedEmail }, "User registered — OTP sent for verification");
 
     res.status(201).json({
       success: true,
-      token: accessToken,
-      refreshToken,
-      user: serializeUser(user),
-      message: "User registered successfully",
+      message: "Registration successful. Please verify your email with the OTP sent.",
+      step: "otp",
+      email: normalizedEmail,
     });
   } catch (err) {
     logger.error({ err }, "Registration error");
@@ -431,19 +469,52 @@ exports.updateProfile = async (req, res) => {
 
     if (name) user.name = name;
 
-    if (latitude !== undefined) user.latitude = parseFloat(latitude);
-    if (longitude !== undefined) user.longitude = parseFloat(longitude);
+    if (latitude !== undefined && longitude !== undefined) {
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        user.latitude = lat;
+        user.longitude = lng;
+      } else {
+        return res.status(400).json({ success: false, message: "Invalid coordinates" });
+      }
+    } else if (latitude !== undefined) {
+      user.latitude = parseFloat(latitude);
+    } else if (longitude !== undefined) {
+      user.longitude = parseFloat(longitude);
+    }
+
     if (locationName !== undefined) user.locationName = locationName;
     if (locationPermission) user.locationPermission = locationPermission;
     if (district !== undefined) user.district = district;
     if (taluka !== undefined) user.taluka = taluka;
 
-    if (upiId !== undefined) user.upiId = upiId;
-    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+    if (phoneNumber !== undefined) {
+      if (phoneNumber && !/^\d{10}$/.test(phoneNumber)) {
+        return res.status(400).json({ success: false, message: "Invalid phone number (must be 10 digits)" });
+      }
+      user.phoneNumber = phoneNumber;
+    }
+    if (upiId !== undefined) {
+      if (upiId && !/^[\w.\-]+@[\w]+$/.test(upiId)) {
+        return res.status(400).json({ success: false, message: "Invalid UPI ID format" });
+      }
+      user.upiId = upiId;
+    }
+    if (ifscCode !== undefined) {
+      if (ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode.toUpperCase())) {
+        return res.status(400).json({ success: false, message: "Invalid IFSC code" });
+      }
+      user.ifscCode = ifscCode;
+    }
     if (bankName !== undefined) user.bankName = bankName;
-    if (ifscCode !== undefined) user.ifscCode = ifscCode;
     if (branch !== undefined) user.branch = branch;
-    if (accountNumber !== undefined) user.accountNumber = accountNumber;
+    if (accountNumber !== undefined) {
+      if (accountNumber && !/^\d{6,18}$/.test(accountNumber)) {
+        return res.status(400).json({ success: false, message: "Invalid account number" });
+      }
+      user.accountNumber = accountNumber;
+    }
 
     if (paymentQrCode !== undefined) {
       if (paymentQrCode && paymentQrCode.startsWith("data:image")) {

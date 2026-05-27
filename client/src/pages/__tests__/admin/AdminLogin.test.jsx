@@ -152,4 +152,9 @@ describe("AdminLogin Page", () => {
       );
     });
   });
+
+  it("shows error toast if redirect query param expired=true is present", () => {
+    render(<AdminLogin />, { initialEntries: ["/admin/login?expired=true"] });
+    expect(toast.error).toHaveBeenCalledWith("Session expired. Please login again.");
+  });
 });

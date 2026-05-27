@@ -48,13 +48,21 @@ self.addEventListener("fetch", (event) => {
       if (isNavigation) {
         try {
           const networkResponse = await fetch(event.request);
-          if (networkResponse && networkResponse.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(event.request, networkResponse.clone());
+          if (networkResponse) {
+            if (networkResponse.status === 200) {
+              const cache = await caches.open(CACHE_NAME);
+              cache.put(event.request, networkResponse.clone());
+            }
             return networkResponse;
           }
         } catch (error) {
           console.log("[Service Worker] Navigation fetch failed, serving from cache", error);
+          const fallback = await caches.match("/") || await caches.match("/index.html");
+          if (fallback) return fallback;
+          return new Response("Offline", {
+            status: 503,
+            headers: { "Content-Type": "text/plain" },
+          });
         }
       }
 

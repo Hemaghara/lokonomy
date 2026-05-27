@@ -2,7 +2,6 @@ const PromotedListing = require("../models/PromotedListing");
 const Business = require("../models/Business");
 const logger = require("../utils/logger");
 
-// Create a new promotion for a business
 exports.createPromotion = async (req, res) => {
   try {
     const { businessId, type, budget, startDate, endDate, paymentId } = req.body;
@@ -11,7 +10,6 @@ exports.createPromotion = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Verify business exists and is owned by the request user
     const business = await Business.findById(businessId);
     if (!business) {
       return res.status(404).json({ message: "Business not found" });

@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Business = require("../models/Business");
 const Job = require("../models/Job");
 const Product = require("../models/Product");
+const logger = require("../utils/logger");
 
 exports.globalSearch = async (req, res) => {
   try {
@@ -62,7 +63,7 @@ exports.globalSearch = async (req, res) => {
       products,
     });
   } catch (error) {
-    console.error("Global search error:", error);
+    logger.error({ err: error }, "Global search error");
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

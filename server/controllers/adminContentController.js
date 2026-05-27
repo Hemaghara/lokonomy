@@ -19,14 +19,13 @@ exports.getBusinessDetails = async (req, res) => {
     const business = await Business.findById(req.params.id)
       .populate("ownerId", "name email phone district taluka profilePic")
       .lean();
-    
+
     if (!business) {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    // Fetch products belonging to this business/owner if any
     const products = await Product.find({ sellerId: business.ownerId }).limit(10);
-    
+
     res.json({
       ...business,
       products

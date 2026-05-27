@@ -41,7 +41,7 @@ describe('AdminBookings Component', () => {
         serviceName: 'Plumbing Repair',
         date: '2026-05-01',
         timeSlot: '10:00 AM',
-        businessId: { name: 'Bob Plumbing' }
+        businessId: { name: 'Bob Plumbing', businessName: 'Bob Plumbing' }
       },
       {
         _id: 'b2',
@@ -51,7 +51,7 @@ describe('AdminBookings Component', () => {
         serviceName: 'Cleaning',
         date: '2026-05-02',
         timeSlot: '12:00 PM',
-        businessId: { name: 'Clean Co' }
+        businessId: { name: 'Clean Co', businessName: 'Clean Co' }
       }
     ]
   };

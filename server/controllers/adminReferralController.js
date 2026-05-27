@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const logger = require("../utils/logger");
 
 exports.getAllReferrals = async (req, res) => {
   try {
@@ -36,7 +37,7 @@ exports.getAllReferrals = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in getAllReferrals:", error);
+    logger.error({ err: error }, "Error in getAllReferrals");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -55,7 +56,7 @@ exports.getTopReferrers = async (req, res) => {
       topReferrers,
     });
   } catch (error) {
-    console.error("Error in getTopReferrers:", error);
+    logger.error({ err: error }, "Error in getTopReferrers");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -88,7 +89,7 @@ exports.getReferralLeaderboard = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in getReferralLeaderboard:", error);
+    logger.error({ err: error }, "Error in getReferralLeaderboard");
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };

@@ -51,7 +51,7 @@ const mockData = {
         usedCount: 50,
         expiryDate: new Date(Date.now() - 86400000).toISOString(),
         status: "inactive",
-        businessId: { _id: "b1", name: "Tech Store" },
+        businessId: { _id: "b1", name: "Tech Store", businessName: "Tech Store" },
       },
     ],
   },

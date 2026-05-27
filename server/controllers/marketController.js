@@ -160,7 +160,6 @@ exports.getProductById = async (req, res) => {
 
     const FlashSale = require("../models/FlashSale");
     const now = new Date();
-    // Fetch scheduled/active sales to update their statuses based on current time
     const pendingSales = await FlashSale.find({
       productId: product._id,
       status: { $in: ["scheduled", "active"] },
@@ -390,16 +389,6 @@ exports.placeBid = async (req, res) => {
       return res.status(400).json({ message: "Auction has ended" });
     }
 
-    const minBid = Math.max(
-      product.startingPrice || 0,
-      product.currentHighestBid || 0,
-    );
-    if (amount <= minBid) {
-      return res
-        .status(400)
-        .json({ message: `Bid must be higher than ${minBid}` });
-    }
-
     const user = await User.findById(req.user.id);
     const bid = {
       userId: req.user.id,
@@ -408,24 +397,53 @@ exports.placeBid = async (req, res) => {
       createdAt: new Date(),
     };
 
-    product.bids.push(bid);
-    product.currentHighestBid = amount;
-    await product.save();
+    const updatedProduct = await Product.findOneAndUpdate(
+      {
+        _id: productId,
+        isAuction: true,
+        auctionEnd: { $gt: new Date() },
+        $and: [
+          {
+            $or: [
+              { currentHighestBid: { $lt: amount } },
+              { currentHighestBid: { $exists: false } }
+            ]
+          },
+          {
+            $or: [
+              { startingPrice: { $lt: amount } },
+              { startingPrice: { $exists: false } }
+            ]
+          }
+        ]
+      },
+      {
+        $push: { bids: bid },
+        $set: { currentHighestBid: amount },
+      },
+      { new: true },
+    );
+
+    if (!updatedProduct) {
+      return res.status(400).json({
+        message: "Bid placement failed. Either the auction has ended or your bid is lower than or equal to the current highest bid.",
+      });
+    }
 
     const io = req.app.get("io");
     if (io) {
       io.emit("bidUpdate", {
         productId,
         currentHighestBid: amount,
-        bidHistory: product.bids,
+        bidHistory: updatedProduct.bids,
       });
     }
 
     await createNotification({
-      recipientId: product.sellerId.toString(),
+      recipientId: updatedProduct.sellerId.toString(),
       type: "order",
       title: "New Bid Received",
-      message: `${user.name} placed a ₹${Number(amount).toLocaleString()} bid on ${product.productName || product.name || "your auction"}.`,
+      message: `${user.name} placed a ₹${Number(amount).toLocaleString()} bid on ${updatedProduct.productName || updatedProduct.name || "your auction"}.`,
       actionUrl: `/market/product/${productId}`,
       metadata: { productId, bidAmount: amount },
       io,
@@ -435,7 +453,7 @@ exports.placeBid = async (req, res) => {
       { productId, userId: req.user.id, amount },
       "Bid placed successfully",
     );
-    res.status(200).json({ success: true, product });
+    res.status(200).json({ success: true, product: updatedProduct });
   } catch (err) {
     logger.error({ err, productId: req.params.id }, "Error placing bid");
     res.status(500).json({ message: err.message });

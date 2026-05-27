@@ -1,8 +1,26 @@
 const sharp = require("sharp");
 const getStorageProvider = require("../services/storage/getStorageProvider");
 const crypto = require("crypto");
+const logger = require("./logger");
 
 const generateUniqueId = () => crypto.randomBytes(8).toString("hex");
+
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf"
+];
+
+const getMimeType = (base64) => {
+  if (base64.startsWith("data:")) {
+    const match = base64.match(/^data:([^;]+);/);
+    return match ? match[1] : null;
+  }
+  return null;
+};
 
 const parseBase64ToBuffer = (base64) => {
   if (base64.startsWith("data:")) {
@@ -23,6 +41,12 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
   if (!fileBase64) return null;
 
   if (fileBase64.startsWith("http")) return fileBase64;
+
+  // Bug #8: MIME type whitelist validation
+  const mimeType = getMimeType(fileBase64);
+  if (mimeType && !ALLOWED_MIME_TYPES.includes(mimeType)) {
+    throw new Error("Invalid file type. Allowed types are: JPEG, PNG, WEBP, GIF, PDF.");
+  }
 
   const storage = getStorageProvider();
   const fileBuffer = parseBase64ToBuffer(fileBase64);
@@ -75,7 +99,7 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
       thumbUrl: thumbResult,
     };
   } catch (err) {
-    console.error("Global Media Upload Error:", err);
+    logger.error({ err }, "Global Media Upload Error"); // Bug #34: Use logger.error
     throw err;
   }
 };

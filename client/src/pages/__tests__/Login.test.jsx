@@ -157,25 +157,14 @@ describe("Login Page", () => {
       target: { value: "password123" },
     });
 
-    // Try submitting without GPS
-    fireEvent.submit(screen.getByPlaceholderText(/name@example.com/i).closest("form"));
-    expect(toast.error).toHaveBeenCalledWith(
-      "GPS location is required to secure your login.",
-    );
-
-    // Authorize GPS
-    fireEvent.click(screen.getByRole("button", { name: /Authorize/i }));
-    await waitFor(() => screen.getByText(/Access Verified/i));
-
-    // Sign in
+    // Sign in WITHOUT GPS (GPS is now optional)
     fireEvent.submit(screen.getByPlaceholderText(/name@example.com/i).closest("form"));
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalledWith(
         expect.objectContaining({
           email: "test@example.com",
-          latitude: 12.3456,
-          locationName: expect.any(String),
+          locationPermission: "denied",
         }),
       );
       expect(screen.getByText("Security Check")).toBeInTheDocument();
@@ -343,5 +332,10 @@ describe("Login Page", () => {
     render(<Login />);
     fireEvent.submit(screen.getByRole("button", { name: /Sign In Now/i }).closest("form"));
     expect(toast.error).toHaveBeenCalledWith("Please fill all fields");
+  });
+
+  it("shows error toast if redirect query param expired=true is present", () => {
+    render(<Login />, { initialEntries: ["/?expired=true"] });
+    expect(toast.error).toHaveBeenCalledWith("Session expired. Please login again.");
   });
 });

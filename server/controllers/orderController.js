@@ -4,8 +4,12 @@ const Product = require("../models/Product");
 const User = require("../models/User");
 const Plan = require("../models/Plan");
 const Commission = require("../models/Commission");
+const FlashSale = require("../models/FlashSale"); // Bug #27: Moved requires to top
+const Coupon = require("../models/Coupon"); // Bug #27: Moved requires to top
+const Business = require("../models/Business"); // Bug #27: Moved requires to top
 const { awardPoints } = require("./rewardsController");
 const { createNotification } = require("./notificationController");
+const { sendPushNotification } = require("../utils/pushService"); // Bug #27: Moved requires to top
 const logger = require("../utils/logger");
 
 const DEFAULT_COMMISSION_RATES = {
@@ -13,6 +17,16 @@ const DEFAULT_COMMISSION_RATES = {
   silver: 4,
   gold: 3,
   platinum: 2,
+};
+
+const VALID_TRANSITIONS = {
+  pending: ["preparing", "processing", "cancelled"],
+  preparing: ["processing", "shipped", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["out_for_delivery", "cancelled"],
+  out_for_delivery: ["delivered", "cancelled"],
+  delivered: [],
+  cancelled: [],
 };
 
 async function getCommissionRate(sellerId) {
@@ -60,6 +74,17 @@ exports.createOrder = async (req, res) => {
         });
       }
 
+      // Bug #17: Validate quantity (integer, 1-1000)
+      const qty = parseInt(quantity, 10);
+      if (isNaN(qty) || qty < 1 || qty > 1000 || qty !== Number(quantity)) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          success: false,
+          message: "Quantity must be an integer between 1 and 1000.",
+        });
+      }
+
       const product = await Product.findOne({
         _id: productId,
         isSold: false,
@@ -91,7 +116,6 @@ exports.createOrder = async (req, res) => {
           .json({ success: false, message: "Cannot purchase your own product." });
       }
 
-      const FlashSale = require("../models/FlashSale");
       const now = new Date();
       const activeFlashSale = await FlashSale.findOne({
         productId,
@@ -119,7 +143,7 @@ exports.createOrder = async (req, res) => {
       let pricePerUnit = product.price;
 
       if (activeFlashSale) {
-        if (activeFlashSale.soldCount + quantity > activeFlashSale.maxQuantity) {
+        if (activeFlashSale.soldCount + qty > activeFlashSale.maxQuantity) {
           await session.abortTransaction();
           session.endSession();
           return res.status(400).json({
@@ -128,13 +152,13 @@ exports.createOrder = async (req, res) => {
           });
         }
         pricePerUnit = activeFlashSale.salePrice;
-        activeFlashSale.soldCount += quantity;
+        activeFlashSale.soldCount += qty;
         if (activeFlashSale.soldCount >= activeFlashSale.maxQuantity) {
           activeFlashSale.status = "ended";
         }
         await activeFlashSale.save({ session });
       } else if (product.isBulkEnabled && product.bulkPricing && product.bulkPricing.length > 0) {
-        if (quantity < (product.minOrderQuantity || 1)) {
+        if (qty < (product.minOrderQuantity || 1)) {
           await session.abortTransaction();
           session.endSession();
           return res.status(400).json({
@@ -143,7 +167,7 @@ exports.createOrder = async (req, res) => {
           });
         }
         const sortedTiers = [...product.bulkPricing].sort((a, b) => b.minQuantity - a.minQuantity);
-        const matchingTier = sortedTiers.find(tier => quantity >= tier.minQuantity);
+        const matchingTier = sortedTiers.find(tier => qty >= tier.minQuantity);
         if (matchingTier) {
           pricePerUnit = matchingTier.pricePerUnit;
         }
@@ -154,12 +178,10 @@ exports.createOrder = async (req, res) => {
         await product.save({ session });
       }
 
-      let orderAmount = pricePerUnit * quantity;
+      let orderAmount = pricePerUnit * qty;
 
       let couponDoc = null;
       if (appliedCoupon) {
-        const Coupon = require("../models/Coupon");
-        const Business = require("../models/Business");
         const biz = await Business.findOne({ ownerId: product.sellerId });
         const query = { code: appliedCoupon.toUpperCase() };
         if (biz) {
@@ -196,7 +218,7 @@ exports.createOrder = async (req, res) => {
         contactNumber,
         transactionId,
         paymentStatus: "completed",
-        quantity,
+        quantity: qty,
         commissionRate,
         commissionAmount,
         sellerPayout,
@@ -226,7 +248,6 @@ exports.createOrder = async (req, res) => {
           "making_order",
           `Order for ${product.productName || product.name}`,
         );
-        const { sendPushNotification } = require("../utils/pushService");
         await sendPushNotification(product.sellerId, {
           title: "New Order",
           body: `New order for ${product.productName || product.name}`,
@@ -237,7 +258,8 @@ exports.createOrder = async (req, res) => {
           recipientId: product.sellerId,
           type: "order",
           title: "New Order",
-          message: `Order for ${product.productName || product.name} - ₹${product.price}`,
+          // Bug #23: Show orderAmount instead of product.price in notification
+          message: `Order for ${product.productName || product.name} - ₹${orderAmount}`,
           actionUrl: "/sales-management",
           metadata: { orderId: savedOrder._id },
           io,
@@ -265,7 +287,8 @@ exports.createOrder = async (req, res) => {
       }
 
       logger.error({ err }, "Order creation error");
-      return res.status(500).json({ success: false, message: "Server error" });
+      // Bug #33: Generic error message
+      return res.status(500).json({ success: false, message: "Failed to create order" });
     }
   }
 
@@ -284,20 +307,40 @@ exports.getBuyerOrders = async (req, res) => {
     res.status(200).json({ success: true, orders });
   } catch (err) {
     logger.error({ err, userId: req.user.id }, "Error in getBuyerOrders");
-    res.status(500).json({ success: false, message: err.message });
+    // Bug #33: Generic error message
+    res.status(500).json({ success: false, message: "Failed to retrieve buyer orders" });
   }
 };
 
 exports.getSellerOrders = async (req, res) => {
   try {
+    // Bug #24: Add pagination to getSellerOrders
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Order.countDocuments({ seller: req.user.id });
     const orders = await Order.find({ seller: req.user.id })
       .populate("product")
       .populate("buyer", "name email")
-      .sort({ createdAt: -1 });
-    res.status(200).json({ success: true, orders });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     logger.error({ err, userId: req.user.id }, "Error in getSellerOrders");
-    res.status(500).json({ success: false, message: err.message });
+    // Bug #33: Generic error message
+    res.status(500).json({ success: false, message: "Failed to retrieve seller orders" });
   }
 };
 
@@ -320,10 +363,21 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
+    // Bug #38: Add order status state machine validation
+    const currentStatus = order.orderStatus || "pending";
+    if (currentStatus !== orderStatus) {
+      const allowedNext = VALID_TRANSITIONS[currentStatus] || [];
+      if (!allowedNext.includes(orderStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status transition from ${currentStatus} to ${orderStatus}.`
+        });
+      }
+    }
+
     order.orderStatus = orderStatus;
     await order.save();
 
-    const { sendPushNotification } = require("../utils/pushService");
     await sendPushNotification(order.buyer, {
       title: "Order Update",
       body: `Your order status has been updated to ${orderStatus}.`,
@@ -351,7 +405,8 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(200).json({ success: true, order });
   } catch (err) {
     logger.error({ err, orderId: req.params.id }, "Error in updateOrderStatus");
-    res.status(500).json({ success: false, message: err.message });
+    // Bug #33: Generic error message
+    res.status(500).json({ success: false, message: "Failed to update order status" });
   }
 };
 
@@ -359,9 +414,52 @@ exports.getSellerDashboardStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
     const orders = await Order.find({ seller: sellerId });
-    const deliveredOrders = orders.filter((o) => o.orderStatus === "delivered");
-    const grossEarnings = deliveredOrders.reduce((acc, curr) => acc + curr.price, 0);
-    const totalCommission = deliveredOrders.reduce((acc, curr) => acc + (curr.commissionAmount || 0), 0);
+
+    // Bug #25: Single-pass computation for seller stats
+    const last7Days = [];
+    const dateToDayIndex = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      last7Days.push({ date: dateStr, gross: 0, commission: 0, net: 0 });
+      dateToDayIndex[dateStr] = 6 - i;
+    }
+
+    let grossEarnings = 0;
+    let totalCommission = 0;
+
+    const statusCounts = {
+      pending: 0,
+      preparing: 0,
+      processing: 0,
+      shipped: 0,
+      out_for_delivery: 0,
+      delivered: 0,
+      cancelled: 0,
+    };
+
+    orders.forEach((o) => {
+      // 1. Status counts
+      if (statusCounts[o.orderStatus] !== undefined) {
+        statusCounts[o.orderStatus]++;
+      }
+
+      // 2. Earnings and Daily Sales (only for delivered orders)
+      if (o.orderStatus === "delivered") {
+        grossEarnings += o.price;
+        totalCommission += (o.commissionAmount || 0);
+
+        const dateStr = new Date(o.createdAt).toISOString().split("T")[0];
+        const dayIndex = dateToDayIndex[dateStr];
+        if (dayIndex !== undefined) {
+          last7Days[dayIndex].gross += o.price;
+          last7Days[dayIndex].commission += (o.commissionAmount || 0);
+          last7Days[dayIndex].net += (o.sellerPayout || o.price);
+        }
+      }
+    });
+
     const netEarnings = grossEarnings - totalCommission;
 
     const stats = {
@@ -370,45 +468,9 @@ exports.getSellerDashboardStats = async (req, res) => {
       grossEarnings,
       totalCommission,
       netEarnings,
-      statusCounts: {
-        pending: 0,
-        preparing: 0,
-        processing: 0,
-        shipped: 0,
-        out_for_delivery: 0,
-        delivered: 0,
-        cancelled: 0,
-      },
-      dailySales: [],
+      statusCounts,
+      dailySales: last7Days,
     };
-
-    orders.forEach((o) => {
-      if (stats.statusCounts[o.orderStatus] !== undefined) {
-        stats.statusCounts[o.orderStatus]++;
-      }
-    });
-
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
-      last7Days.push({ date: dateStr, gross: 0, commission: 0, net: 0 });
-    }
-
-    orders.forEach((o) => {
-      if (o.orderStatus === "delivered") {
-        const dateStr = new Date(o.createdAt).toISOString().split("T")[0];
-        const day = last7Days.find((d) => d.date === dateStr);
-        if (day) {
-          day.gross += o.price;
-          day.commission += o.commissionAmount || 0;
-          day.net += o.sellerPayout || o.price;
-        }
-      }
-    });
-
-    stats.dailySales = last7Days;
 
     const currentRate = await getCommissionRate(sellerId);
     stats.currentCommissionRate = currentRate;
@@ -419,7 +481,8 @@ exports.getSellerDashboardStats = async (req, res) => {
       { err, userId: req.user.id },
       "Error in getSellerDashboardStats",
     );
-    res.status(500).json({ success: false, message: err.message });
+    // Bug #33: Generic error message
+    res.status(500).json({ success: false, message: "Failed to retrieve seller dashboard statistics" });
   }
 };
 
@@ -472,6 +535,7 @@ exports.updateTracking = async (req, res) => {
     res.json({ success: true, tracking: order.tracking });
   } catch (err) {
     logger.error({ err }, "Error updating order tracking");
-    res.status(500).json({ success: false, message: err.message });
+    // Bug #33: Generic error message
+    res.status(500).json({ success: false, message: "Failed to update tracking information" });
   }
 };

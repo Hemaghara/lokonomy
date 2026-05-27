@@ -6,14 +6,12 @@ const User = require("../models/User");
 const Plan = require("../models/Plan");
 const { getActivePlan } = require("../middleware/subscriptionMiddleware");
 
-// Helper to get plan limits (since cache logic isn't exported directly, we fetch planDoc)
 async function getAILevelForUser(userId) {
   const user = await User.findById(userId);
   if (!user) return "none";
   const planSlug = getActivePlan(user);
   const planDoc = await Plan.findOne({ slug: planSlug }).lean();
   if (!planDoc) {
-    // default free fallback
     return "none";
   }
   return planDoc.limits?.aiInsights || "none";
@@ -27,12 +25,10 @@ exports.getAIInsights = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Business not found" });
     }
 
-    // Ensure requesting user is the owner
     if (business.ownerId.toString() !== req.user.id && req.user.role !== "admin" && req.user.role !== "superadmin") {
       return res.status(403).json({ success: false, message: "Access denied: You are not the owner of this business" });
     }
 
-    // Check Plan Limits
     const aiLevel = await getAILevelForUser(req.user.id);
     if (aiLevel === "none") {
       return res.status(403).json({
@@ -43,12 +39,11 @@ exports.getAIInsights = async (req, res, next) => {
       });
     }
 
-    // 1. Sales Patterns (by day of week and hour of day)
     const orders = await Order.find({ seller: business.ownerId }).populate("product");
     const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const dailyVolume = {};
     const hourlyVolume = {};
-    
+
     dayNames.forEach(d => dailyVolume[d] = 0);
     for (let h = 0; h < 24; h++) {
       hourlyVolume[`${h.toString().padStart(2, '0')}:00`] = 0;
@@ -61,18 +56,16 @@ exports.getAIInsights = async (req, res, next) => {
         const dt = new Date(order.createdAt);
         const day = dayNames[dt.getDay()];
         const hourKey = `${dt.getHours().padStart ? dt.getHours().padStart(2, '0') : (dt.getHours() < 10 ? '0' + dt.getHours() : dt.getHours())}:00`;
-        
+
         dailyVolume[day] = (dailyVolume[day] || 0) + 1;
         hourlyVolume[hourKey] = (hourlyVolume[hourKey] || 0) + 1;
       }
     });
 
-    // 2. Pricing Suggestions (compare this business's products to other products in same categories)
     const myProducts = await Product.find({ business: businessId });
     const pricingSuggestions = [];
 
     for (const prod of myProducts) {
-      // Find similar products in the same subcategory
       const similarProds = await Product.find({
         subCategory: prod.subCategory,
         _id: { $ne: prod._id }
@@ -83,7 +76,7 @@ exports.getAIInsights = async (req, res, next) => {
         const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
-        
+
         let recommendation = "";
         let status = "neutral";
         if (prod.price < avgPrice * 0.8) {
@@ -121,7 +114,6 @@ exports.getAIInsights = async (req, res, next) => {
       }
     }
 
-    // 3. Sentiment Analysis (Analyze reviews comment text)
     const reviews = business.reviews || [];
     let positiveCount = 0;
     let negativeCount = 0;
@@ -136,10 +128,9 @@ exports.getAIInsights = async (req, res, next) => {
 
     reviews.forEach(rev => {
       const comment = (rev.comment || "").toLowerCase();
-      // Simple word matching sentiment
       const positiveWords = ["good", "great", "excellent", "fast", "friendly", "clean", "best", "love", "nice", "awesome"];
       const negativeWords = ["bad", "worst", "slow", "expensive", "rude", "dirty", "delay", "poor", "hate", "unhappy"];
-      
+
       let score = 0;
       positiveWords.forEach(w => { if (comment.includes(w)) score++; });
       negativeWords.forEach(w => { if (comment.includes(w)) score--; });
@@ -148,7 +139,6 @@ exports.getAIInsights = async (req, res, next) => {
       else if (rev.rating <= 2 || score < 0) negativeCount++;
       else neutralCount++;
 
-      // Keyword tagging
       if (comment.includes("quality") || comment.includes("taste") || comment.includes("product")) keyMentions.quality++;
       if (comment.includes("delivery") || comment.includes("speed") || comment.includes("fast")) keyMentions.delivery++;
       if (comment.includes("price") || comment.includes("cost") || comment.includes("expensive") || comment.includes("cheap")) keyMentions.pricing++;
@@ -164,18 +154,15 @@ exports.getAIInsights = async (req, res, next) => {
       keyMentions: totalReviews > 0 ? keyMentions : { quality: 5, delivery: 3, pricing: 2, service: 4, cleanliness: 1 }
     };
 
-    // 4. Demand Prediction (Predict demand using orders history or fallback to categories trend)
-    // Advanced plan unlocks true demand projections, basic plan unlocks basic trends
     const demandInsights = [];
     if (aiLevel === "advanced") {
-      // True seasonal / weekly trends
       const month = new Date().getMonth();
       const seasonPatterns = {
         Food: ["High demand for cold drinks/ice cream this summer.", "Evening snack orders peak around 6 PM - 8 PM."],
         Grocery: ["Stable demand throughout. Restock on weekends.", "Milk and bread demand spikes in early morning hours."],
         Services: ["High booking rate expected for weekends.", "Pre-booking campaigns are highly recommended."]
       };
-      
+
       const patternList = seasonPatterns[business.mainCategory] || [
         "Restock inventory for the upcoming weekend rush.",
         "Mid-week promotions (Tuesday-Wednesday) will help boost off-peak sales."

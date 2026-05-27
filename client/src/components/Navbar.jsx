@@ -96,7 +96,7 @@ const Navbar = () => {
       try {
         const res = await chatService.getUnreadCount();
         if (res.data.success) setUnreadCount(res.data.count);
-      } catch (_) {}
+      } catch (_) { }
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 20000);
@@ -293,13 +293,11 @@ const Navbar = () => {
         )}
       </AnimatePresence>
       <nav
-        className={`fixed left-0 right-0 z-60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-          impersonating ? "top-10" : "top-0"
-        } ${
-          scrolled || isOpen
+        className={`fixed left-0 right-0 z-60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${impersonating ? "top-10" : "top-0"
+          } ${scrolled || isOpen
             ? "bg-[#050508]/85 backdrop-blur-3xl border-b border-white/8 py-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
             : "bg-transparent py-4 md:py-8"
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-14 md:h-16">
           <Link
@@ -343,7 +341,6 @@ const Navbar = () => {
                   </Link>
                 ))}
 
-                {/* Browse Dropdown */}
                 <div
                   className="relative"
                   onMouseEnter={() => setActiveDropdown("browse")}
@@ -391,7 +388,6 @@ const Navbar = () => {
 
               {user && (
                 <div className="flex items-center gap-0.5 pl-1.5 pr-1.5 border-r border-white/5">
-                  {/* Activity Dropdown */}
                   <div
                     className="relative"
                     onMouseEnter={() => setActiveDropdown("activity")}

@@ -43,7 +43,7 @@ const PreOrders = () => {
       const bizRes = await businessService.getMyBusinesses();
       const userHasBiz = bizRes.data && bizRes.data.length > 0;
       setHasBusiness(userHasBiz);
-      
+
       if (userHasBiz) {
         setActiveTab("seller");
       } else {
@@ -78,7 +78,7 @@ const PreOrders = () => {
     try {
       const res = await preOrderService.updatePreOrderStatus(preOrderId, newStatus);
       toast.success(`Pre-order ${newStatus} successfully!`);
-      
+
       setBuyerPreOrders(prev =>
         prev.map(p => (p._id === preOrderId ? { ...p, status: newStatus } : p))
       );
@@ -173,21 +173,19 @@ const PreOrders = () => {
           <div className="flex border-b border-[#1f2a3d] mb-8">
             <button
               onClick={() => setActiveTab("seller")}
-              className={`px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${
-                activeTab === "seller"
-                  ? "border-blue-500 text-white"
-                  : "border-transparent text-slate-500 hover:text-slate-300"
-              }`}
+              className={`px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === "seller"
+                ? "border-blue-500 text-white"
+                : "border-transparent text-slate-500 hover:text-slate-300"
+                }`}
             >
               Received Requests ({sellerPreOrders.length})
             </button>
             <button
               onClick={() => setActiveTab("buyer")}
-              className={`px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${
-                activeTab === "buyer"
-                  ? "border-blue-500 text-white"
-                  : "border-transparent text-slate-500 hover:text-slate-300"
-              }`}
+              className={`px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === "buyer"
+                ? "border-blue-500 text-white"
+                : "border-transparent text-slate-500 hover:text-slate-300"
+                }`}
             >
               My Pre-Orders ({buyerPreOrders.length})
             </button>
@@ -270,7 +268,7 @@ const PreOrders = () => {
                                 )}
                               </span>
                             </div>
-                            
+
                             <h3 className="text-white font-black text-lg mb-1 truncate">
                               {preOrder.productId?.productName || "Deleted Product"}
                             </h3>

@@ -38,11 +38,10 @@ const HighlightCircle = ({ highlight, onClick, isActive }) => {
       className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group"
     >
       <div
-        className={`relative p-0.75 rounded-full transition-all duration-500 shadow-lg ${
-          isActive
+        className={`relative p-0.75 rounded-full transition-all duration-500 shadow-lg ${isActive
             ? "bg-linear-to-tr from-violet-500 via-primary to-violet-500 shadow-primary/30"
             : "bg-linear-to-tr from-amber-400 via-fuchsia-500 to-primary group-hover:from-primary group-hover:to-amber-400 shadow-primary/10"
-        }`}
+          }`}
       >
         <div className="w-16 h-16 rounded-full border-2 border-[#111827] overflow-hidden bg-[#1f2a3d] flex items-center justify-center">
           {highlight.image ? (
@@ -190,7 +189,6 @@ const StoryModal = ({ highlights, currentIndex, onClose, onNavigate }) => {
         </button>
       )}
 
-      {/* Progress bars */}
       <div className="absolute top-4 left-6 right-20 flex gap-1.5 z-20">
         {highlights.map((_, idx) => (
           <div

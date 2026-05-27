@@ -174,16 +174,6 @@ exports.applyForJob = async (req, res) => {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const alreadyApplied = job.applications.find(
-      (app) => app.candidateId && app.candidateId.toString() === req.user.id,
-    );
-
-    if (alreadyApplied) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already applied for this job",
-      });
-    }
     let biodataUrl = candidateBiodata;
 
     if (candidateBiodata && candidateBiodata.includes("base64")) {
@@ -199,7 +189,7 @@ exports.applyForJob = async (req, res) => {
       certificateUrl = uploadResult.secure_url;
     }
 
-    job.applications.push({
+    const newApplication = {
       candidateName,
       candidateEmail,
       candidateContact,
@@ -209,9 +199,26 @@ exports.applyForJob = async (req, res) => {
       candidateBiodata: biodataUrl,
       candidateCertificate: certificateUrl,
       candidateId: req.user.id,
-    });
+      appliedAt: new Date(),
+    };
 
-    await job.save();
+    const updatedJob = await Job.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        "applications.candidateId": { $ne: req.user.id },
+      },
+      {
+        $push: { applications: newApplication },
+      },
+      { new: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied for this job or the job is no longer available.",
+      });
+    }
 
     try {
       await User.findByIdAndUpdate(req.user.id, {

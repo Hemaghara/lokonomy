@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Notification = require("../models/Notification");
 const ScheduledNotification = require("../models/ScheduledNotification");
 const { sendPushNotification } = require("../utils/pushService");
+const logger = require("../utils/logger");
 
 exports.sendToAllUsers = async (req, res) => {
   try {
@@ -39,7 +40,7 @@ exports.sendToAllUsers = async (req, res) => {
       message: `Notification sent to ${users.length} users successfully`,
     });
   } catch (error) {
-    console.error("Error sending notification to all:", error);
+    logger.error({ err: error }, "Error sending notification to all");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -92,7 +93,7 @@ exports.sendByPlan = async (req, res) => {
       message: `Notification sent to ${users.length} ${plan} users successfully`,
     });
   } catch (error) {
-    console.error("Error sending notification by plan:", error);
+    logger.error({ err: error }, "Error sending notification by plan");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -124,7 +125,7 @@ exports.getNotificationHistory = async (req, res) => {
       })),
     );
   } catch (error) {
-    console.error("Error fetching history:", error);
+    logger.error({ err: error }, "Error fetching history");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -153,7 +154,7 @@ exports.scheduleNotification = async (req, res) => {
       schedule: newSchedule,
     });
   } catch (error) {
-    console.error("Error scheduling notification:", error);
+    logger.error({ err: error }, "Error scheduling notification");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -165,7 +166,7 @@ exports.getScheduledNotifications = async (req, res) => {
     });
     res.json(scheduled);
   } catch (error) {
-    console.error("Error fetching scheduled notifications:", error);
+    logger.error({ err: error }, "Error fetching scheduled notifications");
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -179,7 +180,7 @@ exports.cancelScheduledNotification = async (req, res) => {
     }
     res.json({ message: "Scheduled notification cancelled successfully" });
   } catch (error) {
-    console.error("Error cancelling scheduled notification:", error);
+    logger.error({ err: error }, "Error cancelling scheduled notification");
     res.status(500).json({ message: "Server error" });
   }
 };

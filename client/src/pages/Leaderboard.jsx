@@ -130,7 +130,7 @@ const Leaderboard = () => {
   if (podiumEntries[0]) reorderedPodium.push(podiumEntries[0]);
   if (podiumEntries[2]) reorderedPodium.push(podiumEntries[2]);
 
-  const listEntries = leaderboard.slice(3);
+  const listEntries = leaderboard;
 
   const isAdmin = user?.role === "superadmin" || user?.role === "admin";
 
@@ -407,7 +407,7 @@ const Leaderboard = () => {
         ) : (
           <>
             {reorderedPodium.length > 0 && (
-              <div className="mt-8 flex flex-col sm:flex-row items-end justify-center gap-6 sm:gap-4 max-w-4xl mx-auto pt-6 pb-8">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-4 max-w-4xl mx-auto pt-6 pb-8">
                 {reorderedPodium.map((entry, idx) => {
                   const isFirst = entry.rank === 1;
                   const isSecond = entry.rank === 2;
@@ -426,14 +426,14 @@ const Leaderboard = () => {
                         borderColor: "border-slate-400/25",
                         glowColor: "shadow-slate-400/5",
                         medalColor: "text-slate-300",
-                        height: "h-72 sm:h-80",
+                        height: "h-80 sm:h-96",
                         order: "order-1",
                       }
                     : {
                         borderColor: "border-amber-800/25",
                         glowColor: "shadow-amber-800/5",
                         medalColor: "text-amber-700",
-                        height: "h-64 sm:h-72",
+                        height: "h-80 sm:h-96",
                         order: "order-3",
                       };
 
@@ -574,7 +574,7 @@ const Leaderboard = () => {
 
             {listEntries.length > 0 && (
               <div className="mt-8 max-w-4xl mx-auto space-y-3">
-                <div className="hidden sm:grid grid-cols-[60px_1fr_120px_120px_140px] gap-4 px-5 py-2.5 text-[10px] text-white/20 uppercase tracking-wider font-bold">
+                <div className="hidden sm:grid grid-cols-[60px_1fr_120px_120px_220px] gap-4 px-5 py-2.5 text-[10px] text-white/20 uppercase tracking-wider font-bold">
                   <span>Rank</span>
                   <span>Business</span>
                   <span>Category</span>
@@ -596,7 +596,7 @@ const Leaderboard = () => {
                         transition={{ delay: idx * 0.04 }}
                         className="bg-[#111118]/80 backdrop-blur-md rounded-xl border border-white/8 overflow-hidden hover:border-white/15 hover:bg-[#14141e]/90 transition-all duration-300"
                       >
-                        <div className="grid grid-cols-1 sm:grid-cols-[60px_1fr_120px_120px_140px] items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-[60px_1fr_120px_120px_220px] items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5">
                           <div className="flex items-center gap-2 sm:gap-0">
                             <span className="text-white/20 text-[10px] uppercase font-bold sm:hidden">Rank</span>
                             <span className="font-mono text-sm sm:text-base font-black text-white/60">

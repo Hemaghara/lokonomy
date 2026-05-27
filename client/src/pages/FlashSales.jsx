@@ -425,12 +425,12 @@ const FlashSales = () => {
 
         <AnimatePresence>
           {showCreateModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#111827] border border-[#1f2a3d] rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl"
+                className="bg-[#111827] border border-[#1f2a3d] rounded-[2.5rem] w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
               >
                 <div className="p-6 sm:p-8">
                   <h2 className="text-2xl font-black mb-1 flex items-center gap-2">

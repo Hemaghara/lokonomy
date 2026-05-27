@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { priceComparisonService } from "../services";
 import { useLocation } from "../context/LocationContext";
+import { MARKET_CATEGORIES } from "../data/marketCategories";
 import toast from "react-hot-toast";
 import {
   HiOutlineSearch,
@@ -40,7 +41,7 @@ const PriceComparison = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [sortBy, setSortBy] = useState("price_asc");
 
-  const categories = ["Electronics", "Fashion", "Grocery", "Home decor", "Services", "Books"];
+  const categories = Object.keys(MARKET_CATEGORIES);
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
@@ -48,6 +49,9 @@ const PriceComparison = () => {
       return toast.error("Please enter a product name to search");
     }
 
+    // Clear stale results immediately so old data doesn't linger during fetch
+    setProducts([]);
+    setHasSearched(false);
     setLoading(true);
     try {
       const res = await priceComparisonService.comparePrices({ q: searchQuery });
@@ -74,6 +78,9 @@ const PriceComparison = () => {
 
   const handleCategoryClick = async (cat) => {
     setSearchQuery(cat);
+    // Clear stale results immediately
+    setProducts([]);
+    setHasSearched(false);
     setLoading(true);
     try {
       const res = await priceComparisonService.comparePrices({ category: cat });
@@ -196,24 +203,42 @@ const PriceComparison = () => {
 
         <AnimatePresence mode="wait">
           {loading ? (
-            <div className="py-20 text-center">
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-20 text-center"
+            >
               <div className="w-10 h-10 border-2 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4" />
               <p className="text-slate-500 text-xs font-black uppercase tracking-widest animate-pulse">
                 Comparing Prices...
               </p>
-            </div>
+            </motion.div>
           ) : !hasSearched ? (
-            <div className="py-12 text-center text-slate-600 text-xs uppercase tracking-widest font-black">
+            <motion.div
+              key="idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-12 text-center text-slate-600 text-xs uppercase tracking-widest font-black"
+            >
               Enter a search query above to see comparisons
-            </div>
+            </motion.div>
           ) : sortedProducts.length === 0 ? (
-            <div className="text-center py-16 bg-[#111827] border border-[#1f2a3d] rounded-[2rem]">
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-16 bg-[#111827] border border-[#1f2a3d] rounded-[2rem]"
+            >
               <div className="text-3xl mb-3">🔍</div>
               <h3 className="text-white font-bold mb-1">No products found</h3>
               <p className="text-slate-500 text-xs max-w-xs mx-auto">
                 No shops seem to list this product near you. Try checking another keyword.
               </p>
-            </div>
+            </motion.div>
           ) : (
             <div className="space-y-4">
               {sortedProducts.map((p, index) => {
@@ -299,7 +324,7 @@ const PriceComparison = () => {
                         </div>
                         <div className="text-2xl font-black text-white flex items-center justify-end">
                           <HiOutlineCurrencyRupee className="text-slate-400 text-lg" />
-                          {p.price.toLocaleString()}
+                          {(p.price ?? 0).toLocaleString()}
                         </div>
                       </div>
 

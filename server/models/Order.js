@@ -93,4 +93,9 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
+orderSchema.index({ buyer: 1, createdAt: -1 });
+orderSchema.index({ seller: 1, createdAt: -1 });
+orderSchema.index({ seller: 1, orderStatus: 1 });
+orderSchema.index({ product: 1, buyer: 1 });
+
 module.exports = mongoose.model("Order", orderSchema);

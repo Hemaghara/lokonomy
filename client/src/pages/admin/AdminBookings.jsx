@@ -211,7 +211,7 @@ const AdminBookings = () => {
                     Business
                   </span>
                   <span className="text-indigo-400 font-black truncate max-w-37.5">
-                    {b.businessId?.name}
+                    {b.businessId?.businessName}
                   </span>
                 </div>
               </div>

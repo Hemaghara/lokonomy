@@ -23,3 +23,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Debug and test scripts containing potential credentials
+db_check.js
+gen-keys.js
+gen-keys-json.js
+test-query.js

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Plan = require("../models/Plan");
 const SubscriptionTransaction = require("../models/SubscriptionTransaction");
+const logger = require("../utils/logger");
 
 exports.getSubscriptionTransactions = async (req, res) => {
   try {
@@ -121,7 +122,7 @@ exports.getSubscriptionTransactions = async (req, res) => {
       failedCount,
     });
   } catch (error) {
-    console.error("getSubscriptionTransactions error:", error);
+    logger.error({ err: error }, "getSubscriptionTransactions error");
     res
       .status(500)
       .json({ success: false, message: "Server error", error: error.message });
@@ -283,7 +284,7 @@ exports.getRevenueData = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("getRevenueData error:", error);
+    logger.error({ err: error }, "getRevenueData error");
     res
       .status(500)
       .json({ success: false, message: "Server error", error: error.message });
@@ -324,7 +325,7 @@ exports.getFailedPayments = async (req, res) => {
       page: parseInt(page),
     });
   } catch (error) {
-    console.error("getFailedPayments error:", error);
+    logger.error({ err: error }, "getFailedPayments error");
     res
       .status(500)
       .json({ success: false, message: "Server error", error: error.message });
@@ -469,7 +470,7 @@ exports.getFinancialReport = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("getFinancialReport error:", error);
+    logger.error({ err: error }, "getFinancialReport error");
     res
       .status(500)
       .json({ success: false, message: "Server error", error: error.message });

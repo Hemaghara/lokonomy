@@ -30,9 +30,14 @@ exports.getAllBusinessReviews = async (req, res) => {
       pipeline.push({ $match: { rating: rating } });
     }
 
-    const allReviews = await Business.aggregate(pipeline);
-    const total = allReviews.length;
-    const reviews = allReviews.slice(skip, skip + limit);
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await Business.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    const reviews = await Business.aggregate(pipeline);
 
     res.json({
       reviews,
@@ -73,9 +78,14 @@ exports.getAllProductReviews = async (req, res) => {
       pipeline.push({ $match: { rating: rating } });
     }
 
-    const allReviews = await Product.aggregate(pipeline);
-    const total = allReviews.length;
-    const reviews = allReviews.slice(skip, skip + limit);
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await Product.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    const reviews = await Product.aggregate(pipeline);
 
     res.json({
       reviews,

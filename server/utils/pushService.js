@@ -27,14 +27,15 @@ const sendPushNotification = async (userId, payload) => {
       data: payload.data || {},
     });
 
+    const expiredEndpoints = [];
+
     const sendPromises = user.pushSubscriptions.map(async (subscription) => {
       try {
         await webpush.sendNotification(subscription, notificationPayload);
       } catch (error) {
         if (error.statusCode === 404 || error.statusCode === 410) {
-          logger.info({ userId }, "Push subscription expired. Removing...");
-          user.pushSubscriptions = user.pushSubscriptions.filter(s => s.endpoint !== subscription.endpoint);
-          await user.save();
+          logger.info({ userId }, "Push subscription expired. Marking for removal...");
+          expiredEndpoints.push(subscription.endpoint);
         } else {
           logger.error({ 
             err: error,
@@ -46,6 +47,15 @@ const sendPushNotification = async (userId, payload) => {
     });
 
     await Promise.all(sendPromises);
+
+    if (expiredEndpoints.length > 0) {
+      await User.findByIdAndUpdate(userId, {
+        $pull: {
+          pushSubscriptions: { endpoint: { $in: expiredEndpoints } }
+        }
+      });
+      logger.info({ userId, count: expiredEndpoints.length }, "Expired push subscriptions atomically removed");
+    }
   } catch (error) {
     logger.error({ err: error }, "Error in pushService");
   }

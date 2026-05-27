@@ -35,7 +35,7 @@ exports.getAllBookings = async (req, res) => {
 
     const bookings = await Booking.find(query)
       .populate("userId", "name email phoneNumber")
-      .populate("businessId", "name category")
+      .populate("businessId", "businessName mainCategory")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(pageLimit);
@@ -57,7 +57,7 @@ exports.getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate("userId", "name email phoneNumber")
-      .populate("businessId", "name category phone address");
+      .populate("businessId", "businessName mainCategory contactNumber address");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
     res.json(booking);
   } catch (error) {

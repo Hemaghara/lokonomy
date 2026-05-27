@@ -55,7 +55,6 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
         className="bg-white w-full max-w-[calc(100vw-24px)] sm:max-w-md rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[calc(100vh-24px)] sm:max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-100 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center shrink-0">
@@ -76,7 +75,6 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
           </button>
         </div>
 
-        {/* Scrollable form body */}
         <form
           onSubmit={handleSubmit}
           className="px-4 py-4 sm:px-6 sm:py-5 space-y-4 sm:space-y-5 overflow-y-auto flex-1 overscroll-contain"
@@ -91,11 +89,10 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
                   key={r}
                   type="button"
                   onClick={() => setReason(r)}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
-                    reason === r
+                  className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${reason === r
                       ? "bg-rose-50 border-rose-300 text-rose-600 shadow-sm ring-1 ring-rose-200"
                       : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300 active:bg-slate-100"
-                  }`}
+                    }`}
                 >
                   {r}
                 </button>

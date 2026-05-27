@@ -153,10 +153,10 @@ const ChatBox = ({
       setLoading(true);
       const res = isBusinessInquiry
         ? await chatService.getBusinessMessages(
-            businessId,
-            buyerId,
-            effectiveSellerId,
-          )
+          businessId,
+          buyerId,
+          effectiveSellerId,
+        )
         : await chatService.getMessages(productId, buyerId, effectiveSellerId);
 
       if (res.data.success) {
@@ -246,17 +246,17 @@ const ChatBox = ({
   // Suggestion chips config
   const suggestionChips = isBusinessInquiry
     ? [
-        { icon: <HiOutlineMagnifyingGlass className="text-xs" />, label: "Services Offered" },
-        { icon: <HiOutlineShoppingBag className="text-xs" />, label: "Pricing Info" },
-        { icon: <HiOutlineBriefcase className="text-xs" />, label: "Business Hours" },
-        { icon: <HiOutlineNewspaper className="text-xs" />, label: "Latest Offers" },
-      ]
+      { icon: <HiOutlineMagnifyingGlass className="text-xs" />, label: "Services Offered" },
+      { icon: <HiOutlineShoppingBag className="text-xs" />, label: "Pricing Info" },
+      { icon: <HiOutlineBriefcase className="text-xs" />, label: "Business Hours" },
+      { icon: <HiOutlineNewspaper className="text-xs" />, label: "Latest Offers" },
+    ]
     : [
-        { icon: <HiOutlineMagnifyingGlass className="text-xs" />, label: "Product Details" },
-        { icon: <HiOutlineShoppingBag className="text-xs" />, label: "Availability" },
-        { icon: <HiOutlineBriefcase className="text-xs" />, label: "Delivery Info" },
-        { icon: <HiOutlineNewspaper className="text-xs" />, label: "Best Price" },
-      ];
+      { icon: <HiOutlineMagnifyingGlass className="text-xs" />, label: "Product Details" },
+      { icon: <HiOutlineShoppingBag className="text-xs" />, label: "Availability" },
+      { icon: <HiOutlineBriefcase className="text-xs" />, label: "Delivery Info" },
+      { icon: <HiOutlineNewspaper className="text-xs" />, label: "Best Price" },
+    ];
 
   // Notify AIGuide to hide when ChatBox is open
   useEffect(() => {
@@ -284,7 +284,7 @@ const ChatBox = ({
         border: "1px solid rgba(99, 102, 241, 0.1)",
       }}
     >
-      {/* ─── Header ─── */}
+
       <div
         className="flex items-center justify-between px-4 py-3.5 shrink-0 relative"
         style={{
@@ -293,7 +293,7 @@ const ChatBox = ({
         }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          {/* Avatar */}
+
           <div className="relative">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg"
@@ -309,7 +309,6 @@ const ChatBox = ({
                 displayName?.charAt(0)?.toUpperCase() || "?"
               )}
             </div>
-            {/* Online dot */}
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0d1529]" />
           </div>
 
@@ -349,7 +348,6 @@ const ChatBox = ({
         </div>
       </div>
 
-      {/* ─── Messages Area ─── */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 scrollbar-thin relative">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -359,9 +357,7 @@ const ChatBox = ({
             </span>
           </div>
         ) : messages.length === 0 ? (
-          /* ─── Empty State: Welcome Message ─── */
           <div className="flex flex-col h-full">
-            {/* Welcome bubble */}
             <div className="flex items-start gap-2.5 mb-4 mt-2">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
@@ -393,10 +389,8 @@ const ChatBox = ({
               </motion.div>
             </div>
 
-            {/* Spacer to push chips down */}
             <div className="flex-1" />
 
-            {/* Suggestion Chips */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -434,7 +428,6 @@ const ChatBox = ({
             </motion.div>
           </div>
         ) : (
-          /* ─── Messages ─── */
           Object.entries(groupedMessages).map(([date, msgs]) => (
             <div key={date}>
               <div className="flex items-center justify-center my-3">
@@ -453,7 +446,6 @@ const ChatBox = ({
                     transition={{ duration: 0.15 }}
                     className={`flex mb-1.5 ${isMine ? "justify-end" : "justify-start"}`}
                   >
-                    {/* Other user avatar (for received messages) */}
                     {!isMine && (
                       <div
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[10px] shrink-0 mr-2 mt-auto mb-1"
@@ -471,24 +463,23 @@ const ChatBox = ({
                       </div>
                     )}
                     <div
-                      className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl relative group ${
-                        isMine
-                          ? "rounded-br-md shadow-lg"
-                          : "rounded-bl-md border border-white/4"
-                      }`}
+                      className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl relative group ${isMine
+                        ? "rounded-br-md shadow-lg"
+                        : "rounded-bl-md border border-white/4"
+                        }`}
                       style={
                         isMine
                           ? {
-                              background: isSeller || isBusinessOwner
-                                ? "linear-gradient(135deg, #059669, #0d9488)"
-                                : "linear-gradient(135deg, #7c3aed, #6366f1)",
-                              boxShadow: isSeller || isBusinessOwner
-                                ? "0 4px 16px rgba(5,150,105,0.2)"
-                                : "0 4px 16px rgba(99,102,241,0.2)",
-                            }
+                            background: isSeller || isBusinessOwner
+                              ? "linear-gradient(135deg, #059669, #0d9488)"
+                              : "linear-gradient(135deg, #7c3aed, #6366f1)",
+                            boxShadow: isSeller || isBusinessOwner
+                              ? "0 4px 16px rgba(5,150,105,0.2)"
+                              : "0 4px 16px rgba(99,102,241,0.2)",
+                          }
                           : {
-                              background: "rgba(255,255,255,0.04)",
-                            }
+                            background: "rgba(255,255,255,0.04)",
+                          }
                       }
                     >
                       {!isMine && (
@@ -500,14 +491,12 @@ const ChatBox = ({
                         {msg.message}
                       </p>
                       <div
-                        className={`flex items-center gap-1 mt-0.5 ${
-                          isMine ? "justify-end" : "justify-start"
-                        }`}
+                        className={`flex items-center gap-1 mt-0.5 ${isMine ? "justify-end" : "justify-start"
+                          }`}
                       >
                         <span
-                          className={`text-[9px] ${
-                            isMine ? "text-white/50" : "text-slate-600"
-                          }`}
+                          className={`text-[9px] ${isMine ? "text-white/50" : "text-slate-600"
+                            }`}
                         >
                           {formatTime(msg.createdAt)}
                         </span>
@@ -557,7 +546,6 @@ const ChatBox = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ─── Input Area ─── */}
       <div
         className="shrink-0"
         style={{
@@ -565,7 +553,6 @@ const ChatBox = ({
           borderTop: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        {/* Suggestion chips when messages exist */}
         {messages.length > 0 && (
           <div className="px-3 pt-2 pb-0 flex gap-1.5 overflow-x-auto scrollbar-hide">
             {suggestionChips.slice(0, 3).map((chip) => (
@@ -632,7 +619,6 @@ const ChatBox = ({
           </div>
         </form>
 
-        {/* Powered by footer */}
         <div className="flex items-center justify-center gap-1.5 pb-3 pt-0.5">
           <span className="text-[10px] text-slate-600 font-medium flex items-center gap-1">
             <span className="text-xs">✨</span>

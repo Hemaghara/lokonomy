@@ -42,7 +42,14 @@ const ProtectedRouteAdmin = ({ requiredRole }) => {
 
   const location = useLocation();
   const adminToken = localStorage.getItem("adminToken");
-  const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || "{}");
+  const adminInfo = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("adminInfo") || "{}");
+    } catch (e) {
+      console.error("Failed to parse adminInfo from localStorage:", e);
+      return {};
+    }
+  })();
 
   const verify = useCallback(async () => {
     if (!adminToken) {

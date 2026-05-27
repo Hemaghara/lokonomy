@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { authService } from "../services";
 import { toast } from "react-hot-toast";
@@ -22,6 +22,7 @@ import { subscribeToPush } from "../services/pushService";
 const Login = () => {
   const { user, login } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (user) {
@@ -29,12 +30,21 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  const [step, setStep] = useState("credentials");
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("expired") === "true") {
+      toast.error("Session expired. Please login again.");
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location]);
+
+  const [step, setStep] = useState(location.state?.step || "credentials");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
 
   const [formData, setFormData] = useState({
-    email: "",
+    email: location.state?.email || "",
     password: "",
   });
 
@@ -145,12 +155,6 @@ const Login = () => {
       return;
     }
 
-    if (gpsState.status !== "granted") {
-      toast.error("GPS location is required to secure your login.");
-      setLoading(false);
-      return;
-    }
-
     const wakeUpToastId = setTimeout(() => {
       toast.loading("Server is waking up from its nap, please wait...", {
         id: "login-wakeup",
@@ -162,7 +166,7 @@ const Login = () => {
       const payload = {
         email: formData.email,
         password: formData.password,
-        locationPermission: "granted",
+        locationPermission: gpsState.status === "granted" ? "granted" : "denied",
       };
 
       if (gpsState.status === "granted" && gpsState.latitude) {
@@ -248,8 +252,8 @@ const Login = () => {
 
   const gpsStatusConfig = {
     idle: {
-      label: "GPS Authorization",
-      subLabel: "Required for secure access",
+      label: "GPS Authorization (Optional)",
+      subLabel: "Help localize your login flow",
       color: "text-blue-400",
       bg: "bg-blue-500/10 border-blue-500/20",
       accent: "blue",
@@ -269,15 +273,15 @@ const Login = () => {
       accent: "emerald",
     },
     denied: {
-      label: "GPS Access Denied",
-      subLabel: "Enable location in settings",
+      label: "GPS Access Denied (Optional)",
+      subLabel: "Proceeding with location disabled",
       color: "text-rose-400",
       bg: "bg-rose-500/10 border-rose-500/20",
       accent: "rose",
     },
     error: {
-      label: "Detection Failed",
-      subLabel: "Tap to retry location capture",
+      label: "Detection Failed (Optional)",
+      subLabel: "Tap authorize to retry location capture",
       color: "text-orange-400",
       bg: "bg-orange-500/10 border-orange-500/20",
       accent: "orange",
@@ -329,7 +333,7 @@ const Login = () => {
                 className="space-y-6"
               >
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-text-dim/80 ml-1">
+                  <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-text-dim/80 ml-1">
                     Email Address
                   </label>
                   <div className="relative group">
@@ -337,6 +341,7 @@ const Login = () => {
                       <Mail className="h-5 w-5 text-text-dim group-focus-within:text-primary transition-colors" />
                     </div>
                     <input
+                      id="email"
                       type="email"
                       name="email"
                       className="w-full bg-white/5 border border-white/10 pl-11 pr-4 py-4 rounded-xl text-sm text-white focus:border-primary/50 focus:bg-white/8 outline-none transition-all placeholder:text-white/20"
@@ -344,12 +349,13 @@ const Login = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
+                      aria-label="Email Address"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-text-dim/80 ml-1">
+                  <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-text-dim/80 ml-1">
                     Password
                   </label>
                   <div className="relative group">
@@ -357,6 +363,7 @@ const Login = () => {
                       <Lock className="h-5 w-5 text-text-dim group-focus-within:text-primary transition-colors" />
                     </div>
                     <input
+                      id="password"
                       type="password"
                       name="password"
                       className="w-full bg-white/5 border border-white/10 pl-11 pr-4 py-4 rounded-xl text-sm text-white focus:border-primary/50 focus:bg-white/8 outline-none transition-all placeholder:text-white/20"
@@ -364,6 +371,7 @@ const Login = () => {
                       value={formData.password}
                       onChange={handleChange}
                       required
+                      aria-label="Password"
                     />
                   </div>
                 </div>
@@ -396,6 +404,7 @@ const Login = () => {
                           type="button"
                           onClick={fetchGpsLocation}
                           disabled={gpsState.status === "fetching"}
+                          aria-label={gpsState.status === "fetching" ? "Fetching location..." : "Authorize GPS location access"}
                           className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold rounded-lg transition-all active:scale-95 disabled:opacity-50"
                         >
                           {gpsState.status === "fetching"
@@ -406,6 +415,7 @@ const Login = () => {
                         <button
                           type="button"
                           onClick={fetchGpsLocation}
+                          aria-label="Refresh GPS location"
                           className="p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-lg transition-all"
                         >
                           <RefreshCw className="w-4 h-4" />
@@ -485,12 +495,15 @@ const Login = () => {
                       id="otp"
                       name="otp"
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-center text-3xl font-black tracking-[0.6em] text-white focus:border-primary/50 outline-none transition-all"
                       placeholder="000000"
                       maxLength="6"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                       required
+                      aria-label="OTP verification code"
                     />
                     {otp.length === 6 && (
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1">

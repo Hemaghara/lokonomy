@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useLocation } from "./LocationContext";
 import { authService } from "../services";
 import { connectSocket, disconnectSocket } from "../services/socket";
@@ -7,8 +7,13 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("lokonomy_user");
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem("lokonomy_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch (err) {
+      console.error("Failed to parse user from localStorage:", err);
+      return null;
+    }
   });
 
   const { setDistrict, setTaluka } = useLocation();
@@ -24,6 +29,14 @@ export const UserProvider = ({ children }) => {
       }
     };
   }, [user]);
+
+  const updateUser = useCallback((updates) => {
+    setUser((prev) => {
+      const newUser = prev ? { ...prev, ...updates } : updates;
+      localStorage.setItem("lokonomy_user", JSON.stringify(newUser));
+      return newUser;
+    });
+  }, []);
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -42,7 +55,7 @@ export const UserProvider = ({ children }) => {
       }
     };
     fetchMe();
-  }, []);
+  }, [user?.token, updateUser]);
 
   const login = (userData) => {
     setUser(userData);
@@ -56,18 +69,18 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("lokonomy_user");
-    disconnectSocket();
-    // setDistrict("");
-    // setTaluka("");
-  };
-
-  const updateUser = (updates) => {
-    const newUser = { ...user, ...updates };
-    setUser(newUser);
-    localStorage.setItem("lokonomy_user", JSON.stringify(newUser));
+  const logout = async () => {
+    try {
+      if (user && user.token) {
+        await authService.logout();
+      }
+    } catch (err) {
+      console.error("Failed to logout on server:", err);
+    } finally {
+      setUser(null);
+      localStorage.removeItem("lokonomy_user");
+      disconnectSocket();
+    }
   };
 
   return (

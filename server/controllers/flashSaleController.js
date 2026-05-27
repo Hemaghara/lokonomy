@@ -3,30 +3,29 @@ const Product = require("../models/Product");
 const Business = require("../models/Business");
 const logger = require("../utils/logger");
 
-// Helper to update flash sale statuses dynamically based on time
-const updateStatusBasedOnTime = async (sales) => {
+// Helper to update flash sale statuses dynamically based on time in bulk
+const updateStatusBasedOnTime = async () => {
   const now = new Date();
-  let updated = false;
 
-  for (let sale of sales) {
-    let newStatus = sale.status;
+  // 1. Transition scheduled -> active
+  await FlashSale.updateMany(
+    { status: "scheduled", startTime: { $lte: now }, endTime: { $gt: now } },
+    { $set: { status: "active" } }
+  );
 
-    if (sale.status === "scheduled" && now >= sale.startTime && now < sale.endTime) {
-      newStatus = "active";
-    } else if ((sale.status === "scheduled" || sale.status === "active") && now >= sale.endTime) {
-      newStatus = "ended";
-    } else if (sale.status === "active" && sale.soldCount >= sale.maxQuantity) {
-      newStatus = "ended";
-    }
+  // 2. Transition scheduled/active -> ended on expiry
+  await FlashSale.updateMany(
+    { status: { $in: ["scheduled", "active"] }, endTime: { $lte: now } },
+    { $set: { status: "ended" } }
+  );
 
-    if (newStatus !== sale.status) {
-      sale.status = newStatus;
-      await sale.save();
-      updated = true;
-    }
-  }
+  // 3. Transition active -> ended if sold count meets max quantity
+  await FlashSale.updateMany(
+    { status: "active", $expr: { $gte: ["$soldCount", "$maxQuantity"] } },
+    { $set: { status: "ended" } }
+  );
 
-  return updated;
+  return true;
 };
 
 // Create a new flash sale
@@ -99,9 +98,8 @@ exports.createFlashSale = async (req, res) => {
 // Get all active / scheduled flash sales for buyers
 exports.getFlashSales = async (req, res) => {
   try {
-    // Perform dynamic status update on scheduled and active sales first
-    const pendingSales = await FlashSale.find({ status: { $in: ["scheduled", "active"] } });
-    await updateStatusBasedOnTime(pendingSales);
+    // Perform dynamic status updates in bulk first
+    await updateStatusBasedOnTime();
 
     // Fetch active ones
     const activeSales = await FlashSale.find({ status: "active" })
@@ -124,11 +122,11 @@ exports.getFlashSales = async (req, res) => {
 // Get seller's own flash sales
 exports.getSellerFlashSales = async (req, res) => {
   try {
+    await updateStatusBasedOnTime();
+
     const allSellerSales = await FlashSale.find({ sellerId: req.user.id })
       .populate("productId", "productName price productImages")
       .sort({ createdAt: -1 });
-
-    await updateStatusBasedOnTime(allSellerSales);
 
     res.json({ flashSales: allSellerSales });
   } catch (error) {

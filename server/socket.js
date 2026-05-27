@@ -7,16 +7,9 @@ const logger = require("./utils/logger");
 
 const jwt = require("jsonwebtoken");
 
-const initSocket = (server) => {
-  const allowedOrigins = [
-    process.env.APP_URL,
-    "https://lokonomy.vercel.app",
-    "https://lokonomy.onrender.com",
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:3000",
-  ].filter(Boolean);
+const allowedOrigins = require("./config/corsOrigins");
 
+const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
       origin: (origin, callback) => {
@@ -31,7 +24,7 @@ const initSocket = (server) => {
     },
   });
 
-  // JWT Connection Authentication Middleware for WebSockets
+
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error("Authentication required"));
@@ -67,6 +60,31 @@ const initSocket = (server) => {
     io.emit("onlineUsersCount", count);
   };
 
+
+  const cleanupOrphanedUsers = () => {
+    logger.debug("[Socket] Running cleanup of orphaned onlineUsers");
+    let changed = false;
+    for (const [userId, data] of onlineUsers.entries()) {
+      if (!data.socketIds || data.socketIds.size === 0) {
+        onlineUsers.delete(userId);
+        changed = true;
+      } else {
+        for (const socketId of data.socketIds) {
+          if (!io.sockets.sockets.has(socketId)) {
+            data.socketIds.delete(socketId);
+            if (data.socketIds.size === 0) {
+              onlineUsers.delete(userId);
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+    if (changed) {
+      emitOnlineCount();
+    }
+  };
+
   io.on("connection", (socket) => {
     logger.debug({ socketId: socket.id }, "[Socket] New raw connection");
 
@@ -76,7 +94,7 @@ const initSocket = (server) => {
     socket.emit("onlineUsersCount", currentCount);
 
     socket.on("registerUser", (data) => {
-      // Use socket.userId & socket.isAdmin from connection verification to prevent identity spoofing
+
       const userId = socket.userId;
       const isAdmin = socket.isAdmin;
 
@@ -258,7 +276,7 @@ const initSocket = (server) => {
           chatType: chatType || "product",
           productId: productId || null,
           businessId: businessId || null,
-          senderId,
+          senderId: socket.userId,
           receiverId,
           senderName,
           message,
@@ -306,28 +324,27 @@ const initSocket = (server) => {
           io,
         });
 
-        // Chatbot Auto-Response Logic
         const receiverStr = receiverId.toString();
         const isReceiverOnline = onlineUsers.has(receiverStr) && onlineUsers.get(receiverStr).socketIds.size > 0;
-        
+
         if (!isReceiverOnline) {
-          const business = businessId 
+          const business = businessId
             ? await Business.findById(businessId)
             : await Business.findOne({ ownerId: receiverId, autoResponseEnabled: true });
-            
+
           if (business && business.autoResponseEnabled) {
             const incomingText = message.toLowerCase();
             let autoResponseText = "";
-            
+
             if (business.autoResponses && business.autoResponses.length > 0) {
-              const matched = business.autoResponses.find(r => 
+              const matched = business.autoResponses.find(r =>
                 r.trigger && incomingText.includes(r.trigger.toLowerCase())
               );
               if (matched) {
                 autoResponseText = matched.response;
               }
             }
-            
+
             if (!autoResponseText) {
               autoResponseText = business.awayMessage || "Thank you for contacting us! We are currently away and will get back to you as soon as possible.";
             }
@@ -344,10 +361,10 @@ const initSocket = (server) => {
                   senderName: `${business.businessName} (Auto-Response)`,
                   message: autoResponseText,
                 });
-                
+
                 const savedBotMsg = await botMessage.save();
                 io.to(chatRoom).emit("receiveMessage", savedBotMsg);
-                
+
                 const senderData = onlineUsers.get(senderId.toString());
                 if (senderData && senderData.socketIds) {
                   senderData.socketIds.forEach((socketId) => {
@@ -475,8 +492,17 @@ const initSocket = (server) => {
     }
   };
 
-  setInterval(recordOnlineStats, 15 * 60 * 1000);
-  setTimeout(recordOnlineStats, 5000);
+  const recordStatsInterval = setInterval(recordOnlineStats, 15 * 60 * 1000);
+  const cleanupInterval = setInterval(cleanupOrphanedUsers, 5 * 60 * 1000);
+  const initialStatsTimeout = setTimeout(recordOnlineStats, 5000);
+
+  io.closeOriginal = io.close;
+  io.close = function (cb) {
+    clearInterval(recordStatsInterval);
+    clearInterval(cleanupInterval);
+    clearTimeout(initialStatsTimeout);
+    return io.closeOriginal(cb);
+  };
 
   return io;
 };

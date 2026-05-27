@@ -127,13 +127,12 @@ const EmptyState = ({ text }) => (
 const JobCard = ({ job, onBan, onSuspend, onView }) => (
   <div
     onClick={() => onView(job)}
-    className={`group relative flex flex-col bg-slate-900/60 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 ${
-      job.isFlagged
+    className={`group relative flex flex-col bg-slate-900/60 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 ${job.isFlagged
         ? "border-rose-500/40"
         : job.isSuspended
           ? "border-amber-500/40"
           : "border-slate-800 hover:border-indigo-500/40"
-    }`}
+      }`}
   >
     <div className="relative bg-linear-to-br from-slate-800/80 to-slate-900 p-4 pb-3">
       <div className="flex items-start justify-between gap-2 mb-3">
@@ -149,11 +148,10 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
             </span>
           )}
           <span
-            className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-              job.status === "Open"
+            className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${job.status === "Open"
                 ? "bg-emerald-500/20 text-emerald-400"
                 : "bg-slate-500/20 text-slate-400"
-            }`}
+              }`}
           >
             {job.status}
           </span>
@@ -214,7 +212,6 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
         </div>
       </div>
 
-      {/* Poster info */}
       <div className="flex items-center justify-between py-2.5 px-3 bg-slate-800/40 rounded-xl border border-slate-800">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
@@ -248,11 +245,10 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
           }}
           aria-label={job.isFlagged ? "Unban Job" : "Ban Job"}
           title={job.isFlagged ? "Unban" : "Ban"}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
-            job.isFlagged
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${job.isFlagged
               ? "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
               : "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20"
-          }`}
+            }`}
         >
           <FiSlash size={12} /> {job.isFlagged ? "Unban" : "Ban"}
         </button>
@@ -263,11 +259,10 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
           }}
           aria-label={job.isSuspended ? "Activate Job" : "Suspend Job"}
           title={job.isSuspended ? "Activate" : "Suspend"}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
-            job.isSuspended
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${job.isSuspended
               ? "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
               : "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
-          }`}
+            }`}
         >
           <FiPauseCircle size={12} /> {job.isSuspended ? "Activate" : "Suspend"}
         </button>
@@ -442,11 +437,10 @@ const AdminJobs = () => {
                 <button
                   key={f}
                   onClick={() => handleFilterChange(f)}
-                  className={`px-3.5 py-2 rounded-xl text-[11px] font-bold capitalize whitespace-nowrap transition-all ${
-                    filter === f
+                  className={`px-3.5 py-2 rounded-xl text-[11px] font-bold capitalize whitespace-nowrap transition-all ${filter === f
                       ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
                       : "bg-slate-800/40 text-slate-500 border border-transparent hover:bg-slate-800 hover:text-slate-300"
-                  }`}
+                    }`}
                 >
                   {f}
                 </button>
@@ -463,11 +457,10 @@ const AdminJobs = () => {
               <button
                 key={e}
                 onClick={() => handleEducationChange(e)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all ${
-                  education === e
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all ${education === e
                     ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
                     : "bg-slate-800/40 text-slate-500 border border-transparent hover:bg-slate-800 hover:text-slate-300"
-                }`}
+                  }`}
               >
                 {e}
               </button>

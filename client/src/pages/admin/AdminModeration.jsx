@@ -217,11 +217,10 @@ const AdminModeration = () => {
           <button
             key={s}
             onClick={() => setFilter({ ...filter, status: s })}
-            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              filter.status === s
+            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter.status === s
                 ? "bg-indigo-600 text-white shadow-lg"
                 : "text-slate-500 hover:text-slate-300"
-            }`}
+              }`}
           >
             {s}
           </button>
@@ -333,11 +332,10 @@ const AdminModeration = () => {
                       onClick={() =>
                         setPreviewId(previewId === r._id ? null : r._id)
                       }
-                      className={`p-2.5 rounded-xl border transition-all ${
-                        previewId === r._id
+                      className={`p-2.5 rounded-xl border transition-all ${previewId === r._id
                           ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"
                           : "bg-slate-800 text-slate-400 hover:text-white border-slate-700/50"
-                      }`}
+                        }`}
                       title="Preview content"
                     >
                       <FiEye size={18} />
@@ -369,7 +367,6 @@ const AdminModeration = () => {
                   </div>
                 </div>
 
-                {/* Content Preview */}
                 {previewId === r._id && (
                   <div className="mb-4">
                     <ContentPreview

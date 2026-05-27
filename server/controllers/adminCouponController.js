@@ -19,7 +19,7 @@ exports.getAllCoupons = async (req, res) => {
     const totalPages = Math.ceil(totalCoupons / pageLimit);
 
     const coupons = await Coupon.find(query)
-      .populate("businessId", "name category")
+      .populate("businessId", "businessName mainCategory")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(pageLimit)
@@ -65,7 +65,7 @@ exports.getAllCoupons = async (req, res) => {
 exports.getCouponById = async (req, res) => {
   try {
     const coupon = await Coupon.findById(req.params.id)
-      .populate("businessId", "name category")
+      .populate("businessId", "businessName mainCategory")
       .populate("usedBy", "name email");
     if (!coupon) return res.status(404).json({ message: "Coupon not found" });
     res.json(coupon);
