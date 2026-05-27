@@ -11,7 +11,6 @@ exports.comparePrices = async (req, res) => {
         .json({ message: "Search query or category is required" });
     }
 
-    // Build match stage — only visible, active, unsold products (handles undefined/missing fields safely)
     const matchStage = {
       isSold: { $ne: true },
       isSuspended: { $ne: true },
@@ -20,7 +19,6 @@ exports.comparePrices = async (req, res) => {
       ...(category ? { mainCategory: category } : {}),
     };
 
-    // Single aggregation: match → limit → join business in one round-trip
     const products = await Product.aggregate([
       { $match: matchStage },
       { $limit: 100 },
@@ -32,11 +30,11 @@ exports.comparePrices = async (req, res) => {
           as: "business",
         },
       },
-      // Only keep products that have a linked business
+
       { $match: { "business.0": { $exists: true } } },
       {
         $addFields: {
-          // Flatten the business array to a single object
+
           business: { $arrayElemAt: ["$business", 0] },
         },
       },

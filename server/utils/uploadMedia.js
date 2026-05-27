@@ -71,12 +71,12 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
   const customId = generateUniqueId();
   const prefix = `lokonomy/${folder}`;
 
-  // Check if it's an image
+
   const isImage = fileBase64.startsWith("data:image/") || (mimeType && mimeType.startsWith("image/"));
 
   try {
     if (!isImage) {
-      // For non-images (like PDFs), upload directly without processing
+
       const hasExtension = fileBase64.includes("application/pdf")
         ? "pdf"
         : "bin";
@@ -117,7 +117,7 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
       thumbUrl: thumbResult,
     };
   } catch (err) {
-    logger.error({ err }, "Global Media Upload Error"); // Bug #34: Use logger.error
+    logger.error({ err }, "Global Media Upload Error");
     throw err;
   }
 };

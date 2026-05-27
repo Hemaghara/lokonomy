@@ -1,7 +1,3 @@
-/**
- * Serializes a user object for API responses.
- * This ensures consistency across different controllers and avoid duplicating fields.
- */
 const serializeUser = (user) => {
   if (!user) return null;
 
@@ -24,11 +20,11 @@ const serializeUser = (user) => {
     phoneNumber: user.phoneNumber,
     subscription: user.subscription
       ? {
-          ...(user.subscription.toObject
-            ? user.subscription.toObject()
-            : user.subscription),
-          durationMonths: user.subscription.durationMonths,
-        }
+        ...(user.subscription.toObject
+          ? user.subscription.toObject()
+          : user.subscription),
+        durationMonths: user.subscription.durationMonths,
+      }
       : null,
     usage: user.usage,
     referralCode: user.referralCode,

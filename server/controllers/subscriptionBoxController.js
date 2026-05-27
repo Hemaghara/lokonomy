@@ -3,7 +3,6 @@ const Business = require("../models/Business");
 const User = require("../models/User");
 const logger = require("../utils/logger");
 
-// Create or update a subscription box (Sellers/Business Owners)
 exports.createBox = async (req, res) => {
   try {
     const { name, description, price, frequency, items } = req.body;
@@ -11,7 +10,7 @@ exports.createBox = async (req, res) => {
       return res.status(400).json({ success: false, message: "Name, description and price are required" });
     }
 
-    // Find the business owned by this user
+
     const business = await Business.findOne({ ownerId: req.user.id });
     if (!business) {
       return res.status(403).json({ success: false, message: "Access denied: You do not own a registered business" });
@@ -35,7 +34,7 @@ exports.createBox = async (req, res) => {
   }
 };
 
-// Get all subscription boxes owned by this seller
+
 exports.getSellerBoxes = async (req, res) => {
   try {
     const business = await Business.findOne({ ownerId: req.user.id });
@@ -52,7 +51,7 @@ exports.getSellerBoxes = async (req, res) => {
   }
 };
 
-// Get subscription boxes for a specific business (Public/Buyer view)
+
 exports.getBusinessBoxes = async (req, res) => {
   try {
     const boxes = await SubscriptionBox.find({ businessId: req.params.businessId, isActive: true });
@@ -63,7 +62,7 @@ exports.getBusinessBoxes = async (req, res) => {
   }
 };
 
-// Subscribe to a box (Buyer)
+
 exports.subscribeToBox = async (req, res) => {
   try {
     const box = await SubscriptionBox.findById(req.params.id);
@@ -75,7 +74,7 @@ exports.subscribeToBox = async (req, res) => {
       return res.status(400).json({ success: false, message: "You are already subscribed to this box" });
     }
 
-    // Mock charging logic or deduction here (e.g. standard points if applicable, or just mock Razorpay success)
+
     box.subscribers.push(req.user.id);
     await box.save();
 
@@ -86,7 +85,7 @@ exports.subscribeToBox = async (req, res) => {
   }
 };
 
-// Unsubscribe from a box
+
 exports.unsubscribeFromBox = async (req, res) => {
   try {
     const box = await SubscriptionBox.findById(req.params.id);
@@ -109,7 +108,7 @@ exports.unsubscribeFromBox = async (req, res) => {
   }
 };
 
-// Get active subscriptions for the logged-in user (Buyer)
+
 exports.getMySubscriptions = async (req, res) => {
   try {
     const boxes = await SubscriptionBox.find({ subscribers: req.user.id })

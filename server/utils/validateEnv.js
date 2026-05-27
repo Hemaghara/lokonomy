@@ -17,7 +17,7 @@ const validateEnv = () => {
       `Missing required environment variables: ${missing.join(", ")}`,
     );
   }
-  
+
   ["JWT_SECRET", "JWT_REFRESH_SECRET", "JWT_ADMIN_SECRET"].forEach((key) => {
     if (process.env[key] && process.env[key].length < 32) {
       throw new Error(`${key} must be at least 32 characters`);

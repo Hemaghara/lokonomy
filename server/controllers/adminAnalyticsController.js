@@ -83,7 +83,6 @@ exports.getAnalyticsOverview = async (req, res) => {
       ],
     );
 
-    // Calculate fallback revenue from User collection for legacy data
     const plans = await Plan.find();
     const plansMap = {};
     plans.forEach((p) => {
