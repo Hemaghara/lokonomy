@@ -210,11 +210,11 @@ exports.claimDailyLogin = async (req, res) => {
     }
 
     const today = new Date().toDateString();
-    const lastLogin = user.lastLoginDate
-      ? new Date(user.lastLoginDate).toDateString()
+    const lastClaim = user.lastDailyClaimDate
+      ? new Date(user.lastDailyClaimDate).toDateString()
       : null;
 
-    if (lastLogin === today) {
+    if (lastClaim === today) {
       return res.json({
         success: false,
         message: "Daily login already claimed today",
@@ -229,7 +229,7 @@ exports.claimDailyLogin = async (req, res) => {
       "Daily login bonus",
     );
 
-    await User.findByIdAndUpdate(req.user.id, { lastLoginDate: new Date() });
+    await User.findByIdAndUpdate(req.user.id, { lastDailyClaimDate: new Date() });
 
     res.json({
       success: true,

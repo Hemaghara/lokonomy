@@ -379,6 +379,12 @@ exports.placeBid = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    if (product.sellerId.toString() === req.user.id) {
+      return res
+        .status(400)
+        .json({ message: "You cannot bid on your own product" });
+    }
+
     if (!product.isAuction) {
       return res
         .status(400)

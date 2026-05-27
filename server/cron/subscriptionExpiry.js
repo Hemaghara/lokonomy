@@ -28,7 +28,7 @@ const startSubscriptionCron = () => {
 
       for (const user of expiringInThreeDays) {
         const title = "Subscription Expiring Soon";
-        const message = `Please renew the new plan your plan expire in 3 day.`; // Admin's requested format
+        const message = `Your subscription expires in 3 days. Renew now to maintain premium benefits.`;
 
         const newNotification = new Notification({
           recipient: user._id,
@@ -59,7 +59,7 @@ const startSubscriptionCron = () => {
       for (const user of expiringToday) {
         const title = "Subscription Expired Today";
         const message =
-          "Please renew the plan your plan expire in some day. (Renew Today to stay active)";
+          "Your subscription expires today. Renew today to remain active.";
 
         const newNotification = new Notification({
           recipient: user._id,
@@ -80,7 +80,7 @@ const startSubscriptionCron = () => {
       const result = await User.updateMany(
         {
           "subscription.status": "active",
-          "subscription.expiryDate": { $lt: now },
+          "subscription.expiryDate": { $lt: new Date() },
         },
         {
           $set: {

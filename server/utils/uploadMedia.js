@@ -22,6 +22,21 @@ const getMimeType = (base64) => {
   return null;
 };
 
+const getMimeTypeFromBuffer = (buffer) => {
+  if (buffer.length < 4) return null;
+  const hex = buffer.slice(0, 4).toString("hex").toUpperCase();
+  if (hex.startsWith("FFD8FF")) return "image/jpeg";
+  if (hex === "89504E47") return "image/png";
+  if (hex.startsWith("474946")) return "image/gif";
+  if (hex === "25504446") return "application/pdf";
+  if (buffer.length >= 12) {
+    const riff = buffer.slice(0, 4).toString("ascii");
+    const webp = buffer.slice(8, 12).toString("ascii");
+    if (riff === "RIFF" && webp === "WEBP") return "image/webp";
+  }
+  return null;
+};
+
 const parseBase64ToBuffer = (base64) => {
   if (base64.startsWith("data:")) {
     const parts = base64.split(",");
@@ -42,19 +57,22 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
 
   if (fileBase64.startsWith("http")) return fileBase64;
 
-  // Bug #8: MIME type whitelist validation
-  const mimeType = getMimeType(fileBase64);
-  if (mimeType && !ALLOWED_MIME_TYPES.includes(mimeType)) {
+  const fileBuffer = parseBase64ToBuffer(fileBase64);
+  let mimeType = getMimeType(fileBase64);
+  if (!mimeType) {
+    mimeType = getMimeTypeFromBuffer(fileBuffer);
+  }
+
+  if (!mimeType || !ALLOWED_MIME_TYPES.includes(mimeType)) {
     throw new Error("Invalid file type. Allowed types are: JPEG, PNG, WEBP, GIF, PDF.");
   }
 
   const storage = getStorageProvider();
-  const fileBuffer = parseBase64ToBuffer(fileBase64);
   const customId = generateUniqueId();
   const prefix = `lokonomy/${folder}`;
 
   // Check if it's an image
-  const isImage = fileBase64.startsWith("data:image/");
+  const isImage = fileBase64.startsWith("data:image/") || (mimeType && mimeType.startsWith("image/"));
 
   try {
     if (!isImage) {

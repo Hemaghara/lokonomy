@@ -136,6 +136,7 @@ const userSchema = new mongoose.Schema({
   ],
   loyaltyPoints: { type: Number, default: 0 },
   lastLoginDate: { type: Date, default: null },
+  lastDailyClaimDate: { type: Date, default: null },
   status: {
     type: String,
     enum: ["active", "suspended", "banned"],

@@ -477,7 +477,14 @@ exports.submitVerification = async (req, res) => {
 
     business.verificationStatus = "pending";
     business.kycDocuments = business.kycDocuments || [];
-    business.kycDocuments.push(documentFile);
+    
+    let documentUrl = documentFile;
+    if (documentFile && documentFile.startsWith("data:")) {
+      const uploadRes = await uploadMedia(documentFile, "businesses/kyc");
+      documentUrl = uploadRes.secure_url;
+    }
+    
+    business.kycDocuments.push(documentUrl);
     await business.save();
 
     res.json({ success: true, message: "Verification submitted", business });

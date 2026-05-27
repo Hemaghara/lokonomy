@@ -115,18 +115,18 @@ exports.getFraudSignals = async (req, res) => {
         {
           $lookup: {
             from: "products",
-            localField: "productId",
+            localField: "product",
             foreignField: "_id",
-            as: "product",
+            as: "productDoc",
           },
         },
-        { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: "$productDoc", preserveNullAndEmptyArrays: true } },
         {
           $project: {
             buyer: "$buyer",
-            seller: "$product.seller",
-            productName: "$product.productName",
-            amount: "$totalPrice",
+            seller: "$seller",
+            productName: "$productDoc.productName",
+            amount: "$price",
             createdAt: 1,
           },
         },

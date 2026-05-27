@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const storyController = require("../controllers/storyController");
 const auth = require("../middleware/authMiddleware");
+const { protectAdmin } = require("../middleware/adminMiddleware");
 const { checkStoryLimit } = require("../middleware/subscriptionMiddleware");
 
 router.get("/", storyController.getAllStories);
@@ -19,8 +20,8 @@ router.post("/:id/comments", auth, storyController.addComment);
 router.delete("/:id/comments/:commentId", auth, storyController.deleteComment);
 router.patch("/:id/vote", auth, storyController.votePoll);
 router.get("/:id/related", storyController.getRelatedStories);
-router.patch("/:id/verify", auth, storyController.verifyStory);
-router.patch("/:id/feature", auth, storyController.featureStory);
-router.delete("/:id/comments/:commentId/admin", auth, storyController.adminDeleteComment);
+router.patch("/:id/verify", protectAdmin, storyController.verifyStory);
+router.patch("/:id/feature", protectAdmin, storyController.featureStory);
+router.delete("/:id/comments/:commentId/admin", protectAdmin, storyController.adminDeleteComment);
 
 module.exports = router;

@@ -183,11 +183,10 @@ exports.createOrder = async (req, res) => {
       let couponDoc = null;
       if (appliedCoupon) {
         const biz = await Business.findOne({ ownerId: product.sellerId });
-        const query = { code: appliedCoupon.toUpperCase() };
         if (biz) {
-          query.businessId = biz._id;
+          const query = { code: appliedCoupon.toUpperCase(), businessId: biz._id };
+          couponDoc = await Coupon.findOne(query);
         }
-        couponDoc = await Coupon.findOne(query);
         if (couponDoc && couponDoc.status === "active" && new Date(couponDoc.expiryDate) >= new Date() && couponDoc.usedBy.indexOf(req.user.id) === -1) {
           if (couponDoc.discountType === "percentage") {
             orderAmount = orderAmount - (orderAmount * couponDoc.discount) / 100;

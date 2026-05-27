@@ -59,9 +59,9 @@ const maintenanceCheck = require("./middleware/maintenanceCheck");
 const largePayload = express.json({ limit: "10mb" });
 const largeUrlencoded = express.urlencoded({ limit: "10mb", extended: true });
 
-app.use("/api/auth", authLimiter, largePayload, largeUrlencoded, require("./routes/auth"));
-app.use("/api/market", largePayload, largeUrlencoded, require("./routes/market"));
-app.use("/api/stories", largePayload, largeUrlencoded, require("./routes/stories"));
+app.use("/api/auth", authLimiter, largePayload, largeUrlencoded, mongoSanitize(), require("./routes/auth"));
+app.use("/api/market", largePayload, largeUrlencoded, mongoSanitize(), require("./routes/market"));
+app.use("/api/stories", largePayload, largeUrlencoded, mongoSanitize(), require("./routes/stories"));
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ limit: "1mb", extended: true }));

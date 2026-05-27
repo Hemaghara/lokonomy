@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
+const { protectAdmin } = require("../middleware/adminMiddleware");
 const {
   getLeaderboard,
   calculateLeaderboard,
@@ -10,6 +11,6 @@ const {
 
 router.get("/", getLeaderboard);
 router.get("/business/:businessId", getBusinessRanking);
-router.post("/calculate", auth, calculateLeaderboard);
+router.post("/calculate", protectAdmin, calculateLeaderboard);
 
 module.exports = router;

@@ -57,7 +57,7 @@ router.use("/", adminAuditRoutes);
 router.use("/", adminQARoutes);
 router.use("/", adminModerationRoutes);
 router.use("/", adminExtraRoutes);
-router.use("/", protectAdmin, authorizeRoles("superadmin"), adminImpersonateRoutes);
+router.use("/", adminImpersonateRoutes);
 router.use("/", protectAdmin, authorizeRoles("superadmin"), adminAlertRoutes);
 router.use("/", protectAdmin, authorizeRoles("superadmin"), adminFraudRoutes);
 router.use("/", protectAdmin, authorizeRoles("superadmin"), adminCampaignRoutes);
