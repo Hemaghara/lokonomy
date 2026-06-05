@@ -3,6 +3,7 @@ const Business = require("../models/Business");
 const Job = require("../models/Job");
 const Product = require("../models/Product");
 const logger = require("../utils/logger");
+const escapeRegex = require("../utils/escapeRegex");
 
 exports.globalSearch = async (req, res) => {
   try {
@@ -12,7 +13,7 @@ exports.globalSearch = async (req, res) => {
       return res.json({ users: [], businesses: [], jobs: [], products: [] });
     }
 
-    const searchRegex = new RegExp(query, "i");
+    const searchRegex = new RegExp(escapeRegex(query), "i");
 
     const [users, businesses, jobs, products] = await Promise.all([
       User.find({
@@ -64,6 +65,6 @@ exports.globalSearch = async (req, res) => {
     });
   } catch (error) {
     logger.error({ err: error }, "Global search error");
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

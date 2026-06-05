@@ -299,14 +299,30 @@ exports.createOrder = async (req, res) => {
 
 exports.getBuyerOrders = async (req, res) => {
   try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Order.countDocuments({ buyer: req.user.id });
     const orders = await Order.find({ buyer: req.user.id })
       .populate("product")
       .populate("seller", "name email")
-      .sort({ createdAt: -1 });
-    res.status(200).json({ success: true, orders });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     logger.error({ err, userId: req.user.id }, "Error in getBuyerOrders");
-    // Bug #33: Generic error message
     res.status(500).json({ success: false, message: "Failed to retrieve buyer orders" });
   }
 };
@@ -412,22 +428,15 @@ exports.updateOrderStatus = async (req, res) => {
 exports.getSellerDashboardStats = async (req, res) => {
   try {
     const sellerId = req.user.id;
-    const orders = await Order.find({ seller: sellerId });
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
 
-    // Bug #25: Single-pass computation for seller stats
-    const last7Days = [];
-    const dateToDayIndex = {};
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
-      last7Days.push({ date: dateStr, gross: 0, commission: 0, net: 0 });
-      dateToDayIndex[dateStr] = 6 - i;
-    }
+    // 1. Get total orders and status counts via aggregation
+    const statusCountsAgg = await Order.aggregate([
+      { $match: { seller: sellerObjectId } },
+      { $group: { _id: "$orderStatus", count: { $sum: 1 } } }
+    ]);
 
-    let grossEarnings = 0;
-    let totalCommission = 0;
-
+    let totalOrders = 0;
     const statusCounts = {
       pending: 0,
       preparing: 0,
@@ -438,31 +447,73 @@ exports.getSellerDashboardStats = async (req, res) => {
       cancelled: 0,
     };
 
-    orders.forEach((o) => {
-      // 1. Status counts
-      if (statusCounts[o.orderStatus] !== undefined) {
-        statusCounts[o.orderStatus]++;
+    statusCountsAgg.forEach((item) => {
+      if (statusCounts[item._id] !== undefined) {
+        statusCounts[item._id] = item.count;
       }
+      totalOrders += item.count;
+    });
 
-      // 2. Earnings and Daily Sales (only for delivered orders)
-      if (o.orderStatus === "delivered") {
-        grossEarnings += o.price;
-        totalCommission += (o.commissionAmount || 0);
-
-        const dateStr = new Date(o.createdAt).toISOString().split("T")[0];
-        const dayIndex = dateToDayIndex[dateStr];
-        if (dayIndex !== undefined) {
-          last7Days[dayIndex].gross += o.price;
-          last7Days[dayIndex].commission += (o.commissionAmount || 0);
-          last7Days[dayIndex].net += (o.sellerPayout || o.price);
+    // 2. Get gross earnings and total commission (delivered orders only)
+    const earningsAgg = await Order.aggregate([
+      { $match: { seller: sellerObjectId, orderStatus: "delivered" } },
+      {
+        $group: {
+          _id: null,
+          gross: { $sum: "$price" },
+          commission: { $sum: { $ifNull: ["$commissionAmount", 0] } }
         }
+      }
+    ]);
+
+    const grossEarnings = earningsAgg[0]?.gross || 0;
+    const totalCommission = earningsAgg[0]?.commission || 0;
+    const netEarnings = grossEarnings - totalCommission;
+
+    // 3. Get daily sales for last 7 days (delivered orders only)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const dailyAgg = await Order.aggregate([
+      {
+        $match: {
+          seller: sellerObjectId,
+          orderStatus: "delivered",
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          gross: { $sum: "$price" },
+          commission: { $sum: { $ifNull: ["$commissionAmount", 0] } },
+          net: { $sum: { $cond: [{ $ifNull: ["$sellerPayout", null] }, "$sellerPayout", "$price"] } }
+        }
+      }
+    ]);
+
+    const last7Days = [];
+    const dateToDayIndex = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      last7Days.push({ date: dateStr, gross: 0, commission: 0, net: 0 });
+      dateToDayIndex[dateStr] = 6 - i;
+    }
+
+    dailyAgg.forEach((item) => {
+      const dayIndex = dateToDayIndex[item._id];
+      if (dayIndex !== undefined) {
+        last7Days[dayIndex].gross = item.gross;
+        last7Days[dayIndex].commission = item.commission;
+        last7Days[dayIndex].net = item.net;
       }
     });
 
-    const netEarnings = grossEarnings - totalCommission;
-
     const stats = {
-      totalOrders: orders.length,
+      totalOrders,
       totalEarnings: netEarnings,
       grossEarnings,
       totalCommission,
@@ -480,7 +531,6 @@ exports.getSellerDashboardStats = async (req, res) => {
       { err, userId: req.user.id },
       "Error in getSellerDashboardStats",
     );
-    // Bug #33: Generic error message
     res.status(500).json({ success: false, message: "Failed to retrieve seller dashboard statistics" });
   }
 };

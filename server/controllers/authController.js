@@ -20,7 +20,12 @@ let DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
   }
 })();
 
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{8,128}$/;
+
+const sanitizeName = (name) => {
+  if (typeof name !== "string") return "";
+  return name.replace(/[<>&"']/g, "").trim().substring(0, 50);
+};
 
 let transporter;
 const getTransporter = () => {
@@ -74,27 +79,29 @@ const sendOtpEmail = async (email, userName, otp) => {
     </div>`,
   };
 
-  if (isResendConfigured) {
-    logger.info({ to: email }, "Attempting to send OTP email via Resend...");
-    resendClient.emails.send({
-      from: process.env.RESEND_FROM || "Lokonomy <onboarding@resend.dev>",
-      to: email,
-      ...emailContent,
-    })
-      .then(() => logger.info({ to: email }, "OTP email sent via Resend"))
-      .catch((err) => logger.error({ err: err.message, email }, "Resend delivery failed"));
-  } else {
-    logger.info({ to: email }, "Attempting to send OTP email via Gmail SMTP...");
-    mailService.sendMail({
-      from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-      to: email,
-      ...emailContent,
-    })
-      .then(() => logger.info({ to: email }, "OTP email sent via Gmail SMTP"))
-      .catch((mailErr) => logger.error({ err: mailErr.message, email }, "Gmail SMTP delivery failed"));
+  try {
+    if (isResendConfigured) {
+      logger.info({ to: email }, "Attempting to send OTP email via Resend...");
+      await resendClient.emails.send({
+        from: process.env.RESEND_FROM || "Lokonomy <onboarding@resend.dev>",
+        to: email,
+        ...emailContent,
+      });
+      logger.info({ to: email }, "OTP email sent via Resend");
+    } else {
+      logger.info({ to: email }, "Attempting to send OTP email via Gmail SMTP...");
+      await mailService.sendMail({
+        from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        to: email,
+        ...emailContent,
+      });
+      logger.info({ to: email }, "OTP email sent via Gmail SMTP");
+    }
+    return { success: true };
+  } catch (err) {
+    logger.error({ err: err.message, email }, "Email delivery failed");
+    return { success: false, production: process.env.NODE_ENV === "production" };
   }
-
-  return { success: true };
 };
 
 exports.login = async (req, res) => {
@@ -162,7 +169,7 @@ exports.login = async (req, res) => {
       user.locationPermission = "denied";
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = crypto.randomInt(100000, 999999).toString();
     const otpExpires = new Date(Date.now() + 300000);
     const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
@@ -236,7 +243,7 @@ exports.verifyOtp = async (req, res) => {
     const accessToken = jwt.sign(
       { user: { id: user.id } },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "15m" },
     );
     const refreshToken = jwt.sign(
       { user: { id: user.id } },
@@ -280,7 +287,7 @@ exports.refresh = async (req, res) => {
     const newAccessToken = jwt.sign(
       { user: { id: user.id } },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "15m" },
     );
     const newRefreshToken = jwt.sign(
       { user: { id: user.id } },
@@ -353,7 +360,7 @@ exports.register = async (req, res) => {
     if (!password || !PASSWORD_REGEX.test(password)) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 8 characters with uppercase, lowercase, number, and special character (@$!%*?&)",
+        message: "Password must be 8-128 characters with uppercase, lowercase, number, and special character",
       });
     }
 
@@ -367,7 +374,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const userData = {
-      name,
+      name: sanitizeName(name),
       email: normalizedEmail,
       password: hashedPassword,
       locationPermission: locationPermission || "not_asked",
@@ -407,9 +414,9 @@ exports.register = async (req, res) => {
     await user.save();
 
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const regOtp = crypto.randomInt(100000, 999999).toString();
     const otpExpires = new Date(Date.now() + 300000);
-    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+    const otpHash = crypto.createHash("sha256").update(regOtp).digest("hex");
 
     await User.findByIdAndUpdate(user._id, {
       $set: { otp: otpHash, otpExpires },
@@ -421,7 +428,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    const emailResult = await sendOtpEmail(normalizedEmail, name, otp);
+    const emailResult = await sendOtpEmail(normalizedEmail, sanitizeName(name), regOtp);
 
     if (!emailResult.success && emailResult.production) {
       logger.error({ email: normalizedEmail }, "Registration succeeded but OTP email failed");
@@ -443,6 +450,13 @@ exports.register = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
+    // Block destructive operations during impersonation
+    if (req.isImpersonation) {
+      return res.status(403).json({
+        success: false,
+        message: "Profile updates are not allowed during impersonation sessions",
+      });
+    }
     const {
       name,
       latitude,
@@ -467,7 +481,7 @@ exports.updateProfile = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    if (name) user.name = name;
+    if (name) user.name = sanitizeName(name);
 
     if (latitude !== undefined && longitude !== undefined) {
       const lat = parseFloat(latitude);
@@ -478,10 +492,8 @@ exports.updateProfile = async (req, res) => {
       } else {
         return res.status(400).json({ success: false, message: "Invalid coordinates" });
       }
-    } else if (latitude !== undefined) {
-      user.latitude = parseFloat(latitude);
-    } else if (longitude !== undefined) {
-      user.longitude = parseFloat(longitude);
+    } else if (latitude !== undefined || longitude !== undefined) {
+      return res.status(400).json({ success: false, message: "Both latitude and longitude are required" });
     }
 
     if (locationName !== undefined) user.locationName = locationName;

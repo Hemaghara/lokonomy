@@ -35,6 +35,12 @@ module.exports = async function (req, res, next) {
       return res.status(401).json({ message: "Invalid token structure" });
     }
 
+    // Flag impersonation sessions so sensitive routes can block them
+    if (decoded.isImpersonation) {
+      req.isImpersonation = true;
+      req.impersonatedBy = decoded.impersonatedBy;
+    }
+
     if (req.user.isAdmin) {
       const admin = await Admin.findById(req.user.id);
       if (!admin) {

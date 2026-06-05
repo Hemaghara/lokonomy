@@ -100,7 +100,8 @@ const Market = () => {
         params.district = district;
       }
       const response = await marketService.getProducts(params);
-      setProducts(response.data);
+      const data = response.data;
+      setProducts(Array.isArray(data) ? data : (data?.products || []));
     } catch (err) {
       console.error("Market fetch error:", err);
     } finally {

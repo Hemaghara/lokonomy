@@ -58,6 +58,13 @@ const uploadMedia = async (fileBase64, folder = "general", options = {}) => {
   if (fileBase64.startsWith("http")) return fileBase64;
 
   const fileBuffer = parseBase64ToBuffer(fileBase64);
+
+  // Enforce 5MB limit
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  if (fileBuffer.length > MAX_FILE_SIZE) {
+    throw new Error("File size exceeds maximum allowed size of 5MB");
+  }
+
   let mimeType = getMimeType(fileBase64);
   if (!mimeType) {
     mimeType = getMimeTypeFromBuffer(fileBuffer);

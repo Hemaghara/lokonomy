@@ -10,7 +10,6 @@ const Story = require("./models/Story");
 
 const MONGO_URI = process.env.MONGO_URI;
 
-// Bug #36: Production guard to prevent accidental database wiping
 const isLocal = MONGO_URI && (MONGO_URI.includes("localhost") || MONGO_URI.includes("127.0.0.1"));
 if (process.env.NODE_ENV === "production" || !isLocal) {
   console.error("FATAL ERROR: Seeding is disabled in production or remote environments to prevent data loss.");

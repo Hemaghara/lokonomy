@@ -3,6 +3,7 @@ const User = require("../models/User");
 const { uploadMedia } = require("../utils/uploadMedia");
 const { buildLocationGeoJSON } = require("../utils/geoHelpers");
 const logger = require("../utils/logger");
+const escapeRegex = require("../utils/escapeRegex");
 
 exports.getAllStories = async (req, res, next) => {
   try {
@@ -38,12 +39,12 @@ exports.getAllStories = async (req, res, next) => {
         ],
       };
 
-      if (district) matchStage.district = { $regex: new RegExp(`^${district}$`, "i") };
+      if (district) matchStage.district = { $regex: new RegExp(`^${escapeRegex(district)}$`, "i") };
       if (type && type !== "All") matchStage.type = type;
       if (search) {
         matchStage.$or = [
-          { title: { $regex: search, $options: "i" } },
-          { content: { $regex: search, $options: "i" } },
+          { title: { $regex: escapeRegex(search), $options: "i" } },
+          { content: { $regex: escapeRegex(search), $options: "i" } },
         ];
       }
 
@@ -135,7 +136,7 @@ exports.getAllStories = async (req, res, next) => {
         },
         {
           $and: [
-            { district: { $regex: new RegExp(`^${district}$`, "i") } },
+            { district: { $regex: new RegExp(`^${escapeRegex(district)}$`, "i") } },
             {
               $or: [
                 { location: { $exists: false } },
@@ -157,7 +158,7 @@ exports.getAllStories = async (req, res, next) => {
         },
       };
     } else if (district) {
-      query.district = { $regex: new RegExp(`^${district}$`, "i") };
+      query.district = { $regex: new RegExp(`^${escapeRegex(district)}$`, "i") };
     }
 
     if (type && type !== "All") {
@@ -166,8 +167,8 @@ exports.getAllStories = async (req, res, next) => {
 
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { content: { $regex: search, $options: "i" } },
+        { title: { $regex: escapeRegex(search), $options: "i" } },
+        { content: { $regex: escapeRegex(search), $options: "i" } },
       ];
     }
 
@@ -443,7 +444,7 @@ exports.updateStory = async (req, res, next) => {
         .json({ success: false, message: "Story not found" });
     }
     if (story.authorId.toString() !== req.user.id) {
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         message: "Not authorized to edit this story",
       });
@@ -502,7 +503,15 @@ exports.updateStory = async (req, res, next) => {
     }
 
     if (req.body.latitude && req.body.longitude) {
-      updates.location = buildLocationGeoJSON(req.body.longitude, req.body.latitude);
+      const geoData = buildLocationGeoJSON({
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+        locationAddress: req.body.locationAddress,
+      });
+      if (geoData.location) {
+        updates.location = geoData.location;
+        if (geoData.locationAddress) updates.locationAddress = geoData.locationAddress;
+      }
     }
 
     const updatedStory = await Story.findByIdAndUpdate(
@@ -558,7 +567,7 @@ exports.deleteStory = async (req, res, next) => {
         { storyId: req.params.id, userId: req.user.id },
         "Unauthorized attempt to delete story",
       );
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         message: "Not authorized to delete this story",
       });

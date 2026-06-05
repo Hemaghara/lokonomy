@@ -17,7 +17,13 @@ exports.getAllProducts = async (req, res) => {
       mainCategory,
       subCategory,
       priceType,
+      page = 1,
+      limit = 20,
     } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 20));
+    const skip = (pageNum - 1) * limitNum;
 
     let query = {};
 
@@ -43,24 +49,37 @@ exports.getAllProducts = async (req, res) => {
     query.isFlagged = { $ne: true };
     query.isSuspended = { $ne: true };
 
+    const total = await Product.countDocuments(query);
     let products;
     if (lat && lng) {
-      products = await Product.find(query).sort({ isFeatured: -1 });
+      products = await Product.find(query)
+        .sort({ isFeatured: -1 })
+        .skip(skip)
+        .limit(limitNum);
     } else {
-      products = await Product.find(query).sort({
-        isFeatured: -1,
-        createdAt: -1,
-      });
+      products = await Product.find(query)
+        .sort({ isFeatured: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum);
     }
     const result = products.map((p) => {
       const obj = p.toObject();
       obj.isSold = obj.isSold === true;
       return obj;
     });
-    res.json(result);
+    res.json({
+      success: true,
+      products: result,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
   } catch (err) {
     logger.error({ err }, "Error in getAllProducts");
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 exports.addProduct = async (req, res) => {

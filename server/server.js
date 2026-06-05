@@ -43,8 +43,10 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
+      } else if (!origin && (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test")) {
+        callback(null, true); // Allow local testing tools / test runner
       } else {
         callback(new Error("CORS policy violation"));
       }
@@ -102,6 +104,8 @@ app.get("/", (req, res) => {
   res.send("Lokonomy API is running");
 });
 
+app.use(globalErrorHandler);
+
 if (process.env.NODE_ENV !== "test") {
   mongoose.connect(process.env.MONGO_URI, { family: 4 })
     .then(async () => {
@@ -123,22 +127,35 @@ if (process.env.NODE_ENV !== "test") {
       startJobAlertsCron();
       startLeaderboardCron();
       startSmartNotificationsCron(io);
+
+      server.listen(PORT, () => logger.info({ port: PORT }, "Server running"));
     })
     .catch((err) => {
       logger.fatal({ err }, "MongoDB connection failed");
       process.exit(1);
     });
-
-  server.listen(PORT, () => logger.info({ port: PORT }, "Server running"));
 }
 
-process.on("SIGTERM", async () => {
-  logger.info("SIGTERM received. Shutting down gracefully...");
+const gracefulShutdown = async (signal) => {
+  logger.info(`${signal} received. Shutting down gracefully...`);
   server.close(async () => {
-    await mongoose.connection.close();
-    process.exit(0);
+    try {
+      await mongoose.connection.close();
+      logger.info("MongoDB connection closed.");
+      process.exit(0);
+    } catch (err) {
+      logger.error({ err }, "Error during database disconnection");
+      process.exit(1);
+    }
   });
-});
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    logger.error("Forceful shutdown after timeout");
+    process.exit(1);
+  }, 10000);
+};
 
-app.use(globalErrorHandler);
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
 module.exports = app;

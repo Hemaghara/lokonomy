@@ -5,6 +5,7 @@ const User = require("../models/User");
 const Order = require("../models/Order");
 const Interaction = require("../models/Interaction");
 const logger = require("../utils/logger");
+const escapeRegex = require("../utils/escapeRegex");
 
 exports.getRecommendations = async (req, res) => {
   try {
@@ -86,7 +87,7 @@ exports.getSearchSuggestions = async (req, res) => {
       return res.json({ suggestions: [] });
     }
 
-    const regex = new RegExp(q, "i");
+    const regex = new RegExp(escapeRegex(q), "i");
 
     const [businesses, products, jobs] = await Promise.all([
       Business.find({ businessName: regex })

@@ -265,18 +265,19 @@ const initSocket = (server) => {
           productId,
           businessId,
           chatType,
-          senderId,
           receiverId,
           senderName,
           message,
         } = data;
+
+        const senderId = socket.userId;
 
         const newMessage = new Message({
           chatRoom,
           chatType: chatType || "product",
           productId: productId || null,
           businessId: businessId || null,
-          senderId: socket.userId,
+          senderId,
           receiverId,
           senderName,
           message,

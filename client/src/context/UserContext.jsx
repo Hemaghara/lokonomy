@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "./LocationContext";
 import { authService } from "../services";
 import { connectSocket, disconnectSocket } from "../services/socket";
@@ -17,6 +17,7 @@ export const UserProvider = ({ children }) => {
   });
 
   const { setDistrict, setTaluka } = useLocation();
+  const fetchedTokenRef = useRef(null);
 
   useEffect(() => {
     if (user && (user.id || user._id)) {
@@ -24,11 +25,9 @@ export const UserProvider = ({ children }) => {
     }
 
     return () => {
-      if (!user) {
-        disconnectSocket();
-      }
+      disconnectSocket();
     };
-  }, [user]);
+  }, [user?.id, user?._id, user?.token]);
 
   const updateUser = useCallback((updates) => {
     setUser((prev) => {
@@ -42,7 +41,8 @@ export const UserProvider = ({ children }) => {
     const fetchMe = async () => {
       if (window?.location?.pathname?.startsWith("/admin")) return;
 
-      if (user && user.token) {
+      if (user && user.token && fetchedTokenRef.current !== user.token) {
+        fetchedTokenRef.current = user.token;
         try {
           const res = await authService.getMe();
           if (res.data.success) {

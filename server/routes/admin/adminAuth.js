@@ -11,7 +11,7 @@ const {
   protectAdmin,
   authorizeRoles,
 } = require("../../middleware/adminMiddleware");
-const { adminLimiter } = require("../../middleware/rateLimiter");
+const { adminLimiter, authLimiter } = require("../../middleware/rateLimiter");
 
 router.post(
   "/register",
@@ -19,7 +19,7 @@ router.post(
   authorizeRoles("superadmin"),
   registerAdmin,
 );
-router.post("/login", adminLimiter, loginAdmin);
+router.post("/login", authLimiter, loginAdmin);
 router.get("/verify", protectAdmin, verifyAdmin);
 router.put("/profile", protectAdmin, updateAdminProfile);
 router.post("/reauth", protectAdmin, reauthAdmin);
