@@ -79,16 +79,30 @@ const sendOtpEmail = async (email, userName, otp) => {
     </div>`,
   };
 
-  try {
-    if (isResendConfigured) {
+  let sentViaResend = false;
+  let sentViaGmail = false;
+
+  if (isResendConfigured) {
+    try {
       logger.info({ to: email }, "Attempting to send OTP email via Resend...");
-      await resendClient.emails.send({
+      const response = await resendClient.emails.send({
         from: process.env.RESEND_FROM || "Lokonomy <onboarding@resend.dev>",
         to: email,
         ...emailContent,
       });
-      logger.info({ to: email }, "OTP email sent via Resend");
-    } else {
+      if (response && response.error) {
+        logger.error({ err: response.error.message, email }, "Resend email delivery failed (API error)");
+      } else {
+        logger.info({ to: email }, "OTP email sent via Resend");
+        sentViaResend = true;
+      }
+    } catch (err) {
+      logger.error({ err: err.message, email }, "Resend email delivery failed");
+    }
+  }
+
+  if (!sentViaResend && isGmailConfigured) {
+    try {
       logger.info({ to: email }, "Attempting to send OTP email via Gmail SMTP...");
       await mailService.sendMail({
         from: `"Lokonomy" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
@@ -96,12 +110,17 @@ const sendOtpEmail = async (email, userName, otp) => {
         ...emailContent,
       });
       logger.info({ to: email }, "OTP email sent via Gmail SMTP");
+      sentViaGmail = true;
+    } catch (err) {
+      logger.error({ err: err.message, email }, "Gmail SMTP email delivery failed");
     }
-    return { success: true };
-  } catch (err) {
-    logger.error({ err: err.message, email }, "Email delivery failed");
-    return { success: false, production: process.env.NODE_ENV === "production" };
   }
+
+  if (sentViaResend || sentViaGmail) {
+    return { success: true };
+  }
+
+  return { success: false, production: process.env.NODE_ENV === "production" };
 };
 
 exports.login = async (req, res) => {
@@ -197,6 +216,7 @@ exports.login = async (req, res) => {
       success: true,
       message: emailResult.devMode ? "OTP sent (dev mode)" : "Verification code sent.",
       step: "otp",
+      devOtp: emailResult.devMode ? otp : undefined,
     });
   } catch (err) {
     logger.error({ err: err.message }, "Login controller error");
@@ -438,9 +458,10 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Registration successful. Please verify your email with the OTP sent.",
+      message: emailResult.devMode ? "OTP sent (dev mode)" : "Registration successful. Please verify your email with the OTP sent.",
       step: "otp",
       email: normalizedEmail,
+      devOtp: emailResult.devMode ? regOtp : undefined,
     });
   } catch (err) {
     logger.error({ err }, "Registration error");
@@ -550,5 +571,47 @@ exports.updateProfile = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Failed to update profile" });
+  }
+};
+
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpires = new Date(Date.now() + 300000);
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    await User.findByIdAndUpdate(user._id, {
+      $set: { otp: otpHash, otpExpires },
+    });
+
+    const emailResult = await sendOtpEmail(normalizedEmail, user.name, otp);
+
+    if (!emailResult.success && emailResult.production) {
+      return res.status(503).json({
+        success: false,
+        message: "Email service is not configured.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: emailResult.devMode ? "OTP sent (dev mode)" : "Verification code resent successfully.",
+      devOtp: emailResult.devMode ? otp : undefined,
+    });
+  } catch (err) {
+    logger.error({ err }, "Resend OTP error");
+    res.status(500).json({ success: false, message: "Failed to resend OTP" });
   }
 };

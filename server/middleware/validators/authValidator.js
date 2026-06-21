@@ -55,4 +55,20 @@ const validateOtp = (req, res, next) => {
   next();
 };
 
-module.exports = { validateLogin, validateRegister, validateOtp };
+const validateResendOtp = (req, res, next) => {
+  const { email } = req.body;
+  const errors = [];
+
+  if (!email || typeof email !== "string") errors.push("Valid email required");
+  if (email && email.length > 254) errors.push("Email too long");
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) errors.push("Invalid email format");
+
+  if (errors.length > 0) {
+    return res.status(400).json({ success: false, message: errors[0], errors });
+  }
+  next();
+};
+
+module.exports = { validateLogin, validateRegister, validateOtp, validateResendOtp };

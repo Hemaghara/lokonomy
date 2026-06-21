@@ -11,6 +11,7 @@ vi.mock("../../services", () => ({
   authService: {
     login: vi.fn(),
     verifyOtp: vi.fn(),
+    resendOtp: vi.fn(),
     getMe: vi.fn().mockResolvedValue({ data: { success: false } }),
   },
 }));

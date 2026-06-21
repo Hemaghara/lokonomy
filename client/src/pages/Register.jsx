@@ -184,7 +184,13 @@ const Register = () => {
         navigate("/home");
       } else if (response.data.step === "otp") {
         toast.success(response.data.message || "Registration successful! Verification code sent.");
-        navigate("/", { state: { email: formData.email, step: "otp" } });
+        navigate("/", {
+          state: {
+            email: formData.email,
+            step: "otp",
+            devOtp: response.data.devOtp,
+          },
+        });
       } else {
         toast.error(response.data.message || "Registration Failed");
       }

@@ -39,6 +39,15 @@ const Login = () => {
     }
   }, [location]);
 
+  useEffect(() => {
+    if (location.state?.step === "otp" && location.state?.devOtp) {
+      toast.success(`Verification Code (Dev Mode): ${location.state.devOtp}`, {
+        duration: 10000,
+        id: "dev-otp-toast",
+      });
+    }
+  }, [location.state]);
+
   const [step, setStep] = useState(location.state?.step || "credentials");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
@@ -245,9 +254,29 @@ const Login = () => {
     }
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     setOtp("");
-    handleInitialLogin();
+    setLoading(true);
+    try {
+      const response = await authService.resendOtp(formData.email);
+      if (response.data.success) {
+        if (response.data.devOtp) {
+          toast.success(`Verification Code: ${response.data.devOtp}`, {
+            duration: 6000,
+          });
+        } else {
+          toast.success(response.data.message || "Please check your email for the verification code.");
+        }
+        setTimer(60);
+      } else {
+        toast.error(response.data.message || "Failed to resend verification code.");
+      }
+    } catch (err) {
+      console.error("Resend OTP error:", err);
+      toast.error(err.response?.data?.message || "Failed to resend verification code.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const gpsStatusConfig = {

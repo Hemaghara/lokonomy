@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const { MongoMemoryReplSet } = require("mongodb-memory-server");
 
+// Disable real email sending during tests
+process.env.RESEND_API_KEY = "";
+process.env.EMAIL_USER = "";
+process.env.EMAIL_PASS = "";
+
 let mongoServer;
 
 beforeAll(async () => {
