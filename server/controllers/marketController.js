@@ -49,7 +49,19 @@ exports.getAllProducts = async (req, res) => {
     query.isFlagged = { $ne: true };
     query.isSuspended = { $ne: true };
 
-    const total = await Product.countDocuments(query);
+    let countQuery = { ...query };
+    if (countQuery.location && countQuery.location.$near) {
+      countQuery.location = {
+        $geoWithin: {
+          $centerSphere: [
+            [parseFloat(lng), parseFloat(lat)],
+            parseFloat(radius) / 6378100,
+          ],
+        },
+      };
+    }
+
+    const total = await Product.countDocuments(countQuery);
     let products;
     if (lat && lng) {
       products = await Product.find(query)

@@ -118,7 +118,18 @@ exports.getAllFeeds = async (req, res, next) => {
     } else if (lat && lng) {
       try {
         feeds = await Feed.find(query).skip(skip).limit(limitNum).lean();
-        totalCount = await Feed.countDocuments(query);
+        const countQuery = { ...query };
+        if (countQuery.location && countQuery.location.$near) {
+          countQuery.location = {
+            $geoWithin: {
+              $centerSphere: [
+                [parseFloat(lng), parseFloat(lat)],
+                parseFloat(radius) / 6378100,
+              ],
+            },
+          };
+        }
+        totalCount = await Feed.countDocuments(countQuery);
       } catch (geoError) {
         logger.warn({ err: geoError }, "Geo-query failed, falling back to district/general query");
         delete query.location;
