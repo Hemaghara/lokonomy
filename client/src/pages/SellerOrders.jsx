@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { orderService, marketService, businessService, aiInsightsService, subscriptionBoxService } from "../services";
 import { useUser } from "../context/UserContext";
@@ -65,6 +66,7 @@ const SellerOrders = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -96,6 +98,8 @@ const SellerOrders = () => {
             const aiRes = await aiInsightsService.getAIInsights(biz._id);
             if (aiRes.data.success) {
               setAiInsights(aiRes.data.insights);
+            } else {
+              setAiError(aiRes.data.message || "Failed to load AI Insights");
             }
           } catch (err) {
             console.error("Error fetching AI Insights:", err);
@@ -135,7 +139,7 @@ const SellerOrders = () => {
       ]);
       setOrders(oRes.data.orders);
       setStats(sRes.data.stats);
-    } catch (err) {
+    } catch {
       toast.error("Failed to update status");
     } finally {
       setUpdatingId(null);
@@ -154,7 +158,7 @@ const SellerOrders = () => {
         toast.success("Chatbot settings updated successfully!");
         setMyBusiness(res.data.business);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to update chatbot settings");
     }
   };
@@ -201,7 +205,7 @@ const SellerOrders = () => {
           setSubscriptionBoxes(boxesRes.data.boxes || []);
         }
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to create subscription box");
     } finally {
       setCreatingBox(false);
@@ -226,7 +230,7 @@ const SellerOrders = () => {
         const ordersRes = await orderService.getSellerOrders();
         setOrders(ordersRes.data.orders);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to update tracking information");
     } finally {
       setSubmittingTracking(false);
@@ -297,7 +301,7 @@ const SellerOrders = () => {
       await marketService.deleteProduct(productId);
       toast.success("Product removed");
       fetchData();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete product");
     }
   };
