@@ -6,9 +6,7 @@ const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{8,128}$/;
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_ADMIN_SECRET, {
-    expiresIn: "8h",
-  });
+  return jwt.sign({ id }, process.env.JWT_ADMIN_SECRET);
 };
 
 exports.registerAdmin = async (req, res) => {

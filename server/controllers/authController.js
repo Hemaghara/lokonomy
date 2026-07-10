@@ -262,13 +262,11 @@ exports.verifyOtp = async (req, res) => {
 
     const accessToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" },
+      process.env.JWT_SECRET
     );
     const refreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "30d" },
+      process.env.JWT_REFRESH_SECRET
     );
 
     user.refreshToken = refreshToken;
@@ -306,13 +304,11 @@ exports.refresh = async (req, res) => {
 
     const newAccessToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" },
+      process.env.JWT_SECRET
     );
     const newRefreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "30d" },
+      process.env.JWT_REFRESH_SECRET
     );
 
     user.refreshToken = newRefreshToken;
