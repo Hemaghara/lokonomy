@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { jobService } from "../services";
 import recommendationService from "../services/recommendationService";
@@ -383,7 +384,7 @@ const JobDetails = () => {
             transition={{ duration: 0.3, delay: 0.1 }}
             className="space-y-4 lg:sticky lg:top-28"
           >
-            <div className={card + " p-5"}>
+            <div className={`${card} p-5 sticky bottom-4 z-40 lg:static shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none bg-[#111827]/95 backdrop-blur-xl lg:bg-[#111827]`}>
               <div className="flex items-center justify-between mb-5 pb-5 border-b border-[#1f2a3d]">
                 <div>
                   <p className={label + " mb-1"}>Total Applications</p>

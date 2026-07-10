@@ -27,5 +27,6 @@ const leaderboardSchema = new mongoose.Schema({
 
 leaderboardSchema.index({ district: 1, category: 1, year: 1, month: 1, rank: 1 });
 leaderboardSchema.index({ businessId: 1, year: 1, month: 1 });
+leaderboardSchema.index({ year: 1, month: 1, score: -1 });
 
 module.exports = mongoose.model("Leaderboard", leaderboardSchema);

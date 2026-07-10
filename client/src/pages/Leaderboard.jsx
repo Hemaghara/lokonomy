@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { leaderboardService, influencerService } from "../services";
 import { useUser } from "../context/UserContext";
@@ -56,25 +57,47 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
   const [expandedBizId, setExpandedBizId] = useState(null);
+  
+  // Cache for instant tab switching
+  const cache = useRef({ businesses: {}, influencers: {} });
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async (forceRefresh = false) => {
+    const cacheKey = JSON.stringify(filters);
+
+    if (!forceRefresh) {
+      if (activeLeaderboardTab === "businesses" && cache.current.businesses[cacheKey]) {
+        setLeaderboard(cache.current.businesses[cacheKey].data);
+        setAvailableFilters(cache.current.businesses[cacheKey].filters);
+        return;
+      }
+      if (activeLeaderboardTab === "influencers" && cache.current.influencers[cacheKey]) {
+        setInfluencers(cache.current.influencers[cacheKey].data);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (activeLeaderboardTab === "businesses") {
         const res = await leaderboardService.getLeaderboard(filters);
         if (res.data.success) {
-          setLeaderboard(res.data.leaderboard || []);
-          setAvailableFilters({
+          const lbData = res.data.leaderboard || [];
+          const filterData = {
             districts: res.data.filters.districts.length > 0 ? res.data.filters.districts : DISTRICTS,
             categories: res.data.filters.categories.length > 0 ? res.data.filters.categories : CATEGORIES,
-          });
+          };
+          setLeaderboard(lbData);
+          setAvailableFilters(filterData);
+          cache.current.businesses[cacheKey] = { data: lbData, filters: filterData };
         } else {
           toast.error("Failed to load leaderboard data");
         }
       } else {
         const res = await influencerService.getLocalInfluencers({ district: filters.district });
         if (res.data.success) {
-          setInfluencers(res.data.influencers || []);
+          const infData = res.data.influencers || [];
+          setInfluencers(infData);
+          cache.current.influencers[cacheKey] = { data: infData };
         } else {
           toast.error("Failed to load influencer data");
         }
@@ -96,7 +119,8 @@ const Leaderboard = () => {
       const res = await leaderboardService.calculateLeaderboard();
       if (res.data.success) {
         toast.success("Leaderboard recalculated successfully!");
-        fetchLeaderboard();
+        cache.current.businesses = {}; // Clear cache on recalculation
+        fetchLeaderboard(true);
       } else {
         toast.error(res.data.message || "Failed to recalculate leaderboard");
       }
@@ -130,7 +154,8 @@ const Leaderboard = () => {
   if (podiumEntries[0]) reorderedPodium.push(podiumEntries[0]);
   if (podiumEntries[2]) reorderedPodium.push(podiumEntries[2]);
 
-  const listEntries = leaderboard;
+  // Remove the top 3 from the list below the podium to avoid redundancy
+  const listEntries = leaderboard.slice(3);
 
   const isAdmin = user?.role === "superadmin" || user?.role === "admin";
 
@@ -411,7 +436,6 @@ const Leaderboard = () => {
                 {reorderedPodium.map((entry, idx) => {
                   const isFirst = entry.rank === 1;
                   const isSecond = entry.rank === 2;
-                  const isThird = entry.rank === 3;
 
                   const cardStyles = isFirst
                     ? {

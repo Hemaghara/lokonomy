@@ -76,30 +76,41 @@ exports.calculateLeaderboard = async (req, res) => {
 
     const businesses = await Business.find({});
 
+    // Bulk calculate Order Counts
+    const orderCounts = await Order.aggregate([
+      { $match: { createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { $group: { _id: "$seller", count: { $sum: 1 } } }
+    ]);
+    const orderMap = new Map(orderCounts.map(o => [o._id.toString(), o.count]));
+
+    // Bulk calculate Story Engagement
+    const storyAgg = await Story.aggregate([
+      { $match: { createdAt: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { 
+        $group: { 
+          _id: "$authorId", 
+          views: { $sum: { $ifNull: ["$views", 0] } },
+          likesCount: { $sum: { $size: { $ifNull: ["$likes", []] } } },
+          shares: { $sum: { $ifNull: ["$shares", 0] } }
+        }
+      }
+    ]);
+    const storyMap = new Map(storyAgg.map(s => [
+      s._id.toString(), 
+      s.views + (s.likesCount * 2) + (s.shares * 3)
+    ]));
+
     const scores = [];
 
     for (const biz of businesses) {
       if (!biz.district || !biz.mainCategory) continue;
 
-
-      const orderCount = await Order.countDocuments({
-        seller: biz.ownerId,
-        createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-      });
-
+      const ownerIdStr = biz.ownerId ? biz.ownerId.toString() : "";
+      const orderCount = orderMap.get(ownerIdStr) || 0;
+      const storyEngagement = storyMap.get(ownerIdStr) || 0;
 
       const reviewCount = biz.reviews ? biz.reviews.length : 0;
       const reviewAvg = biz.rating || 0;
-
-
-      const stories = await Story.find({
-        authorId: biz.ownerId,
-        createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-      });
-      const storyEngagement = stories.reduce(
-        (acc, s) => acc + (s.views || 0) + (s.likes?.length || 0) * 2 + (s.shares || 0) * 3,
-        0
-      );
 
 
       const monthVisits = (biz.dailyVisits || [])

@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "../context/LocationContext";
@@ -108,6 +109,14 @@ const Jobs = () => {
     isOpen: false,
     targetId: null,
   });
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
 
 
   const [selectedDistrict, setSelectedDistrict] = useState(userDistrict || "");
@@ -195,12 +204,33 @@ const Jobs = () => {
     fetchJobs(1, false);
   }, [fetchJobs]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (pagination.hasMore && !isRefreshing) {
       fetchJobs(page + 1, true);
     }
-  };
+  }, [pagination.hasMore, isRefreshing, fetchJobs, page]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && pagination.hasMore && !isRefreshing) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [observerTarget, pagination.hasMore, isRefreshing, loadMore]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -349,12 +379,6 @@ const Jobs = () => {
                 className={inputCls + " pl-10"}
               />
             </div>
-            <button
-              type="submit"
-              className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-xl transition-all active:scale-95"
-            >
-              Search
-            </button>
             {search && (
               <button
                 type="button"
@@ -730,24 +754,13 @@ const Jobs = () => {
           )}
 
           {pagination.hasMore && (
-            <div className="mt-12 flex justify-center">
-              <button
-                onClick={loadMore}
-                disabled={isRefreshing}
-                className="bg-[#111827] border border-[#1f2a3d] hover:border-violet-500/50 text-slate-300 px-8 py-3 rounded-2xl text-sm font-semibold transition-all hover:bg-violet-500/5 disabled:opacity-50 flex items-center gap-3 group"
-              >
-                {isRefreshing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    Load More Jobs
-                    <HiOutlineChevronDown className="text-lg group-hover:translate-y-0.5 transition-transform" />
-                  </>
-                )}
-              </button>
+            <div ref={observerTarget} className="mt-12 flex justify-center py-4">
+              {isRefreshing && (
+                <div className="flex items-center gap-3 text-slate-400 text-sm font-semibold">
+                  <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+                  Loading more jobs...
+                </div>
+              )}
             </div>
           )}
         </div>
