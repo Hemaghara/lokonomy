@@ -21,11 +21,11 @@ const validateRegister = (req, res, next) => {
   const { name, email, password } = req.body;
   const errors = [];
 
-  if (!name || name.trim().length < 2)
-    errors.push("Name must be at least 2 characters");
-  if (name && name.length > 50) errors.push("Name too long");
-  if (!email) errors.push("Email required");
-  if (!password) errors.push("Password required");
+  if (!name || typeof name !== "string" || name.trim().length < 2)
+    errors.push("Name must be a valid string of at least 2 characters");
+  if (name && typeof name === "string" && name.length > 50) errors.push("Name too long");
+  if (!email || typeof email !== "string") errors.push("Valid email required");
+  if (!password || typeof password !== "string") errors.push("Valid password required");
   if (password && password.length < 8)
     errors.push("Password must be at least 8 characters");
   if (password && password.length > 128) errors.push("Password too long");
@@ -42,10 +42,10 @@ const validateRegister = (req, res, next) => {
 
 const validateOtp = (req, res, next) => {
   const { email, otp } = req.body;
-  if (!email || !otp) {
+  if (!email || typeof email !== "string" || !otp || typeof otp !== "string") {
     return res
       .status(400)
-      .json({ success: false, message: "Email and OTP required" });
+      .json({ success: false, message: "Valid email and OTP required" });
   }
   if (!/^\d{6}$/.test(otp)) {
     return res

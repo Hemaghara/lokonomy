@@ -59,7 +59,7 @@ const businessSchema = new mongoose.Schema({
   visits: { type: Number, default: 0 },
   reviews: [
     {
-      userId: { type: String },
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       userName: { type: String, required: true },
       rating: { type: Number, required: true },
       comment: { type: String },
@@ -99,6 +99,8 @@ const businessSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+businessSchema.index({ ownerId: 1 });
+businessSchema.index({ businessName: 1 });
 businessSchema.index({ location: "2dsphere" });
 businessSchema.index({ verificationStatus: 1 });
 

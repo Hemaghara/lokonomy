@@ -18,6 +18,10 @@ exports.registerAdmin = async (req, res) => {
       return res.status(403).json({ success: false, message: "Only superadmins can register new admins" });
     }
 
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ success: false, message: "Valid email is required" });
+    }
+
     if (!password || !PASSWORD_REGEX.test(password)) {
       return res.status(400).json({
         success: false,
@@ -62,7 +66,10 @@ exports.registerAdmin = async (req, res) => {
 exports.loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const admin = await Admin.findOne({ email: email?.toLowerCase().trim() });
+    if (!email || typeof email !== "string" || !password) {
+      return res.status(400).json({ success: false, message: "Valid email and password required" });
+    }
+    const admin = await Admin.findOne({ email: email.toLowerCase().trim() });
 
     const isMatch = admin
       ? await admin.comparePassword(password)
@@ -104,6 +111,9 @@ exports.updateAdminProfile = async (req, res) => {
     const admin = await Admin.findById(req.admin._id);
 
     if (admin) {
+      if (req.body.email && typeof req.body.email !== "string") {
+        return res.status(400).json({ success: false, message: "Valid email is required" });
+      }
       admin.name = req.body.name || admin.name;
       admin.email = req.body.email ? req.body.email.toLowerCase().trim() : admin.email;
 

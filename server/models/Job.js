@@ -155,6 +155,7 @@ const jobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+jobSchema.index({ posterId: 1 });
 jobSchema.index({ isFlagged: 1, isSuspended: 1, status: 1, createdAt: -1 });
 jobSchema.index({ district: 1, isFlagged: 1, isSuspended: 1, status: 1, createdAt: -1 });
 jobSchema.index({ category: 1, isFlagged: 1, isSuspended: 1, status: 1 });
