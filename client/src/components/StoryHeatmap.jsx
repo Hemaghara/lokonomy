@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -16,7 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const storyIcon = (type) => new L.Icon({
+const storyIcon = () => new L.Icon({
   iconUrl:
     "data:image/svg+xml;base64," +
     btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 42" width="30" height="42">
@@ -36,15 +35,12 @@ const StoryHeatmap = ({ isOpen, onClose, stories }) => {
 
   const mapStories = stories.filter(s => s.location?.coordinates);
   
-  const center = mapStories.length > 0 
+  const center = mapStories.length > 0 && mapStories[0].location?.coordinates?.length >= 2
     ? [mapStories[0].location.coordinates[1], mapStories[0].location.coordinates[0]]
     : [22.3, 72.6];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <div
       className="fixed inset-0 z-[70] bg-slate-950 flex flex-col"
     >
       <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
@@ -79,7 +75,7 @@ const StoryHeatmap = ({ isOpen, onClose, stories }) => {
             <Marker 
               key={story._id} 
               position={[story.location.coordinates[1], story.location.coordinates[0]]}
-              icon={storyIcon(story.type)}
+              icon={storyIcon()}
             >
               <Popup className="story-popup">
                 <div className="p-1 w-48">
@@ -111,7 +107,7 @@ const StoryHeatmap = ({ isOpen, onClose, stories }) => {
           margin: 12px;
         }
       `}</style>
-    </motion.div>
+    </div>
   );
 };
 

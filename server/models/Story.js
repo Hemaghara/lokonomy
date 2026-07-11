@@ -72,6 +72,15 @@ const storySchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  comments: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      userName: String,
+      userAvatar: String,
+      text: String,
+      createdAt: { type: Date, default: Date.now },
+    }
+  ],
   poll: {
     question: String,
     options: [{

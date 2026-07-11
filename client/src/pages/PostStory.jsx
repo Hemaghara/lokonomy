@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "../context/LocationContext";
 import { useUser } from "../context/UserContext";
 import { storyService } from "../services";
 import { toast } from "react-hot-toast";
@@ -158,11 +156,9 @@ const PostStory = () => {
   const { storyId } = useParams();
   const isEditMode = !!storyId;
   const { user } = useUser();
-  const { state, availableDistricts } = useLocation();
   const { limits } = usePlanLimits();
 
   const [storyLocation, setStoryLocation] = useState(null);
-  const [loadingStory, setLoadingStory] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -193,6 +189,10 @@ const PostStory = () => {
     }
 
     files.forEach((file) => {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`"${file.name}" exceeds the 10MB limit`);
+        return;
+      }
       if (file.type.startsWith("video")) {
         const video = document.createElement("video");
         video.preload = "metadata";
@@ -208,6 +208,10 @@ const PostStory = () => {
             };
             setMediaFiles((prev) => [...prev, newMedia]);
           }
+        };
+        video.onerror = () => {
+          window.URL.revokeObjectURL(video.src);
+          toast.error(`"${file.name}" is not a valid or readable video format`);
         };
         video.src = URL.createObjectURL(file);
       } else {
@@ -232,7 +236,6 @@ const PostStory = () => {
 
   useEffect(() => {
     if (isEditMode) {
-      setLoadingStory(true);
       storyService
         .getStoryById(storyId)
         .then((res) => {
@@ -276,13 +279,12 @@ const PostStory = () => {
               );
           }
         })
-        .catch((err) => {
+        .catch(() => {
           toast.error("Failed to load story for editing");
           navigate("/stories");
-        })
-        .finally(() => setLoadingStory(false));
+        });
     }
-  }, [storyId]);
+  }, [storyId, isEditMode, navigate]);
 
   useEffect(() => {
     if (storyLocation) {
@@ -326,20 +328,7 @@ const PostStory = () => {
     });
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, image: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  const removeImage = () => {
-    setFormData({ ...formData, image: "" });
-  };
 
   const addPollOption = () => {
     if (pollOptions.length < 4) setPollOptions([...pollOptions, ""]);
@@ -393,6 +382,10 @@ const PostStory = () => {
             options: validOptions.map((o) => ({ text: o.trim() })),
             endsAt: pollEndDate || undefined,
           };
+        } else {
+          setLoading(false);
+          toast.error("A poll requires at least 2 options.");
+          return;
         }
       }
 

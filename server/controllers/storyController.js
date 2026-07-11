@@ -19,8 +19,8 @@ exports.getAllStories = async (req, res, next) => {
       limit = 12,
     } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 12));
     const skip = (pageNum - 1) * limitNum;
 
     if (sort === "trending") {
@@ -271,8 +271,8 @@ exports.createStory = async (req, res, next) => {
       const user = await User.findById(req.user.id);
       if (
         !user ||
-        (user.subscription.plan !== "gold" &&
-          user.subscription.plan !== "platinum")
+        (user.subscription?.plan !== "gold" &&
+          user.subscription?.plan !== "platinum")
       ) {
         logger.warn(
           { userId: req.user.id },
@@ -474,31 +474,35 @@ exports.updateStory = async (req, res, next) => {
     }
 
     // Handle multi-media updates
-    if (Array.isArray(req.body.media) && req.body.media.length > 0) {
+    if (Array.isArray(req.body.media)) {
       const mediaArr = [];
-      for (const item of req.body.media.slice(0, 5)) {
-        if (item.url && item.url.startsWith("data:")) {
-          try {
-            const uploadRes = await uploadMedia(item.url, "stories");
+      if (req.body.media.length > 0) {
+        for (const item of req.body.media.slice(0, 5)) {
+          if (item.url && item.url.startsWith("data:")) {
+            try {
+              const uploadRes = await uploadMedia(item.url, "stories");
+              mediaArr.push({
+                url: uploadRes.secure_url,
+                type: item.type || "image",
+                thumbnail: item.thumbnail || null,
+              });
+            } catch (uploadErr) {
+              logger.warn({ err: uploadErr }, "Failed to upload media item during update");
+            }
+          } else if (item.url) {
             mediaArr.push({
-              url: uploadRes.secure_url,
+              url: item.url,
               type: item.type || "image",
               thumbnail: item.thumbnail || null,
             });
-          } catch (uploadErr) {
-            logger.warn({ err: uploadErr }, "Failed to upload media item during update");
           }
-        } else if (item.url) {
-          mediaArr.push({
-            url: item.url,
-            type: item.type || "image",
-            thumbnail: item.thumbnail || null,
-          });
         }
       }
       updates.media = mediaArr;
       if (!updates.image && mediaArr.length > 0) {
         updates.image = mediaArr[0].url;
+      } else if (mediaArr.length === 0) {
+        updates.image = "";
       }
     }
 

@@ -1,6 +1,5 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getTimeRemaining, getIconForType, getTypeColor, formatTimeAgo } from "../utils/storyHelpers";
+import { getTimeRemaining, getIconForType, getTypeColor } from "../utils/storyHelpers";
 import { haversineDistance, formatDistance } from "../utils/geoUtils";
 import { useUser } from "../context/UserContext";
 import { useState, useEffect } from "react";
@@ -95,11 +94,22 @@ const StoryCard = ({
     >
       <div className="relative aspect-video overflow-hidden bg-[#0d1424]">
         {(story.media?.length > 0 ? story.media[0]?.url : story.image) ? (
-          <img
-            src={story.media?.length > 0 ? story.media[0].url : story.image}
-            alt=""
-            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-          />
+          story.media?.[0]?.type === 'video' ? (
+            <video
+              src={story.media[0].url}
+              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+              muted
+              playsInline
+              loop
+              autoPlay
+            />
+          ) : (
+            <img
+              src={story.media?.length > 0 ? story.media[0].url : story.image}
+              alt=""
+              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+            />
+          )
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-5xl opacity-10">

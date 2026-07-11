@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 import {
   HiOutlineXMark,
   HiOutlineHandThumbUp,
@@ -14,6 +13,7 @@ import { formatTimeAgo, getTypeColor, getIconForType } from "../utils/storyHelpe
 import MediaCarousel from "./MediaCarousel";
 import PollCard from "./PollCard";
 import CommentSection from "./CommentSection";
+import { useUser } from "../context/UserContext";
 
 const StoryFullscreenViewer = ({
   stories,
@@ -24,6 +24,7 @@ const StoryFullscreenViewer = ({
   onShare,
   isBookmarked
 }) => {
+  const { user } = useUser();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showComments, setShowComments] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -216,7 +217,7 @@ const StoryFullscreenViewer = ({
             onClick={() => onLike(story._id)}
             className="flex flex-col items-center gap-1.5 text-white/40 hover:text-rose-500 transition-colors"
           >
-            <HiOutlineHandThumbUp size={22} className={story.likes?.includes(story.userId) ? 'text-rose-500 fill-rose-500' : ''} />
+            <HiOutlineHandThumbUp size={22} className={story.likes?.includes(user?.id) ? 'text-rose-500 fill-rose-500' : ''} />
             <span className="text-[9px] font-black uppercase tracking-widest">{story.likes?.length || 0}</span>
           </button>
           <button
