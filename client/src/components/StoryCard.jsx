@@ -3,6 +3,8 @@ import { getTimeRemaining, getIconForType, getTypeColor } from "../utils/storyHe
 import { haversineDistance, formatDistance } from "../utils/geoUtils";
 import { useUser } from "../context/UserContext";
 import { useState, useEffect } from "react";
+// eslint-disable-next-line no-unused-vars
+import { motion } from "framer-motion";
 import {
   HiOutlineClock,
   HiOutlineMapPin,

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -298,9 +299,9 @@ const AdminJobs = () => {
 
   useEffect(() => {
     fetchData();
-  }, [filter, education, search, page]);
+  }, [filter, education, search, page, fetchData]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const r = await adminService.getJobs({
@@ -317,7 +318,7 @@ const AdminJobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, education, search, page]);
 
   const fetchStats = async () => {
     try {
@@ -385,6 +386,7 @@ const AdminJobs = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* eslint-disable-next-line no-unused-vars */}
           {STAT_CONFIG.map(({ key, label, icon: Icon, color }, i) => {
             const c = colorMap[color];
             return (

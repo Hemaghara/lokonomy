@@ -11,9 +11,9 @@ const logger = require("../utils/logger");
 const sendJobAlerts = async () => {
   try {
     logger.info("Starting job alert check...");
-    const alerts = await JobAlert.find().populate("userId");
+    const cursor = JobAlert.find().populate("userId").cursor();
     
-    for (const alert of alerts) {
+    for await (const alert of cursor) {
       if (!alert.userId || !alert.userId.email) continue;
 
       const query = {

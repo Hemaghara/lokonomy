@@ -101,7 +101,27 @@ exports.createJob = async (req, res) => {
       });
     }
 
-    const jobData = { ...req.body, posterId: req.user.id };
+    const {
+      position, location, vacancies, education, district, 
+      experience, skills, salary, gender, posterName, 
+      posterEmail, posterContact, description, jobType, 
+      category, taluka, deadline, salaryMin, salaryMax
+    } = req.body;
+
+    if (vacancies <= 0 || vacancies > 999) {
+      return res.status(400).json({ success: false, message: "Vacancies must be between 1 and 999." });
+    }
+    if (salaryMin && salaryMax && salaryMin > salaryMax) {
+      return res.status(400).json({ success: false, message: "Minimum salary cannot be greater than maximum salary." });
+    }
+
+    const jobData = {
+      position, location, vacancies, education, district,
+      experience, skills, salary, gender, posterName,
+      posterEmail, posterContact, description, jobType,
+      category, taluka, deadline, salaryMin, salaryMax,
+      posterId: req.user.id
+    };
     const newJob = new Job(jobData);
     await newJob.save();
 
@@ -136,17 +156,29 @@ exports.getJobById = async (req, res) => {
 
     const viewerId = req.user?.id;
     if (!viewerId || viewerId !== job.posterId.toString()) {
-      job.views = (job.views || 0) + 1;
+      let updateQuery;
+      if (historyIndex !== -1) {
+        updateQuery = { 
+          $inc: { 
+            views: 1, 
+            [`viewHistory.${historyIndex}.count`]: 1 
+          } 
+        };
+      } else {
+        updateQuery = { 
+          $inc: { views: 1 }, 
+          $push: { viewHistory: { date: today, count: 1 } } 
+        };
+      }
 
-      const today = new Date().toISOString().split("T")[0];
-      const historyIndex = job.viewHistory.findIndex((h) => h.date === today);
+      await Job.findByIdAndUpdate(job._id, updateQuery);
+
+      job.views = (job.views || 0) + 1;
       if (historyIndex !== -1) {
         job.viewHistory[historyIndex].count += 1;
       } else {
         job.viewHistory.push({ date: today, count: 1 });
       }
-
-      await job.save();
     }
 
 
@@ -172,6 +204,14 @@ exports.applyForJob = async (req, res) => {
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
+    }
+
+    const MAX_BASE64_LENGTH = Math.ceil((5 * 1024 * 1024 * 4) / 3);
+    if (candidateBiodata && candidateBiodata.length > MAX_BASE64_LENGTH) {
+      return res.status(400).json({ success: false, message: "Resume file exceeds the 5MB limit." });
+    }
+    if (candidateCertificate && candidateCertificate.length > MAX_BASE64_LENGTH) {
+      return res.status(400).json({ success: false, message: "Certificate file exceeds the 5MB limit." });
     }
 
     let biodataUrl = candidateBiodata;
@@ -296,6 +336,9 @@ exports.deleteJob = async (req, res) => {
     }
 
     await Job.findByIdAndDelete(req.params.id);
+    await User.findByIdAndUpdate(req.user.id, {
+      $inc: { "usage.jobsPosted": -1 },
+    });
     logger.info(
       { jobId: req.params.id, userId: req.user.id },
       "Job deleted successfully",
@@ -347,6 +390,14 @@ exports.updateJob = async (req, res) => {
       "taluka",
     ];
 
+    if (req.body.vacancies !== undefined && (req.body.vacancies <= 0 || req.body.vacancies > 999)) {
+      return res.status(400).json({ success: false, message: "Vacancies must be between 1 and 999." });
+    }
+    const newSalaryMin = req.body.salaryMin !== undefined ? req.body.salaryMin : job.salaryMin;
+    const newSalaryMax = req.body.salaryMax !== undefined ? req.body.salaryMax : job.salaryMax;
+    if (newSalaryMin && newSalaryMax && newSalaryMin > newSalaryMax) {
+      return res.status(400).json({ success: false, message: "Minimum salary cannot be greater than maximum salary." });
+    }
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
@@ -523,8 +574,10 @@ exports.withdrawApplication = async (req, res) => {
       });
     }
 
-    job.applications.splice(appIndex, 1);
-    await job.save();
+    await Job.updateOne(
+      { _id: job._id },
+      { $pull: { applications: { candidateId: req.user.id } } }
+    );
 
     logger.info(
       { jobId: job._id, userId: req.user.id },

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { HiHeart, HiOutlineHeart } from "react-icons/hi2";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { wishlistService } from "../services";
 import { useUser } from "../context/UserContext";
@@ -10,20 +11,20 @@ const WishlistButton = ({ type, id, className = "", onToggle }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user && id) {
-      checkStatus();
-    }
-  }, [user, id]);
-
-  const checkStatus = async () => {
+  const checkStatus = useCallback(async () => {
     try {
       const { isSaved } = await wishlistService.checkWishlistStatus(type, id);
       setIsSaved(isSaved);
     } catch (err) {
       console.error("Error checking wishlist status:", err);
     }
-  };
+  }, [type, id]);
+
+  useEffect(() => {
+    if (user && id) {
+      checkStatus();
+    }
+  }, [user, id, checkStatus]);
 
   const toggleWishlist = async (e) => {
     e.stopPropagation();

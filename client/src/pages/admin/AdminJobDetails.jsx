@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
@@ -61,6 +62,7 @@ const StatusPill = ({ isFlagged, isSuspended, status }) => {
   );
 };
 
+// eslint-disable-next-line no-unused-vars
 const StatTile = ({ icon: Icon, label, value, accent = "indigo" }) => (
   <div
     className={`flex items-center gap-3 p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/40 hover:border-${accent}-500/30 transition-colors`}
@@ -87,6 +89,7 @@ const Card = ({ children, className = "" }) => (
   </div>
 );
 
+// eslint-disable-next-line no-unused-vars
 const SectionHead = ({ icon: Icon, label }) => (
   <div className="flex items-center gap-2 mb-5">
     <Icon size={14} className="text-indigo-400 shrink-0" />
@@ -210,9 +213,9 @@ const AdminJobDetails = () => {
 
   useEffect(() => {
     fetchJobDetails();
-  }, [id]);
+  }, [id, fetchJobDetails]);
 
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       const res = await adminService.getJobDetails(id);
       setJob(res.data);
@@ -222,14 +225,16 @@ const AdminJobDetails = () => {
             res.data.posterId._id,
           );
           setUsage(usageRes.data);
-        } catch {}
+        } catch (err) {
+          console.error(err);
+        }
       }
     } catch {
       toast.error("Failed to fetch job details");
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   const handleToggleBan = async () => {
     setActionLoading(true);

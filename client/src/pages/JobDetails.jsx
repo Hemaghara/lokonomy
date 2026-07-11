@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
@@ -50,12 +50,7 @@ const JobDetails = () => {
     job &&
     job.applications?.some((app) => app.candidateId === user._id);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchJobDetails();
-  }, [id]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       const response = await jobService.getJobById(id);
       setJob(response.data);
@@ -69,7 +64,12 @@ const JobDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchJobDetails();
+  }, [fetchJobDetails]);
 
   const handleWithdraw = async () => {
     if (
@@ -112,8 +112,7 @@ const JobDetails = () => {
         toast.success("Job listing removed successfully");
         navigate("/jobs");
       }
-    } catch (err) {
-      console.log(err);
+    } catch {
       toast.error("Failed to delete job listing");
     }
   };

@@ -171,6 +171,7 @@ const Jobs = () => {
       jobTypeFilter,
       categoryFilter,
       salaryMin,
+      salaryMax,
       search,
     ],
   );
