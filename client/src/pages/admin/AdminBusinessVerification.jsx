@@ -77,7 +77,7 @@ const AdminBusinessVerification = () => {
       const response = await adminService.getPendingVerifications();
       setBusinesses(response.data.businesses);
       setStats(response.data.stats);
-    } catch (error) {
+    } catch (_) {
       toast.error("Failed to fetch verification queue");
     } finally {
       setLoading(false);
@@ -99,7 +99,7 @@ const AdminBusinessVerification = () => {
       toast.success("Business verified successfully");
       fetchData();
       setSelectedBusiness(null);
-    } catch (error) {
+    } catch (_) {
       toast.error("Approval failed");
     }
   };
@@ -113,7 +113,7 @@ const AdminBusinessVerification = () => {
       setRejectionReason("");
       fetchData();
       setSelectedBusiness(null);
-    } catch (error) {
+    } catch (_) {
       toast.error("Rejection failed");
     }
   };
@@ -123,7 +123,7 @@ const AdminBusinessVerification = () => {
       await adminService.markVerificationUnderReview(id);
       toast.success("Marked as under review");
       fetchData();
-    } catch (error) {
+    } catch (_) {
       toast.error("Operation failed");
     }
   };

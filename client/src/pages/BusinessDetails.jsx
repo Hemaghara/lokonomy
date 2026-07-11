@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { businessService, influencerService } from "../services";
 import { getSocket } from "../services/socket";
@@ -31,7 +32,7 @@ import BookingSystem from "../components/growth/BookingSystem";
 import BusinessQA from "../components/BusinessQA";
 import ChatBox from "../components/ChatBox";
 import { HiStar } from "react-icons/hi2";
-import { useComparison } from "../context/ComparisonContext";
+// useComparison import removed
 import { FaChartBar, FaCheck, FaPlus } from "react-icons/fa";
 import { FaFacebook, FaInstagram, FaYoutube, FaTwitter } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
@@ -61,7 +62,7 @@ const BusinessDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("info");
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
-  const { selectedIds, toggleSelection } = useComparison();
+  // useComparison variables removed as they are unused
   const [showChat, setShowChat] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
@@ -70,10 +71,6 @@ const BusinessDetails = () => {
     activeVisitors: 0,
   });
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchBusinessDetails();
-  }, [id]);
 
   useEffect(() => {
     if (business) {
@@ -110,7 +107,7 @@ const BusinessDetails = () => {
     };
   }, [id]);
 
-  const incrementVisits = async (businessData) => {
+  const incrementVisits = useCallback(async (businessData) => {
     try {
       if (user?.id === businessData?.ownerId) return;
 
@@ -125,9 +122,9 @@ const BusinessDetails = () => {
     } catch (err) {
       console.error("Error incrementing visits:", err);
     }
-  };
+  }, [id, user]);
 
-  const fetchBusinessDetails = async () => {
+  const fetchBusinessDetails = useCallback(async () => {
     try {
       const response = await businessService.getBusinessById(id);
       setBusiness(response.data);
@@ -140,7 +137,12 @@ const BusinessDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user, incrementVisits]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchBusinessDetails();
+  }, [id, fetchBusinessDetails]);
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -506,6 +508,8 @@ const BusinessDetails = () => {
                         </div>
                       ))}
                     </div>
+
+
 
                     {(business.facebookLink ||
                       business.instagramLink ||

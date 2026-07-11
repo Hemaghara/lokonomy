@@ -110,7 +110,7 @@ exports.getAllBusinesses = async (req, res) => {
     const promoMap = new Map(activePromotions.map((p) => [p.businessId.toString(), p._id.toString()]));
 
     const enriched = businesses.map((biz) => {
-      const bizObj = biz.toObject ? biz.toObject() : { ...biz };
+      const bizObj = biz.toObject ? biz.toObject({ flattenMaps: true }) : { ...biz };
       if (biz.businessHours) {
         const dayHours = biz.businessHours.get ? biz.businessHours.get(currentDay) : biz.businessHours[currentDay];
         bizObj.isOpenNow = dayHours && dayHours.isOpen && currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
@@ -219,7 +219,7 @@ exports.getBusinessById = async (req, res) => {
     const users = await User.find({ _id: { $in: userIds } }).select("influencerBadge");
     const userMap = new Map(users.map(u => [u._id.toString(), u.influencerBadge || "none"]));
 
-    const bizObj = business.toObject ? business.toObject() : { ...business };
+    const bizObj = business.toObject ? business.toObject({ flattenMaps: true }) : { ...business };
     bizObj.reviews = bizObj.reviews.map(rev => ({
       ...rev,
       influencerBadge: rev.userId ? (userMap.get(rev.userId.toString()) || "none") : "none"

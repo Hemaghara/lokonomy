@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { marketService, orderService } from "../services";
 import { useUser } from "../context/UserContext";
@@ -29,7 +30,7 @@ const Checkout = () => {
   const [copied, setCopied] = useState(false);
 
   const initialQty = parseInt(searchParams.get("qty")) || 1;
-  const [quantity, setQuantity] = useState(initialQty);
+  const [quantity] = useState(initialQty);
 
   const [orderForm, setOrderForm] = useState({
     shippingAddress: "",

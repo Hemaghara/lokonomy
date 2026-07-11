@@ -1,7 +1,8 @@
 import { Helmet } from "react-helmet-async";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion,AnimatePresence } from "framer-motion";
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "framer-motion";
 import { marketService } from "../services";
 import { useLocation } from "../context/LocationContext";
 import { MARKET_CATEGORIES } from "../data/marketCategories";
@@ -40,6 +41,8 @@ import {
   FiAnchor,
   FiMonitor,
   FiDroplet,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import {
   GiSofa,
@@ -70,6 +73,31 @@ import {
   TbSofa,
 } from "react-icons/tb";
 
+const Pagination = ({ page, totalPages, onPage }) =>
+  totalPages > 1 ? (
+    <div className="flex justify-center items-center gap-3 pt-8 pb-4">
+      <button
+        disabled={page === 1}
+        onClick={() => onPage(page - 1)}
+        aria-label="Previous Page"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:border-slate-700 hover:text-white transition-all"
+      >
+        <FiChevronLeft size={14} /> Prev
+      </button>
+      <span className="text-xs text-slate-500 font-semibold px-2">
+        <span className="text-white font-bold">{page}</span> / {totalPages}
+      </span>
+      <button
+        disabled={page === totalPages}
+        onClick={() => onPage(page + 1)}
+        aria-label="Next Page"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
+      >
+        Next <FiChevronRight size={14} />
+      </button>
+    </div>
+  ) : null;
+
 const Market = () => {
   const navigate = useNavigate();
   const { district, taluka } = useLocation();
@@ -79,17 +107,21 @@ const Market = () => {
   const [radius, setRadius] = useState(5000);
   const [filter, setFilter] = useState({ category: "All", priceType: "All" });
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1 });
 
   useEffect(() => {
-    fetchProducts();
-  }, [district, filter, radius, user?.latitude]);
+    setPage(1);
+  }, [filter, radius]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
         mainCategory: filter.category !== "All" ? filter.category : undefined,
         priceType: filter.priceType !== "All" ? filter.priceType : undefined,
+        page,
+        limit: 12,
       };
 
       if (user?.latitude && user?.longitude) {
@@ -102,12 +134,19 @@ const Market = () => {
       const response = await marketService.getProducts(params);
       const data = response.data;
       setProducts(Array.isArray(data) ? data : (data?.products || []));
+      if (data?.pagination) {
+        setPagination(data.pagination);
+      }
     } catch (err) {
       console.error("Market fetch error:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [district, filter, radius, user, page]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const categories = ["All", ...Object.keys(MARKET_CATEGORIES)];
 
@@ -703,6 +742,14 @@ const Market = () => {
                     <HiOutlineXMark /> Clear Filters
                   </button>
                 </motion.div>
+              )}
+
+              {filteredProducts.length > 0 && pagination.pages > 1 && (
+                <Pagination
+                  page={page}
+                  totalPages={pagination.pages}
+                  onPage={(p) => setPage(p)}
+                />
               )}
             </>
           )}

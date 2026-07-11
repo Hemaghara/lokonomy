@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { adminService } from "../../services";
 import AdminLayout from "../../layouts/AdminLayout";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
@@ -41,6 +42,7 @@ const Card = ({ children, className = "" }) => (
   </div>
 );
 
+// eslint-disable-next-line no-unused-vars
 const SectionHeading = ({ icon: Icon, label, accent = "text-indigo-400" }) => (
   <div className="flex items-center gap-2.5 mb-5">
     <div
@@ -54,6 +56,7 @@ const SectionHeading = ({ icon: Icon, label, accent = "text-indigo-400" }) => (
   </div>
 );
 
+// eslint-disable-next-line no-unused-vars
 const InfoItem = ({ icon: Icon, label, value, href }) => {
   const content = (
     <div className="group flex items-center gap-3 p-3 rounded-xl bg-white/2 border border-white/2 hover:bg-white/5 hover:border-white/6 transition-all">
@@ -90,6 +93,7 @@ const InfoItem = ({ icon: Icon, label, value, href }) => {
   );
 };
 
+// eslint-disable-next-line no-unused-vars
 const StatCard = ({ label, value, icon: Icon, trend, color = "indigo" }) => {
   const map = {
     indigo:
@@ -133,19 +137,14 @@ const AdminBusinessDetails = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [healthData, setHealthData] = useState(null);
 
-  useEffect(() => {
-    fetchDetails();
-    fetchHealthScore();
-  }, [id]);
-
-  const fetchHealthScore = async () => {
+  const fetchHealthScore = useCallback(async () => {
     try {
       const res = await adminService.getBusinessScore(id);
       setHealthData(res.data);
     } catch (_) {}
-  };
+  }, [id]);
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       const response = await adminService.getBusinessDetails(id);
       setBusiness(response.data);
@@ -155,7 +154,12 @@ const AdminBusinessDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    fetchDetails();
+    fetchHealthScore();
+  }, [fetchDetails, fetchHealthScore]);
 
   const handleDelete = async () => {
     if (

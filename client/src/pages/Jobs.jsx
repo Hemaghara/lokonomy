@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ import {
   HiOutlineShare,
   HiOutlineCalendarDays,
 } from "react-icons/hi2";
-import { FiExternalLink, FiFlag } from "react-icons/fi";
+import { FiExternalLink, FiFlag, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import WishlistButton from "../components/WishlistButton";
 import ReportModal from "../components/ReportModal";
 
@@ -83,6 +83,31 @@ const SkeletonCard = () => (
   </div>
 );
 
+const Pagination = ({ page, totalPages, onPage }) =>
+  totalPages > 1 ? (
+    <div className="flex justify-center items-center gap-3 pt-8 pb-4">
+      <button
+        disabled={page === 1}
+        onClick={() => onPage(page - 1)}
+        aria-label="Previous Page"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:border-slate-700 hover:text-white transition-all"
+      >
+        <FiChevronLeft size={14} /> Prev
+      </button>
+      <span className="text-xs text-slate-500 font-semibold px-2">
+        <span className="text-white font-bold">{page}</span> / {totalPages}
+      </span>
+      <button
+        disabled={page === totalPages}
+        onClick={() => onPage(page + 1)}
+        aria-label="Next Page"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
+      >
+        Next <FiChevronRight size={14} />
+      </button>
+    </div>
+  ) : null;
+
 const Jobs = () => {
   const navigate = useNavigate();
   const {
@@ -103,13 +128,11 @@ const Jobs = () => {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({ hasMore: false, total: 0 });
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pagination, setPagination] = useState({ hasMore: false, total: 0, totalPages: 1 });
   const [reportConfig, setReportConfig] = useState({
     isOpen: false,
     targetId: null,
   });
-  const observerTarget = useRef(null);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -129,9 +152,8 @@ const Jobs = () => {
   }, [selectedDistrict, state]);
 
   const fetchJobs = useCallback(
-    async (pageNum = 1, append = false) => {
-      if (pageNum === 1) setLoading(true);
-      else setIsRefreshing(true);
+    async (pageNum = 1) => {
+      setLoading(true);
 
       try {
         const response = await jobService.getJobs({
@@ -148,20 +170,15 @@ const Jobs = () => {
         });
 
         const { jobs: newJobs, pagination: pg } = response.data;
-
-        if (append) {
-          setJobs((prev) => [...prev, ...newJobs]);
-        } else {
-          setJobs(newJobs);
-        }
+        setJobs(newJobs);
         setPagination(pg);
         setPage(pageNum);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
         console.error("Job fetch error:", err);
         toast.error("Failed to load jobs");
       } finally {
         setLoading(false);
-        setIsRefreshing(false);
       }
     },
     [
@@ -202,36 +219,8 @@ const Jobs = () => {
 
 
   useEffect(() => {
-    fetchJobs(1, false);
+    fetchJobs(1);
   }, [fetchJobs]);
-
-  const loadMore = useCallback(() => {
-    if (pagination.hasMore && !isRefreshing) {
-      fetchJobs(page + 1, true);
-    }
-  }, [pagination.hasMore, isRefreshing, fetchJobs, page]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && pagination.hasMore && !isRefreshing) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [observerTarget, pagination.hasMore, isRefreshing, loadMore]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -753,16 +742,13 @@ const Jobs = () => {
               )}
             </div>
           )}
-
-          {pagination.hasMore && (
-            <div ref={observerTarget} className="mt-12 flex justify-center py-4">
-              {isRefreshing && (
-                <div className="flex items-center gap-3 text-slate-400 text-sm font-semibold">
-                  <div className="w-4 h-4 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
-                  Loading more jobs...
-                </div>
-              )}
-            </div>
+          
+          {jobs.length > 0 && pagination.totalPages > 1 && (
+            <Pagination 
+              page={page} 
+              totalPages={pagination.totalPages} 
+              onPage={(p) => fetchJobs(p)} 
+            />
           )}
         </div>
       </div>

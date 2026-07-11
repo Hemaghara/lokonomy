@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiShield,
@@ -41,7 +42,7 @@ const BusinessVerification = () => {
       } else {
         setBusiness(null);
       }
-    } catch (error) {
+    } catch (_) {
       console.error("Failed to fetch business");
     } finally {
       setLoading(false);
