@@ -43,6 +43,17 @@ const getDeadlineInfo = (deadline) => {
   return { text: `${diff} days left`, urgent: false, expired: false };
 };
 
+const calculateMatchScore = (userSkillsStr, jobSkillsStr) => {
+  if (!userSkillsStr || !jobSkillsStr) return null;
+  const userSkills = userSkillsStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const jobSkills = jobSkillsStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  
+  if (jobSkills.length === 0) return null;
+  
+  const matched = jobSkills.filter(s => userSkills.includes(s)).length;
+  return Math.round((matched / jobSkills.length) * 100);
+};
+
 const JobTypeBadge = ({ type }) => {
   const colors = {
     "Full-time": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -585,6 +596,17 @@ const Jobs = () => {
                                 {deadlineInfo.text}
                               </span>
                             )}
+                            {user?.jobProfile?.skills && job.skills && (() => {
+                              const score = calculateMatchScore(user.jobProfile.skills, job.skills);
+                              if (score !== null) {
+                                return (
+                                  <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold ${score >= 75 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : score >= 40 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
+                                    {score}% Match
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
 
                           <div className="flex items-center gap-1 shrink-0">

@@ -181,6 +181,10 @@ const PostStory = () => {
   const [pollOptions, setPollOptions] = useState(["", ""]);
   const [pollEndDate, setPollEndDate] = useState("");
 
+  const [showCTA, setShowCTA] = useState(false);
+  const [actionLinkUrl, setActionLinkUrl] = useState("");
+  const [actionLinkText, setActionLinkText] = useState("Visit Link");
+
   const handleMediaChange = (e) => {
     const files = Array.from(e.target.files);
     if (mediaFiles.length + files.length > 5) {
@@ -277,6 +281,11 @@ const PostStory = () => {
               setPollEndDate(
                 new Date(s.poll.endsAt).toISOString().slice(0, 16),
               );
+          }
+          if (s.actionLink?.url) {
+            setShowCTA(true);
+            setActionLinkUrl(s.actionLink.url);
+            setActionLinkText(s.actionLink.text || "Visit Link");
           }
         })
         .catch(() => {
@@ -387,6 +396,13 @@ const PostStory = () => {
           toast.error("A poll requires at least 2 options.");
           return;
         }
+      }
+
+      if (showCTA && actionLinkUrl.trim()) {
+        storyData.actionLink = {
+          url: actionLinkUrl.trim(),
+          text: actionLinkText
+        };
       }
 
       let response;
@@ -705,6 +721,66 @@ const PostStory = () => {
                   </div>
                 </>
               )}
+
+              <Divider label="Call To Action (CTA)" />
+              <div className="sm:col-span-2">
+                <label className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/2 cursor-pointer transition-all hover:bg-white/4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🔗</span>
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        Add Action Link
+                      </p>
+                      <p className="text-[10px] text-white/40">
+                        Let users visit a website or product
+                      </p>
+                    </div>
+                  </div>
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={showCTA}
+                      onChange={() => setShowCTA(!showCTA)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </div>
+                </label>
+
+                {showCTA && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="mt-3 space-y-3 p-4 border border-white/10 rounded-xl bg-white/2"
+                  >
+                    <Field label="Button Text" id="actionLinkText">
+                      <CustomDropdown
+                        name="actionLinkText"
+                        value={actionLinkText}
+                        onChange={(e) => setActionLinkText(e.target.value)}
+                        options={[
+                          { label: "Visit Link", value: "Visit Link" },
+                          { label: "Shop Now", value: "Shop Now" },
+                          { label: "Learn More", value: "Learn More" },
+                          { label: "Get Offer", value: "Get Offer" },
+                          { label: "Book Now", value: "Book Now" },
+                          { label: "Contact Us", value: "Contact Us" },
+                          { label: "Download", value: "Download" },
+                        ]}
+                      />
+                    </Field>
+                    <Field label="Destination URL" id="actionLinkUrl">
+                      <input
+                        type="url"
+                        value={actionLinkUrl}
+                        onChange={(e) => setActionLinkUrl(e.target.value)}
+                        placeholder="https://example.com"
+                        className={inputCls}
+                      />
+                    </Field>
+                  </motion.div>
+                )}
+              </div>
 
               <Divider label="Highlight (Premium Only)" />
 

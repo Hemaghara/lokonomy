@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { storyService } from "../services";
-import { useLocation } from "../context/LocationContext";
 import { useUser } from "../context/UserContext";
 import { getTimeRemaining, getIconForType, getTypeColor, formatTimeAgo } from "../utils/storyHelpers";
 import { toast } from "react-hot-toast";
@@ -58,7 +58,6 @@ const StoryExpiryStatus = ({ expiresAt }) => {
 const StoryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { district } = useLocation();
   const { user } = useUser();
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,7 +147,7 @@ const StoryDetails = () => {
       const res = await storyService.toggleBookmark(id);
       setIsBookmarked(res.data.isBookmarked);
       toast.success(res.data.message);
-    } catch (err) {
+    } catch {
       toast.error("Failed to save story");
     }
   };
@@ -430,6 +429,18 @@ const StoryDetails = () => {
 
             {story.poll?.question && (
               <PollCard storyId={story._id} poll={story.poll} />
+            )}
+
+            {story.actionLink?.url && (
+              <a
+                href={story.actionLink.url.startsWith('http') ? story.actionLink.url : `https://${story.actionLink.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-violet-900/30 text-sm mt-4 mb-2"
+              >
+                {story.actionLink.text || "Visit Link"}
+                <HiOutlineArrowRight className="text-base" />
+              </a>
             )}
 
             <div className="flex flex-col sm:flex-row gap-3 pt-1">

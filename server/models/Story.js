@@ -99,10 +99,16 @@ const storySchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
+    default: function() {
+      return this.isHighlighted ? null : new Date(Date.now() + 24 * 60 * 60 * 1000);
+    },
   },
   scheduledAt: { type: Date, default: null },
   isFeatured: { type: Boolean, default: false },
+  actionLink: {
+    url: { type: String, trim: true },
+    text: { type: String, enum: ["Shop Now", "Learn More", "Get Offer", "Visit Link", "Book Now", "Contact Us", "Download"], default: "Visit Link" }
+  },
 });
 
 storySchema.index({ location: "2dsphere" });

@@ -257,6 +257,7 @@ exports.createStory = async (req, res, next) => {
       latitude,
       longitude,
       locationAddress,
+      actionLink,
     } = req.body;
 
     if (!district || !taluka) {
@@ -343,6 +344,10 @@ exports.createStory = async (req, res, next) => {
       expiresAt,
       locationAddress: locationAddress || "",
     };
+
+    if (actionLink && actionLink.url) {
+      storyData.actionLink = actionLink;
+    }
 
     const geoData = buildLocationGeoJSON({ latitude, longitude, locationAddress });
     if (geoData.location) {
@@ -460,12 +465,19 @@ exports.updateStory = async (req, res, next) => {
       "taluka",
       "media",
       "poll",
+      "actionLink",
+      "isHighlighted",
+      "highlightCategory",
     ];
     const updates = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
+    }
+
+    if (req.body.isHighlighted !== undefined) {
+      updates.expiresAt = req.body.isHighlighted ? null : new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
 
     if (updates.image && updates.image.startsWith("data:image")) {

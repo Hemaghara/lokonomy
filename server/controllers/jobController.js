@@ -156,6 +156,8 @@ exports.getJobById = async (req, res) => {
 
     const viewerId = req.user?.id;
     if (!viewerId || viewerId !== job.posterId.toString()) {
+      const today = new Date().toISOString().split("T")[0];
+      const historyIndex = job.viewHistory ? job.viewHistory.findIndex((h) => h.date === today) : -1;
       let updateQuery;
       if (historyIndex !== -1) {
         updateQuery = { 

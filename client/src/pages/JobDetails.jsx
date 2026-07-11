@@ -32,6 +32,17 @@ import WishlistButton from "../components/WishlistButton";
 import ReportModal from "../components/ReportModal";
 import { FiFlag } from "react-icons/fi";
 
+const calculateMatchScore = (userSkillsStr, jobSkillsStr) => {
+  if (!userSkillsStr || !jobSkillsStr) return null;
+  const userSkills = userSkillsStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const jobSkills = jobSkillsStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  
+  if (jobSkills.length === 0) return null;
+  
+  const matched = jobSkills.filter(s => userSkills.includes(s)).length;
+  return Math.round((matched / jobSkills.length) * 100);
+};
+
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -291,6 +302,17 @@ const JobDetails = () => {
                         Deadline: {new Date(job.deadline).toLocaleDateString()}
                       </span>
                     )}
+                    {user?.jobProfile?.skills && job.skills && (() => {
+                      const score = calculateMatchScore(user.jobProfile.skills, job.skills);
+                      if (score !== null) {
+                        return (
+                          <span className={`px-2.5 py-0.5 rounded-lg border text-[10px] font-semibold ${score >= 75 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : score >= 40 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
+                            {score}% Match
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
                     <span className="flex items-center gap-1 text-[10px] text-slate-500 ml-auto">
                       <HiOutlineEye size={12} /> {job.views || 0} views
                     </span>
@@ -397,7 +419,7 @@ const JobDetails = () => {
               </div>
               {isOwner ? (
                 <button
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/job-dashboard")}
                   className="w-full flex items-center justify-center gap-2 bg-[#1a2540] hover:bg-[#1f2d4d] border border-[#1f2a3d] text-slate-300 text-xs font-semibold py-3 rounded-xl transition-all mb-3"
                 >
                   Manage Applications{" "}
