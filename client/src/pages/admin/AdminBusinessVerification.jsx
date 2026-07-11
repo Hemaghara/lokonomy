@@ -62,6 +62,8 @@ const AdminBusinessVerification = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkMode, setIsBulkMode] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState(null);
@@ -77,10 +79,64 @@ const AdminBusinessVerification = () => {
       const response = await adminService.getPendingVerifications();
       setBusinesses(response.data.businesses);
       setStats(response.data.stats);
-    } catch (_) {
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to fetch verification queue");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelect = (e, id) => {
+    e.stopPropagation();
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === businesses.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(businesses.map(b => b._id));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.length === 0) return;
+    const isConfirmed = await confirm({
+      title: `Approve ${selectedIds.length} Businesses`,
+      description: `Are you sure you want to verify these ${selectedIds.length} businesses?`,
+      confirmLabel: "Bulk Approve",
+      isDanger: false,
+    });
+    if (!isConfirmed) return;
+
+    try {
+      await adminService.bulkApproveBusinesses(selectedIds);
+      toast.success(`${selectedIds.length} businesses verified`);
+      setSelectedIds([]);
+      setIsBulkMode(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toast.error("Bulk approval failed");
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedIds.length === 0 || !rejectionReason.trim()) return;
+    try {
+      await adminService.bulkRejectBusinesses(selectedIds, rejectionReason);
+      toast.success(`${selectedIds.length} businesses rejected`);
+      setShowRejectionModal(false);
+      setRejectionReason("");
+      setSelectedIds([]);
+      setIsBulkMode(false);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toast.error("Bulk rejection failed");
     }
   };
 
@@ -99,7 +155,8 @@ const AdminBusinessVerification = () => {
       toast.success("Business verified successfully");
       fetchData();
       setSelectedBusiness(null);
-    } catch (_) {
+    } catch (err) {
+      console.error(err);
       toast.error("Approval failed");
     }
   };
@@ -113,7 +170,8 @@ const AdminBusinessVerification = () => {
       setRejectionReason("");
       fetchData();
       setSelectedBusiness(null);
-    } catch (_) {
+    } catch (err) {
+      console.error(err);
       toast.error("Rejection failed");
     }
   };
@@ -123,7 +181,8 @@ const AdminBusinessVerification = () => {
       await adminService.markVerificationUnderReview(id);
       toast.success("Marked as under review");
       fetchData();
-    } catch (_) {
+    } catch (err) {
+      console.error(err);
       toast.error("Operation failed");
     }
   };
@@ -152,7 +211,59 @@ const AdminBusinessVerification = () => {
           </div>
           
         </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setIsBulkMode(!isBulkMode);
+              if (isBulkMode) setSelectedIds([]);
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+              isBulkMode 
+                ? "bg-slate-800 text-slate-300 border-slate-700"
+                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+            }`}
+          >
+            {isBulkMode ? "Cancel Bulk Mode" : "Bulk Actions"}
+          </button>
+        </div>
       </header>
+
+      {isBulkMode && (
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleSelectAll}
+              className="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700 transition-all"
+            >
+              {selectedIds.length === businesses.length && businesses.length > 0 ? "Deselect All" : "Select All"}
+            </button>
+            <span className="text-sm font-bold text-slate-400">
+              {selectedIds.length} selected
+            </span>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                if (selectedIds.length === 0) {
+                  toast.error("Select businesses first");
+                  return;
+                }
+                setShowRejectionModal(true);
+              }}
+              className="px-5 py-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-black uppercase tracking-wider hover:bg-rose-500/20 transition-all"
+            >
+              Bulk Reject
+            </button>
+            <button
+              onClick={handleBulkApprove}
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-wider hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-500/10"
+            >
+              Bulk Approve
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
@@ -217,10 +328,15 @@ const AdminBusinessVerification = () => {
                 <div
                   key={b._id}
                   onClick={() => setSelectedBusiness(b)}
-                  className={`group bg-slate-900/50 border border-white/5 rounded-2xl p-4 cursor-pointer transition-all hover:border-emerald-500/30 ${selectedBusiness?._id === b._id ? "ring-2 ring-emerald-500/50 border-emerald-500/50 bg-emerald-500/5" : ""}`}
+                  className={`group bg-slate-900/50 border border-white/5 rounded-2xl p-4 cursor-pointer transition-all hover:border-emerald-500/30 ${selectedBusiness?._id === b._id ? "ring-2 ring-emerald-500/50 border-emerald-500/50 bg-emerald-500/5" : ""} ${selectedIds.includes(b._id) ? "border-emerald-500 bg-emerald-500/10" : ""}`}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
+                      {isBulkMode && (
+                        <div onClick={(e) => handleSelect(e, b._id)} className="shrink-0 flex items-center justify-center cursor-pointer mr-1">
+                          <input type="checkbox" checked={selectedIds.includes(b._id)} readOnly className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 pointer-events-none" />
+                        </div>
+                      )}
                       <div className="w-10 h-10 rounded-xl bg-slate-800 border border-white/5 overflow-hidden flex items-center justify-center text-slate-400 font-bold">
                         {b.logo ? (
                           <img
@@ -443,7 +559,7 @@ const AdminBusinessVerification = () => {
                 Cancel
               </button>
               <button
-                onClick={handleReject}
+                onClick={() => isBulkMode ? handleBulkReject() : handleReject()}
                 className="flex-2 py-3 bg-rose-600 text-white rounded-xl font-black text-sm hover:bg-rose-500 transition-all"
               >
                 Confirm Rejection

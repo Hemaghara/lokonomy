@@ -69,7 +69,9 @@ export const adminService = {
   getJobs: (params) => adminApi.get("/jobs", { params }),
   getJobDetails: (id) => adminApi.get(`/jobs/${id}`),
   toggleBanJob: (id) => adminApi.patch(`/jobs/${id}/ban`),
+  bulkFlagJobs: (jobIds, isFlagged) => adminApi.patch("/jobs/bulk/ban", { jobIds, isFlagged }),
   toggleSuspendJob: (id) => adminApi.patch(`/jobs/${id}/suspend`),
+  bulkSuspendJobs: (jobIds, isSuspended) => adminApi.patch("/jobs/bulk/suspend", { jobIds, isSuspended }),
   getJobPosterUsage: (userId) => adminApi.get(`/jobs/user/${userId}/usage`),
   getStoriesFeedStats: () => adminApi.get("/stories-feed/stats"),
   getStories: (params) => adminApi.get("/stories-feed/stories", { params }),
@@ -165,8 +167,11 @@ export const adminService = {
     adminApi.get("/verification/pending", { params }),
   getBusinessForVerification: (id) => adminApi.get(`/verification/${id}`),
   approveBusiness: (id) => adminApi.patch(`/verification/${id}/approve`),
+  bulkApproveBusinesses: (businessIds) => adminApi.patch("/verification/bulk/approve", { businessIds }),
   rejectBusiness: (id, reason) =>
     adminApi.patch(`/verification/${id}/reject`, { reason }),
+  bulkRejectBusinesses: (businessIds, reason) =>
+    adminApi.patch("/verification/bulk/reject", { businessIds, reason }),
   markVerificationUnderReview: (id) =>
     adminApi.patch(`/verification/${id}/mark-review`),
   getPlatformSettings: () => adminApi.get("/settings"),

@@ -17,6 +17,9 @@ exports.getAllProducts = async (req, res) => {
       mainCategory,
       subCategory,
       priceType,
+      minPrice,
+      maxPrice,
+      sortBy,
       page = 1,
       limit = 20,
     } = req.query;
@@ -44,6 +47,12 @@ exports.getAllProducts = async (req, res) => {
     if (mainCategory) query.mainCategory = mainCategory;
     if (subCategory) query.subCategory = subCategory;
     if (priceType && priceType !== "All") query.priceType = priceType;
+    
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
 
     // EXCLUDE BANNED OR SUSPENDED FROM USER VIEW
     query.isFlagged = { $ne: true };
@@ -62,15 +71,20 @@ exports.getAllProducts = async (req, res) => {
     }
 
     const total = await Product.countDocuments(countQuery);
+    
+    let sortObj = { isFeatured: -1, createdAt: -1 };
+    if (sortBy === "price_asc") sortObj = { isFeatured: -1, price: 1, createdAt: -1 };
+    if (sortBy === "price_desc") sortObj = { isFeatured: -1, price: -1, createdAt: -1 };
+
     let products;
     if (lat && lng) {
       products = await Product.find(query)
-        .sort({ isFeatured: -1 })
+        .sort(sortBy ? sortObj : { isFeatured: -1 })
         .skip(skip)
         .limit(limitNum);
     } else {
       products = await Product.find(query)
-        .sort({ isFeatured: -1, createdAt: -1 })
+        .sort(sortObj)
         .skip(skip)
         .limit(limitNum);
     }

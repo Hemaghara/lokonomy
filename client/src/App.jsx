@@ -58,6 +58,7 @@ const PriceComparison = lazy(() => import("./pages/PriceComparison"));
 const UserSupport = lazy(() => import("./pages/UserSupport"));
 const BusinessVerification = lazy(() => import("./pages/BusinessVerification"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const BusinessAnalytics = lazy(() => import("./pages/BusinessAnalytics"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminRegister = lazy(() => import("./pages/admin/AdminRegister"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -427,6 +428,10 @@ function App() {
                       <Route
                         path="/business/verification"
                         element={<BusinessVerification />}
+                      />
+                      <Route
+                        path="/business-analytics"
+                        element={<BusinessAnalytics />}
                       />
                       <Route
                         path="/notifications"

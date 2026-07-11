@@ -134,6 +134,36 @@ exports.toggleSuspendJob = async (req, res) => {
   }
 };
 
+exports.bulkFlagJobs = async (req, res) => {
+  try {
+    const { jobIds, isFlagged } = req.body;
+    if (!Array.isArray(jobIds) || jobIds.length === 0) {
+      return res.status(400).json({ message: "No job IDs provided" });
+    }
+
+    await Job.updateMany({ _id: { $in: jobIds } }, { $set: { isFlagged } });
+
+    res.json({ message: `${jobIds.length} jobs ${isFlagged ? "banned" : "unbanned"} successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.bulkSuspendJobs = async (req, res) => {
+  try {
+    const { jobIds, isSuspended } = req.body;
+    if (!Array.isArray(jobIds) || jobIds.length === 0) {
+      return res.status(400).json({ message: "No job IDs provided" });
+    }
+
+    await Job.updateMany({ _id: { $in: jobIds } }, { $set: { isSuspended } });
+
+    res.json({ message: `${jobIds.length} jobs ${isSuspended ? "suspended" : "activated"} successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 exports.getJobPosterUsage = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select(

@@ -11,4 +11,5 @@ export const businessService = {
   incrementVisits: (id) => api.post(`/businesses/${id}/visit`),
   addReview: (id, reviewData) =>
     api.post(`/businesses/${id}/review`, reviewData),
+  getAnalytics: () => api.get("/businesses/my/analytics"),
 };

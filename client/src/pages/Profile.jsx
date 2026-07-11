@@ -6,11 +6,11 @@ import {
   businessService,
   jobService,
   referralService,
-  subscriptionService,
   storyService,
   subscriptionBoxService,
   influencerService,
 } from "../services";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import {
@@ -40,6 +40,7 @@ import {
   HiOutlineBellAlert,
   HiOutlineNewspaper,
   HiOutlineBookmark,
+  HiOutlineChartBar,
 } from "react-icons/hi2";
 
 import { usePlanLimits } from "../hooks/usePlanLimits";
@@ -131,9 +132,9 @@ const Profile = () => {
   const handleCopyCode = async () => {
     const code = referralData?.referralCode || user?.referralCode;
     if (!code) return;
-    const link = `${window.location.origin}/register?ref=${code}`;
+    const shareLink = `${window.location.origin}/register?ref=${code}`;
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(shareLink);
       setCodeCopied(true);
       toast.success("Code copied!");
       setTimeout(() => setCodeCopied(false), 2000);
@@ -149,8 +150,8 @@ const Profile = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: "Join Lokonomy!", text, url: link });
-      } catch {
-      
+      } catch (err) {
+        console.error("Share failed", err);
       }
     } else {
       await navigator.clipboard.writeText(text);
@@ -1109,12 +1110,20 @@ const Profile = () => {
                     {myBusinesses.length} registered
                   </p>
                 </div>
-                <button
-                  onClick={() => navigate("/add-business")}
-                  className={btnPrimary}
-                >
-                  <FiPlus /> Add
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate("/business-analytics")}
+                    className={btnOutline}
+                  >
+                    <HiOutlineChartBar /> Analytics
+                  </button>
+                  <button
+                    onClick={() => navigate("/add-business")}
+                    className={btnPrimary}
+                  >
+                    <FiPlus /> Add
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">

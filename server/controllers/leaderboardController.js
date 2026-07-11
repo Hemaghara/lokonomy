@@ -4,9 +4,17 @@ const Order = require("../models/Order");
 const Story = require("../models/Story");
 const logger = require("../utils/logger");
 
+const cache = require("../utils/cache");
+
 exports.getLeaderboard = async (req, res) => {
   try {
     const { district, category, month, year, limit = 10 } = req.query;
+
+    const cacheKey = `leaderboard:${district || 'all'}:${category || 'all'}:${month || 'current'}:${year || 'current'}:${limit}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const now = new Date();
     const queryMonth = parseInt(month) || now.getMonth() + 1;
@@ -49,7 +57,7 @@ exports.getLeaderboard = async (req, res) => {
       year: queryYear,
     });
 
-    res.json({
+    const responseData = {
       success: true,
       leaderboard: entries,
       filters: {
@@ -57,7 +65,11 @@ exports.getLeaderboard = async (req, res) => {
         categories: distinctCategories,
       },
       period: { month: queryMonth, year: queryYear },
-    });
+    };
+
+    cache.set(cacheKey, responseData, 300); // cache for 5 mins
+
+    res.json(responseData);
   } catch (err) {
     logger.error({ err }, "Error in getLeaderboard");
     res.status(500).json({ success: false, message: err.message });

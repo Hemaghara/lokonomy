@@ -88,7 +88,7 @@ api.interceptors.response.use(
       try {
         const savedUser = localStorage.getItem("lokonomy_user");
         user = savedUser ? JSON.parse(savedUser) : null;
-      } catch (_) { }
+      } catch (err) { console.error(err); }
 
       const refreshToken = user?.refreshToken;
       if (refreshToken) {

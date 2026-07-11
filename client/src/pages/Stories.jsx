@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { storyService } from "../services";
 import { useLocation } from "../context/LocationContext";
@@ -8,6 +8,7 @@ import { getIconForType } from "../utils/storyHelpers";
 import { getSocket, joinStoryFeed, leaveStoryFeed } from "../services/socket";
 import StoryCard from "../components/StoryCard";
 import ReportModal from "../components/ReportModal";
+import Pagination from "../components/Pagination";
 import {
   HiOutlineMagnifyingGlass,
   HiOutlinePlus,
@@ -31,7 +32,7 @@ const Stories = () => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [pagination, setPagination] = useState(null);
   const [savedStoryIds, setSavedStoryIds] = useState(new Set());
   const [newStoryIds, setNewStoryIds] = useState(new Set());
   const [reportConfig, setReportConfig] = useState({ isOpen: false, targetId: null });
@@ -102,11 +103,10 @@ const Stories = () => {
   useEffect(() => {
     setPage(1);
     setStories([]);
-    setHasMore(true);
     fetchStories(1);
-  }, [district, filter, searchQuery, radius, user?.latitude, sortBy]);
+  }, [district, filter, searchQuery, radius, user?.latitude, sortBy, fetchStories]);
 
-  const fetchStories = async (pageNum = 1) => {
+  const fetchStories = useCallback(async (pageNum = 1) => {
     setLoading(true);
     try {
       const params = {
@@ -126,17 +126,17 @@ const Stories = () => {
 
       const response = await storyService.getStories(params);
       const newData = response.data.data || [];
-      const pagination = response.data.pagination;
+      const resPagination = response.data.pagination;
 
       setStories(newData);
-      setHasMore(pagination?.hasMore ?? newData.length >= 5);
+      setPagination(resPagination);
       setPage(pageNum);
     } catch (err) {
       console.error("Story fetch error:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, searchQuery, sortBy, district, user?.latitude, user?.longitude, radius]);
 
   const handleLike = async (e, storyId) => {
     e.stopPropagation();
@@ -329,7 +329,7 @@ const Stories = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <AnimatePresence mode="popLayout">
-                {stories.map((story, idx) => (
+                {stories.map((story) => (
                   <div key={story._id}>
                     <StoryCard
                       story={story}
@@ -346,36 +346,19 @@ const Stories = () => {
                 ))}
               </AnimatePresence>
 
-              {stories.length > 0 && (
-                <div className="col-span-full flex items-center justify-between py-8">
-                  <button
-                    onClick={() => {
-                      if (page > 1) fetchStories(page - 1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    disabled={page === 1 || loading}
-                    className="px-6 py-2.5 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold hover:bg-violet-600 hover:text-white hover:border-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-slate-400 text-sm font-medium">Page {page}</span>
-                  <button
-                    onClick={() => {
-                      if (hasMore) fetchStories(page + 1);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    disabled={!hasMore || loading}
-                    className="px-6 py-2.5 rounded-xl bg-[#111827] border border-[#1f2a3d] text-slate-300 font-semibold hover:bg-violet-600 hover:text-white hover:border-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Next
-                  </button>
-                </div>
+              {stories.length > 0 && pagination?.totalPages > 1 && (
+                <Pagination
+                  page={page}
+                  totalPages={pagination.totalPages}
+                  onPage={(p) => {
+                    fetchStories(p);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
               )}
 
               {stories.length === 0 && !loading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                <div
                   className="col-span-full border-2 border-dashed border-[#1f2a3d] rounded-2xl py-24 text-center"
                 >
                   <h3 className="text-slate-500 font-semibold text-base mb-1">
@@ -384,7 +367,7 @@ const Stories = () => {
                   <p className="text-slate-600 text-xs">
                     Try a different category or search term
                   </p>
-                </motion.div>
+                </div>
               )}
             </div>
           )}

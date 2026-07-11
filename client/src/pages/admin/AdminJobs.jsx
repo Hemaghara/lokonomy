@@ -125,10 +125,18 @@ const EmptyState = ({ text }) => (
   </div>
 );
 
-const JobCard = ({ job, onBan, onSuspend, onView }) => (
+const JobCard = ({ job, onBan, onSuspend, onView, isBulkMode, isSelected, onToggleSelect }) => (
   <div
-    onClick={() => onView(job)}
-    className={`group relative flex flex-col bg-slate-900/60 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 ${job.isFlagged
+    onClick={(e) => {
+      if (isBulkMode) {
+        onToggleSelect(e, job._id);
+      } else {
+        onView(job);
+      }
+    }}
+    className={`group relative flex flex-col bg-slate-900/60 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 ${
+      isSelected ? "border-indigo-500 bg-indigo-500/10 ring-2 ring-indigo-500/30" :
+      job.isFlagged
         ? "border-rose-500/40"
         : job.isSuspended
           ? "border-amber-500/40"
@@ -137,7 +145,15 @@ const JobCard = ({ job, onBan, onSuspend, onView }) => (
   >
     <div className="relative bg-linear-to-br from-slate-800/80 to-slate-900 p-4 pb-3">
       <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap items-center">
+          {isBulkMode && (
+            <div onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect(e, job._id);
+            }} className="mr-1">
+              <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-indigo-500 pointer-events-none" />
+            </div>
+          )}
           {job.isFlagged && (
             <span className="flex items-center gap-1 bg-rose-500/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
               <FiFlag size={9} /> Banned
@@ -292,6 +308,8 @@ const AdminJobs = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
     fetchStats();
@@ -367,6 +385,49 @@ const AdminJobs = () => {
     setPage(1);
   };
 
+  const handleToggleSelect = (e, id) => {
+    e.stopPropagation();
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === jobs.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(jobs.map(j => j._id));
+    }
+  };
+
+  const handleBulkFlag = async (isFlagged) => {
+    if (selectedIds.length === 0) return;
+    try {
+      const r = await adminService.bulkFlagJobs(selectedIds, isFlagged);
+      toast.success(r.data.message);
+      setSelectedIds([]);
+      setIsBulkMode(false);
+      fetchData();
+      fetchStats();
+    } catch {
+      toast.error("Bulk action failed");
+    }
+  };
+
+  const handleBulkSuspend = async (isSuspended) => {
+    if (selectedIds.length === 0) return;
+    try {
+      const r = await adminService.bulkSuspendJobs(selectedIds, isSuspended);
+      toast.success(r.data.message);
+      setSelectedIds([]);
+      setIsBulkMode(false);
+      fetchData();
+      fetchStats();
+    } catch {
+      toast.error("Bulk action failed");
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-screen-2xl mx-auto space-y-6 pb-16 px-1">
@@ -376,12 +437,27 @@ const AdminJobs = () => {
               Job <span className="text-indigo-400">Management</span>
             </h1>
           </div>
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl self-start sm:self-auto">
-            <FiBriefcase size={16} className="text-indigo-400" />
-            <span className="text-sm font-bold text-white">
-              {stats?.totalJobs ?? 0}
-            </span>
-            <span className="text-xs text-slate-500">Total Jobs</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setIsBulkMode(!isBulkMode);
+                if (isBulkMode) setSelectedIds([]);
+              }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                isBulkMode 
+                  ? "bg-slate-800 text-slate-300 border-slate-700"
+                  : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20"
+              }`}
+            >
+              {isBulkMode ? "Cancel Bulk Mode" : "Bulk Actions"}
+            </button>
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl self-start sm:self-auto hidden sm:flex">
+              <FiBriefcase size={16} className="text-indigo-400" />
+              <span className="text-sm font-bold text-white">
+                {stats?.totalJobs ?? 0}
+              </span>
+              <span className="text-xs text-slate-500">Total Jobs</span>
+            </div>
           </div>
         </div>
 
@@ -412,6 +488,48 @@ const AdminJobs = () => {
             );
           })}
         </div>
+
+        {isBulkMode && (
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleSelectAll}
+                className="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700 transition-all"
+              >
+                {selectedIds.length === jobs.length && jobs.length > 0 ? "Deselect All" : "Select All"}
+              </button>
+              <span className="text-sm font-bold text-slate-400">
+                {selectedIds.length} selected
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleBulkFlag(true)}
+                className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold uppercase hover:bg-rose-500/20"
+              >
+                Bulk Ban
+              </button>
+              <button
+                onClick={() => handleBulkFlag(false)}
+                className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase hover:bg-emerald-500/20"
+              >
+                Bulk Unban
+              </button>
+              <button
+                onClick={() => handleBulkSuspend(true)}
+                className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold uppercase hover:bg-amber-500/20"
+              >
+                Bulk Suspend
+              </button>
+              <button
+                onClick={() => handleBulkSuspend(false)}
+                className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase hover:bg-emerald-500/20"
+              >
+                Bulk Activate
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3 bg-slate-900/50 border border-slate-800 rounded-2xl p-3">
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
@@ -492,6 +610,9 @@ const AdminJobs = () => {
                     <JobCard
                       key={job._id}
                       job={job}
+                      isBulkMode={isBulkMode}
+                      isSelected={selectedIds.includes(job._id)}
+                      onToggleSelect={handleToggleSelect}
                       onBan={() => handleToggleBan(job._id)}
                       onSuspend={() => handleToggleSuspend(job._id)}
                       onView={handleViewJob}

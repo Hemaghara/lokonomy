@@ -154,3 +154,83 @@ exports.markUnderReview = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.bulkApproveBusinesses = async (req, res) => {
+  try {
+    const { businessIds } = req.body;
+    if (!Array.isArray(businessIds) || businessIds.length === 0) {
+      return res.status(400).json({ message: "No business IDs provided" });
+    }
+
+    const businesses = await Business.find({ _id: { $in: businessIds } });
+    
+    for (const business of businesses) {
+      business.verificationStatus = "verified";
+      business.isVerified = true;
+      business.verifiedAt = new Date();
+      business.rejectionReason = undefined;
+      await business.save();
+
+      await notificationController.createNotification({
+        recipientId: business.ownerId,
+        type: "system",
+        title: "Business Verified! 🛡️",
+        message: `Congratulations! ${business.businessName} has been successfully verified.`,
+        actionUrl: "/business/verification",
+        io: req.app.get("io"),
+      });
+    }
+
+    await adminAuditController.logAction(
+      req.admin.id,
+      "BUSINESS_BULK_APPROVED",
+      `Bulk verified businesses: ${businessIds.join(", ")}`,
+      req.ip
+    );
+
+    res.json({ message: `${businesses.length} businesses approved successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.bulkRejectBusinesses = async (req, res) => {
+  try {
+    const { businessIds, reason } = req.body;
+    if (!Array.isArray(businessIds) || businessIds.length === 0) {
+      return res.status(400).json({ message: "No business IDs provided" });
+    }
+    if (!reason?.trim()) {
+      return res.status(400).json({ message: "Rejection reason is required for bulk rejection" });
+    }
+
+    const businesses = await Business.find({ _id: { $in: businessIds } });
+    
+    for (const business of businesses) {
+      business.verificationStatus = "rejected";
+      business.isVerified = false;
+      business.rejectionReason = reason.trim();
+      await business.save();
+
+      await notificationController.createNotification({
+        recipientId: business.ownerId,
+        type: "system",
+        title: "Verification Update Required",
+        message: `Your verification for ${business.businessName} was not approved. Reason: ${reason}`,
+        actionUrl: "/business/verification",
+        io: req.app.get("io"),
+      });
+    }
+
+    await adminAuditController.logAction(
+      req.admin.id,
+      "BUSINESS_BULK_REJECTED",
+      `Bulk rejected businesses: ${businessIds.join(", ")}. Reason: ${reason}`,
+      req.ip
+    );
+
+    res.json({ message: `${businesses.length} businesses rejected successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
