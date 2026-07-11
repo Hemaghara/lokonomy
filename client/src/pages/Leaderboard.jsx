@@ -62,16 +62,17 @@ const Leaderboard = () => {
   const cache = useRef({ businesses: {}, influencers: {} });
 
   const fetchLeaderboard = async (forceRefresh = false) => {
-    const cacheKey = JSON.stringify(filters);
+    const bizCacheKey = JSON.stringify(filters);
+    const infCacheKey = filters.district || "all";
 
     if (!forceRefresh) {
-      if (activeLeaderboardTab === "businesses" && cache.current.businesses[cacheKey]) {
-        setLeaderboard(cache.current.businesses[cacheKey].data);
-        setAvailableFilters(cache.current.businesses[cacheKey].filters);
+      if (activeLeaderboardTab === "businesses" && cache.current.businesses[bizCacheKey]) {
+        setLeaderboard(cache.current.businesses[bizCacheKey].data);
+        setAvailableFilters(cache.current.businesses[bizCacheKey].filters);
         return;
       }
-      if (activeLeaderboardTab === "influencers" && cache.current.influencers[cacheKey]) {
-        setInfluencers(cache.current.influencers[cacheKey].data);
+      if (activeLeaderboardTab === "influencers" && cache.current.influencers[infCacheKey]) {
+        setInfluencers(cache.current.influencers[infCacheKey].data);
         return;
       }
     }
@@ -88,7 +89,7 @@ const Leaderboard = () => {
           };
           setLeaderboard(lbData);
           setAvailableFilters(filterData);
-          cache.current.businesses[cacheKey] = { data: lbData, filters: filterData };
+          cache.current.businesses[bizCacheKey] = { data: lbData, filters: filterData };
         } else {
           toast.error("Failed to load leaderboard data");
         }
@@ -97,7 +98,7 @@ const Leaderboard = () => {
         if (res.data.success) {
           const infData = res.data.influencers || [];
           setInfluencers(infData);
-          cache.current.influencers[cacheKey] = { data: infData };
+          cache.current.influencers[infCacheKey] = { data: infData };
         } else {
           toast.error("Failed to load influencer data");
         }
@@ -495,7 +496,8 @@ const Leaderboard = () => {
                               src={bizLogo}
                               alt={bizName}
                               onError={(e) => {
-                                e.target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=150&auto=format&fit=crop";
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=150&auto=format&fit=crop";
                               }}
                               className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[#111118]"
                             />
@@ -633,7 +635,8 @@ const Leaderboard = () => {
                               src={bizLogo}
                               alt={bizName}
                               onError={(e) => {
-                                e.target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=150&auto=format&fit=crop";
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=150&auto=format&fit=crop";
                               }}
                               className="w-10 h-10 rounded-full object-cover border border-white/10"
                             />

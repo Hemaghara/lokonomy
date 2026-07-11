@@ -74,7 +74,7 @@ exports.calculateLeaderboard = async (req, res) => {
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59);
 
-    const businesses = await Business.find({});
+    const businesses = await Business.find({}).lean();
 
     // Bulk calculate Order Counts
     const orderCounts = await Order.aggregate([
@@ -113,11 +113,11 @@ exports.calculateLeaderboard = async (req, res) => {
       const reviewAvg = biz.rating || 0;
 
 
+      const monthStr = month.toString().padStart(2, '0');
+      const prefix = `${year}-${monthStr}`;
+
       const monthVisits = (biz.dailyVisits || [])
-        .filter((v) => {
-          const d = new Date(v.date);
-          return d >= startOfMonth && d <= endOfMonth;
-        })
+        .filter((v) => v.date && v.date.startsWith(prefix))
         .reduce((acc, v) => acc + v.count, 0);
 
       const score =
@@ -154,8 +154,6 @@ exports.calculateLeaderboard = async (req, res) => {
     }
 
 
-    await Leaderboard.deleteMany({ month, year });
-
     const toInsert = [];
     for (const key of Object.keys(groups)) {
       groups[key].sort((a, b) => b.score - a.score);
@@ -170,7 +168,22 @@ exports.calculateLeaderboard = async (req, res) => {
     }
 
     if (toInsert.length > 0) {
-      await Leaderboard.insertMany(toInsert);
+      const bulkOps = toInsert.map(entry => ({
+        updateOne: {
+          filter: { businessId: entry.businessId, month: entry.month, year: entry.year },
+          update: { $set: entry },
+          upsert: true
+        }
+      }));
+      
+      const currentBusinessIds = toInsert.map(e => e.businessId);
+      bulkOps.push({
+        deleteMany: {
+          filter: { month, year, businessId: { $nin: currentBusinessIds } }
+        }
+      });
+      
+      await Leaderboard.bulkWrite(bulkOps);
     }
 
     const message = `Leaderboard calculated: ${toInsert.length} entries for ${month}/${year}`;
