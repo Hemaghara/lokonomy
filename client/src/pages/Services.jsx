@@ -174,60 +174,91 @@ const Services = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            {coords && (
-              <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 flex-wrap">
-                {radiusOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setRadius(opt.value)}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${radius === opt.value
-                        ? "bg-primary text-white"
-                        : "text-text-dim hover:text-white"
+          <div className="flex flex-col xl:flex-row gap-4 w-full lg:w-auto shrink-0 mt-6 lg:mt-0">
+            <div className="flex items-center p-1.5 bg-[#111827]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+              {/* Radius Options */}
+              {coords && (
+                <div className="flex relative items-center bg-black/20 rounded-xl p-1 mr-1.5 border border-white/5 overflow-x-auto no-scrollbar">
+                  {radiusOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setRadius(opt.value)}
+                      className={`relative z-10 px-3.5 py-2 rounded-lg text-[11px] font-bold transition-colors duration-300 whitespace-nowrap ${
+                        radius === opt.value
+                          ? "text-white"
+                          : "text-slate-400 hover:text-white"
                       }`}
+                    >
+                      {radius === opt.value && (
+                        <motion.div
+                          layoutId="radius-active"
+                          className="absolute inset-0 bg-primary rounded-lg -z-10 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {coords && <div className="hidden sm:block w-[1px] h-8 bg-white/10 mx-2" />}
+
+              {/* View Mode */}
+              <div className="flex relative items-center p-1 bg-black/20 rounded-xl border border-white/5 shrink-0">
+                {["list", "map"].map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`relative z-10 flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold capitalize transition-colors duration-300 ${
+                      viewMode === mode
+                        ? "text-white"
+                        : "text-slate-400 hover:text-white"
+                    }`}
                   >
-                    {opt.label}
+                    {viewMode === mode && (
+                      <motion.div
+                        layoutId="view-active"
+                        className="absolute inset-0 bg-primary rounded-lg -z-10 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    {mode === "list" ? <FaThLarge /> : <FaMapMarkedAlt />}
+                    <span className="hidden sm:inline">{mode}</span>
                   </button>
                 ))}
               </div>
-            )}
 
-            <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+              <div className="w-[1px] h-8 bg-white/10 mx-3" />
+
+              {/* Compare Button */}
               <button
-                onClick={() => setViewMode("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${viewMode === "list"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-text-dim hover:text-white"
-                  }`}
+                onClick={() => setIsCompareMode(!isCompareMode)}
+                className={`group relative overflow-hidden flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all duration-500 shrink-0 ${
+                  isCompareMode
+                    ? "text-white shadow-[0_0_20px_rgba(var(--color-primary),0.4)]"
+                    : "text-slate-400 hover:text-white"
+                }`}
               >
-                <FaThLarge className="text-[10px]" /> List
-              </button>
-              <button
-                onClick={() => setViewMode("map")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${viewMode === "map"
-                    ? "bg-primary text-white shadow-md"
-                    : "text-text-dim hover:text-white"
+                <div
+                  className={`absolute inset-0 transition-all duration-500 rounded-xl ${
+                    isCompareMode
+                      ? "bg-primary"
+                      : "bg-white/5 group-hover:bg-white/10 border border-white/5"
                   }`}
-              >
-                <FaMapMarkedAlt className="text-[10px]" /> Map
+                />
+                <FaChartBar className={`relative z-10 ${isCompareMode ? "animate-pulse" : ""}`} />
+                <span className="relative z-10 hidden md:inline">
+                  {isCompareMode ? "Close Compare" : "Compare"}
+                </span>
               </button>
             </div>
 
-            <button
-              onClick={() => setIsCompareMode(!isCompareMode)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest border ${isCompareMode
-                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                  : "bg-white/5 text-text-dim border-white/10 hover:border-white/30"
-                }`}
-            >
-              <FaChartBar className={isCompareMode ? "animate-pulse" : ""} />
-              {isCompareMode ? "Close Selection" : "Compare Mode"}
-            </button>
-
-            <div className="w-full lg:w-80 relative group">
-              <div className="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000" />
-              <div className="relative flex items-center bg-[#1a2133] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-                <span className="pl-5 text-text-dim">
+            {/* Search Input */}
+            <div className="relative group w-full xl:w-80 shrink-0">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-700" />
+              <div className="relative flex items-center bg-[#111827]/90 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden h-full shadow-2xl focus-within:border-primary/50 transition-colors">
+                <span className="pl-5 text-primary text-sm">
                   <FaSearch />
                 </span>
                 <input
@@ -235,10 +266,18 @@ const Services = () => {
                   name="searchQuery"
                   type="text"
                   placeholder="Search by name or keyword..."
-                  className="w-full bg-transparent p-4 text-sm text-white focus:outline-none placeholder:text-white/20"
+                  className="w-full bg-transparent p-4 text-[13px] font-semibold text-white focus:outline-none placeholder:text-slate-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="pr-5 text-slate-500 hover:text-white transition-colors"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
           </div>
