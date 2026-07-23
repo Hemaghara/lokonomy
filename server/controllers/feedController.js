@@ -295,6 +295,10 @@ exports.deleteFeed = async (req, res, next) => {
       });
     }
 
+    const { deleteMedia } = require("../utils/uploadMedia");
+    if (feed.image) {
+      await deleteMedia(feed.image).catch(() => {});
+    }
     await feed.deleteOne();
     logger.info(
       { feedId: req.params.id, userId: req.user.id },
@@ -360,6 +364,10 @@ exports.updateFeed = async (req, res, next) => {
       feedData.locationAddress = geoData.locationAddress;
     }
 
+    const { deleteMedia } = require("../utils/uploadMedia");
+    if (feed.image && feed.image !== imageUrl) {
+      await deleteMedia(feed.image).catch(() => {});
+    }
     feed = await Feed.findByIdAndUpdate(req.params.id, feedData, { new: true, runValidators: true });
     logger.info(
       { feedId: feed._id, userId: req.user.id },

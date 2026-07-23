@@ -102,6 +102,7 @@ const jobSchema = new mongoose.Schema(
     description: {
       type: String,
       default: "",
+      maxlength: [5000, "Description cannot exceed 5000 characters"]
     },
     jobType: {
       type: String,
@@ -137,10 +138,12 @@ const jobSchema = new mongoose.Schema(
     salaryMin: {
       type: Number,
       default: null,
+      min: [0, 'Minimum salary cannot be negative']
     },
     salaryMax: {
       type: Number,
       default: null,
+      min: [0, 'Maximum salary cannot be negative']
     },
     views: {
       type: Number,

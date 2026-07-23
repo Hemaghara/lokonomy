@@ -86,7 +86,7 @@ exports.calculateLeaderboard = async (req, res) => {
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month, 0, 23, 59, 59);
 
-    const businesses = await Business.find({}).lean();
+    const businesses = await Business.find({}).select("businessName logo district mainCategory ownerId rating reviews dailyVisits").lean();
 
     // Bulk calculate Order Counts
     const orderCounts = await Order.aggregate([
@@ -188,15 +188,17 @@ exports.calculateLeaderboard = async (req, res) => {
         }
       }));
       
-      const currentBusinessIds = toInsert.map(e => e.businessId);
-      bulkOps.push({
-        deleteMany: {
-          filter: { month, year, businessId: { $nin: currentBusinessIds } }
-        }
-      });
-      
       await Leaderboard.bulkWrite(bulkOps);
     }
+
+    const currentBusinessIds = toInsert.map(e => e.businessId);
+    await Leaderboard.deleteMany({
+      month,
+      year,
+      businessId: { $nin: currentBusinessIds }
+    });
+
+    cache.flushAll();
 
     const message = `Leaderboard calculated: ${toInsert.length} entries for ${month}/${year}`;
     logger.info(message);

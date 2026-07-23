@@ -275,6 +275,12 @@ exports.deleteProduct = async (req, res) => {
         .json({ message: "You are not authorized to delete this product" });
     }
 
+    const { deleteMedia } = require("../utils/uploadMedia");
+    if (product.productImages && product.productImages.length > 0) {
+      for (const img of product.productImages) {
+        await deleteMedia(img).catch(() => {});
+      }
+    }
     await Product.findByIdAndDelete(req.params.id);
     logger.info(
       { productId: req.params.id, userId: req.user.id },
@@ -413,6 +419,7 @@ exports.getProductReviews = async (req, res) => {
 exports.placeBid = async (req, res) => {
   try {
     const { amount } = req.body;
+    const numericAmount = Number(amount);
     const productId = req.params.id;
 
     if (!amount || isNaN(amount)) {
@@ -456,13 +463,13 @@ exports.placeBid = async (req, res) => {
         $and: [
           {
             $or: [
-              { currentHighestBid: { $lt: amount } },
+              { currentHighestBid: { $lt: numericAmount } },
               { currentHighestBid: { $exists: false } }
             ]
           },
           {
             $or: [
-              { startingPrice: { $lt: amount } },
+              { startingPrice: { $lt: numericAmount } },
               { startingPrice: { $exists: false } }
             ]
           }
@@ -470,7 +477,7 @@ exports.placeBid = async (req, res) => {
       },
       {
         $push: { bids: bid },
-        $set: { currentHighestBid: amount },
+        $set: { currentHighestBid: numericAmount },
       },
       { new: true },
     );

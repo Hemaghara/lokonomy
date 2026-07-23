@@ -81,7 +81,7 @@ const CustomMapControls = ({ userCoords }) => {
     }
   };
   return (
-    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-1000 flex flex-col gap-2">
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[1000] flex flex-col gap-2">
       <button
         type="button"
         onClick={() => map.zoomIn()}
@@ -148,6 +148,7 @@ const EventsMap = () => {
   const [showEvents, setShowEvents] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -155,6 +156,8 @@ const EventsMap = () => {
           businessService.getBusinesses(),
           feedService.getFeeds({ type: "Event" }),
         ]);
+
+        if (!isMounted) return;
 
         if (bizRes.data.success) {
           setBusinesses(
@@ -173,10 +176,11 @@ const EventsMap = () => {
       } catch (error) {
         console.error("Error fetching map data:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchData();
+    return () => { isMounted = false; };
   }, []);
 
   const center = coords ? [coords.lat, coords.lng] : DEFAULT_CENTER;
@@ -233,7 +237,7 @@ const EventsMap = () => {
 
         <div className="relative h-[70vh] rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50 bg-[#0d1117]">
           {loading && (
-            <div className="absolute inset-0 z-2000 flex items-center justify-center bg-[#0d1117]/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-[#0d1117]/80 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                 <p className="text-white/60 font-medium">Loading Map Data...</p>
@@ -241,7 +245,7 @@ const EventsMap = () => {
             </div>
           )}
 
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 w-full px-4 flex justify-center pointer-events-none">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] w-full px-4 flex justify-center pointer-events-none">
             <div className="flex items-center gap-3 bg-[#0d1117]/85 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 shadow-xl overflow-hidden">
               {showBusinesses && (
                 <div className="flex items-center gap-1.5 border-r border-white/10 pr-3 mr-3 last:border-0 last:pr-0 last:mr-0">
@@ -320,7 +324,7 @@ const EventsMap = () => {
                 initial={{ x: 300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 300, opacity: 0 }}
-                className="absolute top-4 right-4 z-1000 w-full max-w-sm"
+                className="absolute top-4 right-4 z-[1000] w-full max-w-sm"
               >
                 <div className="bg-[#131929]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl relative">
                   <button

@@ -448,7 +448,7 @@ exports.updateStory = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "Story not found" });
     }
-    if (story.authorId.toString() !== req.user.id) {
+    if (story.authorId.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: "Not authorized to edit this story",
@@ -578,7 +578,7 @@ exports.deleteStory = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "Story not found" });
     }
-    if (story.authorId.toString() !== req.user.id) {
+    if (story.authorId.toString() !== req.user.id && req.user.role !== 'admin') {
       logger.warn(
         { storyId: req.params.id, userId: req.user.id },
         "Unauthorized attempt to delete story",
@@ -589,6 +589,13 @@ exports.deleteStory = async (req, res, next) => {
       });
     }
 
+    const { deleteMedia } = require("../utils/uploadMedia");
+    if (story.image) await deleteMedia(story.image).catch(() => {});
+    if (story.media && story.media.length > 0) {
+      for (const item of story.media) {
+        if (item.url) await deleteMedia(item.url).catch(() => {});
+      }
+    }
     await story.deleteOne();
     logger.info(
       { storyId: req.params.id, userId: req.user.id },
@@ -617,7 +624,7 @@ exports.toggleLike = async (req, res, next) => {
         .json({ success: false, message: "Story not found" });
     }
 
-    const isLiked = story.likes.includes(req.user.id);
+    const isLiked = story.likes.some(id => id.toString() === req.user.id.toString());
     const update = isLiked
       ? { $pull: { likes: req.user.id } }
       : { $addToSet: { likes: req.user.id } };
@@ -794,7 +801,7 @@ exports.toggleBookmark = async (req, res, next) => {
     }
 
     const user = await User.findById(userId);
-    const isBookmarked = user.savedStories?.includes(storyId);
+    const isBookmarked = user.savedStories?.some(id => id.toString() === storyId.toString());
 
     if (isBookmarked) {
       await User.findByIdAndUpdate(userId, {

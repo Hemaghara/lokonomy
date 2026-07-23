@@ -111,7 +111,7 @@ exports.createJob = async (req, res) => {
     if (vacancies <= 0 || vacancies > 999) {
       return res.status(400).json({ success: false, message: "Vacancies must be between 1 and 999." });
     }
-    if (salaryMin && salaryMax && salaryMin > salaryMax) {
+    if (salaryMin && salaryMax && Number(salaryMin) > Number(salaryMax)) {
       return res.status(400).json({ success: false, message: "Minimum salary cannot be greater than maximum salary." });
     }
 
@@ -337,6 +337,13 @@ exports.deleteJob = async (req, res) => {
         .json({ message: "Not authorized to delete this job" });
     }
 
+    const { deleteMedia } = require("../utils/uploadMedia");
+    if (job.applications && job.applications.length > 0) {
+      for (const app of job.applications) {
+        if (app.candidateBiodata) await deleteMedia(app.candidateBiodata).catch(() => {});
+        if (app.candidateCertificate) await deleteMedia(app.candidateCertificate).catch(() => {});
+      }
+    }
     await Job.findByIdAndDelete(req.params.id);
     await User.findByIdAndUpdate(req.user.id, {
       $inc: { "usage.jobsPosted": -1 },
@@ -397,7 +404,7 @@ exports.updateJob = async (req, res) => {
     }
     const newSalaryMin = req.body.salaryMin !== undefined ? req.body.salaryMin : job.salaryMin;
     const newSalaryMax = req.body.salaryMax !== undefined ? req.body.salaryMax : job.salaryMax;
-    if (newSalaryMin && newSalaryMax && newSalaryMin > newSalaryMax) {
+    if (newSalaryMin && newSalaryMax && Number(newSalaryMin) > Number(newSalaryMax)) {
       return res.status(400).json({ success: false, message: "Minimum salary cannot be greater than maximum salary." });
     }
 
@@ -575,6 +582,11 @@ exports.withdrawApplication = async (req, res) => {
         message: `Cannot withdraw. Application is already "${appStatus}".`,
       });
     }
+
+    const appToWithdraw = job.applications[appIndex];
+    const { deleteMedia } = require("../utils/uploadMedia");
+    if (appToWithdraw.candidateBiodata) await deleteMedia(appToWithdraw.candidateBiodata).catch(() => {});
+    if (appToWithdraw.candidateCertificate) await deleteMedia(appToWithdraw.candidateCertificate).catch(() => {});
 
     await Job.updateOne(
       { _id: job._id },

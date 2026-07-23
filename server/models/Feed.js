@@ -34,7 +34,7 @@ const feedSchema = new mongoose.Schema({
   },
   location: {
     type: { type: String, enum: ["Point"], default: "Point" },
-    coordinates: { type: [Number], default: [72.6, 22.3] },
+    coordinates: { type: [Number] },
   },
   locationAddress: {
     type: String,

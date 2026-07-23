@@ -5,10 +5,12 @@ const storySchema = new mongoose.Schema({
     type: String,
     required: [true, "Title is required"],
     trim: true,
+    maxlength: [150, "Title cannot exceed 150 characters"],
   },
   content: {
     type: String,
     required: [true, "Content is required"],
+    maxlength: [3000, "Content cannot exceed 3000 characters"],
   },
   type: {
     type: String,
@@ -31,7 +33,7 @@ const storySchema = new mongoose.Schema({
   },
   location: {
     type: { type: String, enum: ["Point"], default: "Point" },
-    coordinates: { type: [Number], default: [72.6, 22.3] },
+    coordinates: { type: [Number] },
   },
   locationAddress: {
     type: String,

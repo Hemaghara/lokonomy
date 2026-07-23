@@ -4,16 +4,16 @@ const productSchema = new mongoose.Schema({
   mainCategory: { type: String, required: true },
   subCategory: { type: String, required: true },
   productName: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String, required: true, maxlength: [5000, "Description cannot exceed 5000 characters"] },
   priceType: { type: String, enum: ["sell", "rent"], required: true },
-  price: { type: Number, required: true },
+  price: { type: Number, required: true, min: [0, 'Price cannot be negative'] },
   district: { type: String },
   taluka: { type: String },
   address: { type: String },
   productImages: [{ type: String }],
   location: {
     type: { type: String, enum: ["Point"], default: "Point" },
-    coordinates: { type: [Number], default: [72.6, 22.3] },
+    coordinates: { type: [Number] },
   },
   locationAddress: { type: String },
   sellerProfile: {
@@ -49,7 +49,7 @@ const productSchema = new mongoose.Schema({
   isFlagged: { type: Boolean, default: false },
   isSuspended: { type: Boolean, default: false },
   isAuction: { type: Boolean, default: false },
-  startingPrice: { type: Number },
+  startingPrice: { type: Number, min: [0, 'Starting price cannot be negative'] },
   auctionEnd: { type: Date },
   bids: [
     {
@@ -59,7 +59,7 @@ const productSchema = new mongoose.Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  currentHighestBid: { type: Number, default: 0 },
+  currentHighestBid: { type: Number, default: 0, min: 0 },
   isPreOrderEnabled: { type: Boolean, default: false },
   preOrderLeadTimeDays: { type: Number, default: 0 },
   maxPreOrders: { type: Number, default: 0 },

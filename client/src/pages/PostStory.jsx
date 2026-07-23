@@ -185,6 +185,16 @@ const PostStory = () => {
   const [actionLinkUrl, setActionLinkUrl] = useState("");
   const [actionLinkText, setActionLinkText] = useState("Visit Link");
 
+  useEffect(() => {
+    return () => {
+      mediaFiles.forEach(item => {
+        if (item.preview && !item.isExisting) {
+          URL.revokeObjectURL(item.preview);
+        }
+      });
+    };
+  }, [mediaFiles]);
+
   const handleMediaChange = (e) => {
     const files = Array.from(e.target.files);
     if (mediaFiles.length + files.length > 5) {

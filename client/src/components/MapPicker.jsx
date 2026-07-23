@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FaBullseye } from "react-icons/fa";
 import { MapPin } from "lucide-react";
+import { toast } from "react-hot-toast";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -77,6 +78,11 @@ const MapPicker = ({
   const [geocoding, setGeocoding] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const mapRef = useRef(null);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => { isMounted.current = false; };
+  }, []);
 
   const markerPos = value?.lat ? [value.lat, value.lng] : null;
 
@@ -84,6 +90,7 @@ const MapPicker = ({
     setGeocoding(true);
     const { displayAddress, pincode, state, district, taluka } =
       await reverseGeocode(lat, lng);
+    if (!isMounted.current) return;
     onChange({
       lat,
       lng,
@@ -104,6 +111,7 @@ const MapPicker = ({
         const { latitude: lat, longitude: lng } = pos.coords;
         const { displayAddress, pincode, state, district, taluka } =
           await reverseGeocode(lat, lng);
+        if (!isMounted.current) return;
         onChange({
           lat,
           lng,
@@ -116,10 +124,13 @@ const MapPicker = ({
         if (mapRef.current) {
           mapRef.current.flyTo([lat, lng], 16, { duration: 1.2 });
         }
-        setGpsLoading(false);
+        if (isMounted.current) setGpsLoading(false);
       },
       () => {
-        setGpsLoading(false);
+        if (isMounted.current) {
+          setGpsLoading(false);
+          toast.error("Could not get your location. Please ensure GPS is enabled and permissions are granted.");
+        }
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
@@ -166,7 +177,7 @@ const MapPicker = ({
         style={{ height }}
       >
         {geocoding && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-9999 bg-[#111827]/90 backdrop-blur border border-[#1f2a3d] text-violet-400 text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-2">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[9999] bg-[#111827]/90 backdrop-blur border border-[#1f2a3d] text-violet-400 text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-2">
             <span className="w-3 h-3 border-2 border-violet-400/30 border-t-violet-400 rounded-full animate-spin" />
             Getting address…
           </div>
