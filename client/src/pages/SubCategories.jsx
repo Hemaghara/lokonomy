@@ -80,7 +80,7 @@ const SubCategories = () => {
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-3xl shrink-0">
+              <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center text-3xl shrink-0 ${categoryData.color ? `${categoryData.color.bg} ${categoryData.color.text} border-transparent` : 'bg-violet-500/10 border-violet-500/20 text-violet-400'}`}>
                 {categoryData.icon}
               </div>
               <div>
@@ -139,7 +139,7 @@ const SubCategories = () => {
                            hover:border-violet-500/40 hover:bg-[#131d2e] transition-all duration-300 overflow-hidden"
               >
                 <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
-                <div className="w-12 h-12 rounded-xl bg-[#0d1424] border border-[#1f2a3d] group-hover:border-violet-500/30 group-hover:bg-violet-500/10 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-all duration-300">
+                <div className={`w-12 h-12 rounded-xl border flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-all duration-300 ${categoryData.color ? `${categoryData.color.bg} ${categoryData.color.text} border-transparent ${categoryData.color.hover}` : 'bg-[#0d1424] border-[#1f2a3d] group-hover:border-violet-500/30 group-hover:bg-violet-500/10 text-slate-400'}`}>
                   {sub.icon}
                 </div>
 

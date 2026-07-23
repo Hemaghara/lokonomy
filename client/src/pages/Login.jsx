@@ -281,8 +281,8 @@ const Login = () => {
 
   const gpsStatusConfig = {
     idle: {
-      label: "GPS Authorization (Optional)",
-      subLabel: "Help localize your login flow",
+      label: "GPS Authorization",
+      subLabel: "Help To Find Location",
       color: "text-blue-400",
       bg: "bg-blue-500/10 border-blue-500/20",
       accent: "blue",
@@ -342,11 +342,11 @@ const Login = () => {
               L
             </motion.div>
             <h1 className="text-white text-2xl md:text-3xl font-bold mb-3 tracking-tight">
-              {step === "credentials" ? "Welcome Back" : "Security Check"}
+              {step === "credentials" ? "Welcome Back To Lokonomy" : "Security Check"}
             </h1>
             <p className="text-white text-sm max-w-70 mx-auto">
               {step === "credentials"
-                ? "Enter your credentials to access your local business dashboard"
+                ? "Enter your email and Password to access your local business dashboard"
                 : "Please enter the verification code sent to your email"}
             </p>
           </div>
@@ -476,10 +476,12 @@ const Login = () => {
                     className="w-full bg-linear-to-r from-primary to-primary-dark text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-px active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none transition-all flex items-center justify-center gap-2"
                   >
                     {loading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Processing...
+                      </>
                     ) : (
                       <>
-                        Sign In Now <ArrowRight className="w-4 h-4" />
+                        Sign In Now
                       </>
                     )}
                   </button>
@@ -571,10 +573,12 @@ const Login = () => {
                     className="w-full bg-linear-to-r from-primary to-primary-dark text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2"
                   >
                     {loading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Processing...
+                      </>
                     ) : (
                       <>
-                        Verify Account <ArrowRight className="w-4 h-4" />
+                        Verify Account
                       </>
                     )}
                   </button>

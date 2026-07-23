@@ -254,7 +254,7 @@ const ExploreServices = () => {
               >
                 <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
                 <div className="flex items-center gap-4 mb-5 pb-4 border-b border-[#1f2a3d]">
-                  <div className="w-12 h-12 rounded-xl bg-[#0d1424] border border-[#1f2a3d] group-hover:border-violet-500/30 group-hover:bg-violet-500/10 flex items-center justify-center text-3xl shrink-0 group-hover:scale-110 transition-all duration-300">
+                  <div className={`w-12 h-12 rounded-xl border flex items-center justify-center text-3xl shrink-0 group-hover:scale-110 transition-all duration-300 ${cat.color ? `${cat.color.bg} ${cat.color.text} border-transparent ${cat.color.hover}` : 'bg-[#0d1424] border-[#1f2a3d] group-hover:border-violet-500/30 group-hover:bg-violet-500/10 text-slate-400'}`}>
                     {cat.icon}
                   </div>
                   <div className="flex-1 min-w-0">
