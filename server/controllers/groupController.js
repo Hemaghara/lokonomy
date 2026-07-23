@@ -2,6 +2,7 @@ const Group = require("../models/Group");
 const GroupPost = require("../models/GroupPost");
 const User = require("../models/User");
 const logger = require("../utils/logger");
+const sanitizeHtml = require("sanitize-html");
 
 // Create a group
 exports.createGroup = async (req, res) => {
@@ -40,7 +41,8 @@ exports.getGroups = async (req, res) => {
 
     const groups = await Group.find(filter)
       .populate("createdBy", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(100);
 
     res.json({ success: true, groups });
   } catch (err) {
@@ -103,12 +105,12 @@ exports.leaveGroup = async (req, res) => {
       return res.status(404).json({ success: false, message: "Group not found" });
     }
 
-    const index = group.members.indexOf(req.user.id);
-    if (index === -1) {
+    const isMember = group.members.some(id => id.toString() === req.user.id);
+    if (!isMember) {
       return res.status(400).json({ success: false, message: "Not a member of this group" });
     }
 
-    group.members.splice(index, 1);
+    group.members.pull(req.user.id);
     await group.save();
 
     res.json({ success: true, message: "Left group successfully", group });
@@ -132,14 +134,14 @@ exports.createPost = async (req, res) => {
     }
 
     // Optional: check if member
-    if (!group.members.includes(req.user.id)) {
+    if (!group.members.some(id => id.toString() === req.user.id)) {
       return res.status(403).json({ success: false, message: "Must be a member to post" });
     }
 
     const post = new GroupPost({
       groupId: group._id,
       author: req.user.id,
-      content,
+      content: sanitizeHtml(content),
       likes: [],
       comments: []
     });
@@ -163,11 +165,11 @@ exports.likePost = async (req, res) => {
       return res.status(404).json({ success: false, message: "Post not found" });
     }
 
-    const index = post.likes.indexOf(req.user.id);
-    if (index === -1) {
+    const hasLiked = post.likes.some(id => id.toString() === req.user.id);
+    if (!hasLiked) {
       post.likes.push(req.user.id);
     } else {
-      post.likes.splice(index, 1);
+      post.likes.pull(req.user.id);
     }
 
     await post.save();
@@ -191,12 +193,17 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ success: false, message: "Post not found" });
     }
 
+    const group = await Group.findById(post.groupId);
+    if (!group || !group.members.some(id => id.toString() === req.user.id)) {
+      return res.status(403).json({ success: false, message: "Must be a member to comment" });
+    }
+
     const user = await User.findById(req.user.id);
 
     post.comments.push({
       author: req.user.id,
       authorName: user.name,
-      content,
+      content: sanitizeHtml(content),
       createdAt: new Date()
     });
 
