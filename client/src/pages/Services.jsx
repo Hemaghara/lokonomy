@@ -131,47 +131,48 @@ const Services = () => {
       <div className="fixed top-0 right-0 w-lg h-lg bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
       <div className="container relative px-6">
-        <div className="flex flex-wrap items-center gap-3 mb-10 text-[10px] font-bold uppercase tracking-[0.2em]">
+        <div className="flex flex-wrap items-center gap-3 mb-10 text-[11px] font-bold uppercase tracking-[0.15em]">
           <Link
             to="/explore"
-            className="text-white hover:text-white transition-colors"
+            className="text-slate-500 hover:text-white transition-colors"
           >
             Directory
           </Link>
-          <span className="text-white">❯</span>
+          <span className="text-slate-700">/</span>
           <Link
             to={`/category/${category}`}
-            className="text-white hover:text-white transition-colors"
+            className="text-slate-500 hover:text-white transition-colors"
           >
             {category}
           </Link>
-          <span className="text-white">❯</span>
+          <span className="text-slate-700">/</span>
           <span className="text-primary">{subcategory || "Browse All"}</span>
         </div>
 
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 mb-10 border-b border-white/5 pb-10">
           <div className="max-w-3xl">
-            <h1 className="text-white text-5xl md:text-6xl font-black mb-4 tracking-tight">
+            <h1 className="text-white text-5xl md:text-6xl font-black mb-4 tracking-tight flex items-baseline gap-1">
               {subcategory || category}
+              <span className="text-primary text-5xl md:text-6xl">.</span>
             </h1>
-            <p className="text-text-dim text-xl leading-relaxed">
-              Found{" "}
-              <span className="text-white font-semibold">
-                {listings.length} businesses
-              </span>{" "}
+            <div className="text-slate-400 text-lg flex flex-wrap items-center gap-2 mt-2">
+              <span>Found</span>
+              <span className="px-2.5 py-0.5 bg-white/10 text-white font-bold rounded-md">
+                {listings.length}
+              </span>
+              <span>businesses</span>
               {coords ? (
                 <>
-                  within{" "}
-                  <span className="text-primary font-bold">
-                    {radiusOptions.find((r) => r.value === radius)?.label ||
-                      "5 km"}
-                  </span>{" "}
-                  of your location
+                  <span>within</span>
+                  <span className="px-2.5 py-0.5 bg-primary/20 text-primary font-bold rounded-md border border-primary/20">
+                    {radiusOptions.find((r) => r.value === radius)?.label || "5 km"}
+                  </span>
+                  <span>of your location</span>
                 </>
               ) : (
-                "— enable GPS to filter by distance"
+                <span>— enable GPS to filter by distance</span>
               )}
-            </p>
+            </div>
           </div>
 
           <div className="flex flex-col xl:flex-row gap-4 w-full lg:w-auto shrink-0 mt-6 lg:mt-0">
