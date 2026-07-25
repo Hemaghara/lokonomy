@@ -850,10 +850,15 @@ const BusinessDetails = () => {
                           <div className="flex justify-end mt-3 pt-2 border-t border-[#1f2a3d]/20">
                             <button
                               type="button"
-                              onClick={() => handleHelpfulVote(review.userId, review._id)}
-                              className="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-violet-400 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 px-3 py-1.5 rounded-lg transition-all"
+                              onClick={() => !review.helpfulVotes?.includes(user?.id) && handleHelpfulVote(review.userId, review._id)}
+                              disabled={review.helpfulVotes?.includes(user?.id)}
+                              className={`flex items-center gap-1 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${
+                                review.helpfulVotes?.includes(user?.id)
+                                  ? "text-violet-400 bg-violet-500/10 border border-violet-500/30 cursor-default"
+                                  : "text-slate-400 hover:text-violet-400 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30"
+                              }`}
                             >
-                              👍 Helpful
+                              👍 {review.helpfulVotes?.includes(user?.id) ? "Helpful" : "Helpful"} {review.helpfulVotes?.length > 0 && `(${review.helpfulVotes.length})`}
                             </button>
                           </div>
                         )}

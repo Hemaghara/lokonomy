@@ -8,6 +8,7 @@ import { HiOutlineMapPin, HiStar } from "react-icons/hi2";
 import { useComparison } from "../context/ComparisonContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChartBar, FaPlus, FaCheck } from "react-icons/fa";
+import { Clock, BadgeCheck, Tag, Flame } from "lucide-react";
 const useUserLocation = () => {
   const [coords, setCoords] = useState(() => {
     const cached = sessionStorage.getItem("lokonomy_user_coords");
@@ -289,39 +290,39 @@ const Services = () => {
             <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider mr-2">Filters:</span>
             <button
               onClick={() => setOpenNow(!openNow)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${openNow
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${openNow
                   ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                   : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
                 }`}
             >
-              Open Now 🟢
+              <Clock className="w-3.5 h-3.5" /> Open Now
             </button>
             <button
               onClick={() => setVerified(!verified)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${verified
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${verified
                   ? "bg-primary/10 text-primary border-primary/20"
                   : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
                 }`}
             >
-              Verified ✓
+              <BadgeCheck className="w-3.5 h-3.5" /> Verified
             </button>
             <button
               onClick={() => setHasOffers(!hasOffers)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${hasOffers
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${hasOffers
                   ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                   : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
                 }`}
             >
-              Has Offers 🏷️
+              <Tag className="w-3.5 h-3.5" /> Has Offers
             </button>
             <button
               onClick={() => setTrending(!trending)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${trending
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${trending
                   ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
                   : "bg-white/5 text-text-dim border-white/5 hover:border-white/10 hover:text-white"
                 }`}
             >
-              Trending 🔥
+              <Flame className="w-3.5 h-3.5" /> Trending
             </button>
           </div>
 

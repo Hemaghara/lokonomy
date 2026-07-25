@@ -4,6 +4,29 @@ const { uploadMedia } = require("../utils/uploadMedia");
 const { createNotification } = require("./notificationController");
 const { buildLocationGeoJSON } = require("../utils/geoHelpers");
 const logger = require("../utils/logger");
+const { getActiveBusinessVisitors } = require("../socket");
+const { getInfluencerTier } = require("./influencerController");
+
+const getISTTime = () => {
+  const date = new Date(Date.now() + (5.5 * 60 * 60 * 1000));
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  return {
+    currentDay: days[date.getUTCDay()],
+    currentTime: `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`,
+    now: new Date()
+  };
+};
+
+const isBusinessOpen = (dayHours, currentTime) => {
+  if (!dayHours || !dayHours.isOpen) return false;
+  const { startTime, endTime } = dayHours;
+  if (!startTime || !endTime) return false;
+  if (startTime <= endTime) {
+    return currentTime >= startTime && currentTime <= endTime;
+  } else {
+    return currentTime >= startTime || currentTime <= endTime;
+  }
+};
 
 exports.getAllBusinesses = async (req, res) => {
   try {
@@ -61,23 +84,16 @@ exports.getAllBusinesses = async (req, res) => {
     let businesses = await Business.find(query).sort(sortOpts);
 
     if (openNow === "true") {
-      const now = new Date();
-      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-      const currentDay = days[now.getDay()];
-      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const { currentDay, currentTime } = getISTTime();
 
       businesses = businesses.filter((biz) => {
         if (!biz.businessHours) return false;
         const dayHours = biz.businessHours.get ? biz.businessHours.get(currentDay) : biz.businessHours[currentDay];
-        if (!dayHours || !dayHours.isOpen) return false;
-        return currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
+        return isBusinessOpen(dayHours, currentTime);
       });
     }
 
-    const now = new Date();
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const currentDay = days[now.getDay()];
-    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const { currentDay, currentTime, now } = getISTTime();
 
     const Coupon = require("../models/Coupon");
 
@@ -113,7 +129,7 @@ exports.getAllBusinesses = async (req, res) => {
       const bizObj = biz.toObject ? biz.toObject({ flattenMaps: true }) : { ...biz };
       if (biz.businessHours) {
         const dayHours = biz.businessHours.get ? biz.businessHours.get(currentDay) : biz.businessHours[currentDay];
-        bizObj.isOpenNow = dayHours && dayHours.isOpen && currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
+        bizObj.isOpenNow = isBusinessOpen(dayHours, currentTime);
       } else {
         bizObj.isOpenNow = false;
       }
@@ -210,10 +226,7 @@ exports.getBusinessById = async (req, res) => {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    const now = new Date();
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const currentDay = days[now.getDay()];
-    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const { currentDay, currentTime, now } = getISTTime();
 
     const userIds = business.reviews.map(r => r.userId).filter(Boolean);
     const users = await User.find({ _id: { $in: userIds } }).select("influencerBadge");
@@ -224,10 +237,11 @@ exports.getBusinessById = async (req, res) => {
       ...rev,
       influencerBadge: rev.userId ? (userMap.get(rev.userId.toString()) || "none") : "none"
     }));
+    bizObj.activeVisitors = getActiveBusinessVisitors(business._id);
 
     if (business.businessHours) {
       const dayHours = business.businessHours.get ? business.businessHours.get(currentDay) : business.businessHours[currentDay];
-      bizObj.isOpenNow = dayHours && dayHours.isOpen && currentTime >= dayHours.startTime && currentTime <= dayHours.endTime;
+      bizObj.isOpenNow = isBusinessOpen(dayHours, currentTime);
     } else {
       bizObj.isOpenNow = false;
     }
@@ -251,7 +265,7 @@ exports.getBusinessById = async (req, res) => {
 
 exports.incrementVisitCount = async (req, res) => {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date(Date.now() + (5.5 * 60 * 60 * 1000)).toISOString().split("T")[0];
     const business = await Business.findById(req.params.id);
 
     if (!business)
@@ -330,6 +344,18 @@ exports.addReview = async (req, res) => {
     business.rating = totalRating / business.reviews.length;
 
     await business.save();
+
+    const reviewer = await User.findById(userId);
+    if (reviewer) {
+      reviewer.reviewCount = (reviewer.reviewCount || 0) + 1;
+      const updatedTier = getInfluencerTier(reviewer.reviewCount, reviewer.helpfulVotes || 0);
+      
+      if (updatedTier !== "none" && reviewer.influencerBadge === "none") {
+        reviewer.influencerSince = new Date();
+      }
+      reviewer.influencerBadge = updatedTier;
+      await reviewer.save();
+    }
 
     if (business.ownerId) {
       const io = req.app.get("io");

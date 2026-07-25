@@ -18,7 +18,7 @@ const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const { apiLimiter, authLimiter } = require("./middleware/rateLimiter");
 const setupIndexes = require("./utils/setupIndexes");
-const initSocket = require("./socket");
+const { initSocket } = require("./socket");
 const { startSubscriptionCron } = require("./cron/subscriptionExpiry");
 const { startBookingRemindersCron } = require("./cron/bookingReminders");
 const {
@@ -114,10 +114,10 @@ if (process.env.NODE_ENV !== "test") {
 
 
       try {
-        await Business.updateMany({}, { $set: { activeVisitors: 0, isOwnerOnline: false } });
-        logger.info("Reset all business activeVisitors and isOwnerOnline on startup");
+        await Business.updateMany({}, { $set: { isOwnerOnline: false } });
+        logger.info("Reset all business isOwnerOnline on startup");
       } catch (resetErr) {
-        logger.error({ err: resetErr }, "Failed to reset business visitor counters on startup");
+        logger.error({ err: resetErr }, "Failed to reset business owner online status on startup");
       }
 
       startSubscriptionCron();

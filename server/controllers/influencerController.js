@@ -64,13 +64,31 @@ exports.updateInfluencerStatus = async (req, res) => {
 exports.voteHelpfulReview = async (req, res) => {
   try {
     const { reviewerId, businessId, reviewId } = req.body;
-    if (!reviewerId || !businessId) {
-      return res.status(400).json({ success: false, message: "ReviewerId and businessId are required" });
+    if (!reviewerId || !businessId || !reviewId) {
+      return res.status(400).json({ success: false, message: "ReviewerId, businessId, and reviewId are required" });
     }
 
     if (reviewerId.toString() === req.user.id) {
       return res.status(400).json({ success: false, message: "You cannot vote your own review as helpful" });
     }
+
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ success: false, message: "Business not found" });
+    }
+
+    const review = business.reviews.id(reviewId);
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+
+    if (review.helpfulVotes && review.helpfulVotes.includes(req.user.id)) {
+      return res.status(400).json({ success: false, message: "You have already voted this review as helpful" });
+    }
+
+    if (!review.helpfulVotes) review.helpfulVotes = [];
+    review.helpfulVotes.push(req.user.id);
+    await business.save();
 
     const reviewer = await User.findById(reviewerId);
     if (!reviewer) {
@@ -80,6 +98,10 @@ exports.voteHelpfulReview = async (req, res) => {
     reviewer.helpfulVotes = (reviewer.helpfulVotes || 0) + 1;
 
     const updatedTier = getInfluencerTier(reviewer.reviewCount || 0, reviewer.helpfulVotes);
+    
+    if (updatedTier !== "none" && reviewer.influencerBadge === "none") {
+      reviewer.influencerSince = new Date();
+    }
     reviewer.influencerBadge = updatedTier;
     await reviewer.save();
 
@@ -114,3 +136,5 @@ exports.getLocalInfluencers = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+exports.getInfluencerTier = getInfluencerTier;

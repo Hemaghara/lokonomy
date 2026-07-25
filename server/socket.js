@@ -9,6 +9,13 @@ const jwt = require("jsonwebtoken");
 
 const allowedOrigins = require("./config/corsOrigins");
 
+const businessVisitors = new Map();
+
+const getActiveBusinessVisitors = (businessId) => {
+  const bizIdStr = businessId.toString();
+  return businessVisitors.has(bizIdStr) ? businessVisitors.get(bizIdStr).size : 0;
+};
+
 const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -124,11 +131,11 @@ const initSocket = (server) => {
           { ownerId: userId },
           { $set: { isOwnerOnline: true, lastOwnerActivity: new Date() } }
         ).then(async () => {
-          const businesses = await Business.find({ ownerId: userId }, "_id activeVisitors");
+          const businesses = await Business.find({ ownerId: userId }, "_id");
           businesses.forEach(biz => {
             io.to(`business_${biz._id}`).emit("businessStatusUpdate", {
               businessId: biz._id.toString(),
-              activeVisitors: biz.activeVisitors || 0,
+              activeVisitors: getActiveBusinessVisitors(biz._id),
               isOwnerOnline: true,
             });
           });
@@ -166,12 +173,19 @@ const initSocket = (server) => {
     socket.on("joinBusinessPage", ({ businessId }) => {
       if (businessId) {
         socket.join(`business_${businessId}`);
-        Business.findByIdAndUpdate(businessId, { $inc: { activeVisitors: 1 } }, { new: true })
+        const bizIdStr = businessId.toString();
+        
+        if (!businessVisitors.has(bizIdStr)) {
+          businessVisitors.set(bizIdStr, new Set());
+        }
+        businessVisitors.get(bizIdStr).add(socket.id);
+
+        Business.findById(businessId).select("isOwnerOnline")
           .then(biz => {
             if (biz) {
               io.to(`business_${businessId}`).emit("businessStatusUpdate", {
                 businessId,
-                activeVisitors: biz.activeVisitors || 0,
+                activeVisitors: getActiveBusinessVisitors(businessId),
                 isOwnerOnline: biz.isOwnerOnline,
               });
             }
@@ -179,7 +193,7 @@ const initSocket = (server) => {
           .catch(err => logger.error({ err }, "[Socket] Error tracking business visitor"));
 
         if (!socket._visitingBusinesses) socket._visitingBusinesses = new Set();
-        socket._visitingBusinesses.add(businessId);
+        socket._visitingBusinesses.add(bizIdStr);
         logger.debug({ socketId: socket.id, businessId }, "[Socket] Joined business page");
       }
     });
@@ -187,22 +201,28 @@ const initSocket = (server) => {
     socket.on("leaveBusinessPage", ({ businessId }) => {
       if (businessId) {
         socket.leave(`business_${businessId}`);
-        Business.findOneAndUpdate(
-          { _id: businessId, activeVisitors: { $gt: 0 } },
-          { $inc: { activeVisitors: -1 } },
-          { new: true }
-        )
+        const bizIdStr = businessId.toString();
+
+        if (businessVisitors.has(bizIdStr)) {
+          businessVisitors.get(bizIdStr).delete(socket.id);
+          if (businessVisitors.get(bizIdStr).size === 0) {
+            businessVisitors.delete(bizIdStr);
+          }
+        }
+
+        Business.findById(businessId).select("isOwnerOnline")
           .then(biz => {
             if (biz) {
               io.to(`business_${businessId}`).emit("businessStatusUpdate", {
                 businessId,
-                activeVisitors: biz.activeVisitors || 0,
+                activeVisitors: getActiveBusinessVisitors(businessId),
                 isOwnerOnline: biz.isOwnerOnline,
               });
             }
           })
           .catch(err => logger.error({ err }, "[Socket] Error tracking business visitor leave"));
-        if (socket._visitingBusinesses) socket._visitingBusinesses.delete(businessId);
+
+        if (socket._visitingBusinesses) socket._visitingBusinesses.delete(bizIdStr);
         logger.debug({ socketId: socket.id, businessId }, "[Socket] Left business page");
       }
     });
@@ -440,16 +460,19 @@ const initSocket = (server) => {
 
       if (socket._visitingBusinesses && socket._visitingBusinesses.size > 0) {
         for (const bizId of socket._visitingBusinesses) {
-          Business.findOneAndUpdate(
-            { _id: bizId, activeVisitors: { $gt: 0 } },
-            { $inc: { activeVisitors: -1 } },
-            { new: true }
-          )
+          if (businessVisitors.has(bizId)) {
+            businessVisitors.get(bizId).delete(socket.id);
+            if (businessVisitors.get(bizId).size === 0) {
+              businessVisitors.delete(bizId);
+            }
+          }
+
+          Business.findById(bizId).select("isOwnerOnline")
             .then(biz => {
               if (biz) {
                 io.to(`business_${bizId}`).emit("businessStatusUpdate", {
                   businessId: bizId,
-                  activeVisitors: biz.activeVisitors || 0,
+                  activeVisitors: getActiveBusinessVisitors(bizId),
                   isOwnerOnline: biz.isOwnerOnline,
                 });
               }
@@ -464,11 +487,11 @@ const initSocket = (server) => {
           { ownerId: disconnectedUserId },
           { $set: { isOwnerOnline: false } }
         ).then(async () => {
-          const businesses = await Business.find({ ownerId: disconnectedUserId }, "_id activeVisitors");
+          const businesses = await Business.find({ ownerId: disconnectedUserId }, "_id");
           businesses.forEach(biz => {
             io.to(`business_${biz._id}`).emit("businessStatusUpdate", {
               businessId: biz._id.toString(),
-              activeVisitors: biz.activeVisitors || 0,
+              activeVisitors: getActiveBusinessVisitors(biz._id),
               isOwnerOnline: false,
             });
           });
@@ -508,4 +531,4 @@ const initSocket = (server) => {
   return io;
 };
 
-module.exports = initSocket;
+module.exports = { initSocket, getActiveBusinessVisitors };

@@ -64,6 +64,7 @@ const businessSchema = new mongoose.Schema({
       rating: { type: Number, required: true },
       comment: { type: String },
       createdAt: { type: Date, default: Date.now },
+      helpfulVotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
   ],
   ownerName: { type: String, required: true },
