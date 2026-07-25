@@ -90,7 +90,21 @@ import {
   Dog,
   HelpCircle,
   Activity,
-  Building
+  Building,
+  Syringe,
+  Ear,
+  Eye,
+  Brain,
+  Ambulance,
+  Star,
+  Truck,
+  Wifi,
+  Users,
+  Trash,
+  Brush,
+  Gem,
+  Glasses,
+  Sun
 } from 'lucide-react';
 
 // Reusable Tailwind color tokens.
@@ -126,10 +140,14 @@ export const categories = [
     subcategories: [
       { name: "Bakery", icon: <Croissant className="w-5 h-5" /> },
       { name: "Dairy", icon: <Milk className="w-5 h-5" /> },
-      { name: "Grocery", icon: <Store className="w-5 h-5" /> },
+      { name: "Grocery Shop", icon: <Store className="w-5 h-5" /> },
       { name: "Vegetables", icon: <Carrot className="w-5 h-5" /> },
       { name: "Fruits", icon: <Apple className="w-5 h-5" /> },
-      { name: "Flour Mill", icon: <Wheat className="w-5 h-5" /> }
+      { name: "Flour Mill", icon: <Wheat className="w-5 h-5" /> },
+      { name: "General Store", icon: <Store className="w-5 h-5" /> },
+      { name: "Household Items", icon: <Package className="w-5 h-5" /> },
+      { name: "Laundry", icon: <ShoppingBag className="w-5 h-5" /> },
+      { name: "Water Supplier", icon: <Droplets className="w-5 h-5" /> }
     ]
   },
   { 
@@ -138,11 +156,29 @@ export const categories = [
     icon: <Stethoscope className="w-6 h-6" />, 
     color: COLORS.blue,
     subcategories: [
-      { name: "General Physician", icon: <User className="w-5 h-5" /> },
+      { name: "Anesthetist", icon: <Syringe className="w-5 h-5" /> },
+      { name: "Ayurvedic", icon: <Leaf className="w-5 h-5" /> },
+      { name: "Cardiologist", icon: <Heart className="w-5 h-5" /> },
+      { name: "Child Specialists", icon: <Baby className="w-5 h-5" /> },
+      { name: "Cosmetologist", icon: <Sparkles className="w-5 h-5" /> },
       { name: "Dentist", icon: <Smile className="w-5 h-5" /> },
-      { name: "Pediatrician", icon: <Baby className="w-5 h-5" /> },
+      { name: "Dermatologist", icon: <Droplet className="w-5 h-5" /> },
+      { name: "Ent", icon: <Ear className="w-5 h-5" /> },
+      { name: "Eye Specialist", icon: <Eye className="w-5 h-5" /> },
+      { name: "Gastroenterologist", icon: <Activity className="w-5 h-5" /> },
+      { name: "General Physicians", icon: <User className="w-5 h-5" /> },
+      { name: "Gynecologist", icon: <User className="w-5 h-5" /> },
+      { name: "Homeopathic", icon: <FlaskConical className="w-5 h-5" /> },
+      { name: "Neurologist", icon: <Brain className="w-5 h-5" /> },
+      { name: "Oncologist", icon: <Microscope className="w-5 h-5" /> },
       { name: "Orthopedic", icon: <Bone className="w-5 h-5" /> },
-      { name: "Dermatologist", icon: <Droplet className="w-5 h-5" /> }
+      { name: "Physiotherapist", icon: <Activity className="w-5 h-5" /> },
+      { name: "Psychiatrist", icon: <Brain className="w-5 h-5" /> },
+      { name: "Pulmonologist", icon: <Wind className="w-5 h-5" /> },
+      { name: "Surgeon", icon: <Scissors className="w-5 h-5" /> },
+      { name: "Unani", icon: <FlaskConical className="w-5 h-5" /> },
+      { name: "Veterinary", icon: <Dog className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -151,11 +187,13 @@ export const categories = [
     icon: <Scissors className="w-6 h-6" />, 
     color: COLORS.pink,
     subcategories: [
-      { name: "Salon", icon: <Scissors className="w-5 h-5" /> },
-      { name: "Spa", icon: <Flower2 className="w-5 h-5" /> },
       { name: "Beauty Parlour", icon: <Sparkles className="w-5 h-5" /> },
       { name: "Gym", icon: <Dumbbell className="w-5 h-5" /> },
-      { name: "Barber", icon: <Scissors className="w-5 h-5" /> }
+      { name: "Hair Salon", icon: <Scissors className="w-5 h-5" /> },
+      { name: "Massage Center and Spa", icon: <Flower2 className="w-5 h-5" /> },
+      { name: "Nail and Tattoo Studios", icon: <Palette className="w-5 h-5" /> },
+      { name: "Yoga Classes", icon: <Activity className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -164,11 +202,17 @@ export const categories = [
     icon: <Hospital className="w-6 h-6" />, 
     color: COLORS.red,
     subcategories: [
-      { name: "Pharmacy", icon: <Pill className="w-5 h-5" /> },
-      { name: "Lab", icon: <Microscope className="w-5 h-5" /> },
-      { name: "Hospital", icon: <Hospital className="w-5 h-5" /> },
+      { name: "Ambulance", icon: <Ambulance className="w-5 h-5" /> },
+      { name: "Baby Care Products", icon: <Baby className="w-5 h-5" /> },
+      { name: "Blood Banks", icon: <Droplet className="w-5 h-5" /> },
       { name: "Clinic", icon: <Stethoscope className="w-5 h-5" /> },
-      { name: "Nursing Home", icon: <Bed className="w-5 h-5" /> }
+      { name: "Hospital", icon: <Hospital className="w-5 h-5" /> },
+      { name: "Imaging Centres", icon: <Activity className="w-5 h-5" /> },
+      { name: "Laboratories", icon: <Microscope className="w-5 h-5" /> },
+      { name: "Medical Store", icon: <Pill className="w-5 h-5" /> },
+      { name: "Surgical Equipments", icon: <Scissors className="w-5 h-5" /> },
+      { name: "Weight Loss Centre", icon: <Scale className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -177,11 +221,41 @@ export const categories = [
     icon: <Wrench className="w-6 h-6" />, 
     color: COLORS.slate,
     subcategories: [
-      { name: "Plumber", icon: <Wrench className="w-5 h-5" /> },
-      { name: "Electrician", icon: <Lightbulb className="w-5 h-5" /> },
+      { name: "Astrologer", icon: <Star className="w-5 h-5" /> },
+      { name: "Bird Net Fitter", icon: <Shield className="w-5 h-5" /> },
+      { name: "Borewell Contractor", icon: <Hammer className="w-5 h-5" /> },
+      { name: "Cab/Taxi Service", icon: <Car className="w-5 h-5" /> },
       { name: "Carpenter", icon: <Hammer className="w-5 h-5" /> },
+      { name: "CCTV Sales and Services", icon: <Camera className="w-5 h-5" /> },
+      { name: "Cleaning Service", icon: <Droplet className="w-5 h-5" /> },
+      { name: "Cobbler", icon: <Footprints className="w-5 h-5" /> },
+      { name: "Computer Repair", icon: <Monitor className="w-5 h-5" /> },
+      { name: "Construction Equipment", icon: <Truck className="w-5 h-5" /> },
+      { name: "Cooking", icon: <Utensils className="w-5 h-5" /> },
+      { name: "Courier", icon: <Package className="w-5 h-5" /> },
+      { name: "Electrician", icon: <Lightbulb className="w-5 h-5" /> },
+      { name: "Fabrication", icon: <Factory className="w-5 h-5" /> },
+      { name: "Gardening Service", icon: <Leaf className="w-5 h-5" /> },
+      { name: "IT and Broadband Services", icon: <Wifi className="w-5 h-5" /> },
+      { name: "Key Makers", icon: <Key className="w-5 h-5" /> },
+      { name: "Labour Contractor", icon: <Users className="w-5 h-5" /> },
+      { name: "Lift Service", icon: <Building className="w-5 h-5" /> },
+      { name: "Maid", icon: <User className="w-5 h-5" /> },
+      { name: "Mason", icon: <Building className="w-5 h-5" /> },
+      { name: "Milk Man", icon: <Milk className="w-5 h-5" /> },
+      { name: "Packers and Movers", icon: <Package className="w-5 h-5" /> },
       { name: "Painter", icon: <Palette className="w-5 h-5" /> },
-      { name: "AC Repair", icon: <Snowflake className="w-5 h-5" /> }
+      { name: "Painting Service", icon: <Brush className="w-5 h-5" /> },
+      { name: "Pest Control", icon: <Bug className="w-5 h-5" /> },
+      { name: "Plumber", icon: <Wrench className="w-5 h-5" /> },
+      { name: "POP", icon: <Brush className="w-5 h-5" /> },
+      { name: "Repair and Services", icon: <Settings className="w-5 h-5" /> },
+      { name: "Security Agencies", icon: <Shield className="w-5 h-5" /> },
+      { name: "Sewage Cleaner", icon: <Trash className="w-5 h-5" /> },
+      { name: "Tiffin Service", icon: <Briefcase className="w-5 h-5" /> },
+      { name: "Transport and Logistics", icon: <Truck className="w-5 h-5" /> },
+      { name: "Waterproofing", icon: <Umbrella className="w-5 h-5" /> },
+      { name: "Water Tanker Supplier", icon: <Droplets className="w-5 h-5" /> }
     ]
   },
   { 
@@ -190,11 +264,15 @@ export const categories = [
     icon: <Shirt className="w-6 h-6" />, 
     color: COLORS.fuchsia,
     subcategories: [
-      { name: "Men's Wear", icon: <Shirt className="w-5 h-5" /> },
-      { name: "Women's Wear", icon: <Shirt className="w-5 h-5" /> },
-      { name: "Kids Wear", icon: <Baby className="w-5 h-5" /> },
+      { name: "Cosmetics", icon: <Sparkles className="w-5 h-5" /> },
       { name: "Footwear", icon: <Footprints className="w-5 h-5" /> },
-      { name: "Tailor", icon: <Scissors className="w-5 h-5" /> }
+      { name: "Gents Wear", icon: <Shirt className="w-5 h-5" /> },
+      { name: "Jewellers", icon: <Gem className="w-5 h-5" /> },
+      { name: "Kids Wear", icon: <Baby className="w-5 h-5" /> },
+      { name: "Ladies Wear", icon: <Shirt className="w-5 h-5" /> },
+      { name: "Optical", icon: <Glasses className="w-5 h-5" /> },
+      { name: "Tailor", icon: <Scissors className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -203,10 +281,22 @@ export const categories = [
     icon: <Wind className="w-6 h-6" />, 
     color: COLORS.cyan,
     subcategories: [
-      { name: "Cleaning", icon: <Droplet className="w-5 h-5" /> },
-      { name: "Pest Control", icon: <Bug className="w-5 h-5" /> },
-      { name: "Maid Service", icon: <Wind className="w-5 h-5" /> },
-      { name: "Laundry", icon: <ShoppingBag className="w-5 h-5" /> }
+      { name: "Art Gallery", icon: <ImageIcon className="w-5 h-5" /> },
+      { name: "Clay Products", icon: <Box className="w-5 h-5" /> },
+      { name: "Cleaning Equipment", icon: <Wind className="w-5 h-5" /> },
+      { name: "Cookware and Utensils", icon: <Utensils className="w-5 h-5" /> },
+      { name: "Curtains and Sofa", icon: <Bed className="w-5 h-5" /> },
+      { name: "Flower Shop", icon: <Flower2 className="w-5 h-5" /> },
+      { name: "Furniture Shop", icon: <Home className="w-5 h-5" /> },
+      { name: "Glass and Mirrors", icon: <ImageIcon className="w-5 h-5" /> },
+      { name: "Handloom", icon: <Shirt className="w-5 h-5" /> },
+      { name: "Home Automation", icon: <Settings className="w-5 h-5" /> },
+      { name: "Laminates", icon: <Box className="w-5 h-5" /> },
+      { name: "Lighting Shop", icon: <Lightbulb className="w-5 h-5" /> },
+      { name: "Nursery Shop", icon: <Leaf className="w-5 h-5" /> },
+      { name: "Paint Shop", icon: <Brush className="w-5 h-5" /> },
+      { name: "Solar Rooftop", icon: <Sun className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -215,10 +305,11 @@ export const categories = [
     icon: <Smartphone className="w-6 h-6" />, 
     color: COLORS.indigo,
     subcategories: [
-      { name: "Mobile Shop", icon: <Smartphone className="w-5 h-5" /> },
-      { name: "Computer Shop", icon: <Monitor className="w-5 h-5" /> },
-      { name: "Repair", icon: <Wrench className="w-5 h-5" /> },
-      { name: "Accessories", icon: <Headphones className="w-5 h-5" /> }
+      { name: "Computer and Printer", icon: <Printer className="w-5 h-5" /> },
+      { name: "Home Appliances", icon: <Speaker className="w-5 h-5" /> },
+      { name: "Kitchen Appliances", icon: <Coffee className="w-5 h-5" /> },
+      { name: "Mobile and Accessories", icon: <Smartphone className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -230,7 +321,12 @@ export const categories = [
       { name: "CA / Accountant", icon: <BarChart className="w-5 h-5" /> },
       { name: "Insurance Agent", icon: <Shield className="w-5 h-5" /> },
       { name: "Loan Agent", icon: <Landmark className="w-5 h-5" /> },
-      { name: "Investment Advisor", icon: <TrendingUp className="w-5 h-5" /> }
+      { name: "Investment Advisor", icon: <TrendingUp className="w-5 h-5" /> },
+      { name: "Angadiya", icon: <Briefcase className="w-5 h-5" /> },
+      { name: "Bank and Atm", icon: <Building2 className="w-5 h-5" /> },
+      { name: "Financer", icon: <Handshake className="w-5 h-5" /> },
+      { name: "Loan Provider", icon: <Banknote className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -243,7 +339,16 @@ export const categories = [
       { name: "Cafe", icon: <Coffee className="w-5 h-5" /> },
       { name: "Street Food", icon: <Pizza className="w-5 h-5" /> },
       { name: "Catering", icon: <Utensils className="w-5 h-5" /> },
-      { name: "Tiffin Service", icon: <Briefcase className="w-5 h-5" /> }
+      { name: "Tiffin Service", icon: <Briefcase className="w-5 h-5" /> },
+      { name: "Chocolate", icon: <Gift className="w-5 h-5" /> },
+      { name: "Cold Drinks", icon: <Snowflake className="w-5 h-5" /> },
+      { name: "Dhosa", icon: <Utensils className="w-5 h-5" /> },
+      { name: "Dry Fruits", icon: <Apple className="w-5 h-5" /> },
+      { name: "Fast Food", icon: <Pizza className="w-5 h-5" /> },
+      { name: "Grocery", icon: <ShoppingBag className="w-5 h-5" /> },
+      { name: "Ice Cream Parlour", icon: <Snowflake className="w-5 h-5" /> },
+      { name: "Juice and Soda Shop", icon: <Coffee className="w-5 h-5" /> },
+      { name: "Non Veg", icon: <Bone className="w-5 h-5" /> }
     ]
   },
   { 
@@ -252,11 +357,15 @@ export const categories = [
     icon: <BookOpen className="w-6 h-6" />, 
     color: COLORS.violet,
     subcategories: [
-      { name: "School", icon: <School className="w-5 h-5" /> },
-      { name: "Tuition Classes", icon: <Book className="w-5 h-5" /> },
-      { name: "College", icon: <GraduationCap className="w-5 h-5" /> },
+      { name: "Colleges", icon: <GraduationCap className="w-5 h-5" /> },
+      { name: "Computer Classes", icon: <Monitor className="w-5 h-5" /> },
       { name: "Library", icon: <Book className="w-5 h-5" /> },
-      { name: "Stationery", icon: <Pencil className="w-5 h-5" /> }
+      { name: "Play Schools", icon: <Baby className="w-5 h-5" /> },
+      { name: "Schools", icon: <School className="w-5 h-5" /> },
+      { name: "Stationery and Book Shop", icon: <Pencil className="w-5 h-5" /> },
+      { name: "Tuition Classes", icon: <Book className="w-5 h-5" /> },
+      { name: "Uniforms", icon: <Shirt className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -265,10 +374,15 @@ export const categories = [
     icon: <Palette className="w-6 h-6" />, 
     color: COLORS.rose,
     subcategories: [
-      { name: "Dance", icon: <Music className="w-5 h-5" /> },
-      { name: "Music", icon: <Music className="w-5 h-5" /> },
-      { name: "Art & Craft", icon: <Palette className="w-5 h-5" /> },
-      { name: "Sports Coaching", icon: <Trophy className="w-5 h-5" /> }
+      { name: "Dance Classes", icon: <Music className="w-5 h-5" /> },
+      { name: "Design Studio", icon: <Palette className="w-5 h-5" /> },
+      { name: "Driving School", icon: <Car className="w-5 h-5" /> },
+      { name: "Garba Classes", icon: <Users className="w-5 h-5" /> },
+      { name: "Hair and Makeup Academy", icon: <Sparkles className="w-5 h-5" /> },
+      { name: "Music Classes", icon: <Music className="w-5 h-5" /> },
+      { name: "Sports Academy", icon: <Trophy className="w-5 h-5" /> },
+      { name: "Stitching Classes", icon: <Scissors className="w-5 h-5" /> },
+      { name: "Other", icon: <HelpCircle className="w-5 h-5" /> }
     ]
   },
   { 
@@ -280,7 +394,10 @@ export const categories = [
       { name: "Digital Marketing", icon: <Smartphone className="w-5 h-5" /> },
       { name: "Coding/IT", icon: <Monitor className="w-5 h-5" /> },
       { name: "Management", icon: <BarChart className="w-5 h-5" /> },
-      { name: "Vocational Training", icon: <Wrench className="w-5 h-5" /> }
+      { name: "Vocational Training", icon: <Wrench className="w-5 h-5" /> },
+      { name: "Account Classes", icon: <BookOpen className="w-5 h-5" /> },
+      { name: "Import Export Classes", icon: <Truck className="w-5 h-5" /> },
+      { name: "Stock Market Classes", icon: <TrendingUp className="w-5 h-5" /> }
     ]
   },
   { 
@@ -292,7 +409,11 @@ export const categories = [
       { name: "Broker", icon: <Handshake className="w-5 h-5" /> },
       { name: "Builder", icon: <Building2 className="w-5 h-5" /> },
       { name: "Rental Agency", icon: <Key className="w-5 h-5" /> },
-      { name: "Hostel/PG", icon: <Bed className="w-5 h-5" /> }
+      { name: "Hostel/PG", icon: <Bed className="w-5 h-5" /> },
+      { name: "Architect Planner", icon: <Building className="w-5 h-5" /> },
+      { name: "Builder and Developer", icon: <Building2 className="w-5 h-5" /> },
+      { name: "Interior Designer", icon: <Palette className="w-5 h-5" /> },
+      { name: "Turnkey Project Contractor", icon: <Wrench className="w-5 h-5" /> }
     ]
   },
   { 
@@ -303,7 +424,9 @@ export const categories = [
     subcategories: [
       { name: "Tax Consultant", icon: <FileText className="w-5 h-5" /> },
       { name: "Legal Advisor", icon: <Scale className="w-5 h-5" /> },
-      { name: "Startup Consultant", icon: <Rocket className="w-5 h-5" /> }
+      { name: "Startup Consultant", icon: <Rocket className="w-5 h-5" /> },
+      { name: "Accountant", icon: <BarChart className="w-5 h-5" /> },
+      { name: "CA and CS", icon: <Briefcase className="w-5 h-5" /> }
     ]
   },
   { 
