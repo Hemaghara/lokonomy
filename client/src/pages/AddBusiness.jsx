@@ -204,16 +204,16 @@ const AddBusiness = () => {
     photos: [],
     contactNumber: "",
     email: "",
-    website: "",
+    website: "https://",
     address: "",
     state: "Gujarat",
     district: "",
     taluka: "",
     pincode: "",
-    facebookLink: "",
-    instagramLink: "",
-    youtubeLink: "",
-    twitterLink: "",
+    facebookLink: "https://",
+    instagramLink: "https://",
+    youtubeLink: "https://",
+    twitterLink: "https://",
     businessHours: initialBusinessHours,
   });
 
@@ -335,6 +335,11 @@ const AddBusiness = () => {
     try {
       const payload = {
         ...formData,
+        website: formData.website?.trim() === "https://" ? "" : formData.website,
+        facebookLink: formData.facebookLink?.trim() === "https://" ? "" : formData.facebookLink,
+        instagramLink: formData.instagramLink?.trim() === "https://" ? "" : formData.instagramLink,
+        youtubeLink: formData.youtubeLink?.trim() === "https://" ? "" : formData.youtubeLink,
+        twitterLink: formData.twitterLink?.trim() === "https://" ? "" : formData.twitterLink,
         latitude: shopLocation.lat,
         longitude: shopLocation.lng,
         locationAddress: shopLocation.address || "",
@@ -588,9 +593,9 @@ const AddBusiness = () => {
                   <HiOutlineGlobeAlt className="text-violet-400" /> Website URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   name="website"
-                  placeholder="https://www.yoursite.com"
+                  placeholder="www.yoursite.com"
                   className={inputCls}
                   value={formData.website}
                   onChange={handleChange}

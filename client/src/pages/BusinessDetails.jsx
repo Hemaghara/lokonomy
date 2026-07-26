@@ -241,6 +241,12 @@ const BusinessDetails = () => {
     return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
   };
 
+  const formatUrl = (url) => {
+    if (!url) return "#";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `https://${url}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-10 sm:pb-20">
       <style>{`
@@ -383,7 +389,7 @@ const BusinessDetails = () => {
               )}
               {business.website && (
                 <a
-                  href={business.website}
+                  href={formatUrl(business.website)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all sm:w-44"
@@ -524,7 +530,7 @@ const BusinessDetails = () => {
                         <div className="flex flex-wrap gap-2">
                           {business.facebookLink && (
                             <a
-                              href={business.facebookLink}
+                              href={formatUrl(business.facebookLink)}
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-semibold transition-all"
@@ -534,7 +540,7 @@ const BusinessDetails = () => {
                           )}
                           {business.instagramLink && (
                             <a
-                              href={business.instagramLink}
+                              href={formatUrl(business.instagramLink)}
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center gap-1.5 px-3 py-2 bg-pink-500/10 border border-pink-500/20 text-pink-400 hover:bg-pink-600 hover:text-white rounded-xl text-xs font-semibold transition-all"
@@ -544,7 +550,7 @@ const BusinessDetails = () => {
                           )}
                           {business.youtubeLink && (
                             <a
-                              href={business.youtubeLink}
+                              href={formatUrl(business.youtubeLink)}
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white rounded-xl text-xs font-semibold transition-all"
@@ -554,7 +560,7 @@ const BusinessDetails = () => {
                           )}
                           {business.twitterLink && (
                             <a
-                              href={business.twitterLink}
+                              href={formatUrl(business.twitterLink)}
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center gap-1.5 px-3 py-2 bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-600 hover:text-white rounded-xl text-xs font-semibold transition-all"

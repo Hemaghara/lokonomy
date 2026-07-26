@@ -264,16 +264,16 @@ const EditBusiness = () => {
           photos: biz.photos || [],
           contactNumber: biz.contactNumber || "",
           email: biz.email || "",
-          website: biz.website || "",
+          website: biz.website || "https://",
           address: biz.address || "",
           state: biz.state || "Gujarat",
           district: biz.district || "",
           taluka: biz.taluka || "",
           pincode: biz.pincode || "",
-          facebookLink: biz.facebookLink || "",
-          instagramLink: biz.instagramLink || "",
-          youtubeLink: biz.youtubeLink || "",
-          twitterLink: biz.twitterLink || "",
+          facebookLink: biz.facebookLink || "https://",
+          instagramLink: biz.instagramLink || "https://",
+          youtubeLink: biz.youtubeLink || "https://",
+          twitterLink: biz.twitterLink || "https://",
           businessHours: hours,
         });
 
@@ -406,6 +406,11 @@ const EditBusiness = () => {
     try {
       const payload = {
         ...formData,
+        website: formData.website?.trim() === "https://" ? "" : formData.website,
+        facebookLink: formData.facebookLink?.trim() === "https://" ? "" : formData.facebookLink,
+        instagramLink: formData.instagramLink?.trim() === "https://" ? "" : formData.instagramLink,
+        youtubeLink: formData.youtubeLink?.trim() === "https://" ? "" : formData.youtubeLink,
+        twitterLink: formData.twitterLink?.trim() === "https://" ? "" : formData.twitterLink,
         latitude: shopLocation.lat,
         longitude: shopLocation.lng,
         locationAddress: shopLocation.address || "",
@@ -665,9 +670,9 @@ const EditBusiness = () => {
                   <HiOutlineGlobeAlt className="text-violet-400" /> Website URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   name="website"
-                  placeholder="https://www.yoursite.com"
+                  placeholder="www.yoursite.com"
                   className={inputCls}
                   value={formData.website}
                   onChange={handleChange}
