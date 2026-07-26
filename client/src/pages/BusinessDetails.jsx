@@ -25,6 +25,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineArrowTopRightOnSquare,
   HiOutlineChartBar,
+  HiOutlineArrowRight,
 } from "react-icons/hi2";
 import BusinessAnalytics from "../components/growth/BusinessAnalytics";
 import CouponManager from "../components/growth/CouponManager";
@@ -575,14 +576,14 @@ const BusinessDetails = () => {
                     {business.photos?.length > 0 && (
                       <div className="mt-5 pt-5 border-t border-[#1f2a3d]">
                         <div className="flex items-center justify-between mb-3">
-                          <p className="text-[10px] text-slate-00 font-semibold uppercase tracking-widest">
+                          <p className="text-[10px] text-slate-300 font-semibold uppercase tracking-widest">
                             Gallery Preview
                           </p>
                           <button
                             onClick={() => setActiveTab("gallery")}
-                            className="text-[10px] text-violet-400 hover:text-violet-300 font-semibold transition-colors"
+                            className="group flex items-center cursor-pointer gap-1.5 px-3 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 hover:text-violet-300 border border-violet-500/20 hover:border-violet-500/40 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95"
                           >
-                            View All →
+                            View All <HiOutlineArrowRight className="text-[13px] opacity-80 group-hover:translate-x-0.5 transition-transform" />
                           </button>
                         </div>
                         <div className="no-sb flex gap-2 overflow-x-auto pb-1">
