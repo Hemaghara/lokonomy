@@ -365,7 +365,7 @@ const BusinessDetails = () => {
             </div>
             <div className="grid grid-cols-2 sm:flex sm:flex-col gap-3 w-full sm:w-auto sm:shrink-0">
               <a
-                href={`tel:${business.contactNumber}`}
+                href={`tel:+91${business?.contactNumber || ""}`}
                 className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 active:scale-[.98] text-white text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30 sm:w-44"
               >
                 <HiOutlinePhone className="text-sm" /> Call Now
@@ -394,9 +394,11 @@ const BusinessDetails = () => {
               <WishlistButton
                 type="business"
                 id={business._id}
-                className="flex items-center justify-center gap-2 sm:w-44"
+                className="flex items-center justify-center gap-2 px-4 py-3 sm:w-44 active:scale-[.98]"
                 aria-label="Add to wishlist"
-              />
+              >
+                Wishlist
+              </WishlistButton>
             </div>
           </div>
         </motion.div>

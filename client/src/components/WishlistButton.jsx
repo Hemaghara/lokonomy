@@ -6,7 +6,7 @@ import { wishlistService } from "../services";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
 
-const WishlistButton = ({ type, id, className = "", onToggle }) => {
+const WishlistButton = ({ type, id, className = "", onToggle, children }) => {
   const { user } = useUser();
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,6 +27,7 @@ const WishlistButton = ({ type, id, className = "", onToggle }) => {
   }, [user, id, checkStatus]);
 
   const toggleWishlist = async (e) => {
+    e.preventDefault();
     e.stopPropagation();
     if (!user) {
       toast.error("Please login to save items");
@@ -54,7 +55,9 @@ const WishlistButton = ({ type, id, className = "", onToggle }) => {
       onClick={toggleWishlist}
       disabled={loading}
       aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
-      className={`p-2 rounded-xl transition-all duration-300 ${
+      className={`${
+        !className.includes("p-") && !className.includes("px-") && !className.includes("py-") ? "p-2" : ""
+      } rounded-xl transition-all duration-300 ${
         isSaved
           ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 shadow-lg shadow-rose-500/10"
           : "bg-[#0d1424]/80 text-slate-400 border border-[#1f2a3d] backdrop-blur-md hover:text-rose-400"
@@ -75,6 +78,7 @@ const WishlistButton = ({ type, id, className = "", onToggle }) => {
           )}
         </motion.div>
       </AnimatePresence>
+      {children && <span className="font-semibold text-xs">{children}</span>}
     </motion.button>
   );
 };

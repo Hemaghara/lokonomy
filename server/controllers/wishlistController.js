@@ -33,8 +33,8 @@ exports.toggleWishlist = async (req, res) => {
           .json({ success: false, message: "Invalid type" });
     }
 
-    const isSavedAlready = user[field].some(
-      (savedId) => savedId.toString() === id,
+    const isSavedAlready = user[field]?.some(
+      (savedId) => savedId && savedId.toString() === id,
     );
     let isSaved;
 
@@ -122,7 +122,7 @@ exports.checkWishlistStatus = async (req, res) => {
           .json({ success: false, message: "Invalid type" });
     }
 
-    const isSaved = user[field].some((savedId) => savedId.toString() === id);
+    const isSaved = user[field]?.some((savedId) => savedId && savedId.toString() === id);
     res.json({ success: true, isSaved });
   } catch (err) {
     logger.error(
