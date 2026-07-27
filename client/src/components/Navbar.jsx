@@ -273,7 +273,7 @@ const Navbar = () => {
             exit={{ height: 0, opacity: 0 }}
             className="fixed top-0 left-0 right-0 z-70 bg-linear-to-r from-rose-600 via-rose-500 to-rose-600 border-b border-rose-400/30 overflow-hidden"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center justify-between">
+            <div className="w-[96%] max-w-none mx-auto px-2 sm:px-4 lg:px-6 h-10 flex items-center justify-between">
               <div className="flex items-center gap-2 text-white">
                 <UserCheck className="w-4 h-4 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-widest">
@@ -294,11 +294,11 @@ const Navbar = () => {
       <nav
         className={`fixed left-0 right-0 z-60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${impersonating ? "top-10" : "top-0"
           } ${scrolled || isOpen
-            ? "bg-[#050508]/85 backdrop-blur-3xl border-b border-white/8 py-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
+            ? "bg-gradient-to-r from-[#0d131f]/95 via-[#050508]/95 to-[#111827]/95 backdrop-blur-3xl border-b border-violet-500/20 py-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.7)]"
             : "bg-transparent py-4 md:py-8"
           }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-14 md:h-16">
+        <div className="w-[96%] max-w-none mx-auto px-2 sm:px-4 lg:px-6 flex items-center h-14 md:h-16">
           <Link
             to="/home"
             className="flex items-center gap-2.5 group shrink-0 mr-12 h-10"
