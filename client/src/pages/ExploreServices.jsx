@@ -24,7 +24,29 @@ const ExploreServices = () => {
   const [trendingLoading, setTrendingLoading] = useState(true);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
 
-  const displayedCategories = categories.slice(0, 6);
+  const [gridCols, setGridCols] = useState(3);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w >= 7680) setGridCols(16);
+      else if (w >= 5120) setGridCols(12);
+      else if (w >= 3840) setGridCols(10);
+      else if (w >= 3200) setGridCols(8);
+      else if (w >= 2560) setGridCols(7);
+      else if (w >= 1920) setGridCols(6);
+      else if (w >= 1440) setGridCols(5);
+      else if (w >= 1200) setGridCols(4);
+      else if (w >= 820) setGridCols(3);
+      else if (w >= 540) setGridCols(2);
+      else setGridCols(1);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const displayedCategories = categories.slice(0, Math.max(6, gridCols * 2));
 
   useEffect(() => {
     const fetchTrending = async () => {
@@ -44,7 +66,7 @@ const ExploreServices = () => {
         }
 
         const response = await businessService.getBusinesses(params);
-        setTrendingListings(response.data.slice(0, 6));
+        setTrendingListings(response.data);
       } catch (err) {
         console.error("Error fetching trending:", err);
       } finally {
@@ -170,7 +192,7 @@ const ExploreServices = () => {
 
           {trendingLoading ? (
             <div className="grid grid-cols-1 min-[540px]:grid-cols-2 min-[820px]:grid-cols-3 min-[1200px]:grid-cols-4 min-[1440px]:grid-cols-5 min-[1920px]:grid-cols-6 min-[2560px]:grid-cols-7 min-[3200px]:grid-cols-8 min-[3840px]:grid-cols-10 min-[5120px]:grid-cols-12 min-[7680px]:grid-cols-16 gap-4 sm:gap-6">
-              {[...Array(3)].map((_, i) => (
+              {[...Array(Math.max(3, gridCols))].map((_, i) => (
                 <div key={i} className="bg-[#111827] border border-[#1f2a3d] h-40 rounded-2xl animate-pulse opacity-40" />
               ))}
             </div>
@@ -180,7 +202,7 @@ const ExploreServices = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 min-[540px]:grid-cols-2 min-[820px]:grid-cols-3 min-[1200px]:grid-cols-4 min-[1440px]:grid-cols-5 min-[1920px]:grid-cols-6 min-[2560px]:grid-cols-7 min-[3200px]:grid-cols-8 min-[3840px]:grid-cols-10 min-[5120px]:grid-cols-12 min-[7680px]:grid-cols-16 gap-4 sm:gap-6">
-              {trendingListings.map((biz) => (
+              {trendingListings.slice(0, Math.max(3, gridCols)).map((biz) => (
                 <motion.div
                   key={biz._id}
                   whileHover={{ y: -4 }}

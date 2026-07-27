@@ -671,7 +671,7 @@ const Navbar = () => {
               </div>
 
               {user && (
-                <div className="grid grid-cols-2 gap-3 mb-20">
+                <div className="grid grid-cols-1 min-[320px]:grid-cols-2 gap-3 mb-20">
                   {[
                     {
                       name: "My Orders",
