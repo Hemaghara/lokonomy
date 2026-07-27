@@ -13,7 +13,7 @@ import {
   HiOutlineXMark,
 } from "react-icons/hi2";
 import { useState } from "react";
-import { FaSearch } from "react-icons/fa";
+
 const SubCategories = () => {
   const { categoryName } = useParams();
   const navigate = useNavigate();
@@ -68,19 +68,21 @@ const SubCategories = () => {
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white hover:text-slate-300 text-xs font-medium transition-colors mb-6"
+          className="group flex items-center gap-2 w-max text-slate-300 hover:text-white text-xs font-medium transition-all duration-300 mt-4 sm:mt-6 mb-6 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 backdrop-blur-sm hover:shadow-[0_4px_20px_rgba(255,255,255,0.05)]"
         >
-          <HiOutlineArrowLeft className="text-sm" /> Back to Directory
+          <HiOutlineArrowLeft className="text-sm group-hover:-translate-x-1 transition-transform" /> Back to Directory
         </motion.button>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-[#111827] border border-[#1f2a3d] rounded-2xl p-6 mb-5"
+          className="relative bg-gradient-to-br from-[#111827] to-[#0d131f] border border-[#1f2a3d] rounded-3xl p-6 sm:p-8 mb-8 overflow-hidden shadow-xl"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center text-3xl shrink-0 ${categoryData.color ? `${categoryData.color.bg} ${categoryData.color.text} border-transparent` : 'bg-violet-500/10 border-violet-500/20 text-violet-400'}`}>
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border shadow-lg flex items-center justify-center text-3xl sm:text-4xl shrink-0 ${categoryData.color ? `${categoryData.color.bg} ${categoryData.color.text} border-transparent` : 'bg-violet-500/10 border-violet-500/20 text-violet-400'}`}>
                 {categoryData.icon}
               </div>
               <div>
@@ -156,8 +158,7 @@ const SubCategories = () => {
             ))}
           </div>
         ) : (
-          <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-20 text-center">
-            <div className="text-4xl mb-3 opacity-20"><FaSearch/></div>
+          <div className="border-2 border-dashed border-[#1f2a3d] rounded-2xl py-20 text-center flex flex-col items-center justify-center">
             <p className="text-slate-500 text-sm font-semibold mb-4">
               No sub-categories found for "
               <span className="text-slate-400">{search}</span>"
