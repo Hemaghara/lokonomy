@@ -212,9 +212,12 @@ const ExploreServices = () => {
                     }
                     navigate(`/business/${biz._id}`);
                   }}
-                  className="bg-[#111827] border border-[#1f2a3d] p-4 rounded-2xl hover:border-violet-500/40 hover:bg-[#131d2e] transition-all cursor-pointer flex flex-col justify-between"
+                  className="bg-gradient-to-br from-[#111827] to-[#0d131f] border border-[#1f2a3d] p-4 rounded-2xl hover:border-violet-500/30 hover:shadow-[0_8px_30px_rgba(139,92,246,0.12)] transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden group"
                 >
-                  <div className="flex gap-3">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl group-hover:bg-violet-500/10 transition-colors" />
+                  <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 w-0 group-hover:w-full transition-all duration-500" />
+                  
+                  <div className="flex gap-3 relative z-10">
                     <div className="w-12 h-12 rounded-xl bg-[#0d1424] border border-[#1f2a3d] overflow-hidden flex items-center justify-center shrink-0">
                       {biz.logo ? (
                         <img src={biz.logo} alt={biz.businessName} className="w-full h-full object-cover" />
@@ -239,7 +242,7 @@ const ExploreServices = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1f2a3d]/50">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1f2a3d]/50 relative z-10">
                     <div className="flex items-center gap-1 text-[10px] text-slate-300">
                       <HiOutlineMapPin className="text-rose-400" />
                       <span className="truncate max-w-40">{biz.locationAddress || biz.address || "Local"}</span>
