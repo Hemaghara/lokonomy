@@ -63,7 +63,7 @@ const SubCategories = () => {
         .sc * { font-family: 'DM Sans', sans-serif; }
       `}</style>
 
-      <div className="sc max-w-6xl mx-auto px-4">
+      <div className="sc w-[96%] 3xl:w-[98%] mx-auto px-2 sm:px-4">
         <motion.button
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -127,7 +127,7 @@ const SubCategories = () => {
         </motion.div>
 
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 min-[540px]:grid-cols-3 min-[820px]:grid-cols-4 min-[1024px]:grid-cols-5 min-[1200px]:grid-cols-6 min-[1440px]:grid-cols-7 min-[1920px]:grid-cols-8 min-[2560px]:grid-cols-10 min-[3200px]:grid-cols-12 min-[3840px]:grid-cols-16 min-[5120px]:grid-cols-20 min-[7680px]:grid-cols-30 gap-4 sm:gap-6">
             {filtered.map((sub, index) => (
               <motion.div
                 key={sub.name}
@@ -135,19 +135,21 @@ const SubCategories = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.04, duration: 0.25 }}
                 onClick={() => handleSubClick(sub.name)}
-                className="group relative bg-[#111827] border border-[#1f2a3d] rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer
-                           hover:border-violet-500/40 hover:bg-[#131d2e] transition-all duration-300 overflow-hidden"
+                className="group relative bg-gradient-to-br from-[#111827] to-[#0d131f] border border-[#1f2a3d] rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer
+                           hover:border-violet-500/30 hover:shadow-[0_8px_30px_rgba(139,92,246,0.12)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
               >
-                <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
-                <div className={`w-12 h-12 rounded-xl border flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-all duration-300 ${categoryData.color ? `${categoryData.color.bg} ${categoryData.color.text} border-transparent ${categoryData.color.hover}` : 'bg-[#0d1424] border-[#1f2a3d] group-hover:border-violet-500/30 group-hover:bg-violet-500/10 text-slate-400'}`}>
+                <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 rounded-full blur-3xl group-hover:bg-violet-500/10 transition-colors" />
+                <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 w-0 group-hover:w-full transition-all duration-500" />
+                
+                <div className={`relative z-10 w-12 h-12 rounded-xl border flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-all duration-300 ${categoryData.color ? `${categoryData.color.bg} ${categoryData.color.text} border-transparent ${categoryData.color.hover}` : 'bg-[#0d1424] border-[#1f2a3d] group-hover:border-violet-500/30 group-hover:bg-violet-500/10 text-slate-400'}`}>
                   {sub.icon}
                 </div>
 
-                <h3 className="text-slate-300 font-semibold text-xs leading-snug group-hover:text-white transition-colors duration-300 mb-2">
+                <h3 className="relative z-10 text-slate-300 font-semibold text-xs leading-snug group-hover:text-white transition-colors duration-300 mb-2">
                   {sub.name}
                 </h3>
 
-                <div className="w-6 h-6 rounded-lg bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center mt-auto opacity-0 group-hover:opacity-100 group-hover:border-violet-500/30 transition-all duration-300">
+                <div className="relative z-10 w-6 h-6 rounded-lg bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center mt-auto opacity-0 group-hover:opacity-100 group-hover:border-violet-500/30 transition-all duration-300">
                   <HiOutlineArrowRight className="text-violet-400 text-xs" />
                 </div>
               </motion.div>
