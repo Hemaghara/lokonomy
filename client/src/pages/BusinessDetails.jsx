@@ -256,7 +256,7 @@ const BusinessDetails = () => {
         .bd select option { background: #111827; color: #e2e8f0; }
       `}</style>
 
-      <div className="bd max-w-6xl mx-auto px-4">
+      <div className="bd w-[96%] max-w-none mx-auto px-2 sm:px-4 lg:px-6">
         <Link to="/explore" className="inline-block">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-white hover:text-slate-300 text-xs font-medium transition-colors">
@@ -278,104 +278,117 @@ const BusinessDetails = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className={card + " p-6 mb-5"}
+          className="relative bg-[#0f141e]/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 sm:p-8 md:p-10 mb-6 sm:mb-8 overflow-hidden shadow-2xl shadow-primary/5"
         >
-          <div className="flex flex-col sm:flex-row gap-5 items-start">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#0d1424] border border-[#1f2a3d] overflow-hidden shrink-0 flex items-center justify-center">
+          {/* Subtle Banner Background Gradient */}
+          <div className="absolute top-0 left-0 right-0 h-32 sm:h-40 bg-gradient-to-r from-primary/10 via-violet-500/10 to-transparent pointer-events-none border-b border-white/5" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row gap-6 lg:gap-10 items-start lg:items-center">
+            {/* Logo */}
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-[1.5rem] bg-[#0a0f1a] border-4 border-[#0f141e] shadow-xl overflow-hidden shrink-0 flex items-center justify-center -mt-2 sm:-mt-4 lg:mt-0 lg:-ml-2 z-20">
               {business.logo ? (
                 <img
                   src={business.logo}
                   alt={business.businessName}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                 />
               ) : (
-                <HiOutlineBuildingStorefront className="text-4xl text-slate-700" />
+                <HiOutlineBuildingStorefront className="text-5xl sm:text-6xl text-slate-700" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h1 className="text-white font-bold text-xl sm:text-2xl leading-snug">
+
+            {/* Info Section */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center lg:mt-4">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <h1 className="text-white font-black text-3xl sm:text-4xl tracking-tight leading-snug truncate max-w-full">
                   {business.businessName}
                 </h1>
                 {business.verified && (
-                  <span className="flex items-center gap-1 px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[10px] font-semibold">
+                  <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-xs font-bold shadow-inner shrink-0">
                     <HiOutlineCheckBadge className="text-sm" /> Verified
                   </span>
                 )}
                 {business.ownerPlan === "platinum" && (
-                  <span className="flex items-center gap-1 px-2.5 py-0.5 bg-violet-500/20 border border-violet-500/40 text-violet-300 rounded-lg text-[10px] font-semibold shadow-lg shadow-violet-950/20">
+                  <span className="flex items-center gap-1.5 px-3 py-1 bg-violet-500/10 border border-violet-500/30 text-violet-300 rounded-lg text-xs font-bold shadow-inner shrink-0">
                     💎 Lokonomy Guarantee
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition-all ${
+
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border shadow-inner transition-colors ${
                   business.isOpenNow 
                     ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
                     : "bg-slate-500/10 border-slate-500/20 text-slate-400"
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${business.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-slate-500"}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${business.isOpenNow ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-slate-500"}`} />
                   {business.isOpenNow ? "Open Now" : "Closed"}
                 </span>
                 
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full text-[11px] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-lg text-[11px] font-bold shadow-inner">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse shadow-[0_0_8px_rgba(167,139,250,0.8)]" />
                   {liveStatus.activeVisitors} online
                 </span>
 
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition-all ${
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border shadow-inner transition-colors ${
                   liveStatus.isOwnerOnline 
                     ? "bg-sky-500/10 border-sky-500/20 text-sky-400" 
                     : "bg-slate-500/10 border-slate-500/20 text-slate-400"
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${liveStatus.isOwnerOnline ? "bg-sky-500 animate-pulse" : "bg-slate-500"}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${liveStatus.isOwnerOnline ? "bg-sky-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.8)]" : "bg-slate-500"}`} />
                   {liveStatus.isOwnerOnline ? "Owner Online" : "Owner Offline"}
                 </span>
               </div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-0.5">
+
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-1 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 shadow-sm">
                   {[...Array(5)].map((_, i) => (
                     <HiStar
                       key={i}
                       className={`text-sm ${i < Math.round(business.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
                     />
                   ))}
+                  <span className="text-amber-400 font-bold text-sm ml-1">
+                    {business.rating?.toFixed(1) || "0.0"}
+                  </span>
                 </div>
-                <span className="text-amber-400 font-semibold text-sm">
-                  {business.rating?.toFixed(1) || "0.0"}
-                </span>
-                <span className="text-white text-xs">
+                <span className="text-slate-400 text-sm font-medium">
                   ({business.reviews?.length || 0} reviews)
                 </span>
               </div>
 
-              <p className="text-slate-400 text-sm leading-relaxed mb-3 max-w-2xl">
+              <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6 max-w-4xl line-clamp-3 lg:line-clamp-none">
                 {business.description ||
                   "Professional service provider dedicated to excellence in our community."}
               </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="flex items-center gap-1 px-3 py-1 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-lg text-[11px] font-semibold">
-                  <HiOutlineTag className="text-xs" />
+
+              <div className="flex flex-wrap gap-2 lg:gap-3">
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/5 border border-violet-500/20 text-violet-300 rounded-xl text-xs font-bold backdrop-blur-sm">
+                  <HiOutlineTag className="text-sm" />
                   {business.mainCategory}
                 </span>
-                <span className="px-3 py-1 bg-[#0d1424] border border-[#1f2a3d] text-white rounded-lg text-[11px] font-semibold">
+                <span className="px-3 py-1.5 bg-white/5 border border-white/10 text-white rounded-xl text-xs font-bold backdrop-blur-sm hover:bg-white/10 transition-colors">
                   {business.subCategory}
                 </span>
-                <span className="flex items-center gap-1 px-3 py-1 bg-[#0d1424] border border-[#1f2a3d] text-white rounded-lg text-[11px] font-semibold">
-                  <HiOutlineMapPin className="text-rose-400 text-xs" />
-                  {business.locationAddress ||
-                    business.address ||
-                    business.state ||
-                    "India"}
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 text-white rounded-xl text-xs font-bold backdrop-blur-sm hover:bg-white/10 transition-colors">
+                  <HiOutlineMapPin className="text-rose-400 text-sm" />
+                  <span className="truncate max-w-[200px] sm:max-w-none">
+                    {business.locationAddress ||
+                      business.address ||
+                      business.state ||
+                      "India"}
+                  </span>
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:flex sm:flex-col gap-3 w-full sm:w-auto sm:shrink-0">
+
+            {/* Actions / CTA Section */}
+            <div className="grid grid-cols-2 lg:flex lg:flex-col gap-3 w-full lg:w-48 shrink-0 lg:mt-8 relative z-20">
               <a
                 href={`tel:+91${business?.contactNumber || ""}`}
-                className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 active:scale-[.98] text-white text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30 sm:w-44"
+                className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 active:scale-95 text-white text-xs sm:text-sm font-bold px-4 py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] w-full"
               >
-                <HiOutlinePhone className="text-sm" /> Call Now
+                <HiOutlinePhone className="text-lg" /> Call Now
               </a>
               {user?.id !== business.ownerId && (
                 <button
@@ -383,9 +396,9 @@ const BusinessDetails = () => {
                     if (!user) return navigate("/login");
                     setShowChat(true);
                   }}
-                  className="flex items-center justify-center gap-2 bg-linear-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-[.98] text-white text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-violet-900/30 sm:w-44"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 active:scale-95 text-white text-xs sm:text-sm font-bold px-4 py-3.5 rounded-xl transition-all shadow-lg w-full"
                 >
-                  <HiOutlineChatBubbleLeftRight className="text-sm" /> Message
+                  <HiOutlineChatBubbleLeftRight className="text-lg" /> Message
                 </button>
               )}
               {business.website && (
@@ -393,15 +406,15 @@ const BusinessDetails = () => {
                   href={formatUrl(business.website)}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#0d1424] hover:bg-[#131d2e] border border-[#1f2a3d] hover:border-violet-500/30 hover:text-violet-400 text-slate-400 text-[11px] sm:text-xs font-semibold px-4 py-3 rounded-xl transition-all sm:w-44"
+                  className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm font-bold px-4 py-3.5 rounded-xl transition-all active:scale-95 w-full"
                 >
-                  <HiOutlineGlobeAlt className="text-sm" /> Website
+                  <HiOutlineGlobeAlt className="text-lg" /> Website
                 </a>
               )}
               <WishlistButton
                 type="business"
                 id={business._id}
-                className="flex items-center justify-center gap-2 px-4 py-3 sm:w-44 active:scale-[.98]"
+                className="flex items-center justify-center gap-2 px-4 py-3.5 w-full active:scale-95 border border-white/10"
                 aria-label="Add to wishlist"
               >
                 Wishlist
@@ -418,20 +431,20 @@ const BusinessDetails = () => {
           <Highlights ownerId={business.ownerId} />
         </motion.div>
 
-        <div className="flex items-center gap-1 bg-[#111827] border border-[#1f2a3d] rounded-2xl p-1 mb-5 overflow-x-auto no-sb sticky top-20 z-10 backdrop-blur-md bg-opacity-80">
+        <div className="flex items-center gap-2 bg-[#0f141e]/90 border border-white/10 rounded-[1.5rem] p-2 mb-6 sm:mb-8 overflow-x-auto no-sb sticky top-20 z-10 backdrop-blur-2xl shadow-2xl">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-none sm:flex-1 flex items-center justify-center gap-2 py-2.5 px-4 sm:px-2 rounded-xl text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap
+              className={`flex-none sm:flex-1 flex items-center justify-center gap-2.5 py-3.5 px-6 sm:px-3 rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-300 whitespace-nowrap outline-none
                 ${
                   activeTab === tab.id
-                    ? "bg-violet-600 text-white shadow-md shadow-violet-900/30"
-                    : "text-slate-300 hover:text-slate-300"
+                    ? "bg-primary text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] scale-[1.02]"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
                 }`}
             >
-              <span className="text-base">{tab.icon}</span>
-              {tab.label}
+              <span className={`text-[17px] transition-transform duration-300 ${activeTab === tab.id ? "scale-110" : ""}`}>{tab.icon}</span>
+              <span className="tracking-wide">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -444,28 +457,26 @@ const BusinessDetails = () => {
             transition={{ duration: 0.2 }}
           >
             {activeTab === "info" && (
-              <div className="grid lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2 space-y-5">
-                  <div className={card + " p-5"}>
-                    <h3 className="flex items-center gap-2 text-slate-200 font-semibold text-sm mb-4 pb-4 border-b border-[#1f2a3d]">
-                      <HiOutlineInformationCircle className="text-violet-400 text-base" />{" "}
-                      Business Information
+              <div className="grid lg:grid-cols-3 min-[2560px]:grid-cols-4 min-[3840px]:grid-cols-5 min-[5120px]:grid-cols-6 min-[7680px]:grid-cols-8 gap-5 xl:gap-8">
+                <div className="lg:col-span-2 min-[2560px]:col-span-3 min-[3840px]:col-span-4 min-[5120px]:col-span-5 min-[7680px]:col-span-7 space-y-6">
+                  <div className="bg-[#0f141e]/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 sm:p-8 shadow-2xl">
+                    <h3 className="flex items-center gap-3 text-white font-bold text-lg mb-6 pb-5 border-b border-white/10">
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                        <HiOutlineInformationCircle className="text-primary text-xl" />
+                      </div>
+                      Business Details
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {[
                         {
                           label: "Owner",
                           value: business.ownerName,
-                          icon: (
-                            <HiOutlineUser className="text-violet-400 text-sm" />
-                          ),
+                          icon: <HiOutlineUser className="text-lg transition-colors" />,
                         },
                         {
                           label: "Email",
                           value: business.email || "N/A",
-                          icon: (
-                            <HiOutlineEnvelope className="text-violet-400 text-sm" />
-                          ),
+                          icon: <HiOutlineEnvelope className="text-lg transition-colors" />,
                         },
                         {
                           label: "Address",
@@ -473,47 +484,45 @@ const BusinessDetails = () => {
                             business.locationAddress ||
                             business.address ||
                             "Not specified",
-                          icon: (
-                            <HiOutlineMapPin className="text-rose-400 text-sm" />
-                          ),
+                          icon: <HiOutlineMapPin className="text-lg transition-colors" />,
                         },
                         {
                           label: "State",
                           value: business.state || "India",
-                          icon: (
-                            <HiOutlineMapPin className="text-rose-400 text-sm" />
-                          ),
+                          icon: <HiOutlineMapPin className="text-lg transition-colors" />,
                         },
                         {
                           label: "Pincode",
                           value: business.pincode || "N/A",
-                          icon: (
-                            <HiOutlineMapPin className="text-rose-400 text-sm" />
-                          ),
+                          icon: <HiOutlineMapPin className="text-lg transition-colors" />,
                         },
                         {
                           label: "Total Visits",
                           value: `${business.visits ?? 0} visitors`,
-                          icon: (
-                            <HiOutlineArrowTopRightOnSquare className="text-violet-400 text-sm" />
-                          ),
+                          icon: <HiOutlineArrowTopRightOnSquare className="text-lg transition-colors" />,
                         },
                       ].map((item, i) => (
                         <div
                           key={i}
-                          className="group bg-[#0d1424] border border-[#1f2a3d] rounded-xl p-3.5 hover:border-violet-500/30 hover:bg-[#0f1929] transition-all duration-300 relative overflow-hidden cursor-default"
+                          className="group bg-white/5 border border-white/5 rounded-2xl p-4 hover:border-primary/40 hover:bg-white/10 transition-all duration-500 relative overflow-hidden cursor-default flex flex-col justify-center"
                         >
-                          <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-violet-400 group-hover:w-full transition-all duration-500 rounded-full" />
-                          <p className="flex items-center gap-1.5 text-[10px] text-slate-600 group-hover:text-violet-500/60 font-semibold uppercase tracking-widest mb-1 shadow-xs transition-colors duration-300">
-                            {item.icon}
-                            {item.label}
-                          </p>
-                          <p
-                            className="text-slate-200 font-semibold text-sm group-hover:text-white transition-colors duration-300 truncate"
-                            title={item.value}
-                          >
-                            {item.value}
-                          </p>
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                          <div className="flex items-center gap-3.5 relative z-10">
+                            <div className="w-11 h-11 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center shrink-0 shadow-inner text-slate-400 group-hover:text-primary group-hover:scale-110 group-hover:border-primary/30 group-hover:bg-primary/10 transition-all duration-500">
+                              {item.icon}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.15em] mb-0.5 group-hover:text-primary/80 transition-colors duration-500">
+                                {item.label}
+                              </span>
+                              <span
+                                className="text-slate-200 font-semibold text-sm truncate group-hover:text-white transition-colors duration-500"
+                                title={item.value}
+                              >
+                                {item.value}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
