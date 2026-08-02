@@ -100,12 +100,6 @@ const Stories = () => {
       socket.off("story_updated", handleStoryUpdated);
     };
   }, [district]);
-  useEffect(() => {
-    setPage(1);
-    setStories([]);
-    fetchStories(1);
-  }, [district, filter, searchQuery, radius, user?.latitude, sortBy, fetchStories]);
-
   const fetchStories = useCallback(async (pageNum = 1) => {
     setLoading(true);
     try {
@@ -137,6 +131,12 @@ const Stories = () => {
       setLoading(false);
     }
   }, [filter, searchQuery, sortBy, district, user?.latitude, user?.longitude, radius]);
+
+  useEffect(() => {
+    setPage(1);
+    setStories([]);
+    fetchStories(1);
+  }, [district, filter, searchQuery, radius, user?.latitude, sortBy, fetchStories]);
 
   const handleLike = async (e, storyId) => {
     e.stopPropagation();
