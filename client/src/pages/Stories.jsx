@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { storyService } from "../services";
 import { useLocation } from "../context/LocationContext";
