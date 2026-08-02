@@ -131,7 +131,7 @@ const Services = () => {
     <div className="min-h-screen bg-dark-bg pt-32 pb-24 relative overflow-hidden">
       <div className="fixed top-0 right-0 w-lg h-lg bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-      <div className="container relative px-6">
+      <div className="w-[96%] max-w-none mx-auto relative px-2 sm:px-4 lg:px-6">
         <div className="flex flex-wrap items-center gap-3 mb-10 text-[11px] font-bold uppercase tracking-[0.15em]">
           <Link
             to="/explore"
@@ -368,7 +368,7 @@ const Services = () => {
           {viewMode === "list" && (
             <>
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 min-[2560px]:grid-cols-8 min-[3200px]:grid-cols-10 min-[3840px]:grid-cols-12 min-[5120px]:grid-cols-16 min-[7680px]:grid-cols-24 gap-6 xl:gap-8">
                   {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
@@ -413,14 +413,14 @@ const Services = () => {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 min-[2560px]:grid-cols-8 min-[3200px]:grid-cols-10 min-[3840px]:grid-cols-12 min-[5120px]:grid-cols-16 min-[7680px]:grid-cols-24 gap-6 xl:gap-8">
                   {filteredListings.map((shop) => (
                     <div
                       key={shop._id}
-                      className={`group relative bg-[#1a2133] border ${selectedIds.includes(shop._id)
-                          ? "border-primary shadow-2xl shadow-primary/20 scale-[1.01]"
+                      className={`group relative bg-[#131824] border ${selectedIds.includes(shop._id)
+                          ? "border-primary shadow-[0_0_20px_rgba(99,102,241,0.2)]"
                           : "border-white/5"
-                        } rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-500 flex flex-col cursor-pointer`}
+                        } rounded-2xl overflow-hidden hover:border-primary/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 flex flex-col cursor-pointer`}
                       onClick={() => {
                         if (shop.isPromoted && shop.promotionId) {
                           promotedService.trackClick(shop.promotionId).catch((err) => console.error("Click error:", err));
@@ -428,112 +428,104 @@ const Services = () => {
                         navigate(`/business/${shop._id}`);
                       }}
                     >
-                      <div className="absolute top-4 right-4 z-10">
-                        <div className="bg-yellow-500/10 backdrop-blur-md border border-yellow-500/30 text-yellow-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
-                          aria-label="Rating"
-                        >
-                          <span className="text-xs">
-                            <HiStar />
-                          </span>
-                          <span className="text-[10px] font-black">
-                            {(shop.rating || 0.0).toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="absolute top-4 right-14 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <WishlistButton type="business" id={shop._id} aria-label="Add to wishlist" />
-                      </div>
-
-                      <div className="p-8 flex-1">
-                        <div className="mb-8">
-                          <div className="w-16 h-16 bg-dark-bg rounded-2xl border border-white/10 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:border-primary/50 transition-colors">
+                      {/* Main Content */}
+                      <div className="p-5 flex-1 flex flex-col relative z-10">
+                        {/* Header: Logo, Title, and Rating */}
+                        <div className="flex items-start gap-3 mb-4">
+                          {/* Logo (Left Corner) */}
+                          <div className="w-14 h-14 bg-[#0a0f1a] rounded-xl border border-white/10 shadow-lg flex items-center justify-center text-2xl overflow-hidden shrink-0 group-hover:border-primary/50 transition-colors">
                             {shop.logo ? (
                               <img
                                 src={shop.logo}
-                                className="w-full h-full object-cover rounded-2xl"
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 alt=""
                               />
                             ) : (
                               "🏢"
                             )}
                           </div>
-                          <h3 className="text-white text-2xl font-black mb-2 tracking-tight group-hover:text-primary transition-colors leading-tight">
-                            {shop.businessName}
-                          </h3>
-                          <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">
-                            {shop.subCategory}
+
+                          {/* Title and Category */}
+                          <div className="flex-1 min-w-0 pt-1">
+                            <h3 className="text-white text-lg font-bold mb-1 tracking-tight truncate group-hover:text-primary transition-colors">
+                              {shop.businessName}
+                            </h3>
+                            <div className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">
+                              {shop.subCategory}
+                            </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-2 mb-4">
-                            {shop.isPromoted && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-full text-[10px] font-semibold">
-                                ✨ Promoted
-                              </span>
-                            )}
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${shop.isOpenNow
-                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                : "bg-slate-500/10 border-slate-500/20 text-slate-400"
-                              }`}>
-                              <span className={`w-1 h-1 rounded-full ${shop.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-slate-500"}`} />
-                              {shop.isOpenNow ? "Open Now" : "Closed"}
-                            </span>
-
-                            {shop.hasActiveOffers && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-[10px] font-semibold animate-bounce">
-                                🏷️ Offer Available
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-text-dim text-sm leading-relaxed line-clamp-2">
-                            {shop.description ||
-                              "A verified local provider specializing in professional services."}
-                          </p>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-white/5">
-                            <span className="text-lg">
-                              <HiOutlineMapPin />
-                            </span>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-[8px] font-black text-text-dim uppercase tracking-widest">
-                                Location
-                              </span>
-                              <span className="text-xs font-bold text-white/80 truncate">
-                                {shop.locationAddress ||
-                                  shop.address ||
-                                  "Location not available"}
-                              </span>
+                          {/* Rating and Wishlist (Right Corner) */}
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10 text-yellow-400 text-[10px] font-bold shadow-sm"
+                              aria-label="Rating"
+                            >
+                              <HiStar className="text-[12px]" />
+                              <span>{(shop.rating || 0.0).toFixed(1)}</span>
+                            </div>
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <WishlistButton type="business" id={shop._id} aria-label="Add to wishlist" />
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="p-6 pt-0 mt-auto">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (isCompareMode) {
-                              toggleSelection(shop._id);
-                            } else {
-                              navigate(`/business/${shop._id}`);
-                            }
-                          }}
-                          className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg ${isCompareMode
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {shop.isPromoted && (
+                            <span className="bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                              Promoted
+                            </span>
+                          )}
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold border ${shop.isOpenNow
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : "bg-slate-500/10 border-slate-500/20 text-slate-400"
+                            }`}>
+                            {shop.isOpenNow ? "Open Now" : "Closed"}
+                          </span>
+                          {shop.hasActiveOffers && (
+                            <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                              Offers
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-4 group-hover:text-slate-300 transition-colors">
+                          {shop.description ||
+                            "A verified local provider specializing in professional services."}
+                        </p>
+
+                        {/* Footer */}
+                        <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 flex-1 min-w-0 text-slate-400">
+                            <HiOutlineMapPin className="text-sm shrink-0 group-hover:text-primary transition-colors" />
+                            <span className="text-[10px] truncate font-medium">
+                              {shop.locationAddress || shop.address || "Location not available"}
+                            </span>
+                          </div>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isCompareMode) {
+                                toggleSelection(shop._id);
+                              } else {
+                                navigate(`/business/${shop._id}`);
+                              }
+                            }}
+                            className={`shrink-0 text-[10px] font-bold px-4 py-2 rounded-lg transition-all ${isCompareMode
+                                ? selectedIds.includes(shop._id)
+                                  ? "bg-primary text-white shadow-md shadow-primary/20"
+                                  : "bg-white/5 text-white hover:bg-white/10"
+                                : "bg-white/5 text-white hover:bg-primary shadow-sm hover:shadow-md hover:shadow-primary/20"
+                              }`}
+                          >
+                            {isCompareMode
                               ? selectedIds.includes(shop._id)
-                                ? "bg-primary text-white shadow-primary/40"
-                                : "bg-[#252a3d] text-white border border-white/10 hover:border-primary"
-                              : "bg-white/5 hover:bg-primary text-white group-hover:shadow-primary/20"
-                            }`}
-                        >
-                          {isCompareMode
-                            ? selectedIds.includes(shop._id)
-                              ? "Selected ✓"
-                              : "+ Add to Compare"
-                            : "View Profile →"}
-                        </button>
+                                ? "Selected ✓"
+                                : "+ Compare"
+                              : "View"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
