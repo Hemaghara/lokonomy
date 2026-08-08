@@ -316,15 +316,18 @@ const ProductDetails = () => {
       ? product.productImages
       : [product.productImage];
 
-  const card = "bg-[#111827] border border-[#1f2a3d] rounded-2xl";
+  const card = "bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-3xl shadow-2xl shadow-black/40 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-500";
 
   return (
-    <div className="min-h-screen bg-[#080e1a] pt-32 md:pt-40 pb-20">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-[#080e1a] to-[#080e1a] pt-32 md:pt-40 pb-20 relative overflow-hidden">
+      {/* Decorative background orbs */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[128px] -z-10 pointer-events-none opacity-50" />
+      <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-[128px] -z-10 pointer-events-none opacity-50" />
       <style>{`
         .pd * { font-family: 'DM Sans', sans-serif; }
       `}</style>
 
-      <div className="pd max-w-5xl mx-auto px-4">
+      <div className="pd w-full mx-auto px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32 min-[1600px]:px-40 min-[1920px]:px-56 min-[2560px]:px-72 min-[3840px]:px-[15vw] min-[5120px]:px-[20vw] min-[7680px]:px-[25vw]">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -365,7 +368,7 @@ const ProductDetails = () => {
             </button>
           </div>
         </motion.div>
-        <div className="grid lg:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 lg:gap-16 xl:gap-20 min-[1920px]:gap-32 items-start">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -949,7 +952,7 @@ const ProductDetails = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid md:grid-cols-2 gap-8"
+              className="grid grid-cols-1 md:grid-cols-2 gap-8 min-[1920px]:gap-12"
             >
               <div className={`${card} p-6`}>
                 <h3 className="text-white font-bold mb-4 flex items-center gap-2">
@@ -1071,7 +1074,7 @@ const ProductDetails = () => {
               animate={{ opacity: 1 }}
               className="space-y-12"
             >
-              <div className="grid lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-[1920px]:gap-12">
                 <div className="lg:col-span-2 space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-white font-bold flex items-center gap-2">
