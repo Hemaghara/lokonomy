@@ -635,121 +635,119 @@ const Market = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.97 }}
                       transition={{ duration: 0.18 }}
-                      className="group relative bg-[#0f141e]/90 backdrop-blur-2xl border border-white/5 rounded-[2rem] overflow-hidden hover:border-primary/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 flex flex-col cursor-pointer"
+                      className="group relative bg-[#0d1424] border border-[#1f2a3d] rounded-2xl overflow-hidden hover:border-violet-500/40 hover:-translate-y-1 hover:shadow-[0_12px_40px_-15px_rgba(139,92,246,0.2)] transition-all duration-300 flex flex-col cursor-pointer"
                       onClick={() => navigate(`/market/product/${p._id}`)}
                     >
                       <div
-                        className={`relative aspect-[4/3] overflow-hidden bg-[#0a0f1a] ${p.isFeatured ? "ring-2 ring-primary/50" : ""}`}
+                        className={`relative aspect-[4/3] overflow-hidden bg-[#0a0f1a] ${p.isFeatured ? "border-b-2 border-violet-500" : "border-b border-[#1f2a3d]"}`}
                       >
                         {p.productImages?.[0] || p.productImage ? (
                           <img
                             src={p.productImages?.[0] || p.productImage}
                             alt={p.productName}
-                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-700"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <FiPackage className="text-5xl text-slate-700" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f141e]/90 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1424] via-transparent to-transparent opacity-90" />
 
-                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        <div className="absolute top-3 left-3 flex flex-col gap-2">
                           {p.isFeatured && (
-                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/30 border border-white/20">
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
                               <HiOutlineSparkles className="text-sm animate-pulse" />{" "}
                               Featured
                             </span>
                           )}
                           <span
-                            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[10px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-lg backdrop-blur-md
                             ${
                               p.priceType === "sell"
-                                ? "bg-violet-500/80 text-white border-violet-400/30"
-                                : "bg-emerald-500/80 text-white border-emerald-400/30"
+                                ? "bg-violet-500/90 text-white border border-violet-400/20"
+                                : "bg-emerald-500/90 text-white border border-emerald-400/20"
                             }`}
                           >
                             {p.priceType === "sell" ? (
                               <>
-                                <HiOutlineTag className="text-sm" /> Sale
+                                <HiOutlineTag className="text-[11px]" /> Sale
                               </>
                             ) : (
                               <>
-                                <HiOutlineHome className="text-sm" /> Rent
+                                <HiOutlineHome className="text-[11px]" /> Rent
                               </>
                             )}
                           </span>
                         </div>
 
-                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                        <div className="absolute top-3 right-3 z-10 bg-[#0d1424]/60 backdrop-blur-md rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <WishlistButton type="product" id={p._id} />
                         </div>
                       </div>
 
-                      <div className="p-5 flex flex-col flex-1 relative z-10 -mt-6">
-                        <div className="bg-[#0f141e] border border-white/10 rounded-xl p-3.5 shadow-lg flex-1 flex flex-col">
-                          <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
-                            <span className="text-sm leading-none bg-primary/10 p-1.5 rounded-lg text-primary">
-                              {getCategoryIcon(
-                                p.subCategory || p.mainCategory || "",
-                              )}
-                            </span>
-                            {p.subCategory}
-                          </p>
+                      <div className="p-4 flex flex-col flex-1 relative z-10 bg-[#0d1424]">
+                        <p className="text-[11px] text-violet-400 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                          <span className="text-[13px]">
+                            {getCategoryIcon(
+                              p.subCategory || p.mainCategory || "",
+                            )}
+                          </span>
+                          <span className="truncate">{p.subCategory}</span>
+                        </p>
 
-                          <h3 className="text-white font-bold text-base leading-snug line-clamp-2 mb-3 group-hover:text-primary transition-colors flex-1">
-                            {p.productName}
-                          </h3>
+                        <h3 className="text-white font-semibold text-[15px] leading-snug line-clamp-2 mb-2 group-hover:text-violet-400 transition-colors flex-1">
+                          {p.productName}
+                        </h3>
 
-                          <div className="flex items-center gap-2 mb-4">
-                            <div className="flex items-center gap-0.5">
-                              {[...Array(5)].map((_, i) => (
-                                <HiStar
-                                  key={i}
-                                  className={`text-[12px] ${i < Math.round(p.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
-                                />
-                              ))}
+                        <div className="flex items-center gap-1.5 mb-4">
+                          <div className="flex items-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <HiStar
+                                key={i}
+                                className={`text-[12px] ${i < Math.round(p.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-slate-500 text-[10px] font-bold">
+                            ({p.numReviews || 0})
+                          </span>
+                        </div>
+
+                        <div className="mt-auto pt-3 border-t border-[#1f2a3d] flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-0.5">Price</span>
+                              <span className="text-lg font-bold text-white tracking-tight flex items-center gap-1">
+                                <HiOutlineCurrencyRupee className="text-emerald-400 text-[18px] shrink-0" />
+                                {p.price?.toLocaleString() || "0"}
+                                {p.priceType === "rent" && (
+                                  <span className="text-[11px] text-slate-400 font-medium tracking-normal ml-0.5 lowercase">
+                                    /{p.rentDuration || "day"}
+                                  </span>
+                                )}
+                              </span>
                             </div>
-                            <span className="text-slate-500 text-[10px] font-bold">
-                              ({p.numReviews || 0})
-                            </span>
+                            <div className="w-8 h-8 rounded-full bg-[#161f33] border border-[#1f2a3d] flex items-center justify-center text-slate-400 group-hover:bg-violet-600 group-hover:text-white group-hover:border-violet-600 transition-all duration-300">
+                              <HiOutlineArrowRight className="text-sm group-hover:translate-x-0.5 transition-transform" />
+                            </div>
                           </div>
 
-                          <div className="mt-auto pt-3 border-t border-white/5 flex flex-col gap-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex flex-col">
-                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Price</span>
-                                <span className="text-lg font-black text-white tracking-tight flex items-center gap-1">
-                                  <HiOutlineCurrencyRupee className="text-emerald-400 text-xl shrink-0" />
-                                  {p.price?.toLocaleString() || "0"}
-                                  {p.priceType === "rent" && (
-                                    <span className="text-[10px] text-slate-400 font-medium tracking-normal ml-1 lowercase">
-                                      /{p.rentDuration || "day"}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                              <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 group-hover:bg-primary/20 group-hover:text-primary group-hover:border-primary/30 transition-all duration-300">
-                                <HiOutlineArrowRight className="text-sm group-hover:translate-x-0.5 transition-transform" />
-                              </div>
-                            </div>
-
-                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                              <HiOutlineMapPin className="text-sm text-rose-400" />
-                              <span className="truncate">
-                                {p.taluka ? `${p.taluka}, ${p.district}` : p.district}
-                              </span>
-                              {p.distance !== undefined && (
-                                <span className="text-slate-600 mx-1">•</span>
-                              )}
-                              {p.distance !== undefined && (
-                                <span className="text-slate-400">
-                                  {p.distance < 1
-                                    ? "< 1 km"
-                                    : `${Math.round(p.distance)} km`}
-                                </span>
-                              )}
+                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+                            <HiOutlineMapPin className="text-[13px] text-rose-400 shrink-0" />
+                            <span className="truncate">
+                              {p.taluka ? `${p.taluka}, ${p.district}` : p.district}
                             </span>
+                            {p.distance !== undefined && (
+                              <span className="text-slate-600 shrink-0 mx-0.5">•</span>
+                            )}
+                            {p.distance !== undefined && (
+                              <span className="text-slate-400 shrink-0">
+                                {p.distance < 1
+                                  ? "< 1 km"
+                                  : `${Math.round(p.distance)} km`}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
