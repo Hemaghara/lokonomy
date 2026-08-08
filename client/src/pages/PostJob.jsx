@@ -6,6 +6,7 @@ import { jobService } from "../services";
 import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
 import { usePlanLimits } from "../hooks/usePlanLimits";
+import { jobSchema } from "../validators/job.schema";
 import { FiBriefcase, FiTarget, FiPhone } from "react-icons/fi";
 const CustomDropdown = ({
   name,
@@ -184,12 +185,19 @@ const PostJob = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      jobSchema.parse(formData);
+      
       const res = await jobService.createJob(formData);
       if (res.data.success) {
         toast.success("Job posted successfully!");
         navigate("/jobs");
       }
     } catch (err) {
+      if (err.errors && Array.isArray(err.errors)) {
+        // Zod validation error
+        return toast.error(err.errors[0].message);
+      }
+      
       const errorData = err.response?.data;
       if (errorData?.code === "LIMIT_REACHED") {
         toast(

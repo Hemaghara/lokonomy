@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import api from "../services/api";
 import { FiFlag, FiX, FiAlertTriangle } from "react-icons/fi";
+import { reportSchema } from "../validators/ops.schema";
 
 const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
   const [reason, setReason] = useState("");
@@ -24,16 +25,24 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
 
     try {
       setLoading(true);
-      await api.post("/reports", {
+      
+      const payload = {
         targetType,
         targetId,
         reason,
         description,
-      });
+      };
+      
+      reportSchema.parse(payload);
+      
+      await api.post("/reports", payload);
 
       toast.success("Thank you for your report. Our team will review it.");
       onClose();
     } catch (error) {
+      if (error.errors && Array.isArray(error.errors)) {
+        return toast.error(error.errors[0].message);
+      }
       console.log(error);
       toast.error("Failed to submit report");
     } finally {

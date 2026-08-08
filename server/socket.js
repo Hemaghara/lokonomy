@@ -4,7 +4,8 @@ const Business = require("./models/Business");
 const OnlineStatus = require("./models/OnlineStatus");
 const { createNotification } = require("./controllers/notificationController");
 const logger = require("./utils/logger");
-
+const { sendMessageSchema } = require("./validators/chat.schema");
+const { ZodError } = require("zod");
 const jwt = require("jsonwebtoken");
 
 const allowedOrigins = require("./config/corsOrigins");
@@ -280,6 +281,8 @@ const initSocket = (server) => {
 
     socket.on("sendMessage", async (data) => {
       try {
+        const validatedData = await sendMessageSchema.body.parseAsync(data);
+        
         const {
           chatRoom,
           productId,
@@ -403,6 +406,10 @@ const initSocket = (server) => {
         }
 
       } catch (err) {
+        if (err instanceof ZodError) {
+          logger.warn({ err: err.errors }, "[Socket] Validation error on sendMessage");
+          return socket.emit("messageError", { error: err.errors[0].message });
+        }
         logger.error({ err }, "[Socket] Error saving message");
         socket.emit("messageError", { error: "Failed to send message" });
       }

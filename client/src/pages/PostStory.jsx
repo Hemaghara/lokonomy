@@ -5,6 +5,7 @@ import { storyService } from "../services";
 import { toast } from "react-hot-toast";
 import MapPicker from "../components/MapPicker";
 import { usePlanLimits } from "../hooks/usePlanLimits";
+import { storySchema } from "../validators/social.schema";
 import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 const CustomDropdown = ({
   name,
@@ -414,6 +415,8 @@ const PostStory = () => {
           text: actionLinkText
         };
       }
+      
+      storySchema.parse(formData);
 
       let response;
       if (isEditMode) {
@@ -430,6 +433,9 @@ const PostStory = () => {
         navigate(isEditMode ? `/stories/${storyId}` : "/stories");
       }
     } catch (error) {
+      if (error.errors && Array.isArray(error.errors)) {
+        return toast.error(error.errors[0].message);
+      }
       const errorData = error.response?.data;
       if (errorData?.code === "LIMIT_REACHED") {
         toast(

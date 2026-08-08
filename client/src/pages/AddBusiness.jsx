@@ -4,6 +4,7 @@ import { businessService, generateBusinessDescription } from "../services";
 import { categories } from "../data/categories";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
+import { businessSchema } from "../validators/business.schema";
 import MapPicker from "../components/MapPicker";
 import {
   HiOutlineArrowLeft,
@@ -333,6 +334,8 @@ const AddBusiness = () => {
     }
     setLoading(true);
     try {
+      businessSchema.parse(formData);
+      
       const payload = {
         ...formData,
         website: formData.website?.trim() === "https://" ? "" : formData.website,
@@ -350,11 +353,16 @@ const AddBusiness = () => {
         navigate(`/business/${response.data.business._id}`);
       }
     } catch (err) {
-      console.error("Error creating business:", err);
-      toast.error(
-        err.response?.data?.message ||
-          "Registration Failed. Please check all fields.",
-      );
+      console.error("Validation or submission error:", err);
+      if (err.errors && Array.isArray(err.errors)) {
+        // Zod error
+        toast.error(err.errors[0].message);
+      } else {
+        toast.error(
+          err.response?.data?.message ||
+            "Registration Failed. Please check all fields.",
+        );
+      }
     } finally {
       setLoading(false);
     }

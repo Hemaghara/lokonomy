@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { marketService, orderService } from "../services";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-hot-toast";
+import { orderSchema } from "../validators/order.schema";
 import api from "../services/api";
 import {
   HiOutlineArrowLeft,
@@ -143,6 +144,8 @@ const Checkout = () => {
     e.preventDefault();
     setIsOrdering(true);
     try {
+      orderSchema.parse(orderForm);
+      
       await orderService.createOrder({
         productId: product._id,
         appliedCoupon: appliedCoupon?.code,
@@ -152,6 +155,9 @@ const Checkout = () => {
       toast.success("Order placed successfully!");
       navigate("/my-orders");
     } catch (err) {
+      if (err.errors && Array.isArray(err.errors)) {
+        return toast.error(err.errors[0].message);
+      }
       toast.error(err.response?.data?.message || "Failed to place order");
     } finally {
       setIsOrdering(false);

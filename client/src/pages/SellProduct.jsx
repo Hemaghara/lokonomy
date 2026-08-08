@@ -6,6 +6,7 @@ import { useLocation } from "../context/LocationContext";
 import { useUser } from "../context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { marketSchema } from "../validators/market.schema";
 import MapPicker from "../components/MapPicker";
 import { usePlanLimits } from "../hooks/usePlanLimits";
 const CustomDropdown = ({
@@ -242,6 +243,8 @@ const SellProduct = () => {
       return toast.error("At least one photo is required.");
     setLoading(true);
     try {
+      marketSchema.parse(formData);
+      
       const payload = {
         ...formData,
         latitude: shopLocation?.lat,
@@ -254,6 +257,11 @@ const SellProduct = () => {
         navigate("/market");
       }
     } catch (err) {
+      if (err.errors && Array.isArray(err.errors)) {
+        // Zod validation error
+        return toast.error(err.errors[0].message);
+      }
+      
       const errorData = err.response?.data;
       if (errorData?.code === "LIMIT_REACHED") {
         toast(

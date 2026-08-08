@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const groupController = require("../controllers/groupController");
+const validateRequest = require("../middleware/validateRequest");
+const { createGroupSchema } = require("../validators/social.schema");
 
-router.post("/", auth, groupController.createGroup);
+router.post("/", auth, validateRequest(createGroupSchema), groupController.createGroup);
 router.get("/", groupController.getGroups);
 router.get("/:id", groupController.getGroupDetails);
 router.post("/:id/join", auth, groupController.joinGroup);

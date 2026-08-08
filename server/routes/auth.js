@@ -4,17 +4,18 @@ const authController = require("../controllers/authController");
 const auth = require("../middleware/authMiddleware");
 const { otpLimiter } = require("../middleware/rateLimiter");
 
+const validateRequest = require("../middleware/validateRequest");
 const {
-  validateLogin,
-  validateRegister,
-  validateOtp,
-  validateResendOtp,
-} = require("../middleware/validators/authValidator");
+  loginSchema,
+  registerSchema,
+  otpSchema,
+  resendOtpSchema,
+} = require("../validators/auth.schema");
 
-router.post("/login", validateLogin, authController.login);
-router.post("/register", validateRegister, authController.register);
-router.post("/verify-otp", otpLimiter, validateOtp, authController.verifyOtp);
-router.post("/resend-otp", otpLimiter, validateResendOtp, authController.resendOtp);
+router.post("/login", validateRequest(loginSchema), authController.login);
+router.post("/register", validateRequest(registerSchema), authController.register);
+router.post("/verify-otp", otpLimiter, validateRequest(otpSchema), authController.verifyOtp);
+router.post("/resend-otp", otpLimiter, validateRequest(resendOtpSchema), authController.resendOtp);
 router.post("/refresh", authController.refresh);
 router.post("/logout", auth, authController.logout);
 router.get("/me", auth, authController.getMe);

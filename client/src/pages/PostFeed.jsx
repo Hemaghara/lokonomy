@@ -6,6 +6,7 @@ import { useUser } from "../context/UserContext";
 import { feedService } from "../services";
 import { toast } from "react-hot-toast";
 import MapPicker from "../components/MapPicker";
+import { feedSchema } from "../validators/social.schema";
 
 const CustomDropdown = ({
   name,
@@ -261,28 +262,29 @@ const PostFeed = () => {
     if (!feedLocation) {
       toast.error("Please select a location on the map.");
       return;
-    }
+    
     try {
       setLoading(true);
-      const feedData = {
-        ...formData,
-        author: user?.name || "Anonymous",
-      };
+      feedSchema.parse(formData);
       
-      let response;
+      let res;
       if (isEditMode) {
-        response = await feedService.updateFeed(id, feedData);
+        res = await feedService.updateFeed(id, { ...formData });
       } else {
-        response = await feedService.createFeed(feedData);
+        res = await feedService.createFeed({ ...formData, district: state.district });
       }
-
-      if (response.data.success) {
-        toast.success(response.data.message || (isEditMode ? "Feed updated successfully!" : "Feed posted successfully!"));
+      
+      if (res.data.success) {
+        toast.success(isEditMode ? "Post updated successfully!" : "Post published successfully!");
         navigate("/feed");
       }
-    } catch (error) {
-      console.error("Error posting/updating feed:", error);
-      toast.error(error.response?.data?.message || "Operation failed");
+    } catch (err) {
+      if (err.errors && Array.isArray(err.errors)) {
+        // Zod validation error
+        return toast.error(err.errors[0].message);
+      }
+      toast.error(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'publish'} post`);
+      console.error(err);
     } finally {
       setLoading(false);
     }

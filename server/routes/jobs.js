@@ -3,16 +3,21 @@ const router = express.Router();
 const jobController = require("../controllers/jobController");
 const auth = require("../middleware/authMiddleware");
 const { checkJobLimit } = require("../middleware/subscriptionMiddleware");
-
+const validateRequest = require("../middleware/validateRequest");
+const {
+  createJobSchema,
+  updateJobSchema,
+  applyForJobSchema,
+} = require("../validators/job.schema");
 router.get("/", jobController.getAllJobs);
 router.get("/applied", auth, jobController.getAppliedJobs);
 router.get("/my", auth, jobController.getMyJobs);
-router.post("/", auth, checkJobLimit, jobController.createJob);
+router.post("/", auth, checkJobLimit, validateRequest(createJobSchema), jobController.createJob);
 router.get("/:id", jobController.getJobById);
 router.get("/:id/similar", jobController.getSimilarJobs);
-router.post("/:id/apply", auth, jobController.applyForJob);
+router.post("/:id/apply", auth, validateRequest(applyForJobSchema), jobController.applyForJob);
 router.delete("/:id/withdraw", auth, jobController.withdrawApplication);
-router.put("/:id", auth, jobController.updateJob);
+router.put("/:id", auth, validateRequest(updateJobSchema), jobController.updateJob);
 router.patch("/:id/status", auth, jobController.toggleJobStatus);
 router.patch(
   "/:id/applications/:applicantId/status",
