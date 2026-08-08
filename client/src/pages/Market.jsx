@@ -439,7 +439,7 @@ const Market = () => {
         .mk select option { background: #111827; color: #e2e8f0; }
       `}</style>
 
-      <div className="mk max-w-7xl mx-auto px-4">
+      <div className="mk w-[96%] max-w-none mx-auto px-2 sm:px-4 lg:px-6">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -625,7 +625,7 @@ const Market = () => {
             <MarketSkeleton />
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 min-[1920px]:grid-cols-6 min-[2560px]:grid-cols-8 min-[3840px]:grid-cols-12 min-[5120px]:grid-cols-16 min-[7680px]:grid-cols-24 gap-4 sm:gap-6 lg:gap-8">
                 <AnimatePresence mode="popLayout">
                   {filteredProducts.map((p) => (
                     <motion.div
@@ -635,33 +635,34 @@ const Market = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.97 }}
                       transition={{ duration: 0.18 }}
-                      className={`${card} overflow-hidden flex flex-col hover:border-violet-500/30 hover:bg-[#131d2e] transition-all duration-300 cursor-pointer group`}
+                      className="group relative bg-[#0f141e]/90 backdrop-blur-2xl border border-white/5 rounded-[2rem] overflow-hidden hover:border-primary/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 flex flex-col cursor-pointer"
                       onClick={() => navigate(`/market/product/${p._id}`)}
                     >
                       <div
-                        className={`relative aspect-4/3 overflow-hidden bg-[#0d1424] ${p.isFeatured ? "ring-2 ring-violet-500/50" : ""}`}
+                        className={`relative aspect-[4/3] overflow-hidden bg-[#0a0f1a] ${p.isFeatured ? "ring-2 ring-primary/50" : ""}`}
                       >
                         {p.productImages?.[0] || p.productImage ? (
                           <img
                             src={p.productImages?.[0] || p.productImage}
                             alt={p.productName}
-                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-700"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <FiPackage className="text-5xl text-slate-700" />
                           </div>
                         )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f141e]/90 via-transparent to-transparent pointer-events-none" />
 
-                        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
                           {p.isFeatured && (
-                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-linear-to-r from-violet-600 to-indigo-600 text-white text-[9px] font-black uppercase tracking-widest shadow-xl shadow-violet-900/40 border border-violet-400/30">
+                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/30 border border-white/20">
                               <HiOutlineSparkles className="text-sm animate-pulse" />{" "}
                               Featured
                             </span>
                           )}
                           <span
-                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wide backdrop-blur-sm
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-[10px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg
                             ${
                               p.priceType === "sell"
                                 ? "bg-violet-500/80 text-white border-violet-400/30"
@@ -670,64 +671,85 @@ const Market = () => {
                           >
                             {p.priceType === "sell" ? (
                               <>
-                                <HiOutlineTag className="text-xs" /> Sale
+                                <HiOutlineTag className="text-sm" /> Sale
                               </>
                             ) : (
                               <>
-                                <HiOutlineHome className="text-xs" /> Rent
+                                <HiOutlineHome className="text-sm" /> Rent
                               </>
                             )}
                           </span>
                         </div>
 
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                           <WishlistButton type="product" id={p._id} />
                         </div>
                       </div>
 
-                      <div className="p-4 flex flex-col flex-1">
-                        <p className="text-[10px] text-violet-400 font-medium uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                          <span className="text-sm leading-none">
-                            {getCategoryIcon(
-                              p.subCategory || p.mainCategory || "",
-                            )}
-                          </span>
-                          {p.subCategory}
-                        </p>
-
-                        <h3 className="text-slate-100 font-semibold text-sm leading-snug line-clamp-2 mb-3 group-hover:text-violet-400 transition-colors flex-1">
-                          {p.productName}
-                        </h3>
-
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="flex items-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <HiStar
-                                key={i}
-                                className={`text-[10px] ${i < Math.round(p.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-slate-600 text-[10px] font-bold">
-                            ({p.numReviews || 0})
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-3 border-t border-[#1f2a3d]">
-                          <div className="flex items-center gap-0.5 text-white font-bold text-base">
-                            <HiOutlineCurrencyRupee className="text-emerald-400 text-lg shrink-0" />
-                            {p.price.toLocaleString()}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="flex items-center gap-1 text-[10px] text-slate-600">
-                              <HiOutlineMapPin className="text-xs text-rose-400" />
-                              {p.taluka
-                                ? `${p.taluka}, ${p.district}`
-                                : p.district}
+                      <div className="p-5 flex flex-col flex-1 relative z-10 -mt-6">
+                        <div className="bg-[#0f141e] border border-white/10 rounded-xl p-3.5 shadow-lg flex-1 flex flex-col">
+                          <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
+                            <span className="text-sm leading-none bg-primary/10 p-1.5 rounded-lg text-primary">
+                              {getCategoryIcon(
+                                p.subCategory || p.mainCategory || "",
+                              )}
                             </span>
-                            <div className="w-6 h-6 rounded-lg bg-[#0d1424] border border-[#1f2a3d] flex items-center justify-center text-slate-600 group-hover:text-violet-400 group-hover:border-violet-500/30 transition-colors">
-                              <HiOutlineArrowRight className="text-xs" />
+                            {p.subCategory}
+                          </p>
+
+                          <h3 className="text-white font-bold text-base leading-snug line-clamp-2 mb-3 group-hover:text-primary transition-colors flex-1">
+                            {p.productName}
+                          </h3>
+
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <HiStar
+                                  key={i}
+                                  className={`text-[12px] ${i < Math.round(p.rating || 0) ? "text-amber-400" : "text-slate-700"}`}
+                                />
+                              ))}
                             </div>
+                            <span className="text-slate-500 text-[10px] font-bold">
+                              ({p.numReviews || 0})
+                            </span>
+                          </div>
+
+                          <div className="mt-auto pt-3 border-t border-white/5 flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Price</span>
+                                <span className="text-lg font-black text-white tracking-tight flex items-center gap-1">
+                                  <HiOutlineCurrencyRupee className="text-emerald-400 text-xl shrink-0" />
+                                  {p.price?.toLocaleString() || "0"}
+                                  {p.priceType === "rent" && (
+                                    <span className="text-[10px] text-slate-400 font-medium tracking-normal ml-1 lowercase">
+                                      /{p.rentDuration || "day"}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 group-hover:bg-primary/20 group-hover:text-primary group-hover:border-primary/30 transition-all duration-300">
+                                <HiOutlineArrowRight className="text-sm group-hover:translate-x-0.5 transition-transform" />
+                              </div>
+                            </div>
+
+                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                              <HiOutlineMapPin className="text-sm text-rose-400" />
+                              <span className="truncate">
+                                {p.taluka ? `${p.taluka}, ${p.district}` : p.district}
+                              </span>
+                              {p.distance !== undefined && (
+                                <span className="text-slate-600 mx-1">•</span>
+                              )}
+                              {p.distance !== undefined && (
+                                <span className="text-slate-400">
+                                  {p.distance < 1
+                                    ? "< 1 km"
+                                    : `${Math.round(p.distance)} km`}
+                                </span>
+                              )}
+                            </span>
                           </div>
                         </div>
                       </div>
