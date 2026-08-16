@@ -12,6 +12,7 @@ const emailService = require("../utils/emailService");
 exports.getAllJobs = async (req, res) => {
   try {
     const {
+      state,
       district,
       taluka,
       gender,
@@ -30,6 +31,7 @@ exports.getAllJobs = async (req, res) => {
     query.isFlagged = { $ne: true };
     query.isSuspended = { $ne: true };
 
+    if (state) query.state = state;
     if (district) query.district = district;
     if (taluka) query.taluka = taluka;
     if (gender && gender !== "All") query.gender = gender;
@@ -102,7 +104,7 @@ exports.createJob = async (req, res) => {
     }
 
     const {
-      position, location, vacancies, education, district, 
+      position, location, vacancies, education, state, district, 
       experience, skills, salary, gender, posterName, 
       posterEmail, posterContact, description, jobType, 
       category, taluka, deadline, salaryMin, salaryMax
@@ -116,7 +118,7 @@ exports.createJob = async (req, res) => {
     }
 
     const jobData = {
-      position, location, vacancies, education, district,
+      position, location, vacancies, education, state, district,
       experience, skills, salary, gender, posterName,
       posterEmail, posterContact, description, jobType,
       category, taluka, deadline, salaryMin, salaryMax,
@@ -381,6 +383,7 @@ exports.updateJob = async (req, res) => {
       "location",
       "vacancies",
       "education",
+      "state",
       "district",
       "experience",
       "skills",

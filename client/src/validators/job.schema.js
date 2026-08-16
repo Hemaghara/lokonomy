@@ -5,6 +5,7 @@ export const jobSchema = z.object({
   location: z.string().min(2, "Location is required"),
   vacancies: z.number().int().positive().or(z.string().regex(/^\d+$/).transform(Number)),
   education: z.enum(["10th pass", "12th pass", "Graduate", "Post Graduate"]),
+  state: z.string().min(2, "State is required"),
   district: z.string().min(2, "District is required"),
   experience: z.string().min(1, "Experience is required"),
   skills: z.string().min(2, "Skills are required"),

@@ -19,6 +19,10 @@ const jobSchema = new mongoose.Schema(
       enum: ["10th pass", "12th pass", "Graduate", "Post Graduate"],
       required: true,
     },
+    state: {
+      type: String,
+      required: true,
+    },
     district: {
       type: String,
       required: true,

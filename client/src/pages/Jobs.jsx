@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useLocation } from "../context/LocationContext";
 import { jobService } from "../services";
 import { toast } from "react-hot-toast";
-import { getTalukas } from "../data/locations";
+import { getTalukas, getDistricts, getStates } from "../data/locations";
 import { useUser } from "../context/UserContext";
 import {
   HiOutlineMapPin,
@@ -102,7 +102,6 @@ const Jobs = () => {
     state,
     district: userDistrict,
     taluka: userTaluka,
-    availableDistricts,
   } = useLocation();
   const { user } = useUser();
 
@@ -130,14 +129,22 @@ const Jobs = () => {
   }, [searchInput]);
 
 
+  const [selectedState, setSelectedState] = useState(state || "Gujarat");
   const [selectedDistrict, setSelectedDistrict] = useState(userDistrict || "");
   const [selectedTaluka, setSelectedTaluka] = useState(userTaluka || "");
+  const [districts, setDistricts] = useState([]);
   const [talukas, setTalukas] = useState([]);
+  const availableStates = getStates();
 
   useEffect(() => {
-    if (selectedDistrict) setTalukas(getTalukas(state, selectedDistrict));
+    if (selectedState) setDistricts(getDistricts(selectedState));
+    else setDistricts([]);
+  }, [selectedState]);
+
+  useEffect(() => {
+    if (selectedState && selectedDistrict) setTalukas(getTalukas(selectedState, selectedDistrict));
     else setTalukas([]);
-  }, [selectedDistrict, state]);
+  }, [selectedDistrict, selectedState]);
 
   const fetchJobs = useCallback(
     async (pageNum = 1) => {
@@ -145,6 +152,7 @@ const Jobs = () => {
 
       try {
         const response = await jobService.getJobs({
+          state: selectedState || undefined,
           district: selectedDistrict || undefined,
           taluka: selectedTaluka || undefined,
           gender: genderFilter !== "All" ? genderFilter : undefined,
@@ -307,7 +315,7 @@ const Jobs = () => {
         .no-sb::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div className="jb max-w-6xl mx-auto px-4">
+      <div className="jb w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 min-[1920px]:px-12 min-[2560px]:px-16 min-[3840px]:px-20 transition-all duration-300">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -382,7 +390,7 @@ const Jobs = () => {
 
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center w-full">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center w-full lg:w-auto">
-              <div className="no-sb flex items-center gap-2 overflow-x-auto w-full pb-1">
+              <div className="flex flex-wrap items-center gap-2 w-full pb-1">
                 <HiOutlineFunnel className="text-slate-600 text-base shrink-0" />
                 {genderFilters.map((f) => (
                   <button
@@ -402,7 +410,7 @@ const Jobs = () => {
 
               <div className="hidden sm:block h-7 w-px bg-[#1f2a3d] shrink-0" />
 
-              <div className="no-sb flex items-center gap-2 overflow-x-auto w-full pb-1">
+              <div className="flex flex-wrap items-center gap-2 w-full pb-1">
                 {jobTypeFilters.map((f) => (
                   <button
                     key={f.value}
@@ -424,6 +432,30 @@ const Jobs = () => {
 
             <div className="flex flex-wrap gap-3 flex-1 w-full">
               <div className="relative flex-1 min-w-36">
+                <label htmlFor="state" className="sr-only">
+                  Select State
+                </label>
+                <select
+                  id="state"
+                  className={inputCls + " pr-9 cursor-pointer"}
+                  value={selectedState}
+                  onChange={(e) => {
+                    setSelectedState(e.target.value);
+                    setSelectedDistrict("");
+                    setSelectedTaluka("");
+                  }}
+                >
+                  <option value="">All States</option>
+                  {availableStates.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                <HiOutlineChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none text-sm" />
+              </div>
+
+              <div className={`relative flex-1 min-w-36 transition-opacity ${!selectedState ? "opacity-30 pointer-events-none" : ""}`}>
                 <label htmlFor="district" className="sr-only">
                   Select District
                 </label>
@@ -435,9 +467,10 @@ const Jobs = () => {
                     setSelectedDistrict(e.target.value);
                     setSelectedTaluka("");
                   }}
+                  disabled={!selectedState}
                 >
                   <option value="">All Districts</option>
-                  {availableDistricts.map((d) => (
+                  {districts.map((d) => (
                     <option key={d} value={d}>
                       {d}
                     </option>
@@ -472,7 +505,7 @@ const Jobs = () => {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="flex-1 no-sb flex items-center gap-2 overflow-x-auto w-full pb-1">
+            <div className="flex-1 flex flex-wrap items-center gap-2 w-full pb-1">
               {categories.map((c) => (
                 <button
                   key={c}
@@ -516,13 +549,13 @@ const Jobs = () => {
 
         <div className="min-h-64">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 min-[1200px]:grid-cols-4 min-[1440px]:grid-cols-5 min-[1920px]:grid-cols-6 min-[2560px]:grid-cols-8 min-[3200px]:grid-cols-10 min-[3840px]:grid-cols-12 min-[5120px]:grid-cols-14 min-[7680px]:grid-cols-16 gap-4 min-[1920px]:gap-6 min-[3840px]:gap-8 transition-all duration-300">
               {[...Array(6)].map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 min-[1200px]:grid-cols-4 min-[1440px]:grid-cols-5 min-[1920px]:grid-cols-6 min-[2560px]:grid-cols-8 min-[3200px]:grid-cols-10 min-[3840px]:grid-cols-12 min-[5120px]:grid-cols-14 min-[7680px]:grid-cols-16 gap-4 min-[1920px]:gap-6 min-[3840px]:gap-8 transition-all duration-300">
               <AnimatePresence mode="popLayout">
                 {jobs.map((job) => {
                   const applied = job.applications?.some(
@@ -730,7 +763,7 @@ const Jobs = () => {
                   animate={{ opacity: 1 }}
                   className="col-span-full border-2 border-dashed border-[#1f2a3d] rounded-2xl py-24 text-center"
                 >
-                  <div className="text-5xl mb-4 opacity-20">💼</div>
+                  <HiOutlineBriefcase className="w-16 h-16 mx-auto text-slate-600 mb-4 opacity-50" />
                   <h3 className="text-slate-500 font-semibold text-base mb-1">
                     {search ? `No jobs matching "${search}"` : "No Jobs Found"}
                   </h3>

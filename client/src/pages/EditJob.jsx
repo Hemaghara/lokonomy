@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "../context/LocationContext";
+import { getStates, getDistricts, getTalukas } from "../data/locations";
 import { jobService } from "../services";
 import { toast } from "react-hot-toast";
 
@@ -150,7 +151,6 @@ const Field = ({ label, required, span2, children }) => (
 const EditJob = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { availableDistricts } = useLocation();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState({
@@ -158,6 +158,7 @@ const EditJob = () => {
     location: "",
     vacancies: "",
     education: "10th pass",
+    state: "Gujarat",
     district: "",
     experience: "",
     skills: "",
@@ -188,6 +189,7 @@ const EditJob = () => {
           location: job.location || "",
           vacancies: job.vacancies || "",
           education: job.education || "10th pass",
+          state: job.state || "Gujarat",
           district: job.district || "",
           experience: job.experience || "",
           skills: job.skills || "",
@@ -219,8 +221,19 @@ const EditJob = () => {
     fetchJob();
   }, [id]);
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "state") {
+        next.district = "";
+        next.taluka = "";
+      } else if (name === "district") {
+        next.taluka = "";
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -239,10 +252,9 @@ const EditJob = () => {
     }
   };
 
-  const districtOptions = [
-    { value: "", label: "Select District" },
-    ...(availableDistricts || []).map((d) => ({ value: d, label: d })),
-  ];
+  const stateOptions = getStates().map((s) => ({ value: s, label: s }));
+  const districtOptions = (formData.state ? getDistricts(formData.state) : []).map((d) => ({ value: d, label: d }));
+  const talukaOptions = (formData.state && formData.district ? getTalukas(formData.state, formData.district) : []).map((t) => ({ value: t, label: t }));
 
   const educationOptions = [
     { value: "10th pass", label: "10th Pass" },
@@ -390,13 +402,33 @@ const EditJob = () => {
                 />
               </Field>
 
+              <Field label="State" required>
+                <CustomDropdown
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  options={stateOptions}
+                  placeholder="Select State"
+                />
+              </Field>
+
               <Field label="District" required>
                 <CustomDropdown
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
-                  options={districtOptions.filter((o) => o.value !== "")}
+                  options={districtOptions}
                   placeholder="Select District"
+                />
+              </Field>
+
+              <Field label="Taluka">
+                <CustomDropdown
+                  name="taluka"
+                  value={formData.taluka}
+                  onChange={handleChange}
+                  options={talukaOptions}
+                  placeholder="Select Taluka"
                 />
               </Field>
 
@@ -457,16 +489,7 @@ const EditJob = () => {
                 />
               </Field>
 
-              <Field label="Location / Taluka" id="taluka">
-                <input
-                  id="taluka"
-                  name="taluka"
-                  value={formData.taluka}
-                  onChange={handleChange}
-                  placeholder="e.g. Haveli, Mulshi"
-                  className={inputCls}
-                />
-              </Field>
+
 
               <Field label="Monthly Salary (₹)" required id="salary">
                 <input

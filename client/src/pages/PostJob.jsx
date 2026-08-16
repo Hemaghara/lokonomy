@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "../context/LocationContext";
+import { getStates, getDistricts, getTalukas } from "../data/locations";
 import { jobService } from "../services";
 import { toast } from "react-hot-toast";
 import { useUser } from "../context/UserContext";
@@ -152,7 +153,7 @@ const Field = ({ label, required, span2, id, children }) => (
 const PostJob = () => {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { availableDistricts } = useLocation();
+  const { state: userState, district: userDistrict, taluka: userTaluka } = useLocation();
   const { limits } = usePlanLimits();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -160,7 +161,9 @@ const PostJob = () => {
     location: "",
     vacancies: "",
     education: "10th pass",
-    district: "",
+    state: userState || "Gujarat",
+    district: userDistrict || "",
+    taluka: userTaluka || "",
     experience: "",
     skills: "",
     salary: "",
@@ -174,12 +177,22 @@ const PostJob = () => {
     jobType: "Full-time",
     category: "Other",
     deadline: "",
-    taluka: "",
   });
 
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "state") {
+        next.district = "";
+        next.taluka = "";
+      } else if (name === "district") {
+        next.taluka = "";
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -248,10 +261,9 @@ const PostJob = () => {
     }
   };
 
-  const districtOptions = [
-    { value: "", label: "Select District" },
-    ...(availableDistricts || []).map((d) => ({ value: d, label: d })),
-  ];
+  const stateOptions = getStates().map((s) => ({ value: s, label: s }));
+  const districtOptions = (formData.state ? getDistricts(formData.state) : []).map((d) => ({ value: d, label: d }));
+  const talukaOptions = (formData.state && formData.district ? getTalukas(formData.state, formData.district) : []).map((t) => ({ value: t, label: t }));
 
   const educationOptions = [
     { value: "10th pass", label: "10th Pass" },
@@ -373,14 +385,36 @@ const PostJob = () => {
                 />
               </Field>
 
+              <Field label="State" required id="state">
+                <CustomDropdown
+                  id="state"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  options={stateOptions}
+                  placeholder="Select State"
+                />
+              </Field>
+
               <Field label="District" required id="district">
                 <CustomDropdown
                   id="district"
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
-                  options={districtOptions.filter((o) => o.value !== "")}
+                  options={districtOptions}
                   placeholder="Select District"
+                />
+              </Field>
+
+              <Field label="Taluka" id="taluka">
+                <CustomDropdown
+                  id="taluka"
+                  name="taluka"
+                  value={formData.taluka}
+                  onChange={handleChange}
+                  options={talukaOptions}
+                  placeholder="Select Taluka"
                 />
               </Field>
 
@@ -444,16 +478,7 @@ const PostJob = () => {
                 />
               </Field>
 
-              <Field label="Location / Taluka" id="taluka">
-                <input
-                  id="taluka"
-                  name="taluka"
-                  value={formData.taluka}
-                  onChange={handleChange}
-                  placeholder="e.g. Haveli, Mulshi"
-                  className={inputCls}
-                />
-              </Field>
+
 
               <Field label="Monthly Salary (₹)" required id="salary">
                 <input
