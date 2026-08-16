@@ -70,7 +70,6 @@ const CommentSection = ({
       setComments((prev) => prev.filter((c) => c._id !== commentId));
       toast.success("Comment deleted");
     } catch (err) {
-      console.log(err);
       toast.error("Failed to delete comment");
     }
   };

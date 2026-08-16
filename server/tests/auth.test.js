@@ -97,12 +97,12 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(400);
     });
 
-    it("should reject nonexistent email", async () => {
+    it("should return generic success message on nonexistent email (prevent user enumeration)", async () => {
       const res = await request(app)
         .post("/api/auth/resend-otp")
         .send({ email: "nonexistent@test.com" });
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
     });
 
     it("should successfully generate and resend OTP for existing user", async () => {
@@ -111,7 +111,6 @@ describe("Auth Routes", () => {
         .send({ email: "test@test.com" });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.devOtp).toBeDefined();
 
       const user = await User.findOne({ email: "test@test.com" }).select("+otp +otpExpires");
       expect(user.otp).toBeDefined();

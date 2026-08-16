@@ -43,7 +43,6 @@ const ReportModal = ({ isOpen, onClose, targetType, targetId }) => {
       if (error.errors && Array.isArray(error.errors)) {
         return toast.error(error.errors[0].message);
       }
-      console.log(error);
       toast.error("Failed to submit report");
     } finally {
       setLoading(false);

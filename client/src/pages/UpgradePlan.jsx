@@ -189,7 +189,6 @@ const UpgradePlan = () => {
 
   const handlePurchase = async (planKey) => {
     if (!user) return toast.error("Please login first");
-    console.log("planKey", planKey);
     setSelectedPlan(planKey);
     setLoading(true);
 
@@ -205,13 +204,9 @@ const UpgradePlan = () => {
         selectedDuration,
       );
 
-      console.log("orderRes", orderRes);
       const { orderId, amount, currency, keyId } = orderRes.data;
-      console.log("amount1:", amount);
 
       const plan = PLANS_CONFIG.find((p) => p.key === planKey);
-
-      console.log("plan=====>", plan);
 
       const options = {
         key: keyId,
@@ -731,12 +726,6 @@ const UpgradePlan = () => {
                 </motion.div>
               );
             });
-            console.log(
-              "Mapped array length:",
-              mapped.length,
-              "First element type:",
-              mapped[0]?.type,
-            );
             return mapped;
           })()}
         </div>

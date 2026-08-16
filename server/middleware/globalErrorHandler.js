@@ -4,7 +4,7 @@ const globalErrorHandler = (err, req, res, next) => {
   logger.error({ err, url: req.url }, "Unhandled Application Error");
 
   let statusCode = err.statusCode || 500;
-  let message = err.message || "Internal Server Error";
+  let message = process.env.NODE_ENV === "production" ? "Internal Server Error" : (err.message || "Internal Server Error");
 
   if (err.name === "ValidationError") {
     statusCode = 400;

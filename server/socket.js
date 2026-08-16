@@ -291,7 +291,7 @@ const initSocket = (server) => {
           receiverId,
           senderName,
           message,
-        } = data;
+        } = validatedData;
 
         const senderId = socket.userId;
 

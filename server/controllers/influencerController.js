@@ -121,7 +121,7 @@ exports.voteHelpfulReview = async (req, res) => {
 exports.getLocalInfluencers = async (req, res) => {
   try {
     const { district } = req.query;
-    const filter = { influencerBadge: { $ne: "none" } };
+    const filter = { influencerBadge: { $exists: true, $nin: ["none", null] } };
     if (district) {
       filter.district = district;
     }

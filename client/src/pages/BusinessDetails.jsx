@@ -244,8 +244,10 @@ const BusinessDetails = () => {
 
   const formatUrl = (url) => {
     if (!url) return "#";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `https://${url}`;
+    const trimmed = url.trim();
+    if (/^(javascript|vbscript|data):/i.test(trimmed)) return "#";
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
   };
 
   return (

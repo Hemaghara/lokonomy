@@ -512,7 +512,8 @@ exports.updateStory = async (req, res, next) => {
       }
       updates.media = mediaArr;
       if (!updates.image && mediaArr.length > 0) {
-        updates.image = mediaArr[0].url;
+        const imageMedia = mediaArr.find(m => m.type === "image");
+        updates.image = imageMedia ? imageMedia.url : (mediaArr[0]?.thumbUrl || mediaArr[0]?.url || "");
       } else if (mediaArr.length === 0) {
         updates.image = "";
       }

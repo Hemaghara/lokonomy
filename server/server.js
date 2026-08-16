@@ -4,7 +4,9 @@ const cors = require("cors");
 const http = require("http");
 require("dotenv").config();
 const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
+if (process.env.NODE_ENV !== "production") {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
+}
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder("ipv4first");
 }
@@ -157,5 +159,15 @@ const gracefulShutdown = async (signal) => {
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+process.on("unhandledRejection", (reason) => {
+  logger.fatal({ reason }, "Unhandled Promise Rejection");
+  gracefulShutdown("unhandledRejection");
+});
+
+process.on("uncaughtException", (err) => {
+  logger.fatal({ err }, "Uncaught Exception");
+  process.exit(1);
+});
 
 module.exports = app;

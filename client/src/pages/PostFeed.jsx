@@ -262,7 +262,8 @@ const PostFeed = () => {
     if (!feedLocation) {
       toast.error("Please select a location on the map.");
       return;
-    
+    }
+
     try {
       setLoading(true);
       feedSchema.parse(formData);

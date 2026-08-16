@@ -2,10 +2,11 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.MODE === "development"
+  baseURL: import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL}/api`
+    : (import.meta.env.MODE === "development"
       ? "http://localhost:5000/api"
-      : "https://lokonomy.onrender.com/api",
+      : "https://lokonomy.onrender.com/api"),
 });
 
 let isRefreshing = false;
@@ -31,7 +32,7 @@ api.interceptors.request.use(
       const savedUser = localStorage.getItem("lokonomy_user");
       user = savedUser ? JSON.parse(savedUser) : null;
     } catch (err) {
-      console.error("Failed to parse user from localStorage:", err);
+      
     }
 
     const adminToken = localStorage.getItem("adminToken");
@@ -88,7 +89,7 @@ api.interceptors.response.use(
       try {
         const savedUser = localStorage.getItem("lokonomy_user");
         user = savedUser ? JSON.parse(savedUser) : null;
-      } catch (err) { console.error(err); }
+      } catch (err) {  }
 
       const refreshToken = user?.refreshToken;
       if (refreshToken) {

@@ -6,7 +6,7 @@ const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{8,128}$/;
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_ADMIN_SECRET);
+  return jwt.sign({ id }, process.env.JWT_ADMIN_SECRET, { expiresIn: "8h" });
 };
 
 exports.registerAdmin = async (req, res) => {
@@ -69,7 +69,7 @@ exports.loginAdmin = async (req, res) => {
     if (!email || typeof email !== "string" || !password) {
       return res.status(400).json({ success: false, message: "Valid email and password required" });
     }
-    const admin = await Admin.findOne({ email: email.toLowerCase().trim() });
+    const admin = await Admin.findOne({ email: email.toLowerCase().trim() }).select("+password");
 
     const isMatch = admin
       ? await admin.comparePassword(password)
@@ -100,7 +100,7 @@ exports.verifyAdmin = async (req, res) => {
     if (!req.admin) {
       return res.status(404).json({ success: false, message: "Admin not found" });
     }
-    res.json({ success: true, admin: req.admin });
+    res.json({ success: true, admin: { _id: req.admin._id, name: req.admin.name, email: req.admin.email, role: req.admin.role, status: req.admin.status } });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
@@ -108,7 +108,7 @@ exports.verifyAdmin = async (req, res) => {
 
 exports.updateAdminProfile = async (req, res) => {
   try {
-    const admin = await Admin.findById(req.admin._id);
+    const admin = await Admin.findById(req.admin._id).select("+password");
 
     if (admin) {
       if (req.body.email && typeof req.body.email !== "string") {
@@ -156,7 +156,7 @@ exports.reauthAdmin = async (req, res) => {
       return res.status(400).json({ success: false, message: "Password is required" });
     }
 
-    const admin = await Admin.findById(req.admin._id);
+    const admin = await Admin.findById(req.admin._id).select("+password");
     if (!admin) {
       return res.status(404).json({ success: false, message: "Admin not found" });
     }

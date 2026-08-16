@@ -70,12 +70,12 @@ const Login = () => {
   });
 
   useEffect(() => {
-    if (step !== "otp" || timer <= 0) return;
+    if (step !== "otp") return;
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [step, timer]);
+  }, [step]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

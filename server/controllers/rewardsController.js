@@ -75,6 +75,7 @@ const awardPoints = async (userId, event, description) => {
               },
             ],
             $position: 0,
+            $slice: 200,
           },
         },
       },
@@ -153,7 +154,8 @@ exports.redeemReward = async (req, res) => {
               description: `Redeemed: ${option.name}`,
               createdAt: new Date(),
             }],
-            $position: 0 
+            $position: 0,
+            $slice: 200
           } 
         }
       },

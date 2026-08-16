@@ -3,8 +3,9 @@ import { useAuth } from "../hooks/useAuth";
 
 const ProtectedRoute = () => {
   const { isAuthenticated } = useAuth();
+  const hasStoredUser = !!localStorage.getItem("lokonomy_user");
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !hasStoredUser) {
     return <Navigate to="/" replace />;
   }
 

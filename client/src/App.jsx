@@ -11,6 +11,7 @@ import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -146,8 +147,8 @@ function App() {
         ? "http://localhost:5000/"
         : "https://lokonomy.onrender.com/";
     fetch(wakeupURL)
-      .then(() => console.log("Backend awake"))
-      .catch(() => console.log("Backend not awake"));
+      .then(() => {})
+      .catch(() => {});
   }, []);
   return (
     <LocationProvider>
@@ -365,7 +366,7 @@ function App() {
                     </Route>
                   </Route>
 
-                  <Route element={<MainLayout />}>
+                  <Route element={<ErrorBoundary><MainLayout /></ErrorBoundary>}>
                     <Route path="/home" element={<Home />} />
                     <Route path="/explore" element={<ExploreServices />} />
                     <Route path="/explore/all" element={<AllServices />} />

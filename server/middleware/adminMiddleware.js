@@ -19,6 +19,9 @@ const protectAdmin = async (req, res, next) => {
         .status(401)
         .json({ message: "Not authorized, admin not found" });
     }
+    if (req.admin.status !== "Active") {
+      return res.status(403).json({ message: "Admin account is deactivated" });
+    }
     return next();
   } catch (error) {
     logger.error({ err: error }, "Admin authorization failed");

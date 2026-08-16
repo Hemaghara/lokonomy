@@ -181,6 +181,7 @@ exports.getJobById = async (req, res) => {
       if (historyIndex !== -1) {
         job.viewHistory[historyIndex].count += 1;
       } else {
+        if (!job.viewHistory) job.viewHistory = [];
         job.viewHistory.push({ date: today, count: 1 });
       }
     }
@@ -216,6 +217,18 @@ exports.applyForJob = async (req, res) => {
     }
     if (candidateCertificate && candidateCertificate.length > MAX_BASE64_LENGTH) {
       return res.status(400).json({ success: false, message: "Certificate file exceeds the 5MB limit." });
+    }
+
+    // Bug #34: Check duplicate application before uploading media
+    const duplicateCheck = await Job.findOne({
+      _id: req.params.id,
+      "applications.candidateId": req.user.id
+    });
+    if (duplicateCheck) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied for this job.",
+      });
     }
 
     let biodataUrl = candidateBiodata;

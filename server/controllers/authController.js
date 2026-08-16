@@ -216,7 +216,6 @@ exports.login = async (req, res) => {
       success: true,
       message: emailResult.devMode ? "OTP sent (dev mode)" : "Verification code sent.",
       step: "otp",
-      devOtp: emailResult.devMode ? otp : undefined,
     });
   } catch (err) {
     logger.error({ err: err.message }, "Login controller error");
@@ -233,8 +232,11 @@ exports.verifyOtp = async (req, res) => {
 
     const incomingHash = crypto.createHash("sha256").update(otp || "").digest("hex");
 
+    const userOtpBuffer = Buffer.from(user?.otp || "");
+    const incomingBuffer = Buffer.from(incomingHash);
     const isOtpValid = user && user.otp &&
-      crypto.timingSafeEqual(Buffer.from(user.otp), Buffer.from(incomingHash)) &&
+      userOtpBuffer.length === incomingBuffer.length &&
+      crypto.timingSafeEqual(userOtpBuffer, incomingBuffer) &&
       new Date() <= user.otpExpires;
 
     if (!isOtpValid) {
@@ -262,11 +264,13 @@ exports.verifyOtp = async (req, res) => {
 
     const accessToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
     );
     const refreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_REFRESH_SECRET
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
     );
 
     user.refreshToken = refreshToken;
@@ -304,11 +308,13 @@ exports.refresh = async (req, res) => {
 
     const newAccessToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
     );
     const newRefreshToken = jwt.sign(
       { user: { id: user.id } },
-      process.env.JWT_REFRESH_SECRET
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
     );
 
     user.refreshToken = newRefreshToken;
@@ -422,11 +428,8 @@ exports.register = async (req, res) => {
       }
     }
 
+    userData.referralCode = `LOKO-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
     user = new User(userData);
-    await user.save();
-
-
-    user.referralCode = `LOKO-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
     await user.save();
 
 
@@ -457,7 +460,6 @@ exports.register = async (req, res) => {
       message: emailResult.devMode ? "OTP sent (dev mode)" : "Registration successful. Please verify your email with the OTP sent.",
       step: "otp",
       email: normalizedEmail,
-      devOtp: emailResult.devMode ? regOtp : undefined,
     });
   } catch (err) {
     logger.error({ err }, "Registration error");
@@ -581,7 +583,10 @@ exports.resendOtp = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.json({
+        success: true,
+        message: "If an account exists with this email, a verification code has been sent."
+      });
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -603,8 +608,7 @@ exports.resendOtp = async (req, res) => {
 
     return res.json({
       success: true,
-      message: emailResult.devMode ? "OTP sent (dev mode)" : "Verification code resent successfully.",
-      devOtp: emailResult.devMode ? otp : undefined,
+      message: "If an account exists with this email, a verification code has been sent.",
     });
   } catch (err) {
     logger.error({ err }, "Resend OTP error");

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "./LocationContext";
 import { authService } from "../services";
 import { connectSocket, disconnectSocket } from "../services/socket";
@@ -49,8 +49,7 @@ export const UserProvider = ({ children }) => {
             updateUser(res.data.user);
           }
         } catch (err) {
-          console.log("Session expired or invalid");
-          // logout();
+          // Session check failed — user will need to re-login on next protected action
         }
       }
     };
@@ -83,8 +82,10 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const contextValue = useMemo(() => ({ user, login, logout, updateUser }), [user, login, logout, updateUser]);
+
   return (
-    <UserContext.Provider value={{ user, login, logout, updateUser }}>
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );

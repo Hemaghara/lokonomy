@@ -17,17 +17,20 @@ module.exports = function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Support both user and admin payload structures
     if (decoded.user) {
       req.user = decoded.user;
     } else if (decoded.id) {
       req.user = { id: decoded.id };
     }
-    
     next();
   } catch (err) {
-    req.user = null;
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_ADMIN_SECRET);
+      req.user = { id: decoded.id, isAdmin: true };
+      next();
+    } catch (err2) {
+      req.user = null;
+      next();
+    }
   }
 };

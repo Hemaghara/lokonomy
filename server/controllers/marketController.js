@@ -463,7 +463,12 @@ exports.placeBid = async (req, res) => {
         $and: [
           {
             $or: [
-              { currentHighestBid: { $lt: numericAmount } },
+              {
+                $or: [
+                  { currentHighestBid: { $lt: numericAmount } },
+                  { currentHighestBid: { $lte: numericAmount }, "bids.0": { $exists: false } }
+                ]
+              },
               { currentHighestBid: { $exists: false } }
             ]
           },

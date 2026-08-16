@@ -66,11 +66,9 @@ const SellerOrders = () => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
-    console.log("Fetching data for SellerOrders...");
     setLoading(true);
     try {
       const [ordersRes, productsRes, statsRes, bizRes] = await Promise.all([
@@ -79,7 +77,6 @@ const SellerOrders = () => {
         orderService.getSellerStats(),
         businessService.getMyBusinesses(),
       ]);
-      console.log("Data fetched successfully", { orders: ordersRes.data, products: productsRes.data, stats: statsRes.data });
       setOrders(ordersRes.data.orders);
       setMyProducts(productsRes.data);
       setStats(statsRes.data.stats);
@@ -122,7 +119,6 @@ const SellerOrders = () => {
       console.error("Error fetching seller data:", err);
       toast.error("Failed to load dashboard data");
     } finally {
-      console.log("Setting loading to false");
       setLoading(false);
     }
   };

@@ -305,7 +305,6 @@ const Profile = () => {
         toast.success("Profile updated successfully");
       }
     } catch (err) {
-      console.log(err);
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);
@@ -356,7 +355,6 @@ const Profile = () => {
             toast.success("Location updated successfully");
           }
         } catch (err) {
-          console.log(err);
           toast.error("Failed to update location");
         } finally {
           setLoading(false);
@@ -393,7 +391,6 @@ const Profile = () => {
       setNotificationsEnabled(newState);
       login({ ...user, notificationsEnabled: newState });
     } catch (err) {
-      console.log(err);
       toast.error("Failed to update notification settings");
     } finally {
       setLoading(false);
@@ -411,7 +408,6 @@ const Profile = () => {
         `Appointment reminders ${newState ? "enabled" : "disabled"}`,
       );
     } catch (err) {
-      console.log(err);
       toast.error("Failed to update reminder settings");
     } finally {
       setLoading(false);

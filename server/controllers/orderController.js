@@ -140,23 +140,48 @@ exports.createOrder = async (req, res) => {
         }
       }
 
-      let pricePerUnit = product.price;
-
-      if (activeFlashSale) {
-        if (activeFlashSale.soldCount + qty > activeFlashSale.maxQuantity) {
+      // Bug #7: Enforce pre-order limits
+      if (product.isPreOrderEnabled && product.maxPreOrders) {
+        const currentPreOrders = await Order.aggregate([
+          { $match: { product: product._id, orderStatus: { $ne: "cancelled" } } },
+          { $group: { _id: null, totalQty: { $sum: "$quantity" } } }
+        ]).session(session);
+        const totalOrdered = currentPreOrders[0]?.totalQty || 0;
+        if (totalOrdered + qty > product.maxPreOrders) {
           await session.abortTransaction();
           session.endSession();
           return res.status(400).json({
             success: false,
-            message: `Only ${activeFlashSale.maxQuantity - activeFlashSale.soldCount} items available at flash sale price.`
+            message: `Only ${product.maxPreOrders - totalOrdered} pre-orders remaining.`
+          });
+        }
+      }
+
+      let pricePerUnit = product.price;
+
+      if (activeFlashSale) {
+        const updatedFlashSale = await FlashSale.findOneAndUpdate(
+          {
+            _id: activeFlashSale._id,
+            $expr: { $lte: [{ $add: ["$soldCount", qty] }, "$maxQuantity"] }
+          },
+          { $inc: { soldCount: qty } },
+          { session, new: true }
+        );
+
+        if (!updatedFlashSale) {
+          await session.abortTransaction();
+          session.endSession();
+          return res.status(400).json({
+            success: false,
+            message: "Not enough items available at flash sale price."
           });
         }
         pricePerUnit = activeFlashSale.salePrice;
-        activeFlashSale.soldCount += qty;
-        if (activeFlashSale.soldCount >= activeFlashSale.maxQuantity) {
-          activeFlashSale.status = "ended";
+        if (updatedFlashSale.soldCount >= updatedFlashSale.maxQuantity) {
+          updatedFlashSale.status = "ended";
+          await updatedFlashSale.save({ session });
         }
-        await activeFlashSale.save({ session });
       } else if (product.isBulkEnabled && product.bulkPricing && product.bulkPricing.length > 0) {
         if (qty < (product.minOrderQuantity || 1)) {
           await session.abortTransaction();
@@ -182,12 +207,12 @@ exports.createOrder = async (req, res) => {
 
       let couponDoc = null;
       if (appliedCoupon) {
-        const biz = await Business.findOne({ ownerId: product.sellerId });
+        const biz = await Business.findOne({ ownerId: product.sellerId }).session(session);
         if (biz) {
           const query = { code: appliedCoupon.toUpperCase(), businessId: biz._id };
-          couponDoc = await Coupon.findOne(query);
+          couponDoc = await Coupon.findOne(query).session(session);
         }
-        if (couponDoc && couponDoc.status === "active" && new Date(couponDoc.expiryDate) >= new Date() && couponDoc.usedBy.indexOf(req.user.id) === -1) {
+        if (couponDoc && couponDoc.status === "active" && new Date(couponDoc.expiryDate) >= new Date() && couponDoc.usedBy.indexOf(req.user.id) === -1 && couponDoc.usedCount < couponDoc.usageLimit) {
           if (couponDoc.discountType === "percentage") {
             orderAmount = orderAmount - (orderAmount * couponDoc.discount) / 100;
           } else {
@@ -216,7 +241,8 @@ exports.createOrder = async (req, res) => {
         shippingAddress,
         contactNumber,
         transactionId,
-        paymentStatus: "completed",
+        // TODO: Handle COD properly
+        paymentStatus: paymentMethod === "cod" ? "pending" : "completed",
         quantity: qty,
         commissionRate,
         commissionAmount,
@@ -488,7 +514,7 @@ exports.getSellerDashboardStats = async (req, res) => {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           gross: { $sum: "$price" },
           commission: { $sum: { $ifNull: ["$commissionAmount", 0] } },
-          net: { $sum: { $cond: [{ $ifNull: ["$sellerPayout", null] }, "$sellerPayout", "$price"] } }
+          net: { $sum: { $cond: [{ $ne: [{ $type: "$sellerPayout" }, "missing"] }, "$sellerPayout", "$price"] } }
         }
       }
     ]);
