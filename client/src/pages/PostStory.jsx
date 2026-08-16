@@ -7,6 +7,7 @@ import MapPicker from "../components/MapPicker";
 import { usePlanLimits } from "../hooks/usePlanLimits";
 import { storySchema } from "../validators/social.schema";
 import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
+import { motion, AnimatePresence } from "framer-motion";
 const CustomDropdown = ({
   name,
   value,
