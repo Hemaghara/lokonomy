@@ -23,7 +23,7 @@ const createBusinessSchema = {
     state: z.string().optional(),
     district: z.string().optional().nullable(),
     taluka: z.string().optional().nullable(),
-    pincode: z.string().regex(/^\d{6}$/, "Invalid pincode").optional(),
+    pincode: z.string().regex(/^\d{6}$/, "Invalid pincode").optional().or(z.literal("")),
     latitude: z.number().or(z.string()).optional(),
     longitude: z.number().or(z.string()).optional(),
     facebookLink: z.string().url().optional().or(z.literal("")),

@@ -34,4 +34,10 @@ const feedLimiter = rateLimit({
   message: { success: false, message: "Too many feeds created. Please try again later." },
 });
 
-module.exports = { authLimiter, otpLimiter, adminLimiter, apiLimiter, feedLimiter };
+const visitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: { success: false, message: "Too many visit requests." },
+});
+
+module.exports = { authLimiter, otpLimiter, adminLimiter, apiLimiter, feedLimiter, visitLimiter };

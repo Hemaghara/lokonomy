@@ -296,10 +296,10 @@ exports.addReview = async (req, res) => {
     const { userName, rating, comment } = req.body;
     const userId = req.user.id;
 
-    if (!rating) {
+    if (!rating || Number(rating) < 1 || Number(rating) > 5) {
       return res.status(400).json({
         success: false,
-        message: "Rating is required",
+        message: "Rating must be between 1 and 5",
       });
     }
 

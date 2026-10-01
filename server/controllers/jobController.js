@@ -116,6 +116,9 @@ exports.createJob = async (req, res) => {
     if (salaryMin && salaryMax && Number(salaryMin) > Number(salaryMax)) {
       return res.status(400).json({ success: false, message: "Minimum salary cannot be greater than maximum salary." });
     }
+    if (deadline && new Date(deadline) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Deadline must be a future date." });
+    }
 
     const jobData = {
       position, location, vacancies, education, state, district,
@@ -209,6 +212,14 @@ exports.applyForJob = async (req, res) => {
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
+    }
+    
+    if (job.status === "Closed") {
+      return res.status(400).json({ success: false, message: "This job is no longer accepting applications." });
+    }
+    
+    if (job.deadline && new Date(job.deadline) < new Date()) {
+      return res.status(400).json({ success: false, message: "The deadline for this job has passed." });
     }
 
     const MAX_BASE64_LENGTH = Math.ceil((5 * 1024 * 1024 * 4) / 3);
@@ -422,6 +433,9 @@ exports.updateJob = async (req, res) => {
     const newSalaryMax = req.body.salaryMax !== undefined ? req.body.salaryMax : job.salaryMax;
     if (newSalaryMin && newSalaryMax && Number(newSalaryMin) > Number(newSalaryMax)) {
       return res.status(400).json({ success: false, message: "Minimum salary cannot be greater than maximum salary." });
+    }
+    if (req.body.deadline && new Date(req.body.deadline) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Deadline must be a future date." });
     }
 
     allowedFields.forEach((field) => {

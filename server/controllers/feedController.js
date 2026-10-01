@@ -212,6 +212,16 @@ exports.createFeed = async (req, res, next) => {
     const currentUser = await User.findById(req.user.id).select("name").lean();
     const authorName = currentUser?.name || "Anonymous";
 
+    if (scheduledAt && new Date(scheduledAt) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Scheduled time must be in the future." });
+    }
+    if (expiresAt && new Date(expiresAt) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Expiration time must be in the future." });
+    }
+    if (scheduledAt && expiresAt && new Date(expiresAt) <= new Date(scheduledAt)) {
+      return res.status(400).json({ success: false, message: "Expiration time must be after scheduled time." });
+    }
+
     logger.debug({ title, type, userId: req.user.id }, "Creating new feed");
 
     let imageUrl = image;
@@ -337,6 +347,16 @@ exports.updateFeed = async (req, res, next) => {
     }
 
     const { title, content, type, image, district, taluka, eventDate, eventTime, scheduledAt, expiresAt, tags } = req.body;
+
+    if (scheduledAt && new Date(scheduledAt) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Scheduled time must be in the future." });
+    }
+    if (expiresAt && new Date(expiresAt) <= new Date()) {
+      return res.status(400).json({ success: false, message: "Expiration time must be in the future." });
+    }
+    if (scheduledAt && expiresAt && new Date(expiresAt) <= new Date(scheduledAt)) {
+      return res.status(400).json({ success: false, message: "Expiration time must be after scheduled time." });
+    }
 
     let imageUrl = image;
     if (image && image.startsWith("data:image")) {

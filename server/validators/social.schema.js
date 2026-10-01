@@ -14,6 +14,8 @@ const createFeedSchema = {
     latitude: z.number().optional(),
     longitude: z.number().optional(),
     locationAddress: z.string().optional(),
+    scheduledAt: z.string().refine(val => !isNaN(Date.parse(val)), "Invalid date").optional().nullable().or(z.literal("").transform(() => null)),
+    expiresAt: z.string().refine(val => !isNaN(Date.parse(val)), "Invalid date").optional().nullable().or(z.literal("").transform(() => null)),
   })
 };
 
@@ -49,8 +51,8 @@ const createGroupSchema = {
 
 const createCommentSchema = {
   body: z.object({
-    targetId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid target ID format"),
-    targetType: z.enum(["Feed", "Story", "BusinessQA", "ProductQA"]),
+    targetId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid target ID format").optional(),
+    targetType: z.enum(["Feed", "Story", "BusinessQA", "ProductQA"]).optional(),
     text: z.string().min(1, "Comment cannot be empty").max(1000, "Comment is too long").trim(),
     parentId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid parent ID format").optional().nullable(),
   })

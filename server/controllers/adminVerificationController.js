@@ -71,6 +71,7 @@ exports.approveBusiness = async (req, res) => {
 
     business.verificationStatus = "verified";
     business.isVerified = true;
+    business.verified = true;
     business.verifiedAt = new Date();
     business.rejectionReason = undefined;
     await business.save();
@@ -109,6 +110,7 @@ exports.rejectBusiness = async (req, res) => {
 
     business.verificationStatus = "rejected";
     business.isVerified = false;
+    business.verified = false;
     business.rejectionReason = reason.trim();
     await business.save();
     await notificationController.createNotification({
@@ -167,6 +169,7 @@ exports.bulkApproveBusinesses = async (req, res) => {
     for (const business of businesses) {
       business.verificationStatus = "verified";
       business.isVerified = true;
+      business.verified = true;
       business.verifiedAt = new Date();
       business.rejectionReason = undefined;
       await business.save();
@@ -209,6 +212,7 @@ exports.bulkRejectBusinesses = async (req, res) => {
     for (const business of businesses) {
       business.verificationStatus = "rejected";
       business.isVerified = false;
+      business.verified = false;
       business.rejectionReason = reason.trim();
       await business.save();
 

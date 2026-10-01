@@ -31,7 +31,7 @@ const createProductSchema = {
     sellerProfile: sellerProfileSchema,
     isAuction: z.boolean().optional().default(false),
     startingPrice: z.number().nonnegative().optional().or(z.string().regex(/^\d+(\.\d+)?$/).transform(Number)),
-    auctionEnd: z.string().datetime().optional().nullable(),
+    auctionEnd: z.string().refine(val => !isNaN(Date.parse(val)), "Invalid date format").optional().nullable(),
     isPreOrderEnabled: z.boolean().optional().default(false),
     preOrderLeadTimeDays: z.number().int().nonnegative().optional(),
     maxPreOrders: z.number().int().nonnegative().optional(),

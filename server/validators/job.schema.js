@@ -11,8 +11,8 @@ const createJobSchema = {
     experience: z.string().min(1, "Experience is required"),
     skills: z.string().min(2, "Skills are required"),
     salary: z.string().min(1, "Salary is required"), // legacy salary field
-    salaryMin: z.number().nonnegative().optional().nullable().or(z.string().regex(/^\d+(\.\d+)?$/).transform(Number).optional()),
-    salaryMax: z.number().nonnegative().optional().nullable().or(z.string().regex(/^\d+(\.\d+)?$/).transform(Number).optional()),
+    salaryMin: z.number().nonnegative().optional().nullable().or(z.string().regex(/^\d+(\.\d+)?$/).transform(Number).optional()).or(z.literal("").transform(() => null)),
+    salaryMax: z.number().nonnegative().optional().nullable().or(z.string().regex(/^\d+(\.\d+)?$/).transform(Number).optional()).or(z.literal("").transform(() => null)),
     gender: z.enum(["Male", "Female", "Both"]),
     posterName: z.string().min(2, "Poster name is required"),
     posterEmail: z.string().email("Invalid email format"),
@@ -34,7 +34,7 @@ const createJobSchema = {
       "Other",
     ]).optional(),
     taluka: z.string().optional().or(z.literal("")),
-    deadline: z.string().datetime().optional().nullable(),
+    deadline: z.string().refine(val => !isNaN(Date.parse(val)), "Invalid date format").optional().nullable().or(z.literal("").transform(() => null)),
   })
 };
 

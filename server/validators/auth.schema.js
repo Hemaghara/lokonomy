@@ -7,6 +7,13 @@ const registerSchema = {
     name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name too long"),
     email: z.string().email("Invalid email format").max(254, "Email too long"),
     password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password too long").regex(passwordRegex, "Password must include uppercase, lowercase, number, and special character"),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+    locationName: z.string().max(200).optional().nullable(),
+    locationPermission: z.enum(["granted", "denied", "not_asked"]).optional(),
+    district: z.string().max(100).optional().nullable(),
+    taluka: z.string().max(100).optional().nullable(),
+    referralCode: z.string().max(20).optional().nullable(),
   })
 };
 
@@ -14,6 +21,10 @@ const loginSchema = {
   body: z.object({
     email: z.string().email("Invalid email format").max(254, "Email too long"),
     password: z.string().min(1, "Password required").max(128, "Password too long"),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
+    locationName: z.string().max(200).optional().nullable(),
+    locationPermission: z.enum(["granted", "denied", "not_asked"]).optional(),
   })
 };
 

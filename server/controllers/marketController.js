@@ -157,7 +157,12 @@ exports.addProduct = async (req, res) => {
       productData.isAuction = true;
       productData.startingPrice = Number(productData.startingPrice);
       productData.currentHighestBid = productData.startingPrice;
-      productData.auctionEnd = new Date(productData.auctionEnd);
+      
+      const end = new Date(productData.auctionEnd);
+      if (end <= new Date()) {
+        return res.status(400).json({ success: false, message: "Auction end date must be in the future" });
+      }
+      productData.auctionEnd = end;
     } else {
       productData.isAuction = false;
     }
@@ -422,7 +427,7 @@ exports.placeBid = async (req, res) => {
     const numericAmount = Number(amount);
     const productId = req.params.id;
 
-    if (!amount || isNaN(amount)) {
+    if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       return res.status(400).json({ message: "Invalid bid amount" });
     }
 
