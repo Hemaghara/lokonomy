@@ -7,6 +7,7 @@ const api = axios.create({
     : (import.meta.env.MODE === "development"
       ? "http://localhost:5000/api"
       : "https://lokonomy.onrender.com/api"),
+  timeout: 15000,
 });
 
 let isRefreshing = false;
@@ -111,7 +112,7 @@ api.interceptors.response.use(
           if (!window.location.pathname.startsWith("/admin") &&
             !window.location.pathname.startsWith("/login") &&
             window.location.pathname !== "/") {
-            window.location.href = "/?expired=true";
+            window.dispatchEvent(new CustomEvent("auth-expired", { detail: { isAdmin: false } }));
           }
           return Promise.reject(refreshErr);
         } finally {
@@ -126,7 +127,7 @@ api.interceptors.response.use(
         localStorage.removeItem("adminInfo");
 
         if (window.location.pathname.startsWith("/admin") && window.location.pathname !== "/admin/login") {
-          window.location.href = "/admin/login?expired=true";
+          window.dispatchEvent(new CustomEvent("auth-expired", { detail: { isAdmin: true } }));
         }
       } else if (tokenType === "impersonation") {
         localStorage.removeItem("impersonationToken");
@@ -139,7 +140,7 @@ api.interceptors.response.use(
         if (!window.location.pathname.startsWith("/admin") &&
           !window.location.pathname.startsWith("/login") &&
           window.location.pathname !== "/") {
-          window.location.href = "/?expired=true";
+          window.dispatchEvent(new CustomEvent("auth-expired", { detail: { isAdmin: false } }));
         }
       }
     } else if (status === 403) {

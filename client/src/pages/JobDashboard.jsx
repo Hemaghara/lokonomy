@@ -173,11 +173,11 @@ const JobDashboard = () => {
     if (!job) return;
 
     try {
-      const updatePromises = job.applications.map((app) =>
-        jobService.updateApplicationStatus(jobId, app._id, newStatus),
-      );
+      // Process updates sequentially to prevent saturating the backend and email service
+      for (const app of job.applications) {
+        await jobService.updateApplicationStatus(jobId, app._id, newStatus);
+      }
 
-      await Promise.all(updatePromises);
       toast.success(
         `Successfully updated ${job.applications.length} applicants`,
       );

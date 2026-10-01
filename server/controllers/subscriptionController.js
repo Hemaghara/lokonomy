@@ -169,7 +169,10 @@ exports.verifyPayment = async (req, res) => {
       .update(body)
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
+    const expectedBuffer = Buffer.from(expectedSignature, "utf-8");
+    const receivedBuffer = Buffer.from(razorpay_signature, "utf-8");
+
+    if (expectedBuffer.length !== receivedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, receivedBuffer)) {
       logger.error(
         { razorpay_order_id, userId: req.user.id },
         "Payment verification failed: invalid signature",

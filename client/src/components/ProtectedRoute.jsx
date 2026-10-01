@@ -3,9 +3,22 @@ import { useAuth } from "../hooks/useAuth";
 
 const ProtectedRoute = () => {
   const { isAuthenticated } = useAuth();
-  const hasStoredUser = !!localStorage.getItem("lokonomy_user");
+  
+  let hasValidStoredUser = false;
+  try {
+    const stored = localStorage.getItem("lokonomy_user");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Validate that it's a real user object with a token
+      if (parsed && parsed.token && (parsed.id || parsed._id)) {
+        hasValidStoredUser = true;
+      }
+    }
+  } catch (err) {
+    hasValidStoredUser = false;
+  }
 
-  if (!isAuthenticated && !hasStoredUser) {
+  if (!isAuthenticated && !hasValidStoredUser) {
     return <Navigate to="/" replace />;
   }
 

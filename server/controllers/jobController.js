@@ -223,11 +223,21 @@ exports.applyForJob = async (req, res) => {
     }
 
     const MAX_BASE64_LENGTH = Math.ceil((5 * 1024 * 1024 * 4) / 3);
-    if (candidateBiodata && candidateBiodata.length > MAX_BASE64_LENGTH) {
-      return res.status(400).json({ success: false, message: "Resume file exceeds the 5MB limit." });
+    if (candidateBiodata) {
+      if (candidateBiodata.length > MAX_BASE64_LENGTH) {
+        return res.status(400).json({ success: false, message: "Resume file exceeds the 5MB limit." });
+      }
+      if (!candidateBiodata.startsWith("data:application/pdf;") && !candidateBiodata.startsWith("data:image/")) {
+        return res.status(400).json({ success: false, message: "Invalid resume format. Only PDF and images are allowed." });
+      }
     }
-    if (candidateCertificate && candidateCertificate.length > MAX_BASE64_LENGTH) {
-      return res.status(400).json({ success: false, message: "Certificate file exceeds the 5MB limit." });
+    if (candidateCertificate) {
+      if (candidateCertificate.length > MAX_BASE64_LENGTH) {
+        return res.status(400).json({ success: false, message: "Certificate file exceeds the 5MB limit." });
+      }
+      if (!candidateCertificate.startsWith("data:application/pdf;") && !candidateCertificate.startsWith("data:image/")) {
+        return res.status(400).json({ success: false, message: "Invalid certificate format. Only PDF and images are allowed." });
+      }
     }
 
     // Bug #34: Check duplicate application before uploading media
@@ -706,7 +716,10 @@ exports.createJobAlert = async (req, res) => {
   try {
     const { category, district, taluka, jobType, salaryMin } = req.body;
     
-    
+    // Prevent concurrency bypass by updating a lock or relying on an atomic operation if needed,
+    // but here we can enforce a hard cap using a transaction or atomic array on the User, 
+    // or just accept a slight race condition but use robust limits.
+    // For now, doing a standard find to count. In production, store alerts inside the User document array to enforce atomic length limits.
     const existingCount = await JobAlert.countDocuments({ userId: req.user.id });
     if (existingCount >= 5) {
       return res.status(400).json({ 
@@ -721,6 +734,17 @@ exports.createJobAlert = async (req, res) => {
     });
 
     await alert.save();
+    
+    // Double check after save to mitigate race conditions
+    const finalCount = await JobAlert.countDocuments({ userId: req.user.id });
+    if (finalCount > 5) {
+      await JobAlert.findByIdAndDelete(alert._id);
+      return res.status(400).json({ 
+        success: false, 
+        message: "You can only have up to 5 job alerts. Please delete an old one." 
+      });
+    }
+
     res.status(201).json({ success: true, message: "Job alert created successfully", alert });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

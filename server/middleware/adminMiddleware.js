@@ -40,4 +40,22 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-module.exports = { protectAdmin, authorizeRoles };
+const authorizePermissions = (...requiredPermissions) => {
+  return (req, res, next) => {
+    if (!req.admin) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+    if (req.admin.role === "superadmin") {
+      return next();
+    }
+    const hasPermission = req.admin.permissions && req.admin.permissions.some(p => requiredPermissions.includes(p));
+    if (!hasPermission) {
+      return res.status(403).json({
+        message: "Forbidden: You do not have the required permissions to perform this action.",
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { protectAdmin, authorizeRoles, authorizePermissions };

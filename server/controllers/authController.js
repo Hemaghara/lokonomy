@@ -11,14 +11,8 @@ const { Resend } = require("resend");
 const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 
-let DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
-(async () => {
-  try {
-    DUMMY_HASH = await bcrypt.hash("dummy_password_for_timing_attack_prevention", 10);
-  } catch (e) {
-    logger.warn("Could not pre-compute dummy hash, using fallback");
-  }
-})();
+// Pre-compute dummy hash synchronously to ensure it's ready before traffic arrives
+const DUMMY_HASH = bcrypt.hashSync("dummy_password_for_timing_attack_prevention", 10);
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{8,128}$/;
 
@@ -430,7 +424,15 @@ exports.register = async (req, res) => {
 
     userData.referralCode = `LOKO-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
     user = new User(userData);
-    await user.save();
+    try {
+      await user.save();
+    } catch (saveErr) {
+      if (saveErr.code === 11000) {
+        logger.warn({ email: normalizedEmail }, "Registration failed: Concurrent duplicate email entry");
+        return res.status(400).json({ success: false, message: "User already exists" });
+      }
+      throw saveErr;
+    }
 
 
     const regOtp = crypto.randomInt(100000, 999999).toString();

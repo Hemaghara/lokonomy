@@ -30,6 +30,12 @@ export default defineConfig({
           'vendor-utils': ['axios', 'framer-motion', 'lucide-react'],
           'vendor-charts': ['recharts'],
           'vendor-maps': ['leaflet', 'react-leaflet'],
+          'admin-panel': [
+            './src/pages/admin/AdminDashboard.jsx',
+            './src/pages/admin/AdminUsers.jsx',
+            './src/pages/admin/AdminBusinesses.jsx',
+            './src/pages/admin/AdminMarketplace.jsx'
+          ]
         }
       }
     }

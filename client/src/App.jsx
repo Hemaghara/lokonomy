@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import { LocationProvider } from "./context/LocationContext";
 import { UserProvider } from "./context/UserContext";
@@ -140,6 +140,22 @@ const AdminErrorBoundary = lazy(
 );
 const AppliedJobs = lazy(() => import("./pages/AppliedJobs"));
 
+function AuthExpirationHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handleExpired = (e) => {
+      if (e.detail?.isAdmin) {
+        navigate("/admin/login?expired=true");
+      } else {
+        navigate("/?expired=true");
+      }
+    };
+    window.addEventListener("auth-expired", handleExpired);
+    return () => window.removeEventListener("auth-expired", handleExpired);
+  }, [navigate]);
+  return null;
+}
+
 function App() {
   useEffect(() => {
     const wakeupURL =
@@ -181,6 +197,7 @@ function App() {
               }}
             />
             <Router>
+              <AuthExpirationHandler />
               <Suspense
                 fallback={
                   <div className="min-h-screen flex items-center justify-center bg-dark-bg text-gray-300">

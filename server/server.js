@@ -115,12 +115,10 @@ if (process.env.NODE_ENV !== "test") {
       await setupIndexes();
 
 
-      try {
-        await Business.updateMany({}, { $set: { isOwnerOnline: false } });
-        logger.info("Reset all business isOwnerOnline on startup");
-      } catch (resetErr) {
-        logger.error({ err: resetErr }, "Failed to reset business owner online status on startup");
-      }
+      // Run in background (non-blocking) to avoid slowing down startup
+      Business.updateMany({}, { $set: { isOwnerOnline: false } })
+        .then(() => logger.info("Reset all business isOwnerOnline on startup"))
+        .catch((resetErr) => logger.error({ err: resetErr }, "Failed to reset business owner online status on startup"));
 
       startSubscriptionCron();
       startBookingRemindersCron();
