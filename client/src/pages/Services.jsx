@@ -140,20 +140,24 @@ const Services = () => {
             Directory
           </Link>
           <span className="text-slate-700">/</span>
-          <Link
-            to={`/category/${category}`}
-            className="text-slate-500 hover:text-white transition-colors"
-          >
-            {category}
-          </Link>
-          <span className="text-slate-700">/</span>
-          <span className="text-primary">{subcategory || "Browse All"}</span>
+          {category ? (
+            <>
+              <Link
+                to={`/category/${category}`}
+                className="text-slate-500 hover:text-white transition-colors"
+              >
+                {category}
+              </Link>
+              <span className="text-slate-700">/</span>
+            </>
+          ) : null}
+          <span className="text-primary">{subcategory || category || "Browse All"}</span>
         </div>
 
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 mb-10 border-b border-white/5 pb-10">
           <div className="max-w-3xl">
             <h1 className="text-white text-5xl md:text-6xl font-black mb-4 tracking-tight flex items-baseline gap-1">
-              {subcategory || category}
+              {subcategory || category || "All Services"}
               <span className="text-primary text-5xl md:text-6xl">.</span>
             </h1>
             <div className="text-slate-400 text-lg flex flex-wrap items-center gap-2 mt-2">

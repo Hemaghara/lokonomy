@@ -396,6 +396,11 @@ function App() {
                       path="/market/product/:id"
                       element={<ProductDetails />}
                     />
+                    <Route path="/services" element={<Services />} />
+                    <Route
+                      path="/services/:category"
+                      element={<Services />}
+                    />
                     <Route
                       path="/services/:category/:subcategory"
                       element={<Services />}
